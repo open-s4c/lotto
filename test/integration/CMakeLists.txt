@@ -21,7 +21,10 @@ configure_file(tinl.cfg.in "${CMAKE_CURRENT_BINARY_DIR}/tinl.cfg" @ONLY)
 
 add_custom_target(
     check-integration
-    COMMAND "${TINL_EXECUTABLE}" -b "${CMAKE_CURRENT_BINARY_DIR}" -c
+    COMMAND
+        ${CMAKE_COMMAND} -E env
+        LOTTO_DICE_SCRIPT="${LOTTO_DICE_SCRIPTS_DIR}/dice"
+        "${TINL_EXECUTABLE}" -b "${CMAKE_CURRENT_BINARY_DIR}" -c
             "${CMAKE_CURRENT_BINARY_DIR}/tinl.cfg" ${INTEGRATION_TEST_SOURCES}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     COMMENT "Running tinl integration tests"

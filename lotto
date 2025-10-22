@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -eu
+
+if [ $# -lt 1 ]; then
+    echo "[lotto-mock] error: missing subcommand" >&2
+    exit 2
+fi
+
+subcommand="$1"
+shift
+
+target=""
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --)
+            shift
+            if [ $# -gt 0 ]; then
+                target="$1"
+                shift
+            fi
+            break
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+echo "[lotto-mock] subcommand=${subcommand}"
+
+if [ -n "${target}" ]; then
+    target_name=$(basename "${target}")
+    echo "[lotto-mock] target=${target_name}"
+fi
+
+echo "[lotto-mock] status=ok"

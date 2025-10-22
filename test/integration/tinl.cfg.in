@@ -1,0 +1,2 @@
+lotto = "@LOTTO_PATH@"
+x = $(basename %b)

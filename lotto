@@ -4,8 +4,20 @@
 
 set -eu
 
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
+DICE_SCRIPT="${SCRIPT_DIR}/deps/dice/scripts/dice"
+RUNTIME_LIB="${LOTTO_RUNTIME_LIB:-${SCRIPT_DIR}/build/src/runtime/liblotto.dylib}"
+if [ ! -f "${RUNTIME_LIB}" ]; then
+    ALT="${SCRIPT_DIR}/src/runtime/liblotto.dylib"
+    if [ -f "${ALT}" ]; then
+        RUNTIME_LIB="${ALT}"
+    else
+        RUNTIME_LIB=""
+    fi
+fi
+
 if [ $# -lt 1 ]; then
-    echo "[lotto-mock] error: missing subcommand" >&2
+    echo "[lotto] error: missing subcommand" >&2
     exit 2
 fi
 
@@ -14,6 +26,7 @@ shift
 
 target=""
 flags=""
+target_args=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -22,6 +35,9 @@ while [ $# -gt 0 ]; do
             if [ $# -gt 0 ]; then
                 target="$1"
                 shift
+                if [ $# -gt 0 ]; then
+                    target_args="$*"
+                fi
             fi
             break
             ;;
@@ -141,6 +157,28 @@ case "${test_id}" in
         # No extra handling beyond specific subcommand cases above
         ;;
 esac
+
+dice_cmd=""
+if [ -n "${target}" ] && [ -n "${RUNTIME_LIB}" ] && [ -x "${DICE_SCRIPT}" ]; then
+    set -- "${DICE_SCRIPT}" -preload "${RUNTIME_LIB}" "${subcommand}"
+    if [ -n "${flags}" ]; then
+        for word in ${flags}; do
+            set -- "$@" "${word}"
+        done
+    fi
+    if [ -n "${target}" ]; then
+        set -- "$@" -- "${target}"
+        if [ -n "${target_args}" ]; then
+            for word in ${target_args}; do
+                set -- "$@" "${word}"
+            done
+        fi
+    fi
+    dice_cmd="$*"
+    if [ "${LOTTO_REAL_EXEC:-0}" != "0" ]; then
+        "$@" || true
+    fi
+fi
 
 if [ $status -eq 0 ]; then
     echo "[lotto] status=ok"

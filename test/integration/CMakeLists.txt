@@ -26,4 +26,4 @@ add_custom_target(
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     COMMENT "Running tinl integration tests"
     USES_TERMINAL
-    DEPENDS ${INTEGRATION_TEST_TARGETS} tinl)
+    DEPENDS ${INTEGRATION_TEST_TARGETS} lotto_runtime tinl)

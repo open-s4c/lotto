@@ -4,5 +4,5 @@ inflex = inflex
 debug = debug
 trace = trace
 show = show
-check = "@TINL_CHECK_EXECUTABLE@" %s
+check = "@TIKL_CHECK_EXECUTABLE@" %s
 x = $(basename %b)

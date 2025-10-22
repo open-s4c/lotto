@@ -1,5 +1,4 @@
 // clang-format off
-// XFAIL: *
 // NOTE: Original lit script executed `RUN: exit 1` here
 // RUN: echo Loops not yet supported for rinflex
 // clang-format on

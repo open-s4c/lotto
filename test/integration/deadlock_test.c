@@ -1,7 +1,5 @@
-// RUN: %lotto stress -- %b | %check
-// CHECK: [lotto-mock] subcommand=stress
-// CHECK: [lotto-mock] target=deadlock_test
-// CHECK: [lotto-mock] status=ok
+// RUN: (! %lotto %stress -s random --check-deadlock -v -- %b 2>&1) | %check
+// CHECK: Deadlock detected!
 
 #include <pthread.h>
 

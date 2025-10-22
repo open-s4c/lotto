@@ -1,7 +1,5 @@
-// RUN: %lotto stress -- %b | %check
-// CHECK: [lotto-mock] subcommand=stress
-// CHECK: [lotto-mock] target=user_yield_test
-// CHECK: [lotto-mock] status=ok
+// RUN: (! %lotto %stress -- %b 2>&1) | %check
+// CHECK: assert failed: val == 1
 
 #include <pthread.h>
 #include <sched.h>

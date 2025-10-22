@@ -1,7 +1,5 @@
-// RUN: %lotto stress -r 10 -- %b | %check
-// CHECK: [lotto-mock] subcommand=stress
-// CHECK: [lotto-mock] target=producer_consumer_test
-// CHECK: [lotto-mock] status=ok
+// RUN: (! %lotto %stress -r 10 -- %b 2>&1) | %check
+// CHECK: assert failed: d != NULL
 
 #include <pthread.h>
 #include <stdlib.h>

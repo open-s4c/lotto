@@ -1,7 +1,6 @@
-// RUN: %lotto stress -r 1 -- %b | %check
-// CHECK: [lotto-mock] subcommand=stress
-// CHECK: [lotto-mock] target=spin_await_test
-// CHECK: [lotto-mock] status=ok
+// ALLOW_RETRIES: 100
+// REQUIRES: RUST_HANDLERS_AVAILABLE
+// RUN: (%lotto %stress -s random -r 1 -- %b 2>&1)
 
 #include <assert.h>
 #include <pthread.h>

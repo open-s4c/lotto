@@ -1,7 +1,7 @@
-// RUN: %lotto stress -r 10 -- %b | %check
-// CHECK: [lotto-mock] subcommand=stress
-// CHECK: [lotto-mock] target=queue_mpmc_test
-// CHECK: [lotto-mock] status=ok
+// XFAIL: *
+// NOTE: Original lit script executed `RUN: exit 1` here
+// RUN: (! %lotto %stress -r 10 -- %b 2>&1) | %check
+// CHECK: assert failed: d->content != 2
 
 #include <pthread.h>
 #include <stdbool.h>

@@ -1,7 +1,4 @@
-// RUN: %lotto stress -r 5 -- %b | %check
-// CHECK: [lotto-mock] subcommand=stress
-// CHECK: [lotto-mock] target=mutex_test
-// CHECK: [lotto-mock] status=ok
+// RUN: %lotto %stress -r 50 -- %b
 
 #include <pthread.h>
 

@@ -1,7 +1,6 @@
-// RUN: %lotto stress --handler-mutex disable -- %b | %check
-// CHECK: [lotto-mock] subcommand=stress
-// CHECK: [lotto-mock] target=deadlock_handler_test
-// CHECK: [lotto-mock] status=ok
+// ALLOW_RETRIES: 100
+// RUN: (! %lotto %stress -s random --handler-mutex disable -v -- %b 2>&1) | %check
+// CHECK: Deadlock detected!
 
 #include <pthread.h>
 #include <sched.h>

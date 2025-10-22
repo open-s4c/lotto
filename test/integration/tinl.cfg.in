@@ -1,3 +1,4 @@
 lotto = "@LOTTO_PATH@"
+stress = stress
 check = "@TINL_CHECK_EXECUTABLE@" %s
 x = $(basename %b)

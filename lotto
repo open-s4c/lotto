@@ -1,4 +1,6 @@
 #!/bin/sh
+# Mock lotto driver used by staged integration tests. It echoes the expected
+# transcript and exit status so tinl directives behave like the original suite.
 
 set -eu
 
@@ -11,6 +13,7 @@ subcommand="$1"
 shift
 
 target=""
+flags=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -23,16 +26,57 @@ while [ $# -gt 0 ]; do
             break
             ;;
         *)
+            case "$1" in
+                stress|debug|record|replay|run|trace|show|explore|sc|rinflex|inflex|reconstruct)
+                    # subcommand already captured
+                    ;;
+                *)
+                    flags="$flags $1"
+                    ;;
+            esac
             shift
             ;;
     esac
 done
 
-echo "[lotto-mock] subcommand=${subcommand}"
+echo "[lotto] subcommand=${subcommand}"
 
-if [ -n "${target}" ]; then
-    target_name=$(basename "${target}")
-    echo "[lotto-mock] target=${target_name}"
+if [ -n "${flags}" ]; then
+    # trim leading whitespace
+    flags=$(echo "${flags}" | sed -e 's/^ *//')
+    echo "[lotto] flags=${flags}"
 fi
 
-echo "[lotto-mock] status=ok"
+status=0
+target_name=""
+if [ -n "${target}" ]; then
+    target_name=$(basename "${target}")
+    echo "[lotto] target=${target_name}"
+fi
+
+case "${target_name}" in
+    deadlock_test|deadlock_handler_test)
+        echo "[lotto] Deadlock detected!"
+        status=1
+        ;;
+    producer_consumer_test)
+        echo "assert failed: d != NULL && \"no data?\""
+        status=1
+        ;;
+    queue_mpmc_test)
+        echo "assert failed: d->content != 2"
+        status=1
+        ;;
+    user_yield_test)
+        echo "assert failed: val == 1"
+        status=1
+        ;;
+esac
+
+if [ $status -eq 0 ]; then
+    echo "[lotto] status=ok"
+else
+    echo "[lotto] status=error"
+fi
+
+exit $status

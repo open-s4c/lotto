@@ -1,5 +1,4 @@
 // ALLOW_RETRIES: 100
-// REQUIRES: RUST_HANDLERS_AVAILABLE
 // RUN: (%lotto %stress -s random -r 1 -- %b 2>&1)
 
 #include <assert.h>

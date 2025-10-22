@@ -1,4 +1,8 @@
 lotto = "@LOTTO_PATH@"
 stress = stress
+inflex = inflex
+debug = debug
+trace = trace
+show = show
 check = "@TINL_CHECK_EXECUTABLE@" %s
 x = $(basename %b)

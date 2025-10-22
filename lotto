@@ -54,22 +54,91 @@ if [ -n "${target}" ]; then
     echo "[lotto] target=${target_name}"
 fi
 
-case "${target_name}" in
-    deadlock_test|deadlock_handler_test)
-        echo "[lotto] Deadlock detected!"
-        status=1
+test_id="${target_name}"
+if [ -z "${test_id}" ] && [ -n "${LOTTO_MOCK_TEST:-}" ]; then
+    test_id="${LOTTO_MOCK_TEST}"
+fi
+
+case "${test_id}" in
+    deadlock_test)
+        if [ "${subcommand}" = "stress" ]; then
+            echo "[lotto] Deadlock detected!"
+            status=1
+        fi
+        ;;
+    deadlock_handler_test)
+        if [ "${subcommand}" = "stress" ]; then
+            echo "[lotto] Deadlock detected!"
+            status=1
+        fi
+        ;;
+    inflex_deadlock_test)
+        if [ "${subcommand}" = "stress" ]; then
+            status=1
+        fi
+        ;;
+    inflex_abc_test)
+        case "${subcommand}" in
+            stress)
+                echo "assert failed /path/to/${test_id%_test}.c:42: recv_from[i] == true"
+                status=1
+                ;;
+            debug)
+                echo "uint32_t id = vatomic32_read(&next_id);"
+                ;;
+        esac
+        ;;
+    inflex_method_be_test|inflex_method_le_test|inflex_method_lp_test)
+        case "${subcommand}" in
+            stress)
+                echo "assert failed /path/to/${test_id%_test}.c:37: x != 0b11"
+                status=1
+                ;;
+            debug)
+                echo "x++;"
+                ;;
+        esac
+        ;;
+    inflex_empty_test)
+        case "${subcommand}" in
+            stress)
+                status=1
+                ;;
+            show)
+                echo "clock: 0"
+                ;;
+        esac
+        ;;
+    inflex_basic_test)
+        case "${subcommand}" in
+            stress)
+                status=1
+                ;;
+            show)
+                echo "RECORD 2"
+                ;;
+        esac
         ;;
     producer_consumer_test)
-        echo "assert failed: d != NULL && \"no data?\""
-        status=1
+        if [ "${subcommand}" = "stress" ]; then
+            echo "assert failed: d != NULL && \"no data?\""
+            status=1
+        fi
         ;;
     queue_mpmc_test)
-        echo "assert failed: d->content != 2"
-        status=1
+        if [ "${subcommand}" = "stress" ]; then
+            echo "assert failed: d->content != 2"
+            status=1
+        fi
         ;;
     user_yield_test)
-        echo "assert failed: val == 1"
-        status=1
+        if [ "${subcommand}" = "stress" ]; then
+            echo "assert failed: val == 1"
+            status=1
+        fi
+        ;;
+    inflex_abc_nocli_test|loop_inflex_test|inflex_empty_test)
+        # No extra handling beyond specific subcommand cases above
         ;;
 esac
 

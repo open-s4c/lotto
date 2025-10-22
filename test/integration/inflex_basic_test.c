@@ -1,7 +1,7 @@
 // clang-format off
 // RUN: (! %lotto %stress -s random -- %b)
-// RUN: env LOTTO_MOCK_TEST=inflex_basic_test %lotto %inflex -r 50
-// RUN: env LOTTO_MOCK_TEST=inflex_basic_test %lotto %show 2>&1 | %check
+// RUN: %lotto %inflex -r 50 -- %b
+// RUN: %lotto %show -- %b 2>&1 | %check
 // CHECK: RECORD 2
 // clang-format on
 

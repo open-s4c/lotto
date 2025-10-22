@@ -1,10 +1,9 @@
 // clang-format off
 // UNSUPPORTED: aarch64
-// XFAIL: *
 // NOTE: Original lit script executed `RUN: exit 1` here
 // ALLOW_RETRIES: 100
 // RUN: (! %lotto %stress -v -s random --check-deadlock -- %b)
-// RUN: env LOTTO_MOCK_TEST=inflex_deadlock_test %lotto %inflex -s random --handler-lock enable -r 100
+// RUN: %lotto %inflex -s random --handler-lock enable -r 100 -- %b
 // clang-format on
 
 #include <pthread.h>

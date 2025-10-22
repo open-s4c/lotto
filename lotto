@@ -1,6 +1,6 @@
 #!/bin/sh
 # Mock lotto driver used by staged integration tests. It echoes the expected
-# transcript and exit status so tinl directives behave like the original suite.
+# transcript and exit status so tikl directives behave like the original suite.
 
 set -eu
 

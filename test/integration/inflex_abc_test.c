@@ -1,8 +1,8 @@
 // clang-format off
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | %check --check-prefix=BUG
-// RUN: env LOTTO_MOCK_TEST=inflex_abc_test %lotto %inflex -r 10 &>/dev/null
-// RUN: env LOTTO_MOCK_TEST=inflex_abc_test %lotto %debug --file-filter="libvsync" <<< $'\n'run-replay-lotto | %check --check-prefix=LOC
+// RUN: %lotto %inflex -r 10 -- %b >/dev/null 2>&1
+// RUN: printf '\nrun-replay-lotto\n' | %lotto %debug --file-filter="libvsync" -- %b | %check --check-prefix=LOC
 // BUG: assert failed {{.*}}/inflex_abc.c:{{[0-9]+}}: recv_from[i] == true
 // LOC: uint32_t id = vatomic32_read(&next_id);
 // clang-format on

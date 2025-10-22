@@ -1,4 +1,3 @@
-// XFAIL: *
 // NOTE: Original lit script executed `RUN: exit 1` here
 // RUN: (! %lotto %stress -r 10 -- %b 2>&1) | %check
 // CHECK: assert failed: d->content != 2

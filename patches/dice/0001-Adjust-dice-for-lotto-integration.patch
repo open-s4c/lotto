@@ -1,0 +1,57 @@
+--- a/src/mod/self.c
++++ b/src/mod/self.c
+@@ -27,9 +27,7 @@
+ #include <signal.h>
+ #include <stdio.h>
+ #include <string.h>
+-#if defined(__NetBSD__)
+-    #include <errno.h>
+-#endif
++#include <errno.h>
+ 
+ #ifndef DICE_MODULE_PRIO
+     #define DICE_MODULE_PRIO 4
+--- a/scripts/dice
++++ b/scripts/dice
+@@ -2,6 +2,21 @@
+ # Copyright (C) 2025 Huawei Technologies Co., Ltd.
+ # SPDX-License-Identifier: 0BSD
+ set -e
++
++resolve() {
++    TARGET_FILE=$1
++    (
++        cd "$(dirname "$TARGET_FILE")" || exit 1
++        TARGET_FILE=$(basename "$TARGET_FILE")
++        while [ -L "$TARGET_FILE" ]; do
++            TARGET_FILE=$(readlink "$TARGET_FILE")
++            cd "$(dirname "$TARGET_FILE")" || exit 1
++            TARGET_FILE=$(basename "$TARGET_FILE")
++        done
++        PHYS_DIR=$(pwd -P)
++        printf '%s\n' "$PHYS_DIR/$TARGET_FILE"
++    )
++}
+ 
+ if [ "$(uname)" = "Darwin" ]; then
+     SO=dylib
+@@ -11,8 +26,8 @@
+ 
+ # find libdice
+ if [ -z "$DICE_BUILD" ]; then
+-	PARDIR=$(readlink -f $(dirname "$0")/..)
+-	LIBDIR=$(readlink -f "$PARDIR")/lib
++	PARDIR=$(resolve "$(dirname "$0")/..")
++	LIBDIR=$(resolve "$PARDIR")/lib
+ 	if [ -f "$LIBDIR/libdice.$SO" ]; then
+ 	    LIBDICE="$LIBDIR/libdice.$SO"
+ 	    DICE_DIR="$LIBDIR/dice"
+@@ -28,7 +43,7 @@
+ 	fi
+ else
+ 	if [ -z "$DICE_SOURCE" ]; then
+-		DICE_SOURCE=$(readlink -f $DICE_BUILD/..)
++		DICE_SOURCE=$(resolve "$DICE_BUILD/..")
+ 	fi
+ 	LIBDICE="$DICE_BUILD/src/dice/libdice.$SO"
+ 	DICE_DIR="$DICE_BUILD/src/mod"

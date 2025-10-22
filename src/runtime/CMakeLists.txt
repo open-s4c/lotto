@@ -10,7 +10,7 @@ target_sources(lotto_runtime PRIVATE
 
 target_include_directories(lotto_runtime
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/deps/dice/include>
+        $<BUILD_INTERFACE:${LOTTO_DICE_INCLUDE_DIR}>
 )
 
 target_link_libraries(lotto_runtime

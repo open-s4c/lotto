@@ -1,9 +1,9 @@
-set(LOTTO_TINL_VERSION "0.1.0")
+set(LOTTO_TINL_VERSION "0.1.1")
 set(LOTTO_TINL_URL
     "https://github.com/db7/tinl/archive/refs/tags/v${LOTTO_TINL_VERSION}.tar.gz"
 )
 set(LOTTO_TINL_SHA256
-    "SHA256=9ec4b099eb10d75cf7a49697db7804e865b547511b578c3efbcff548a3453fe4")
+    "SHA256=151b2b0972006c8e49fd8bf8624aabb3e78009c6745f4cb4edfe5f1a40c6dc8c")
 
 function(lotto_ensure_tinl OUT_TINL OUT_TINL_CHECK)
     if(NOT DEFINED LOTTO_TINL_EXECUTABLE OR NOT DEFINED LOTTO_TINL_CHECK_EXECUTABLE)
@@ -19,8 +19,8 @@ function(lotto_ensure_tinl OUT_TINL OUT_TINL_CHECK)
             set(LOTTO_TINL_EXECUTABLE "${_tinl}" CACHE INTERNAL "tinl executable")
             set(LOTTO_TINL_CHECK_EXECUTABLE "${_tinl_check}" CACHE INTERNAL
                                                              "tinl-check executable")
-            if(NOT TARGET tinl_build)
-                add_custom_target(tinl_build)
+            if(NOT TARGET tinl)
+                add_custom_target(tinl)
             endif()
         else()
             set(_tinl_archive "${CMAKE_BINARY_DIR}/tinl-${LOTTO_TINL_VERSION}.tar.gz")
@@ -46,7 +46,7 @@ function(lotto_ensure_tinl OUT_TINL OUT_TINL_CHECK)
                 add_custom_target(tinl_extract DEPENDS "${_tinl_source_stamp}")
             endif()
 
-            if(NOT TARGET tinl_build)
+            if(NOT TARGET tinl)
                 add_custom_command(
                     OUTPUT "${_tinl_source_dir}/tinl"
                     COMMAND
@@ -56,7 +56,7 @@ function(lotto_ensure_tinl OUT_TINL OUT_TINL_CHECK)
                     DEPENDS tinl_extract
                     COMMENT "Compiling tinl ${LOTTO_TINL_VERSION}"
                     VERBATIM)
-                add_custom_target(tinl_build DEPENDS "${_tinl_source_dir}/tinl")
+                add_custom_target(tinl DEPENDS "${_tinl_source_dir}/tinl")
             endif()
 
             set(LOTTO_TINL_EXECUTABLE "${_tinl_source_dir}/tinl"
@@ -64,8 +64,8 @@ function(lotto_ensure_tinl OUT_TINL OUT_TINL_CHECK)
             set(LOTTO_TINL_CHECK_EXECUTABLE "${_tinl_source_dir}/tinl-check"
                 CACHE INTERNAL "tinl-check executable")
         endif()
-    elseif(NOT TARGET tinl_build)
-        add_custom_target(tinl_build)
+    elseif(NOT TARGET tinl)
+        add_custom_target(tinl)
     endif()
 
     set(${OUT_TINL} "${LOTTO_TINL_EXECUTABLE}" PARENT_SCOPE)

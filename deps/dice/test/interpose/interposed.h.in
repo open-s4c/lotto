@@ -1,0 +1,161 @@
+$_dl; //
+$_dl; // Copyright (C) Huawei Technologies Co., Ltd. 2025. All rights reserved.
+$_dl; // SPDX-License-Identifier: 0BSD
+$_dl; //
+$_dl;
+$_dl; // -----------------------------------------------------------------------
+$_dl; // malloc and co
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN_malloc, void *);
+$_map(MM_PARAMS_malloc, size_t size);
+$_map(MM_ARGS_malloc, size);
+$_map(MM_RETURN_calloc, void *);
+$_map(MM_PARAMS_calloc, size_t number, size_t size);
+$_map(MM_ARGS_calloc, number, size);
+$_map(MM_RETURN_realloc, void *);
+$_map(MM_PARAMS_realloc, void *ptr, size_t size);
+$_map(MM_ARGS_realloc, ptr, size);
+$_map(MM_RETURN_free, void);
+$_map(MM_PARAMS_free, void *ptr);
+$_map(MM_ARGS_free, ptr);
+$_map(MM_RETURN_posix_memalign, int);
+$_map(MM_PARAMS_posix_memalign, void **ptr, size_t alignment, size_t size);
+$_map(MM_ARGS_posix_memalign, ptr, alignment, size);
+$_map(MM_RETURN_aligned_alloc, void *);
+$_map(MM_PARAMS_aligned_alloc, size_t alignment, size_t size);
+$_map(MM_ARGS_aligned_alloc, alignment, size);
+$_dl; // -----------------------------------------------------------------------
+$_dl; // mman
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN_mmap, void *);
+$_map(MM_PARAMS_mmap, void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+$_map(MM_ARGS_mmap, addr, length, prot, flags, fd, offset);
+$_map(MM_RETURN_munmap, int);
+$_map(MM_PARAMS_munmap, void *addr, size_t length);
+$_map(MM_ARGS_munmap, addr, length);
+$_dl; // -----------------------------------------------------------------------
+$_dl; // pthread_create
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN_pthread_exit, void);
+$_map(MM_PARAMS_pthread_exit, void *ptr);
+$_map(MM_ARGS_pthread_exit, ptr);
+$_map(MM_RETURN_pthread_create, int);
+$_map(MM_PARAMS_pthread_create, pthread_t *thread, const pthread_attr_t *attr, void *(*run)(void *), void *arg);
+$_map(MM_ARGS_pthread_create, thread, attr, run, arg);
+$_map(MM_RETURN_pthread_join, int);
+$_map(MM_PARAMS_pthread_join, pthread_t thread, void **ptr);
+$_map(MM_ARGS_pthread_join, thread, ptr);
+$_dl; // -----------------------------------------------------------------------
+$_dl; // mutex
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN_pthread_mutex_lock, int);
+$_map(MM_PARAMS_pthread_mutex_lock, pthread_mutex_t *mutex);
+$_map(MM_ARGS_pthread_mutex_lock, mutex);
+$_map(MM_RETURN_pthread_mutex_unlock, int);
+$_map(MM_PARAMS_pthread_mutex_unlock, pthread_mutex_t *mutex);
+$_map(MM_ARGS_pthread_mutex_unlock, mutex);
+$_map(MM_RETURN_pthread_mutex_trylock, int);
+$_map(MM_PARAMS_pthread_mutex_trylock, pthread_mutex_t *mutex);
+$_map(MM_ARGS_pthread_mutex_trylock, mutex);
+$_map(MM_RETURN_pthread_mutex_timedlock, int);
+$_map(MM_PARAMS_pthread_mutex_timedlock, pthread_mutex_t *mutex, const struct timespec *timeout);
+$_map(MM_ARGS_pthread_mutex_timedlock, mutex, timeout);
+$_dl; // -----------------------------------------------------------------------
+$_dl; // rwlock
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN_pthread_rwlock_rdlock, int);
+$_map(MM_PARAMS_pthread_rwlock_rdlock, pthread_rwlock_t *lock);
+$_map(MM_ARGS_pthread_rwlock_rdlock, lock);
+$_map(MM_RETURN_pthread_rwlock_tryrdlock, int);
+$_map(MM_PARAMS_pthread_rwlock_tryrdlock, pthread_rwlock_t *lock);
+$_map(MM_ARGS_pthread_rwlock_tryrdlock, lock);
+$_map(MM_RETURN_pthread_rwlock_timedrdlock, int);
+$_map(MM_PARAMS_pthread_rwlock_timedrdlock, pthread_rwlock_t *lock, const struct timespec *abstime);
+$_map(MM_ARGS_pthread_rwlock_timedrdlock, lock, abstime);
+$_map(MM_RETURN_pthread_rwlock_wrlock, int);
+$_map(MM_PARAMS_pthread_rwlock_wrlock, pthread_rwlock_t *lock);
+$_map(MM_ARGS_pthread_rwlock_wrlock, lock);
+$_map(MM_RETURN_pthread_rwlock_timedwrlock, int);
+$_map(MM_PARAMS_pthread_rwlock_timedwrlock, pthread_rwlock_t *lock, const struct timespec *abstime);
+$_map(MM_ARGS_pthread_rwlock_timedwrlock, lock, abstime);
+$_map(MM_RETURN_pthread_rwlock_trywrlock, int);
+$_map(MM_PARAMS_pthread_rwlock_trywrlock, pthread_rwlock_t *lock);
+$_map(MM_ARGS_pthread_rwlock_trywrlock, lock);
+$_map(MM_RETURN_pthread_rwlock_unlock, int);
+$_map(MM_PARAMS_pthread_rwlock_unlock, pthread_rwlock_t *lock);
+$_map(MM_ARGS_pthread_rwlock_unlock, lock);
+$_dl; // -----------------------------------------------------------------------
+$_dl; // cond
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN_pthread_cond_wait, int);
+$_map(MM_PARAMS_pthread_cond_wait, pthread_cond_t *cond, pthread_mutex_t *mutex);
+$_map(MM_ARGS_pthread_cond_wait, cond, mutex);
+$_map(MM_RETURN_pthread_cond_signal, int);
+$_map(MM_PARAMS_pthread_cond_signal, pthread_cond_t *cond);
+$_map(MM_ARGS_pthread_cond_signal, cond);
+$_map(MM_RETURN_pthread_cond_broadcast, int);
+$_map(MM_PARAMS_pthread_cond_broadcast, pthread_cond_t *cond);
+$_map(MM_ARGS_pthread_cond_broadcast, cond);
+$_map(MM_RETURN_pthread_cond_timedwait, int);
+$_map(MM_PARAMS_pthread_cond_timedwait, pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime);
+$_map(MM_ARGS_pthread_cond_timedwait, cond, mutex, abstime);
+$_dl; // -----------------------------------------------------------------------
+$_dl; // semaphore
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN_sem_post, int);
+$_map(MM_PARAMS_sem_post, sem_t *sem);
+$_map(MM_ARGS_sem_post, sem);
+$_map(MM_RETURN_sem_wait, int);
+$_map(MM_PARAMS_sem_wait, sem_t *sem);
+$_map(MM_ARGS_sem_wait, sem);
+$_map(MM_RETURN_sem_trywait, int);
+$_map(MM_PARAMS_sem_trywait, sem_t *sem);
+$_map(MM_ARGS_sem_trywait, sem);
+$_map(MM_RETURN_sem_timedwait, int);
+$_map(MM_PARAMS_sem_timedwait, sem_t *sem, const struct timespec *abstime);
+$_map(MM_ARGS_sem_timedwait, sem, abstime);
+$_dl; // -----------------------------------------------------------------------
+$_dl; // cxa
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN___cxa_guard_acquire, int);
+$_map(MM_PARAMS___cxa_guard_acquire, void *addr);
+$_map(MM_ARGS___cxa_guard_acquire, addr);
+$_map(MM_RETURN___cxa_guard_release, int);
+$_map(MM_PARAMS___cxa_guard_release, void *addr);
+$_map(MM_ARGS___cxa_guard_release, addr);
+$_map(MM_RETURN___cxa_guard_abort, void);
+$_map(MM_PARAMS___cxa_guard_abort, void *addr);
+$_map(MM_ARGS___cxa_guard_abort, addr);
+$_dl; // -----------------------------------------------------------------------
+$_dl; // annotate_rw_lock
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN_AnnotateRWLockCreate,void);
+$_map(MM_PARAMS_AnnotateRWLockCreate, const char *file, int line, const volatile void *lock);
+$_map(MM_ARGS_AnnotateRWLockCreate,file,line,lock);
+$_map(MM_RETURN_AnnotateRWLockDestroy,void);
+$_map(MM_PARAMS_AnnotateRWLockDestroy, const char *file, int line, const volatile void *lock);
+$_map(MM_ARGS_AnnotateRWLockDestroy,file,line,lock);
+$_map(MM_RETURN_AnnotateRWLockAcquired,void);
+$_map(MM_PARAMS_AnnotateRWLockAcquired, const char *file, int line, const volatile void *lock , long is_w);
+$_map(MM_ARGS_AnnotateRWLockAcquired, file, line, lock, is_w);
+$_map(MM_RETURN_AnnotateRWLockReleased,void);
+$_map(MM_PARAMS_AnnotateRWLockReleased, const char *file, int line, const volatile void *lock , long is_w);
+$_map(MM_ARGS_AnnotateRWLockReleased, file, line, lock, is_w);
+$_dl; // -----------------------------------------------------------------------
+$_dl; // memcpy
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN_memcpy, void *);
+$_map(MM_PARAMS_memcpy, void *dest ,const void *src ,size_t num);
+$_map(MM_ARGS_memcpy,  dest , src , num);
+$_dl; // -----------------------------------------------------------------------
+$_dl; // memmove
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN_memmove, void *);
+$_map(MM_PARAMS_memmove, void *dest ,const void *src ,size_t count);
+$_map(MM_ARGS_memmove,  dest , src , count);
+$_dl; // -----------------------------------------------------------------------
+$_dl; // memset
+$_dl; // -----------------------------------------------------------------------
+$_map(MM_RETURN_memset, void *);
+$_map(MM_PARAMS_memset, void *ptr, int value, size_t num);
+$_map(MM_ARGS_memset, ptr, value, num);

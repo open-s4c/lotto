@@ -1,0 +1,94 @@
+#!/bin/sh
+# Copyright (C) 2025 Huawei Technologies Co., Ltd.
+# SPDX-License-Identifier: 0BSD
+set -e
+
+if [ "$(uname)" = "Darwin" ]; then
+    SO=dylib
+else
+    SO=so
+fi
+
+# find libdice
+if [ -z "$DICE_BUILD" ]; then
+	PARDIR=$(readlink -f $(dirname "$0")/..)
+	LIBDIR=$(readlink -f "$PARDIR")/lib
+	if [ -f "$LIBDIR/libdice.$SO" ]; then
+	    LIBDICE="$LIBDIR/libdice.$SO"
+	    DICE_DIR="$LIBDIR/dice"
+	    TSANO=$(which tsano)
+	elif [ -f "$PARDIR/build/src/dice/libdice.$SO" ]; then
+	    LIBDICE="$PARDIR/build/src/dice/libdice.$SO"
+	    DICE_DIR="$PARDIR/build/src/mod"
+	    TSANO="$PARDIR/deps/tsano/tsano"
+	    TSANO_LIBDIR="$PARDIR/build/deps/tsano"
+	else
+	    echo "could not find libdice.$SO"
+	    exit 1
+	fi
+else
+	if [ -z "$DICE_SOURCE" ]; then
+		DICE_SOURCE=$(readlink -f $DICE_BUILD/..)
+	fi
+	LIBDICE="$DICE_BUILD/src/dice/libdice.$SO"
+	DICE_DIR="$DICE_BUILD/src/mod"
+	TSANO_LIBDIR="$DICE_BUILD/deps/tsano"
+	TSANO="$DICE_SOURCE/deps/tsano/tsano"
+fi
+
+if [ ! -f "$TSANO" ]; then
+    echo "could not find tsano"
+    exit 1
+fi
+
+# prepare preload
+PRELOAD=""
+args=""
+while [ "$#" != "0" ]; do
+    case "$1" in
+        -self)
+            PRELOAD="$PRELOAD:$DICE_DIR/dice-self.$SO"
+        ;;
+        -malloc)
+            PRELOAD="$PRELOAD:$DICE_DIR/dice-malloc.$SO"
+        ;;
+        -tsan)
+            PRELOAD="$PRELOAD:$DICE_DIR/dice-tsan.$SO"
+            PRELOAD="$PRELOAD:$DICE_DIR/dice-stacktrace.$SO"
+        ;;
+        -cxa)
+            PRELOAD="$PRELOAD:$DICE_DIR/dice-cxa.$SO"
+        ;;
+        -pthread)
+            PRELOAD="$PRELOAD:$DICE_DIR/dice-pthread_create.$SO"
+            PRELOAD="$PRELOAD:$DICE_DIR/dice-pthread_mutex.$SO"
+            PRELOAD="$PRELOAD:$DICE_DIR/dice-pthread_cond.$SO"
+            PRELOAD="$PRELOAD:$DICE_DIR/dice-pthread_rwlock.$SO"
+        ;;
+        -preload)
+            shift
+            PRELOAD="$PRELOAD:$1"
+        ;;
+        -with)
+            shift
+            LIBDICE="$1"
+        ;;
+        *)
+            args="${args} $1"
+        ;;
+    esac
+    shift
+done
+
+# prepend libdice
+PRELOAD="$LIBDICE$PRELOAD"
+
+# prefix tsano's libdir if necessary
+TSANO="env TSANO_LIBDIR=$TSANO_LIBDIR $TSANO"
+
+# execute command
+if [ $SO = "dylib" ]; then
+    exec $TSANO env DYLD_INSERT_LIBRARIES=$PRELOAD $args
+else
+    exec $TSANO env LD_PRELOAD=$PRELOAD $args
+fi

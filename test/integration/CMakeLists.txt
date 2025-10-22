@@ -1,10 +1,5 @@
-find_program(TINL_EXECUTABLE tinl)
-if(NOT TINL_EXECUTABLE)
-    message(
-        FATAL_ERROR
-            "tinl executable not found. Install tinl or add it to PATH before configuring."
-    )
-endif()
+include("${CMAKE_SOURCE_DIR}/cmake/tinl.cmake")
+lotto_ensure_tinl(TINL_EXECUTABLE TINL_CHECK_EXECUTABLE)
 
 add_executable(mutex_test mutex_test.c)
 target_link_libraries(mutex_test PRIVATE pthread)
@@ -22,4 +17,4 @@ add_custom_target(
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     COMMENT "Running tinl integration tests"
     USES_TERMINAL
-    DEPENDS mutex_test)
+    DEPENDS mutex_test tinl_build)

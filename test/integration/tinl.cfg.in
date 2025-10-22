@@ -1,2 +1,3 @@
 lotto = "@LOTTO_PATH@"
+check = "@TINL_CHECK_EXECUTABLE@" %s
 x = $(basename %b)

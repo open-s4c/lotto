@@ -1,5 +1,8 @@
 add_library(lotto_runtime SHARED
     runtime.c
+    intercept_stub.c
+    subs_pthread.c
+    rsrc_deadlock_stub.c
     ../engine/engine.c
     ../engine/sequencer.c
     ../engine/recorder.c

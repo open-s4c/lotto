@@ -1,0 +1,13 @@
+[package]
+name = "handler_trust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lotto.workspace = true
+bincode.workspace = true
+trust_algorithm = { path = "../../lib/trust/" }
+rustc-hash = { version = "1.1.0", features = [] }
+event_utils = { path = "../../lib/graph_util/event_utils" }
+log = "0.4.20"
+memmap = "0.7.0"

@@ -1,0 +1,35 @@
+import lit.formats
+import os
+
+config.name = 'integration'
+config.test_format = lit.formats.ShTest(True)
+config.suffixes = {'.c', '.cpp', '.sh'}
+config.test_exec_root = r'@CMAKE_CURRENT_BINARY_DIR@'
+config.available_features.add(r'@CMAKE_SYSTEM_PROCESSOR@')
+config.available_features.add(r'@LOTTO_ENGINE_NAME@')
+config.available_features.add(r'@LOTTO_RUST_LIT_FEATURE@')
+config.available_features.add(r'@LOTTO_STABLE_ADDRESS_MAP_LIT_FEATURE@')
+config.available_features.add(os.path.basename(r'@CMAKE_C_COMPILER@'))
+config.maxIndividualTestTime = 600
+config.recursiveExpansionLimit = 100
+emulator = r'@CMAKE_CROSSCOMPILING_EMULATOR@'.replace(';', ' ')
+config.substitutions.append(('%lotto', rf'timeout -s 9 {int(config.maxIndividualTestTime) + 10}s stdbuf -i0 -o0 -e0 {emulator} @CMAKE_BINARY_DIR@/lotto'))
+config.substitutions.append(('%b', rf'''{emulator} %S/../$(basename %s | grep -Po '.*(?=\.)')'''))
+config.substitutions.append(('%demo', rf'''@CMAKE_SOURCE_DIR@/demos/$(basename %s | sed 's/_demo.*//')/bug'''))
+
+config.substitutions.append(('%output', rf'-o %s.replay.trace'))
+config.substitutions.append(('%input', rf'-i %s.replay.trace'))
+config.substitutions.append(('%{tempdir}', rf'--temporary-directory %t'))
+
+config.substitutions.append(('%record', r'record %{tempdir} %output'))
+config.substitutions.append(('%sc', r'sc %{tempdir} %output'))
+config.substitutions.append(('%stress', r'stress %{tempdir} %output'))
+config.substitutions.append(('%debug', r'debug %{tempdir} %input'))
+config.substitutions.append(('%explore', r'explore %{tempdir} %input %output'))
+config.substitutions.append(('%inflex', r'inflex %{tempdir} %input %output'))
+config.substitutions.append(('%rinflex', r'rinflex %{tempdir} %input'))
+config.substitutions.append(('%reconstruct', r'reconstruct %{tempdir} %output'))
+config.substitutions.append(('%replay', r'replay %{tempdir} %input'))
+config.substitutions.append(('%show', r'show %{tempdir} %input'))
+config.substitutions.append(('%trace', r'trace %{tempdir} %output'))
+config.substitutions.append(('%run', r'run %{tempdir}'))

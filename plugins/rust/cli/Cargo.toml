@@ -1,0 +1,22 @@
+[package]
+name = "rusty_cli"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+lotto.workspace = true
+loccolator.workspace = true
+rusty_handlers.workspace = true
+
+rinflex = { path="../lib/rinflex", optional = true }
+
+[features]
+demo = ["rusty_handlers/demo"]
+stable_address_map = [
+    "rusty_handlers/stable_address_map",
+    "dep:rinflex"
+]
+qlotto = ["lotto/qlotto"]

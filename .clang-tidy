@@ -1,0 +1,5 @@
+Checks:          'bugprone-*,-bugprone-reserved-identifier,-clang-analyzer*,-readability-*,-bugprone-easily-swappable-parameters,-bugprone-multi-level-implicit-pointer-conversion,-bugprone-assignment-in-if-condition'
+WarningsAsErrors: 'bugprone-*,-bugprone-reserved-identifier,-clang-analyzer*,-readability-*,-bugprone-easily-swappable-parameters,-bugprone-multi-level-implicit-pointer-conversion,-bugprone-assignment-in-if-condition,-bugprone-macro-parentheses'
+CheckOptions:
+  - key:   bugprone-implicit-widening-of-multiplication-result.IgnoreConstantIntExpr
+    value: 'true'

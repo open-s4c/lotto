@@ -1,0 +1,9 @@
+[package]
+name = "lotto_log"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lotto_sys.workspace = true
+log.workspace = true
+regex = "1"

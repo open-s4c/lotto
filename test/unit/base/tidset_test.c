@@ -1,0 +1,95 @@
+#include "memory_mock.h"
+#include <lotto/base/marshable.h>
+#include <lotto/base/tidset.h>
+#include <lotto/sys/ensure.h>
+
+task_id data1[2];
+task_id data2[4];
+task_id *malloc_mock;
+size_t malloc_expect;
+
+void *
+mock_malloc(size_t size)
+{
+    ENSURE(size == malloc_expect);
+    ENSURE(malloc_mock);
+    void *r     = malloc_mock;
+    malloc_mock = NULL;
+    return r;
+}
+
+task_id *free_expect;
+void
+mock_free(void *p)
+{
+    ENSURE(p == free_expect);
+}
+
+void
+test_insert()
+{
+    tidset_t tset;
+    malloc_mock   = data1;
+    malloc_expect = TIDSET_INIT_SIZE * sizeof(task_id);
+    tidset_init(&tset);
+    ENSURE(tset.tasks == data1);
+
+    tidset_insert(&tset, 123);
+    ENSURE(tset.size == 1);
+    ENSURE(tset.tasks == data1);
+    free_expect = data1;
+    tidset_fini(&tset);
+}
+
+void
+test_expand()
+{
+    tidset_t tset;
+    malloc_mock   = data1;
+    malloc_expect = 2 * sizeof(task_id);
+    tidset_init_cap(&tset, 2);
+
+    tidset_insert(&tset, 101);
+    ENSURE(tset.size == 1);
+    ENSURE(tset.capacity == 2);
+    ENSURE(tset.tasks == data1);
+
+    tidset_insert(&tset, 102);
+    ENSURE(tset.size == 2);
+    ENSURE(tset.capacity == 2);
+    ENSURE(tset.tasks == data1);
+
+    free_expect   = data1;
+    malloc_expect = 4 * sizeof(task_id);
+    malloc_mock   = data2;
+    tidset_insert(&tset, 103);
+    ENSURE(tset.size == 3);
+    ENSURE(tset.capacity == 4);
+    ENSURE(tset.tasks == data2);
+
+    ENSURE(tidset_has(&tset, 101));
+    ENSURE(tidset_has(&tset, 102));
+    ENSURE(tidset_has(&tset, 103));
+
+    free_expect = data2;
+    tidset_fini(&tset);
+}
+
+
+void
+test_get()
+{
+    tidset_t tset = {0};
+    tidset_get(&tset, 0);
+}
+
+int
+main()
+{
+    mockoto_memmgr_runtime_alloc_hook(mock_malloc);
+    mockoto_memmgr_runtime_free_hook(mock_free);
+    test_insert();
+    test_expand();
+    test_get();
+    return 0;
+}

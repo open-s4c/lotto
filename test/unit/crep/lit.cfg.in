@@ -1,0 +1,11 @@
+import lit.formats
+
+config.name = 'crep'
+config.test_format = lit.formats.ShTest(True)
+config.suffixes = {'.c', '.cpp'}
+config.test_exec_root = r'@CMAKE_CURRENT_BINARY_DIR@'
+config.available_features.add(r'@CMAKE_SYSTEM_PROCESSOR@')
+config.maxIndividualTestTime = 600
+config.recursiveExpansionLimit = 100
+config.substitutions.append(('%b', rf'''LD_PRELOAD=../../../src/crep/libcrep.so %S/../$(basename %s | grep -Po '.*(?=\.)')'''))
+config.substitutions.append(('%cleanup', r'rm -f *.trace *.dat'))

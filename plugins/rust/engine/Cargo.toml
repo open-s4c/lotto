@@ -1,0 +1,20 @@
+[package]
+name = "rusty_engine"
+version = "0.1.0"
+edition = "2021"
+description = "Wrapper library for all Rust engine crates"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+log = "0.4.20"
+lotto.workspace = true
+loccolator.workspace = true
+string-builder = "0.2.0"
+rusty_handlers.workspace = true
+
+[features]
+demo = ["rusty_handlers/demo"]
+stable_address_map = ["rusty_handlers/stable_address_map"]
+qlotto = ["lotto/qlotto"]

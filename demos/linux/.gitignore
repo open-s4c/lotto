@@ -1,0 +1,6 @@
+linux-*/
+linux-*.xz
+busybox-*/
+busybox-*bz2
+rootfs/
+*.img

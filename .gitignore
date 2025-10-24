@@ -1,0 +1,51 @@
+# editor configuration
+.vscode/
+.idea
+.kak*
+
+# build and generated files
+build/
+build_*/
+local/
+*.rs.bk
+.cache
+deps/target
+**~
+
+# lotto traces
+*.trace
+*.crep
+**/replay.trace.tmp
+
+# clangd config
+compile_flags.txt
+
+#ccls config and databases
+.ccls-cache
+.ccls
+/.ccls-cache/
+
+# ctags database
+tags
+
+# gtags database
+GPATH
+GRTAGS
+GTAGS
+
+# demo binaries
+demos/*/bug
+
+# mocks
+**/mock/*.rkt
+**/mock/*.c
+**/mock/*.h
+
+# bootimage
+**/bootimage.elf
+**/*.qcow2*
+**/*.img*
+**/output.log
+
+# Rust output
+plugins/rust/target/

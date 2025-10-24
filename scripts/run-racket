@@ -1,0 +1,16 @@
+#!/bin/bash
+
+SO_FILES=$(find build -name '*.so')
+DIRS=$(echo $SO_FILES | xargs -n1 dirname | uniq)
+LDPATHS=$(echo $DIRS | tr " " ":")
+
+if [[ -z "$SO_FILES" ]]; then
+    echo "build lotto project first"
+    exit 1
+fi
+
+if [[ ! -z "$LD_LIBRARY_PATH" ]]; then
+    LDPATHS="$LDPATHS:$LD_LIBRARY_PATH"
+fi
+
+exec env LD_LIBRARY_PATH=$LDPATHS racket $@

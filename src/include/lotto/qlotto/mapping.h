@@ -1,0 +1,2158 @@
+#ifndef LOTTO_QEMU_MAPPING_H
+    #define LOTTO_QEMU_MAPPING_H
+
+    #include <qemu-plugin.h>
+
+    #include <capstone/arm64.h>
+    #include <lotto/base/category.h>
+    #include <lotto/qlotto/qemu/util.h>
+
+    /* Enables (1) or disables (0) instrumentation for a group of instructions
+     */
+
+    // compare branch
+    #define INSTR_CB 1
+
+    // syscall / hyper call
+    #define INSTR_HS_CALL 0
+
+    // wait for
+    #define INSTR_WF 0
+
+    // return
+    #define INSTR_RET 0
+
+    // atomic read
+    #define INSTR_AREAD 1
+
+    // plain read
+    #define INSTR_READ 1
+
+    // atomic write
+    #define INSTR_AWRITE 1
+
+    // plain write
+    #define INSTR_WRITE 1
+
+    // Loop detection
+    #define INSTR_LOOP 1
+
+    // Branch link (function call)
+    #define INSTR_FUNC 0
+
+    // CAS variants
+    #define INSTR_CAS 1
+
+    // explicit barriers
+    #define INSTR_DMB 1
+
+    // Yield instruction
+    #define INSTR_YIELD 1
+
+    /* Enables (1) or disables (0) instrumentation for a group of instructions
+     */
+
+    // compare branch
+    #define INSTR_CB 1
+
+    // syscall / hyper call
+    #define INSTR_HS_CALL 0
+
+    // wait for
+    #define INSTR_WF 0
+
+    // return
+    #define INSTR_RET 0
+
+    // atomic read
+    #define INSTR_AREAD 1
+
+    // plain read
+    #define INSTR_READ 1
+
+    // atomic write
+    #define INSTR_AWRITE 1
+
+    // plain write
+    #define INSTR_WRITE 1
+
+    // Loop detection
+    #define INSTR_LOOP 1
+
+    // Branch link (function call)
+    #define INSTR_FUNC 0
+
+    // CAS variants
+    #define INSTR_CAS 1
+
+    // explicit barriers
+    #define INSTR_DMB 1
+
+    // Yield instruction
+    #define INSTR_YIELD 1
+
+enum {
+    CAT_EXTRA_HS_CALL = CAT_END_ + 1,
+    CAT_EXTRA_WF,
+    CAT_EXTRA_UDF,
+};
+
+static const int cat_extra_mapping[] = {
+    [CAT_EXTRA_HS_CALL] = CAT_SYS_YIELD,
+    [CAT_EXTRA_WF]      = CAT_SYS_YIELD,
+    [CAT_EXTRA_UDF]     = CAT_NONE,
+};
+
+static const int mapping_arm64[] = {
+    [ARM64_INS_INVALID] = -1,
+
+    // === Memory accesses =====================================================
+
+    // loads
+    [ARM64_INS_LDR]    = CAT_BEFORE_READ,
+    [ARM64_INS_LDRB]   = CAT_BEFORE_READ,
+    [ARM64_INS_LDRH]   = CAT_BEFORE_READ,
+    [ARM64_INS_LDRSB]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDRSH]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDRSW]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDTR]   = CAT_BEFORE_READ,
+    [ARM64_INS_LDTRB]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDTRH]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDTRSB] = CAT_BEFORE_READ,
+    [ARM64_INS_LDTRSH] = CAT_BEFORE_READ,
+    [ARM64_INS_LDTRSW] = CAT_BEFORE_READ,
+    [ARM64_INS_LDUR]   = CAT_BEFORE_READ,
+    [ARM64_INS_LDURB]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDURH]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDURSB] = CAT_BEFORE_READ,
+    [ARM64_INS_LDURSH] = CAT_BEFORE_READ,
+    [ARM64_INS_LDURSW] = CAT_BEFORE_READ,
+    [ARM64_INS_LDP]    = CAT_BEFORE_READ,
+    [ARM64_INS_LDNP]   = CAT_BEFORE_READ,
+    [ARM64_INS_LDPSW]  = CAT_BEFORE_READ,
+
+    // loads with pointer authentication
+    [ARM64_INS_LDRAA] = CAT_BEFORE_READ,
+    [ARM64_INS_LDRAB] = CAT_BEFORE_READ,
+
+    // stores
+    [ARM64_INS_STR]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_STRB]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_STRH]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_STTR]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_STTRB]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_STTRH]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_STUR]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_STURB]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_STURH]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_STP]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_STNP]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_STNT1B] = CAT_BEFORE_WRITE,
+    [ARM64_INS_STNT1D] = CAT_BEFORE_WRITE,
+    [ARM64_INS_STNT1H] = CAT_BEFORE_WRITE,
+    [ARM64_INS_STNT1W] = CAT_BEFORE_WRITE,
+
+    // load memory tags
+    [ARM64_INS_LDG]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDGM] = CAT_BEFORE_READ,
+
+    // store memory tags
+    [ARM64_INS_STG]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST2G]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_STGM]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_STGP]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_STZG]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_STZ2G] = CAT_BEFORE_WRITE,
+    [ARM64_INS_STZGM] = CAT_BEFORE_WRITE,
+
+    // memory copy
+    [ARM64_INS_CPYE]      = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYEN]     = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYERN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYERT]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYERTN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYERTRN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYERTWN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYET]     = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYETN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYETRN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYETWN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYEWN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYEWT]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYEWTN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYEWTRN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYEWTWN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFE]     = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFEN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFERN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFERT]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFERTN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFERTRN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFERTWN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFET]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFETN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFETRN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFETWN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFEWN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFEWT]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFEWTN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFEWTRN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFEWTWN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFM]     = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMRN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMRT]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMRTN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMRTRN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMRTWN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMT]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMTN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMTRN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMTWN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMWN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMWT]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMWTN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMWTRN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFMWTWN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFP]     = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPRN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPRT]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPRTN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPRTRN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPRTWN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPT]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPTN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPTRN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPTWN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPWN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPWT]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPWTN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPWTRN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYFPWTWN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYM]      = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMN]     = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMRN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMRT]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMRTN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMRTRN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMRTWN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMT]     = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMTN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMTRN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMTWN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMWN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMWT]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMWTN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMWTRN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYMWTWN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYP]      = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPN]     = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPRN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPRT]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPRTN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPRTRN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPRTWN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPT]     = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPTN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPTRN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPTWN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPWN]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPWT]    = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPWTN]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPWTRN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_CPYPWTWN]  = CAT_BEFORE_WRITE,
+
+    // memory set
+    [ARM64_INS_SETE]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETEN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETET]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETETN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETM]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETMN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETMT]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETMTN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETP]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETPN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETPT]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETPTN] = CAT_BEFORE_WRITE,
+
+    // memory set with tag settings
+    [ARM64_INS_SETGE]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETGEN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETGET]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETGETN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETGM]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETGMN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETGMT]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETGMTN] = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETGP]   = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETGPN]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETGPT]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_SETGPTN] = CAT_BEFORE_WRITE,
+
+    // atomic loads
+    [ARM64_INS_LDAR]     = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDARB]    = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDARH]    = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDLAR]    = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDLARB]   = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDLARH]   = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAPUR]   = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAPURB]  = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAPURH]  = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAPURSB] = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAPURSH] = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAPURSW] = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAPR]    = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAPRB]   = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAPRH]   = CAT_BEFORE_AREAD,
+    [ARM64_INS_LD64B]    = CAT_BEFORE_AREAD,
+
+    // atomic stores
+    [ARM64_INS_STLR]    = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLRB]   = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLRH]   = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLLR]   = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLLRB]  = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLLRH]  = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLUR]   = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLURB]  = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLURH]  = CAT_BEFORE_AWRITE,
+    [ARM64_INS_ST64B]   = CAT_BEFORE_AWRITE,
+    [ARM64_INS_ST64BV]  = CAT_BEFORE_AWRITE,
+    [ARM64_INS_ST64BV0] = CAT_BEFORE_AWRITE,
+
+    // exclusive pairs
+    // TODO: Some smarter mapping?
+    [ARM64_INS_LDXP]   = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDXR]   = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDXRB]  = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDXRH]  = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAXP]  = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAXR]  = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAXRB] = CAT_BEFORE_AREAD,
+    [ARM64_INS_LDAXRH] = CAT_BEFORE_AREAD,
+    [ARM64_INS_STXP]   = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STXR]   = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STXRB]  = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STXRH]  = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLXP]  = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLXR]  = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLXRB] = CAT_BEFORE_AWRITE,
+    [ARM64_INS_STLXRH] = CAT_BEFORE_AWRITE,
+
+    // compare-and-swap
+    [ARM64_INS_CAS]    = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASA]   = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASAB]  = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASAH]  = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASAL]  = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASALB] = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASALH] = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASB]   = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASH]   = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASL]   = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASLB]  = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASLH]  = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASP]   = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASPA]  = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASPAL] = CAT_BEFORE_CMPXCHG,
+    [ARM64_INS_CASPL]  = CAT_BEFORE_CMPXCHG,
+
+    // swap
+    [ARM64_INS_SWP]    = CAT_BEFORE_RMW,
+    [ARM64_INS_SWPA]   = CAT_BEFORE_RMW,
+    [ARM64_INS_SWPAB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_SWPAH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_SWPAL]  = CAT_BEFORE_RMW,
+    [ARM64_INS_SWPALB] = CAT_BEFORE_RMW,
+    [ARM64_INS_SWPALH] = CAT_BEFORE_RMW,
+    [ARM64_INS_SWPB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_SWPH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_SWPL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_SWPLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_SWPLH]  = CAT_BEFORE_RMW,
+
+    // atomic-fetch-add
+    [ARM64_INS_LDADD]    = CAT_BEFORE_RMW,
+    [ARM64_INS_LDADDA]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDADDAB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDADDAH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDADDAL]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDADDALB] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDADDALH] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDADDB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDADDH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDADDL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDADDLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDADDLH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STADD]    = CAT_BEFORE_RMW,
+    [ARM64_INS_STADDB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STADDH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STADDL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STADDLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STADDLH]  = CAT_BEFORE_RMW,
+
+    // atomic-fetch-and
+    [ARM64_INS_LDCLR]    = CAT_BEFORE_RMW,
+    [ARM64_INS_LDCLRA]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDCLRAB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDCLRAH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDCLRAL]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDCLRALB] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDCLRALH] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDCLRB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDCLRH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDCLRL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDCLRLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDCLRLH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STCLR]    = CAT_BEFORE_RMW,
+    [ARM64_INS_STCLRB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STCLRH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STCLRL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STCLRLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STCLRLH]  = CAT_BEFORE_RMW,
+
+    // atomic-fetch-xor
+    [ARM64_INS_LDEOR]    = CAT_BEFORE_RMW,
+    [ARM64_INS_LDEORA]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDEORAB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDEORAH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDEORAL]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDEORALB] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDEORALH] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDEORB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDEORH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDEORL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDEORLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDEORLH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STEOR]    = CAT_BEFORE_RMW,
+    [ARM64_INS_STEORB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STEORH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STEORL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STEORLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STEORLH]  = CAT_BEFORE_RMW,
+
+    // atomic-fetch-or
+    [ARM64_INS_LDSET]    = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSETA]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSETAB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSETAH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSETAL]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSETALB] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSETALH] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSETB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSETH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSETL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSETLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSETLH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STSET]    = CAT_BEFORE_RMW,
+    [ARM64_INS_STSETB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STSETH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STSETL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STSETLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STSETLH]  = CAT_BEFORE_RMW,
+
+    // atomic-fetch-max (signed)
+    [ARM64_INS_LDSMAX]    = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMAXA]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMAXAB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMAXAH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMAXAL]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMAXALB] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMAXALH] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMAXB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMAXH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMAXL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMAXLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMAXLH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMAX]    = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMAXB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMAXH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMAXL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMAXLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMAXLH]  = CAT_BEFORE_RMW,
+
+    // atomic-fetch-min (signed)
+    [ARM64_INS_LDSMIN]    = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMINA]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMINAB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMINAH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMINAL]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMINALB] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMINALH] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMINB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMINH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMINL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMINLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDSMINLH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMIN]    = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMINB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMINH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMINL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMINLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STSMINLH]  = CAT_BEFORE_RMW,
+
+    // atomic-fetch-max (unsigned)
+    [ARM64_INS_LDUMAX]    = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMAXA]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMAXAB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMAXAH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMAXAL]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMAXALB] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMAXALH] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMAXB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMAXH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMAXL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMAXLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMAXLH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMAX]    = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMAXB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMAXH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMAXL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMAXLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMAXLH]  = CAT_BEFORE_RMW,
+
+    // atomic-fetch-min (unsigned)
+    [ARM64_INS_LDUMIN]    = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMINA]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMINAB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMINAH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMINAL]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMINALB] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMINALH] = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMINB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMINH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMINL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMINLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_LDUMINLH]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMIN]    = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMINB]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMINH]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMINL]   = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMINLB]  = CAT_BEFORE_RMW,
+    [ARM64_INS_STUMINLH]  = CAT_BEFORE_RMW,
+
+    // loads (SIMD&FP and SVE)
+    [ARM64_INS_LD1]    = CAT_BEFORE_READ,
+    [ARM64_INS_LD1B]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD1D]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD1H]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD1Q]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD1R]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD1RB]  = CAT_BEFORE_READ,
+    [ARM64_INS_LD1RD]  = CAT_BEFORE_READ,
+    [ARM64_INS_LD1RH]  = CAT_BEFORE_READ,
+    [ARM64_INS_LD1ROB] = CAT_BEFORE_READ,
+    [ARM64_INS_LD1ROD] = CAT_BEFORE_READ,
+    [ARM64_INS_LD1ROH] = CAT_BEFORE_READ,
+    [ARM64_INS_LD1ROW] = CAT_BEFORE_READ,
+    [ARM64_INS_LD1RQB] = CAT_BEFORE_READ,
+    [ARM64_INS_LD1RQD] = CAT_BEFORE_READ,
+    [ARM64_INS_LD1RQH] = CAT_BEFORE_READ,
+    [ARM64_INS_LD1RQW] = CAT_BEFORE_READ,
+    [ARM64_INS_LD1RSB] = CAT_BEFORE_READ,
+    [ARM64_INS_LD1RSH] = CAT_BEFORE_READ,
+    [ARM64_INS_LD1RSW] = CAT_BEFORE_READ,
+    [ARM64_INS_LD1RW]  = CAT_BEFORE_READ,
+    [ARM64_INS_LD1SB]  = CAT_BEFORE_READ,
+    [ARM64_INS_LD1SH]  = CAT_BEFORE_READ,
+    [ARM64_INS_LD1SW]  = CAT_BEFORE_READ,
+    [ARM64_INS_LD1W]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD2]    = CAT_BEFORE_READ,
+    [ARM64_INS_LD2B]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD2D]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD2H]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD2R]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD2W]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD3]    = CAT_BEFORE_READ,
+    [ARM64_INS_LD3B]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD3D]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD3H]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD3R]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD3W]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD4]    = CAT_BEFORE_READ,
+    [ARM64_INS_LD4B]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD4D]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD4H]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD4R]   = CAT_BEFORE_READ,
+    [ARM64_INS_LD4W]   = CAT_BEFORE_READ,
+
+    // stores (SIMD&FP and SVE)
+    [ARM64_INS_ST1]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST1B] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST1D] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST1H] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST1Q] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST1W] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST2]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST2B] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST2D] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST2H] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST2W] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST3]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST3B] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST3D] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST3H] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST3W] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST4]  = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST4B] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST4D] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST4H] = CAT_BEFORE_WRITE,
+    [ARM64_INS_ST4W] = CAT_BEFORE_WRITE,
+
+    // load first-fault (SVE)
+    [ARM64_INS_LDFF1B]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDFF1D]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDFF1H]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDFF1SB] = CAT_BEFORE_READ,
+    [ARM64_INS_LDFF1SH] = CAT_BEFORE_READ,
+    [ARM64_INS_LDFF1SW] = CAT_BEFORE_READ,
+    [ARM64_INS_LDFF1W]  = CAT_BEFORE_READ,
+
+    // load no-fault (SVE)
+    [ARM64_INS_LDNF1B]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDNF1D]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDNF1H]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDNF1SB] = CAT_BEFORE_READ,
+    [ARM64_INS_LDNF1SH] = CAT_BEFORE_READ,
+    [ARM64_INS_LDNF1SW] = CAT_BEFORE_READ,
+    [ARM64_INS_LDNF1W]  = CAT_BEFORE_READ,
+
+    // load non-temporal (SVE)
+    [ARM64_INS_LDNT1B]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDNT1D]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDNT1H]  = CAT_BEFORE_READ,
+    [ARM64_INS_LDNT1SB] = CAT_BEFORE_READ,
+    [ARM64_INS_LDNT1SH] = CAT_BEFORE_READ,
+    [ARM64_INS_LDNT1SW] = CAT_BEFORE_READ,
+    [ARM64_INS_LDNT1W]  = CAT_BEFORE_READ,
+
+    // === Barriers ============================================================
+
+    // data sync barrier
+    [ARM64_INS_DSB] = CAT_BEFORE_FENCE,
+    // alias of DSB
+    [ARM64_INS_SSBB] = CAT_BEFORE_FENCE,
+    // alias of DSB
+    [ARM64_INS_PSSBB] = CAT_BEFORE_FENCE,
+
+    // data memory barrier
+    [ARM64_INS_DMB] = CAT_BEFORE_FENCE,
+
+    // data full barrier
+    [ARM64_INS_DFB] = CAT_BEFORE_FENCE,
+
+    // instruction sync barrier
+    [ARM64_INS_ISB] = CAT_BEFORE_FENCE,
+
+    // TODO: Is really needed? Check compilation schemes
+    // speculation barrier
+    [ARM64_INS_SB] = CAT_BEFORE_FENCE,
+    // consumption of speculative data barrier
+    [ARM64_INS_CSDB] = CAT_NONE,
+
+    // error sync barrier
+    [ARM64_INS_ESB] = CAT_NONE,
+    // profiling sync barrier
+    [ARM64_INS_PSB] = CAT_NONE,
+    // trace sync barrier
+    [ARM64_INS_TSB] = CAT_NONE,
+
+    // === System instructions =================================================
+
+    // secure monitor call
+    [ARM64_INS_SMC] = CAT_EXTRA_HS_CALL,
+    // supervisor call
+    [ARM64_INS_SVC] = CAT_EXTRA_HS_CALL,
+    // hypervisor call
+    [ARM64_INS_HVC] = CAT_EXTRA_HS_CALL,
+
+    // send event
+    [ARM64_INS_SEV]  = CAT_SYS_YIELD,
+    [ARM64_INS_SEVL] = CAT_SYS_YIELD,
+
+    // wait for event
+    [ARM64_INS_WFE]  = CAT_EXTRA_WF,
+    [ARM64_INS_WFET] = CAT_EXTRA_WF,
+
+    // wait for interrupt
+    [ARM64_INS_WFI]  = CAT_EXTRA_WF,
+    [ARM64_INS_WFIT] = CAT_EXTRA_WF,
+
+    // yield
+    [ARM64_INS_YIELD] = CAT_SYS_YIELD,
+
+    // TODO: special market for this
+    // undefined
+    [ARM64_INS_UDF] = CAT_EXTRA_UDF,
+
+    // TODO: Ignore?
+    // system instructions
+    [ARM64_INS_SYS]  = CAT_SYS_YIELD,
+    [ARM64_INS_SYSL] = CAT_SYS_YIELD,
+    // alias of SYS
+    [ARM64_INS_AT] = CAT_SYS_YIELD,
+    // alias of SYS
+    [ARM64_INS_DC] = CAT_SYS_YIELD,
+    // alias of SYS
+    [ARM64_INS_IC] = CAT_SYS_YIELD,
+    // alias of SYS
+    [ARM64_INS_TLBI] = CAT_SYS_YIELD,
+
+    // TODO: Another category?
+    // transactions
+    [ARM64_INS_TSTART]  = CAT_NONE,
+    [ARM64_INS_TCOMMIT] = CAT_NONE,
+    [ARM64_INS_TCANCEL] = CAT_NONE,
+    [ARM64_INS_TTEST]   = CAT_NONE,
+
+    // SVE mode
+    [ARM64_INS_SMSTART] = CAT_NONE,
+    [ARM64_INS_SMSTOP]  = CAT_NONE,
+
+    // TODO: Should it yield?
+    // debug
+    [ARM64_INS_BRK]   = CAT_NONE,
+    [ARM64_INS_HLT]   = CAT_NONE,
+    [ARM64_INS_DCPS1] = CAT_NONE,
+    [ARM64_INS_DCPS2] = CAT_NONE,
+    [ARM64_INS_DCPS3] = CAT_NONE,
+    [ARM64_INS_DRPS]  = CAT_NONE,
+
+    // no op
+    [ARM64_INS_NOP] = CAT_NONE,
+    // hint
+    [ARM64_INS_HINT] = CAT_NONE,
+    // data gathering hint
+    [ARM64_INS_DGH] = CAT_NONE,
+
+    // prefetch hints
+    [ARM64_INS_PRFM]  = CAT_NONE,
+    [ARM64_INS_PRFUM] = CAT_NONE,
+
+    // clear exclusive monitor
+    // sometimes needed after an exclusive pair
+    [ARM64_INS_CLREX] = CAT_NONE,
+
+    // invalidate branch record buffer
+    [ARM64_INS_BRB] = CAT_NONE,
+
+    // state and system flags
+    [ARM64_INS_BTI]    = CAT_NONE,
+    [ARM64_INS_MSR]    = CAT_NONE,
+    [ARM64_INS_MRS]    = CAT_NONE,
+    [ARM64_INS_CFINV]  = CAT_NONE,
+    [ARM64_INS_XAFLAG] = CAT_NONE,
+    [ARM64_INS_AXFLAG] = CAT_NONE,
+
+    // === Branch and return ===================================================
+
+    // conditional
+    [ARM64_INS_B]  = CAT_NONE,
+    [ARM64_INS_BC] = CAT_NONE,
+
+    // compare and branch
+    [ARM64_INS_CBZ]  = CAT_NONE,
+    [ARM64_INS_CBNZ] = CAT_NONE,
+    [ARM64_INS_TBZ]  = CAT_NONE,
+    [ARM64_INS_TBNZ] = CAT_NONE,
+
+    // unconditional
+    [ARM64_INS_BR]  = CAT_NONE,
+    [ARM64_INS_BL]  = CAT_FUNC_ENTRY,
+    [ARM64_INS_BLR] = CAT_NONE,
+
+    // unconditional with address authentication
+    [ARM64_INS_BRAA]   = CAT_NONE,
+    [ARM64_INS_BRAAZ]  = CAT_NONE,
+    [ARM64_INS_BRAB]   = CAT_NONE,
+    [ARM64_INS_BRABZ]  = CAT_NONE,
+    [ARM64_INS_BLRAA]  = CAT_NONE,
+    [ARM64_INS_BLRAAZ] = CAT_NONE,
+    [ARM64_INS_BLRAB]  = CAT_NONE,
+    [ARM64_INS_BLRABZ] = CAT_NONE,
+
+    // return
+    [ARM64_INS_RET]  = CAT_FUNC_EXIT,
+    [ARM64_INS_ERET] = CAT_NONE,
+
+    // return with address authentication
+    [ARM64_INS_RETAA]  = CAT_NONE,
+    [ARM64_INS_RETAB]  = CAT_NONE,
+    [ARM64_INS_ERETAA] = CAT_NONE,
+    [ARM64_INS_ERETAB] = CAT_NONE,
+
+    // === Base instructions ===================================================
+
+    // mov
+    [ARM64_INS_MOV]  = CAT_NONE,
+    [ARM64_INS_MOVK] = CAT_NONE,
+    [ARM64_INS_MOVN] = CAT_NONE,
+    [ARM64_INS_MOVZ] = CAT_NONE,
+    [ARM64_INS_EXTR] = CAT_NONE,
+    [ARM64_INS_GMI]  = CAT_NONE,
+
+    // address
+    [ARM64_INS_ADR]  = CAT_NONE,
+    [ARM64_INS_ADRP] = CAT_NONE,
+
+    // subtract pointers
+    [ARM64_INS_SUBP]  = CAT_NONE,
+    [ARM64_INS_SUBPS] = CAT_NONE,
+    [ARM64_INS_CMPP]  = CAT_NONE, // alias of SUBPS
+
+    // TODO: Non-deterministic??
+    // random address tag
+    [ARM64_INS_IRG] = CAT_NONE,
+
+    // set flag
+    [ARM64_INS_SETF8]  = CAT_NONE,
+    [ARM64_INS_SETF16] = CAT_NONE,
+
+    // compare
+    [ARM64_INS_CMP]  = CAT_NONE,
+    [ARM64_INS_CMN]  = CAT_NONE,
+    [ARM64_INS_CMLO] = CAT_NONE,
+    [ARM64_INS_CMHI] = CAT_NONE,
+
+    // conditional compare
+    [ARM64_INS_CCMP] = CAT_NONE,
+    [ARM64_INS_CCMN] = CAT_NONE,
+
+    // conditional select
+    [ARM64_INS_CSEL] = CAT_NONE,
+
+    // conditional select-op
+    [ARM64_INS_CSNEG] = CAT_NONE,
+    [ARM64_INS_CSINC] = CAT_NONE,
+    [ARM64_INS_CSINV] = CAT_NONE,
+    [ARM64_INS_CNEG]  = CAT_NONE, // alias of CSNEG
+    [ARM64_INS_CINC]  = CAT_NONE, // alias of CSINC
+    [ARM64_INS_CSET]  = CAT_NONE, // alias of CSINC
+    [ARM64_INS_CINV]  = CAT_NONE, // alias of CSINV
+    [ARM64_INS_CSETM] = CAT_NONE, // alias of CSINV
+
+    // extend
+    [ARM64_INS_SXTB] = CAT_NONE,
+    [ARM64_INS_SXTH] = CAT_NONE,
+    [ARM64_INS_UXTB] = CAT_NONE,
+    [ARM64_INS_UXTH] = CAT_NONE,
+
+    // and
+    [ARM64_INS_AND]  = CAT_NONE,
+    [ARM64_INS_ANDS] = CAT_NONE,
+    [ARM64_INS_TST]  = CAT_NONE, // alias of ANDS
+
+    // or
+    [ARM64_INS_ORR] = CAT_NONE,
+
+    // or-not
+    [ARM64_INS_ORN] = CAT_NONE,
+
+    // xor
+    [ARM64_INS_EOR] = CAT_NONE,
+
+    // xor-not
+    [ARM64_INS_EON] = CAT_NONE,
+
+    // not
+    [ARM64_INS_MVN] = CAT_NONE,
+
+    // arithmetic shift right
+    [ARM64_INS_ASR]  = CAT_NONE,
+    [ARM64_INS_ASRV] = CAT_NONE,
+
+    // logical shift left
+    [ARM64_INS_LSL]  = CAT_NONE,
+    [ARM64_INS_LSLV] = CAT_NONE,
+
+    // logical shift right
+    [ARM64_INS_LSR]  = CAT_NONE,
+    [ARM64_INS_LSRV] = CAT_NONE,
+
+    // count bits
+    [ARM64_INS_CLS] = CAT_NONE,
+    [ARM64_INS_CLZ] = CAT_NONE,
+
+    // clear
+    [ARM64_INS_BIC]  = CAT_NONE,
+    [ARM64_INS_BICS] = CAT_NONE,
+
+    // reverse bits
+    [ARM64_INS_REV]   = CAT_NONE,
+    [ARM64_INS_REV16] = CAT_NONE,
+    [ARM64_INS_REV32] = CAT_NONE,
+    [ARM64_INS_REV64] = CAT_NONE,
+    [ARM64_INS_RBIT]  = CAT_NONE,
+
+    // rotate
+    [ARM64_INS_RORV] = CAT_NONE,
+    [ARM64_INS_ROR]  = CAT_NONE, // alias of RORV
+    [ARM64_INS_RMIF] = CAT_NONE,
+
+    // bitfield move
+    [ARM64_INS_BFM]   = CAT_NONE,
+    [ARM64_INS_SBFM]  = CAT_NONE,
+    [ARM64_INS_UBFM]  = CAT_NONE,
+    [ARM64_INS_BFI]   = CAT_NONE, // alias of BFM
+    [ARM64_INS_BFXIL] = CAT_NONE, // alias of BFM
+    [ARM64_INS_SBFX]  = CAT_NONE, // alias of SBFM
+    [ARM64_INS_SBFIZ] = CAT_NONE, // alias of SBFM
+    [ARM64_INS_UBFX]  = CAT_NONE, // alias of UBFM
+    [ARM64_INS_UBFIZ] = CAT_NONE, // alias of UBFM
+
+    // add
+    [ARM64_INS_ADD]  = CAT_NONE,
+    [ARM64_INS_ADDG] = CAT_NONE,
+    [ARM64_INS_ADDS] = CAT_NONE,
+
+    // subtract
+    [ARM64_INS_SUB]  = CAT_NONE,
+    [ARM64_INS_SUBG] = CAT_NONE,
+    [ARM64_INS_SUBS] = CAT_NONE,
+    [ARM64_INS_NEG]  = CAT_NONE, // alias of SUB
+    [ARM64_INS_NEGS] = CAT_NONE, // alias of SUBS
+
+    // add with carry
+    [ARM64_INS_ADC]  = CAT_NONE,
+    [ARM64_INS_ADCS] = CAT_NONE,
+
+    // subtract with carry
+    [ARM64_INS_SBC]  = CAT_NONE,
+    [ARM64_INS_SBCS] = CAT_NONE,
+    [ARM64_INS_NGC]  = CAT_NONE, // alias of SBC
+    [ARM64_INS_NGCS] = CAT_NONE, // alias of SBCS
+
+    // multiply
+    [ARM64_INS_MUL] = CAT_NONE,
+
+    // signed multiply
+    [ARM64_INS_SMULH] = CAT_NONE,
+    [ARM64_INS_SMULL] = CAT_NONE,
+
+    // unsigned multiply
+    [ARM64_INS_UMULH] = CAT_NONE,
+    [ARM64_INS_UMULL] = CAT_NONE,
+
+    // signed divide
+    [ARM64_INS_SDIV] = CAT_NONE,
+
+    // unsigned divide
+    [ARM64_INS_UDIV] = CAT_NONE,
+
+    // multiply-add
+    [ARM64_INS_MADD] = CAT_NONE,
+
+    // signed multiply-add
+    [ARM64_INS_SMADDL] = CAT_NONE,
+
+    // unsigned multiply-add
+    [ARM64_INS_UMADDL] = CAT_NONE,
+
+    // multiply-subtract
+    [ARM64_INS_MSUB] = CAT_NONE,
+    [ARM64_INS_MNEG] = CAT_NONE, // alias of MSUB
+
+    // signed multiply-subtract
+    [ARM64_INS_SMSUBL] = CAT_NONE,
+    [ARM64_INS_SMNEGL] = CAT_NONE, // alias of SMSUBL
+
+    // unsigned multiply-subtract
+    [ARM64_INS_UMSUBL] = CAT_NONE,
+    [ARM64_INS_UMNEGL] = CAT_NONE, // alias of UMSUBL
+
+    // === Common for SIMD&FP and SVE extensions ===============================
+
+    // conversion to float
+    [ARM64_INS_SCVTF] = CAT_NONE,
+    [ARM64_INS_UCVTF] = CAT_NONE,
+
+    // conversion from float
+    [ARM64_INS_FCVT]   = CAT_NONE,
+    [ARM64_INS_FCVTZS] = CAT_NONE,
+    [ARM64_INS_FCVTZU] = CAT_NONE,
+
+    // conversion to brain float
+    [ARM64_INS_BFCVT] = CAT_NONE,
+
+    // move
+    [ARM64_INS_FMOV] = CAT_NONE,
+
+    // insert
+    [ARM64_INS_DUP] = CAT_NONE,
+    [ARM64_INS_EXT] = CAT_NONE,
+
+    // compare float
+    [ARM64_INS_FCMLA] = CAT_NONE,
+    [ARM64_INS_FCMLE] = CAT_NONE,
+    [ARM64_INS_FCMLT] = CAT_NONE,
+
+    // shift and insert
+    [ARM64_INS_SLI] = CAT_NONE,
+    [ARM64_INS_SRI] = CAT_NONE,
+
+    // transpose
+    [ARM64_INS_TRN1] = CAT_NONE,
+    [ARM64_INS_TRN2] = CAT_NONE,
+
+    // table lookup
+    [ARM64_INS_TBL] = CAT_NONE,
+    [ARM64_INS_TBX] = CAT_NONE,
+
+    // zip and unzip
+    [ARM64_INS_ZIP1] = CAT_NONE,
+    [ARM64_INS_ZIP2] = CAT_NONE,
+    [ARM64_INS_UZP1] = CAT_NONE,
+    [ARM64_INS_UZP2] = CAT_NONE,
+
+    // rounding shift left
+    [ARM64_INS_SRSHL] = CAT_NONE,
+    [ARM64_INS_URSHL] = CAT_NONE,
+
+    // rounding shift right
+    [ARM64_INS_SRSHR] = CAT_NONE,
+    [ARM64_INS_URSHR] = CAT_NONE,
+
+    // saturating shift left
+    [ARM64_INS_SQSHL]  = CAT_NONE,
+    [ARM64_INS_UQSHL]  = CAT_NONE,
+    [ARM64_INS_SQSHLU] = CAT_NONE,
+
+    // saturating rounding shift left
+    [ARM64_INS_SQRSHL] = CAT_NONE,
+    [ARM64_INS_UQRSHL] = CAT_NONE,
+
+    // shift right and accumulate
+    [ARM64_INS_SSRA] = CAT_NONE,
+    [ARM64_INS_USRA] = CAT_NONE,
+
+    // rounding shift right and accumulate
+    [ARM64_INS_SRSRA] = CAT_NONE,
+    [ARM64_INS_URSRA] = CAT_NONE,
+
+    // count non-zero bits
+    [ARM64_INS_CNT] = CAT_NONE,
+
+    // bitwise clear
+    [ARM64_INS_BCAX] = CAT_NONE,
+
+    // bitwise select
+    [ARM64_INS_BSL] = CAT_NONE,
+
+    // logics
+    [ARM64_INS_NOT]  = CAT_NONE,
+    [ARM64_INS_EOR3] = CAT_NONE,
+
+    // op-and-rotate
+    [ARM64_INS_RAX1] = CAT_NONE,
+    [ARM64_INS_XAR]  = CAT_NONE,
+
+    // signed max
+    [ARM64_INS_SMAX]  = CAT_NONE,
+    [ARM64_INS_SMAXP] = CAT_NONE,
+    [ARM64_INS_SMAXV] = CAT_NONE,
+
+    // signed min
+    [ARM64_INS_SMIN]  = CAT_NONE,
+    [ARM64_INS_SMINP] = CAT_NONE,
+    [ARM64_INS_SMINV] = CAT_NONE,
+
+    // unsigned max
+    [ARM64_INS_UMAX]  = CAT_NONE,
+    [ARM64_INS_UMAXP] = CAT_NONE,
+    [ARM64_INS_UMAXV] = CAT_NONE,
+
+    // unsigned min
+    [ARM64_INS_UMIN]  = CAT_NONE,
+    [ARM64_INS_UMINP] = CAT_NONE,
+    [ARM64_INS_UMINV] = CAT_NONE,
+
+    // max float
+    [ARM64_INS_FMAX]    = CAT_NONE,
+    [ARM64_INS_FMAXNM]  = CAT_NONE,
+    [ARM64_INS_FMAXNMP] = CAT_NONE,
+    [ARM64_INS_FMAXNMV] = CAT_NONE,
+    [ARM64_INS_FMAXP]   = CAT_NONE,
+    [ARM64_INS_FMAXV]   = CAT_NONE,
+
+    // min float
+    [ARM64_INS_FMIN]    = CAT_NONE,
+    [ARM64_INS_FMINNM]  = CAT_NONE,
+    [ARM64_INS_FMINNMP] = CAT_NONE,
+    [ARM64_INS_FMINNMV] = CAT_NONE,
+    [ARM64_INS_FMINP]   = CAT_NONE,
+    [ARM64_INS_FMINV]   = CAT_NONE,
+
+    // absolute value
+    [ARM64_INS_ABS]  = CAT_NONE,
+    [ARM64_INS_FABS] = CAT_NONE,
+
+    // saturating absolute value
+    [ARM64_INS_SQABS] = CAT_NONE,
+
+    // negate
+    [ARM64_INS_FNEG] = CAT_NONE,
+
+    // saturating negate
+    [ARM64_INS_SQNEG] = CAT_NONE,
+
+    // add
+    [ARM64_INS_FADD]  = CAT_NONE,
+    [ARM64_INS_FADDP] = CAT_NONE,
+
+    // subtract
+    [ARM64_INS_FSUB] = CAT_NONE,
+
+    // halving add
+    [ARM64_INS_SHADD] = CAT_NONE,
+    [ARM64_INS_UHADD] = CAT_NONE,
+
+    // halving subtract
+    [ARM64_INS_SHSUB] = CAT_NONE,
+    [ARM64_INS_UHSUB] = CAT_NONE,
+
+    // halving rounding add
+    [ARM64_INS_SRHADD] = CAT_NONE,
+    [ARM64_INS_URHADD] = CAT_NONE,
+
+    // saturating add
+    [ARM64_INS_SQADD]  = CAT_NONE,
+    [ARM64_INS_UQADD]  = CAT_NONE,
+    [ARM64_INS_SUQADD] = CAT_NONE,
+    [ARM64_INS_USQADD] = CAT_NONE,
+
+    // saturating subtract
+    [ARM64_INS_SQSUB] = CAT_NONE,
+    [ARM64_INS_UQSUB] = CAT_NONE,
+
+    // add pairwise
+    [ARM64_INS_ADDP]   = CAT_NONE,
+    [ARM64_INS_SADALP] = CAT_NONE,
+    [ARM64_INS_UADALP] = CAT_NONE,
+
+    // absolute difference
+    [ARM64_INS_SABD] = CAT_NONE,
+    [ARM64_INS_UABD] = CAT_NONE,
+    [ARM64_INS_FABD] = CAT_NONE,
+
+    // absolute difference accumulate
+    [ARM64_INS_SABA] = CAT_NONE,
+    [ARM64_INS_UABA] = CAT_NONE,
+
+    // multiply
+    [ARM64_INS_FMUL]  = CAT_NONE,
+    [ARM64_INS_FMULX] = CAT_NONE,
+
+    // divide
+    [ARM64_INS_FDIV] = CAT_NONE,
+
+    // signed multiply
+    [ARM64_INS_SQDMULH] = CAT_NONE,
+
+    // saturating rounding signed multiply
+    [ARM64_INS_SQRDMULH] = CAT_NONE,
+
+    // multiply add/sub
+    [ARM64_INS_MLA] = CAT_NONE,
+    [ARM64_INS_MLS] = CAT_NONE,
+
+    // multiply-add/sub-to/from-accumulator
+    [ARM64_INS_FMLA] = CAT_NONE,
+    [ARM64_INS_FMLS] = CAT_NONE,
+
+    // saturating multiply-add/sub-to/from-accumulator
+    [ARM64_INS_SQRDMLAH] = CAT_NONE,
+    [ARM64_INS_SQRDMLSH] = CAT_NONE,
+
+    // multiply-add-to-accumulator brain-float
+    [ARM64_INS_BFMLALB] = CAT_NONE,
+    [ARM64_INS_BFMLALT] = CAT_NONE,
+
+    // complex add
+    [ARM64_INS_FCADD] = CAT_NONE,
+
+    // dot product
+    [ARM64_INS_SDOT]  = CAT_NONE,
+    [ARM64_INS_UDOT]  = CAT_NONE,
+    [ARM64_INS_SUDOT] = CAT_NONE,
+    [ARM64_INS_USDOT] = CAT_NONE,
+    [ARM64_INS_BFDOT] = CAT_NONE,
+
+    // matrix multiplication
+    [ARM64_INS_SMMLA]  = CAT_NONE,
+    [ARM64_INS_UMMLA]  = CAT_NONE,
+    [ARM64_INS_USMMLA] = CAT_NONE,
+    [ARM64_INS_BFMMLA] = CAT_NONE,
+
+    // polynomial multiplication
+    [ARM64_INS_PMUL] = CAT_NONE,
+
+    // reciprocal
+    [ARM64_INS_FRECPE] = CAT_NONE,
+    [ARM64_INS_FRECPS] = CAT_NONE,
+    [ARM64_INS_FRECPX] = CAT_NONE,
+    [ARM64_INS_URECPE] = CAT_NONE,
+
+    // sqrt reciprocal
+    [ARM64_INS_FRSQRTE] = CAT_NONE,
+    [ARM64_INS_FRSQRTS] = CAT_NONE,
+    [ARM64_INS_URSQRTE] = CAT_NONE,
+
+    // logarithmic
+    [ARM64_INS_FSQRT] = CAT_NONE,
+
+    // === SIMD&FP extension ===================================================
+
+    // conversion from float
+    [ARM64_INS_FCVTL]   = CAT_NONE,
+    [ARM64_INS_FCVTL2]  = CAT_NONE,
+    [ARM64_INS_FCVTN]   = CAT_NONE,
+    [ARM64_INS_FCVTN2]  = CAT_NONE,
+    [ARM64_INS_FCVTXN]  = CAT_NONE,
+    [ARM64_INS_FCVTXN2] = CAT_NONE,
+
+    // conversion from float to signed
+    [ARM64_INS_FCVTAS] = CAT_NONE,
+    [ARM64_INS_FCVTMS] = CAT_NONE,
+    [ARM64_INS_FCVTNS] = CAT_NONE,
+    [ARM64_INS_FCVTPS] = CAT_NONE,
+
+    // conversion from float to unsigned
+    [ARM64_INS_FCVTAU] = CAT_NONE,
+    [ARM64_INS_FCVTMU] = CAT_NONE,
+    [ARM64_INS_FCVTNU] = CAT_NONE,
+    [ARM64_INS_FCVTPU] = CAT_NONE,
+
+    // conversion to brain float
+    [ARM64_INS_BFCVTN]  = CAT_NONE,
+    [ARM64_INS_BFCVTN2] = CAT_NONE,
+
+    // conversion from js
+    [ARM64_INS_FJCVTZS] = CAT_NONE,
+
+    // round to integer
+    [ARM64_INS_FRINT32X] = CAT_NONE,
+    [ARM64_INS_FRINT32Z] = CAT_NONE,
+    [ARM64_INS_FRINT64X] = CAT_NONE,
+    [ARM64_INS_FRINT64Z] = CAT_NONE,
+
+    // round to integral
+    [ARM64_INS_FRINTA] = CAT_NONE,
+    [ARM64_INS_FRINTI] = CAT_NONE,
+    [ARM64_INS_FRINTM] = CAT_NONE,
+    [ARM64_INS_FRINTN] = CAT_NONE,
+    [ARM64_INS_FRINTP] = CAT_NONE,
+    [ARM64_INS_FRINTX] = CAT_NONE,
+    [ARM64_INS_FRINTZ] = CAT_NONE,
+
+    // move
+    [ARM64_INS_INS]  = CAT_NONE,
+    [ARM64_INS_MOVI] = CAT_NONE,
+    [ARM64_INS_MVNI] = CAT_NONE,
+    [ARM64_INS_SMOV] = CAT_NONE,
+    [ARM64_INS_UMOV] = CAT_NONE,
+
+    // compare
+    [ARM64_INS_CMEQ]  = CAT_NONE,
+    [ARM64_INS_CMGE]  = CAT_NONE,
+    [ARM64_INS_CMGT]  = CAT_NONE,
+    [ARM64_INS_CMHS]  = CAT_NONE,
+    [ARM64_INS_CMLE]  = CAT_NONE,
+    [ARM64_INS_CMLS]  = CAT_NONE,
+    [ARM64_INS_CMLT]  = CAT_NONE,
+    [ARM64_INS_CMTST] = CAT_NONE,
+
+    // compare float
+    [ARM64_INS_FCMP]   = CAT_NONE,
+    [ARM64_INS_FCMPE]  = CAT_NONE,
+    [ARM64_INS_FCCMP]  = CAT_NONE,
+    [ARM64_INS_FCCMPE] = CAT_NONE,
+
+    // select
+    [ARM64_INS_FCSEL] = CAT_NONE,
+
+    // extract
+    [ARM64_INS_XTN]  = CAT_NONE,
+    [ARM64_INS_XTN2] = CAT_NONE,
+
+    // saturating signed extract
+    [ARM64_INS_SQXTN]  = CAT_NONE,
+    [ARM64_INS_SQXTN2] = CAT_NONE,
+
+    // saturating unsigned extract
+    [ARM64_INS_UQXTN]  = CAT_NONE,
+    [ARM64_INS_UQXTN2] = CAT_NONE,
+
+    // saturating signed extract (uns narrow)
+    [ARM64_INS_SQXTUN]  = CAT_NONE,
+    [ARM64_INS_SQXTUN2] = CAT_NONE,
+
+    // extend
+    [ARM64_INS_SXTL]  = CAT_NONE,
+    [ARM64_INS_SXTL2] = CAT_NONE,
+    [ARM64_INS_UXTL]  = CAT_NONE,
+    [ARM64_INS_UXTL2] = CAT_NONE,
+
+    // insert if false/true
+    [ARM64_INS_BIF] = CAT_NONE,
+    [ARM64_INS_BIT] = CAT_NONE,
+
+    // shift left
+    [ARM64_INS_SHL]   = CAT_NONE,
+    [ARM64_INS_SHLL]  = CAT_NONE,
+    [ARM64_INS_SHLL2] = CAT_NONE,
+
+    // shift right
+    [ARM64_INS_SHRN]  = CAT_NONE,
+    [ARM64_INS_SHRN2] = CAT_NONE,
+
+    // signed shift left
+    [ARM64_INS_SSHL]   = CAT_NONE,
+    [ARM64_INS_SSHLL]  = CAT_NONE,
+    [ARM64_INS_SSHLL2] = CAT_NONE,
+
+    // unsigned shift left
+    [ARM64_INS_USHL]   = CAT_NONE,
+    [ARM64_INS_USHLL]  = CAT_NONE,
+    [ARM64_INS_USHLL2] = CAT_NONE,
+
+    // signed shift right
+    [ARM64_INS_SSHR] = CAT_NONE,
+
+    // unsigned shift right
+    [ARM64_INS_USHR] = CAT_NONE,
+
+    // rounding shift right
+    [ARM64_INS_RSHRN]  = CAT_NONE,
+    [ARM64_INS_RSHRN2] = CAT_NONE,
+
+    // saturating signed shift right
+    [ARM64_INS_SQSHRN]  = CAT_NONE,
+    [ARM64_INS_SQSHRN2] = CAT_NONE,
+
+    // saturating unsigned shift right
+    [ARM64_INS_UQSHRN]  = CAT_NONE,
+    [ARM64_INS_UQSHRN2] = CAT_NONE,
+
+    // saturating signed shift right (uns narrow)
+    [ARM64_INS_SQSHRUN]  = CAT_NONE,
+    [ARM64_INS_SQSHRUN2] = CAT_NONE,
+
+    // saturating signed rounding shift right
+    [ARM64_INS_SQRSHRN]  = CAT_NONE,
+    [ARM64_INS_SQRSHRN2] = CAT_NONE,
+
+    // saturating unsigned rounding shift right
+    [ARM64_INS_UQRSHRN]  = CAT_NONE,
+    [ARM64_INS_UQRSHRN2] = CAT_NONE,
+
+    // saturating signed rounding shift right (uns narrow)
+    [ARM64_INS_SQRSHRUN]  = CAT_NONE,
+    [ARM64_INS_SQRSHRUN2] = CAT_NONE,
+
+    // add
+    [ARM64_INS_ADDHN]  = CAT_NONE,
+    [ARM64_INS_ADDHN2] = CAT_NONE,
+
+    // subtract
+    [ARM64_INS_SUBHN]  = CAT_NONE,
+    [ARM64_INS_SUBHN2] = CAT_NONE,
+
+    // signed add
+    [ARM64_INS_SADDL]  = CAT_NONE,
+    [ARM64_INS_SADDL2] = CAT_NONE,
+    [ARM64_INS_SADDW]  = CAT_NONE,
+    [ARM64_INS_SADDW2] = CAT_NONE,
+
+    // signed subtract
+    [ARM64_INS_SSUBL]  = CAT_NONE,
+    [ARM64_INS_SSUBL2] = CAT_NONE,
+    [ARM64_INS_SSUBW]  = CAT_NONE,
+    [ARM64_INS_SSUBW2] = CAT_NONE,
+
+    // unsigned add
+    [ARM64_INS_UADDL]  = CAT_NONE,
+    [ARM64_INS_UADDL2] = CAT_NONE,
+    [ARM64_INS_UADDW]  = CAT_NONE,
+    [ARM64_INS_UADDW2] = CAT_NONE,
+
+    // unsigned subtract
+    [ARM64_INS_USUBL]  = CAT_NONE,
+    [ARM64_INS_USUBL2] = CAT_NONE,
+    [ARM64_INS_USUBW]  = CAT_NONE,
+    [ARM64_INS_USUBW2] = CAT_NONE,
+
+    // rounding add
+    [ARM64_INS_RADDHN]  = CAT_NONE,
+    [ARM64_INS_RADDHN2] = CAT_NONE,
+
+    // rounding subtract
+    [ARM64_INS_RSUBHN]  = CAT_NONE,
+    [ARM64_INS_RSUBHN2] = CAT_NONE,
+
+    // add pairwise
+    [ARM64_INS_SADDLP] = CAT_NONE,
+    [ARM64_INS_UADDLP] = CAT_NONE,
+
+    // add across vectors
+    [ARM64_INS_ADDV]   = CAT_NONE,
+    [ARM64_INS_SADDLV] = CAT_NONE,
+    [ARM64_INS_UADDLV] = CAT_NONE,
+
+    // signed absolute difference
+    [ARM64_INS_SABDL]  = CAT_NONE,
+    [ARM64_INS_SABDL2] = CAT_NONE,
+
+    // unsigned absolute difference
+    [ARM64_INS_UABDL]  = CAT_NONE,
+    [ARM64_INS_UABDL2] = CAT_NONE,
+
+    // signed absolute difference accumulate
+    [ARM64_INS_SABAL]  = CAT_NONE,
+    [ARM64_INS_SABAL2] = CAT_NONE,
+
+    // unsigned absolute difference accumulate
+    [ARM64_INS_UABAL]  = CAT_NONE,
+    [ARM64_INS_UABAL2] = CAT_NONE,
+
+    // multiply
+    [ARM64_INS_SMULL2] = CAT_NONE,
+    [ARM64_INS_UMULL2] = CAT_NONE,
+    [ARM64_INS_FNMUL]  = CAT_NONE,
+
+    // saturating signed multiply
+    [ARM64_INS_SQDMULL]  = CAT_NONE,
+    [ARM64_INS_SQDMULL2] = CAT_NONE,
+
+    // multiply-add
+    [ARM64_INS_FMADD]  = CAT_NONE,
+    [ARM64_INS_FNMADD] = CAT_NONE,
+
+    // multiply-subtract
+    [ARM64_INS_FMSUB]  = CAT_NONE,
+    [ARM64_INS_FNMSUB] = CAT_NONE,
+
+    // signed multiply-add
+    [ARM64_INS_SMLAL]  = CAT_NONE,
+    [ARM64_INS_SMLAL2] = CAT_NONE,
+
+    // unsigned multiply-add
+    [ARM64_INS_UMLAL]  = CAT_NONE,
+    [ARM64_INS_UMLAL2] = CAT_NONE,
+
+    // signed multiply-subtract
+    [ARM64_INS_SMLSL]  = CAT_NONE,
+    [ARM64_INS_SMLSL2] = CAT_NONE,
+
+    // unsigned multiply-subtract
+    [ARM64_INS_UMLSL]  = CAT_NONE,
+    [ARM64_INS_UMLSL2] = CAT_NONE,
+
+    // saturating signed multiply-add
+    [ARM64_INS_SQDMLAL]  = CAT_NONE,
+    [ARM64_INS_SQDMLAL2] = CAT_NONE,
+
+    // saturating signed multiple-subtract
+    [ARM64_INS_SQDMLSL]  = CAT_NONE,
+    [ARM64_INS_SQDMLSL2] = CAT_NONE,
+
+    // multiply-add-to-accumulator
+    [ARM64_INS_FMLAL]  = CAT_NONE,
+    [ARM64_INS_FMLAL2] = CAT_NONE,
+
+    // multiply-sub-from-accumulator
+    [ARM64_INS_FMLSL]  = CAT_NONE,
+    [ARM64_INS_FMLSL2] = CAT_NONE,
+
+    // polynomial multiply
+    [ARM64_INS_PMULL]  = CAT_NONE,
+    [ARM64_INS_PMULL2] = CAT_NONE,
+
+    // === Scalable Vector Extension (SVE) =====================================
+
+    // conversion float
+    [ARM64_INS_FCVTLT]  = CAT_NONE,
+    [ARM64_INS_FCVTNT]  = CAT_NONE,
+    [ARM64_INS_FCVTX]   = CAT_NONE,
+    [ARM64_INS_FCVTXNT] = CAT_NONE,
+
+    // conversion to brain float
+    [ARM64_INS_BFCVTNT] = CAT_NONE,
+
+    // move
+    [ARM64_INS_CPY]     = CAT_NONE,
+    [ARM64_INS_FCPY]    = CAT_NONE,
+    [ARM64_INS_MOVS]    = CAT_NONE,
+    [ARM64_INS_MOVPRFX] = CAT_NONE,
+
+    // insert
+    [ARM64_INS_INSR] = CAT_NONE,
+    [ARM64_INS_DUPM] = CAT_NONE,
+    [ARM64_INS_FDUP] = CAT_NONE,
+
+    // prefetch hints
+    [ARM64_INS_PRFB] = CAT_NONE,
+    [ARM64_INS_PRFD] = CAT_NONE,
+    [ARM64_INS_PRFH] = CAT_NONE,
+    [ARM64_INS_PRFW] = CAT_NONE,
+
+    // select conditionally
+    [ARM64_INS_SEL] = CAT_NONE,
+
+    // compare
+    [ARM64_INS_CMPEQ] = CAT_NONE,
+    [ARM64_INS_CMPGE] = CAT_NONE,
+    [ARM64_INS_CMPGT] = CAT_NONE,
+    [ARM64_INS_CMPHI] = CAT_NONE,
+    [ARM64_INS_CMPHS] = CAT_NONE,
+    [ARM64_INS_CMPLE] = CAT_NONE,
+    [ARM64_INS_CMPLO] = CAT_NONE,
+    [ARM64_INS_CMPLS] = CAT_NONE,
+    [ARM64_INS_CMPLT] = CAT_NONE,
+    [ARM64_INS_CMPNE] = CAT_NONE,
+
+    // compare float
+    [ARM64_INS_FCMEQ] = CAT_NONE,
+    [ARM64_INS_FCMGE] = CAT_NONE,
+    [ARM64_INS_FCMGT] = CAT_NONE,
+    [ARM64_INS_FCMNE] = CAT_NONE,
+    [ARM64_INS_FCMUO] = CAT_NONE,
+
+    // absolute compare float
+    [ARM64_INS_FACGE] = CAT_NONE,
+    [ARM64_INS_FACGT] = CAT_NONE,
+    [ARM64_INS_FACLE] = CAT_NONE,
+    [ARM64_INS_FACLT] = CAT_NONE,
+
+    // compact
+    [ARM64_INS_COMPACT] = CAT_NONE,
+
+    // splice
+    [ARM64_INS_SPLICE] = CAT_NONE,
+
+    // detect matching elements
+    [ARM64_INS_MATCH]  = CAT_NONE,
+    [ARM64_INS_NMATCH] = CAT_NONE,
+
+    // count matching elements
+    [ARM64_INS_HISTCNT] = CAT_NONE,
+    [ARM64_INS_HISTSEG] = CAT_NONE,
+
+    // extract last element
+    [ARM64_INS_LASTA] = CAT_NONE,
+    [ARM64_INS_LASTB] = CAT_NONE,
+
+    // extract last element conditionally
+    [ARM64_INS_CLASTA] = CAT_NONE,
+    [ARM64_INS_CLASTB] = CAT_NONE,
+
+    // multiple of vector register size
+    [ARM64_INS_RDVL]  = CAT_NONE,
+    [ARM64_INS_ADDPL] = CAT_NONE,
+    [ARM64_INS_ADDVL] = CAT_NONE,
+
+    // reversed logical shift
+    [ARM64_INS_LSLR] = CAT_NONE,
+    [ARM64_INS_LSRR] = CAT_NONE,
+
+    // arithmetic shift right
+    [ARM64_INS_ASRD] = CAT_NONE,
+    [ARM64_INS_ASRR] = CAT_NONE,
+
+    // shift left
+    [ARM64_INS_SSHLLB] = CAT_NONE,
+    [ARM64_INS_SSHLLT] = CAT_NONE,
+    [ARM64_INS_USHLLB] = CAT_NONE,
+    [ARM64_INS_USHLLT] = CAT_NONE,
+
+    // shift right
+    [ARM64_INS_SHRNB] = CAT_NONE,
+    [ARM64_INS_SHRNT] = CAT_NONE,
+
+    // rounding shift left
+    [ARM64_INS_SRSHLR] = CAT_NONE,
+    [ARM64_INS_URSHLR] = CAT_NONE,
+
+    // rounding shift right
+    [ARM64_INS_RSHRNB] = CAT_NONE,
+    [ARM64_INS_RSHRNT] = CAT_NONE,
+
+    // saturating shift left reversed
+    [ARM64_INS_SQSHLR] = CAT_NONE,
+    [ARM64_INS_UQSHLR] = CAT_NONE,
+
+    // saturating shift right
+    [ARM64_INS_SQSHRNB] = CAT_NONE,
+    [ARM64_INS_SQSHRNT] = CAT_NONE,
+    [ARM64_INS_UQSHRNB] = CAT_NONE,
+    [ARM64_INS_UQSHRNT] = CAT_NONE,
+
+    // saturating rounding shift left reversed
+    [ARM64_INS_SQRSHLR] = CAT_NONE,
+    [ARM64_INS_UQRSHLR] = CAT_NONE,
+
+    // saturating rounding shift right
+    [ARM64_INS_SQRSHRNB] = CAT_NONE,
+    [ARM64_INS_SQRSHRNT] = CAT_NONE,
+    [ARM64_INS_UQRSHRNB] = CAT_NONE,
+    [ARM64_INS_UQRSHRNT] = CAT_NONE,
+
+    // saturating signed shift right (uns narrow)
+    [ARM64_INS_SQSHRUNB] = CAT_NONE,
+    [ARM64_INS_SQSHRUNT] = CAT_NONE,
+
+    // saturating signed rounding shift right (uns narrow)
+    [ARM64_INS_SQRSHRUNB] = CAT_NONE,
+    [ARM64_INS_SQRSHRUNT] = CAT_NONE,
+
+    // reverse element parts
+    [ARM64_INS_REVB] = CAT_NONE,
+    [ARM64_INS_REVD] = CAT_NONE,
+    [ARM64_INS_REVH] = CAT_NONE,
+    [ARM64_INS_REVW] = CAT_NONE,
+
+    // saturating extract
+    [ARM64_INS_SQXTNB] = CAT_NONE,
+    [ARM64_INS_SQXTNT] = CAT_NONE,
+    [ARM64_INS_UQXTNB] = CAT_NONE,
+    [ARM64_INS_UQXTNT] = CAT_NONE,
+
+    // saturating signed extract (unset narrow)
+    [ARM64_INS_SQXTUNB] = CAT_NONE,
+    [ARM64_INS_SQXTUNT] = CAT_NONE,
+
+    // sign-extend
+    [ARM64_INS_SXTW] = CAT_NONE,
+    [ARM64_INS_UXTW] = CAT_NONE,
+
+    // unpack and extend
+    [ARM64_INS_SUNPKHI] = CAT_NONE,
+    [ARM64_INS_UUNPKHI] = CAT_NONE,
+    [ARM64_INS_SUNPKLO] = CAT_NONE,
+    [ARM64_INS_UUNPKLO] = CAT_NONE,
+
+    // bitwise select
+    [ARM64_INS_BSL1N] = CAT_NONE,
+    [ARM64_INS_BSL2N] = CAT_NONE,
+    [ARM64_INS_NBSL]  = CAT_NONE,
+
+    // logical
+    [ARM64_INS_NOTS]  = CAT_NONE,
+    [ARM64_INS_ORRS]  = CAT_NONE,
+    [ARM64_INS_EORS]  = CAT_NONE,
+    [ARM64_INS_NAND]  = CAT_NONE,
+    [ARM64_INS_NANDS] = CAT_NONE,
+    [ARM64_INS_ORNS]  = CAT_NONE,
+    [ARM64_INS_NOR]   = CAT_NONE,
+    [ARM64_INS_NORS]  = CAT_NONE,
+
+    // logical interleaving
+    [ARM64_INS_EORBT] = CAT_NONE,
+    [ARM64_INS_EORTB] = CAT_NONE,
+
+    // logical with reduction to scalar
+    [ARM64_INS_ANDV] = CAT_NONE,
+    [ARM64_INS_ORV]  = CAT_NONE,
+    [ARM64_INS_EORV] = CAT_NONE,
+
+    // bitwise computations
+    [ARM64_INS_BDEP] = CAT_NONE,
+    [ARM64_INS_BEXT] = CAT_NONE,
+    [ARM64_INS_BGRP] = CAT_NONE,
+
+    // add
+    [ARM64_INS_ADDHNB] = CAT_NONE,
+    [ARM64_INS_ADDHNT] = CAT_NONE,
+
+    // subtract
+    [ARM64_INS_SUBHNB] = CAT_NONE,
+    [ARM64_INS_SUBHNT] = CAT_NONE,
+    [ARM64_INS_SSUBWB] = CAT_NONE,
+    [ARM64_INS_SSUBWT] = CAT_NONE,
+
+    // signed add
+    [ARM64_INS_SADDLB]  = CAT_NONE,
+    [ARM64_INS_SADDLT]  = CAT_NONE,
+    [ARM64_INS_SADDLBT] = CAT_NONE,
+    [ARM64_INS_SADDWB]  = CAT_NONE,
+    [ARM64_INS_SADDWT]  = CAT_NONE,
+
+    // signed subtract
+    [ARM64_INS_SSUBLB]  = CAT_NONE,
+    [ARM64_INS_SSUBLT]  = CAT_NONE,
+    [ARM64_INS_SSUBLBT] = CAT_NONE,
+    [ARM64_INS_SSUBLTB] = CAT_NONE,
+
+    // unsigned add
+    [ARM64_INS_UADDLB] = CAT_NONE,
+    [ARM64_INS_UADDLT] = CAT_NONE,
+    [ARM64_INS_UADDWB] = CAT_NONE,
+    [ARM64_INS_UADDWT] = CAT_NONE,
+
+    // unsigned subtract
+    [ARM64_INS_USUBLB] = CAT_NONE,
+    [ARM64_INS_USUBLT] = CAT_NONE,
+    [ARM64_INS_USUBWB] = CAT_NONE,
+    [ARM64_INS_USUBWT] = CAT_NONE,
+
+    // add with carry
+    [ARM64_INS_ADCLB] = CAT_NONE,
+    [ARM64_INS_ADCLT] = CAT_NONE,
+
+    // subtract with carry
+    [ARM64_INS_SBCLB] = CAT_NONE,
+    [ARM64_INS_SBCLT] = CAT_NONE,
+
+    // add reduction to scalar
+    [ARM64_INS_SADDV] = CAT_NONE,
+    [ARM64_INS_UADDV] = CAT_NONE,
+
+    // halving subtract
+    [ARM64_INS_SHSUBR] = CAT_NONE,
+    [ARM64_INS_UHSUBR] = CAT_NONE,
+
+    // reversed subtract
+    [ARM64_INS_SUBR]  = CAT_NONE,
+    [ARM64_INS_FSUBR] = CAT_NONE,
+
+    // saturating subtract
+    [ARM64_INS_SQSUBR] = CAT_NONE,
+    [ARM64_INS_UQSUBR] = CAT_NONE,
+
+    // rounding add
+    [ARM64_INS_RADDHNB] = CAT_NONE,
+    [ARM64_INS_RADDHNT] = CAT_NONE,
+
+    // rounding subtract
+    [ARM64_INS_RSUBHNB] = CAT_NONE,
+    [ARM64_INS_RSUBHNT] = CAT_NONE,
+
+    // floating point add
+    [ARM64_INS_FADDA] = CAT_NONE,
+    [ARM64_INS_FADDV] = CAT_NONE,
+
+    // saturating signed increment
+    [ARM64_INS_SQINCB] = CAT_NONE,
+    [ARM64_INS_SQINCD] = CAT_NONE,
+    [ARM64_INS_SQINCH] = CAT_NONE,
+    [ARM64_INS_SQINCP] = CAT_NONE,
+    [ARM64_INS_SQINCW] = CAT_NONE,
+
+    // saturating unsigned increment
+    [ARM64_INS_UQINCB] = CAT_NONE,
+    [ARM64_INS_UQINCD] = CAT_NONE,
+    [ARM64_INS_UQINCH] = CAT_NONE,
+    [ARM64_INS_UQINCP] = CAT_NONE,
+    [ARM64_INS_UQINCW] = CAT_NONE,
+
+    // saturating signed decrement
+    [ARM64_INS_SQDECB] = CAT_NONE,
+    [ARM64_INS_SQDECD] = CAT_NONE,
+    [ARM64_INS_SQDECH] = CAT_NONE,
+    [ARM64_INS_SQDECP] = CAT_NONE,
+    [ARM64_INS_SQDECW] = CAT_NONE,
+
+    // saturating unsigned decrement
+    [ARM64_INS_UQDECB] = CAT_NONE,
+    [ARM64_INS_UQDECD] = CAT_NONE,
+    [ARM64_INS_UQDECH] = CAT_NONE,
+    [ARM64_INS_UQDECP] = CAT_NONE,
+    [ARM64_INS_UQDECW] = CAT_NONE,
+
+    // absolute difference
+    [ARM64_INS_SABDLB] = CAT_NONE,
+    [ARM64_INS_SABDLT] = CAT_NONE,
+    [ARM64_INS_UABDLB] = CAT_NONE,
+    [ARM64_INS_UABDLT] = CAT_NONE,
+
+    // absolute difference to accumulator
+    [ARM64_INS_SABALB] = CAT_NONE,
+    [ARM64_INS_SABALT] = CAT_NONE,
+    [ARM64_INS_UABALB] = CAT_NONE,
+    [ARM64_INS_UABALT] = CAT_NONE,
+
+    // multiply
+    [ARM64_INS_SMULLB] = CAT_NONE,
+    [ARM64_INS_SMULLT] = CAT_NONE,
+    [ARM64_INS_UMULLB] = CAT_NONE,
+    [ARM64_INS_UMULLT] = CAT_NONE,
+
+    // divide
+    [ARM64_INS_SDIVR] = CAT_NONE,
+    [ARM64_INS_UDIVR] = CAT_NONE,
+    [ARM64_INS_FDIVR] = CAT_NONE,
+
+    // saturating signed multiply
+    [ARM64_INS_SQDMULLB] = CAT_NONE,
+    [ARM64_INS_SQDMULLT] = CAT_NONE,
+
+    // multiply-add and subtract
+    [ARM64_INS_MAD]  = CAT_NONE,
+    [ARM64_INS_MSB]  = CAT_NONE,
+    [ARM64_INS_FMAD] = CAT_NONE,
+    [ARM64_INS_FMSB] = CAT_NONE,
+
+    // multiply-add
+    [ARM64_INS_SMLALB] = CAT_NONE,
+    [ARM64_INS_SMLALT] = CAT_NONE,
+    [ARM64_INS_UMLALB] = CAT_NONE,
+    [ARM64_INS_UMLALT] = CAT_NONE,
+
+    // multiply-subtract
+    [ARM64_INS_SMLSLB] = CAT_NONE,
+    [ARM64_INS_SMLSLT] = CAT_NONE,
+    [ARM64_INS_UMLSLB] = CAT_NONE,
+    [ARM64_INS_UMLSLT] = CAT_NONE,
+
+    // multiple-negated-op
+    [ARM64_INS_FNMAD] = CAT_NONE,
+    [ARM64_INS_FNMLA] = CAT_NONE,
+    [ARM64_INS_FNMLS] = CAT_NONE,
+    [ARM64_INS_FNMSB] = CAT_NONE,
+
+    // multiply-add-to-accumulator
+    [ARM64_INS_FMLALB] = CAT_NONE,
+    [ARM64_INS_FMLALT] = CAT_NONE,
+
+    // multiply-subtract-from-accumulator
+    [ARM64_INS_FMLSLB] = CAT_NONE,
+    [ARM64_INS_FMLSLT] = CAT_NONE,
+
+    // saturating signed multiply-add
+    [ARM64_INS_SQDMLALB]  = CAT_NONE,
+    [ARM64_INS_SQDMLALBT] = CAT_NONE,
+    [ARM64_INS_SQDMLALT]  = CAT_NONE,
+
+    // saturating signed multiply-subtract
+    [ARM64_INS_SQDMLSLB]  = CAT_NONE,
+    [ARM64_INS_SQDMLSLBT] = CAT_NONE,
+    [ARM64_INS_SQDMLSLT]  = CAT_NONE,
+
+    // logical invert of elements values
+    [ARM64_INS_CNOT] = CAT_NONE,
+
+    // complex integers
+    [ARM64_INS_CADD] = CAT_NONE,
+    [ARM64_INS_CDOT] = CAT_NONE,
+    [ARM64_INS_CMLA] = CAT_NONE,
+
+    // complex integer add
+    [ARM64_INS_SQCADD]    = CAT_NONE,
+    [ARM64_INS_SQRDCMLAH] = CAT_NONE,
+
+    // polynomial multiplication
+    [ARM64_INS_PMULLB] = CAT_NONE,
+    [ARM64_INS_PMULLT] = CAT_NONE,
+
+    // matrix multiplication
+    [ARM64_INS_FMMLA] = CAT_NONE,
+
+    // clamp
+    [ARM64_INS_SCLAMP] = CAT_NONE,
+    [ARM64_INS_UCLAMP] = CAT_NONE,
+
+    // logarithmic
+    [ARM64_INS_FEXPA]  = CAT_NONE,
+    [ARM64_INS_FLOGB]  = CAT_NONE,
+    [ARM64_INS_FSCALE] = CAT_NONE,
+
+    // trigonometry
+    [ARM64_INS_FTSSEL] = CAT_NONE,
+    [ARM64_INS_FTMAD]  = CAT_NONE,
+    [ARM64_INS_FTSMUL] = CAT_NONE,
+
+    // === Scalable Vector Extension (SVE) loops ===============================
+
+    // predicate
+    [ARM64_INS_PTEST]   = CAT_NONE,
+    [ARM64_INS_PTRUE]   = CAT_NONE,
+    [ARM64_INS_PTRUES]  = CAT_NONE,
+    [ARM64_INS_PFALSE]  = CAT_NONE,
+    [ARM64_INS_PFIRST]  = CAT_NONE,
+    [ARM64_INS_PNEXT]   = CAT_NONE,
+    [ARM64_INS_PUNPKHI] = CAT_NONE,
+    [ARM64_INS_PUNPKLO] = CAT_NONE,
+
+    // element predicate
+    [ARM64_INS_PSEL]   = CAT_NONE,
+    [ARM64_INS_RDFFR]  = CAT_NONE,
+    [ARM64_INS_RDFFRS] = CAT_NONE,
+
+    // index
+    [ARM64_INS_INDEX] = CAT_NONE,
+
+    // first-fault register
+    [ARM64_INS_SETFFR] = CAT_NONE,
+    [ARM64_INS_WRFFR]  = CAT_NONE,
+
+    // count
+    [ARM64_INS_CNTB] = CAT_NONE,
+    [ARM64_INS_CNTD] = CAT_NONE,
+    [ARM64_INS_CNTH] = CAT_NONE,
+    [ARM64_INS_CNTP] = CAT_NONE,
+    [ARM64_INS_CNTW] = CAT_NONE,
+
+    // increment
+    [ARM64_INS_INCB] = CAT_NONE,
+    [ARM64_INS_INCD] = CAT_NONE,
+    [ARM64_INS_INCH] = CAT_NONE,
+    [ARM64_INS_INCP] = CAT_NONE,
+    [ARM64_INS_INCW] = CAT_NONE,
+
+    // decrement
+    [ARM64_INS_DECB] = CAT_NONE,
+    [ARM64_INS_DECD] = CAT_NONE,
+    [ARM64_INS_DECH] = CAT_NONE,
+    [ARM64_INS_DECP] = CAT_NONE,
+    [ARM64_INS_DECW] = CAT_NONE,
+
+    // while
+    [ARM64_INS_WHILEGE] = CAT_NONE,
+    [ARM64_INS_WHILEGT] = CAT_NONE,
+    [ARM64_INS_WHILEHI] = CAT_NONE,
+    [ARM64_INS_WHILEHS] = CAT_NONE,
+    [ARM64_INS_WHILELE] = CAT_NONE,
+    [ARM64_INS_WHILELO] = CAT_NONE,
+    [ARM64_INS_WHILELS] = CAT_NONE,
+    [ARM64_INS_WHILELT] = CAT_NONE,
+    [ARM64_INS_WHILERW] = CAT_NONE,
+    [ARM64_INS_WHILEWR] = CAT_NONE,
+
+    // break
+    [ARM64_INS_BRKA]   = CAT_NONE,
+    [ARM64_INS_BRKAS]  = CAT_NONE,
+    [ARM64_INS_BRKB]   = CAT_NONE,
+    [ARM64_INS_BRKBS]  = CAT_NONE,
+    [ARM64_INS_BRKN]   = CAT_NONE,
+    [ARM64_INS_BRKNS]  = CAT_NONE,
+    [ARM64_INS_BRKPA]  = CAT_NONE,
+    [ARM64_INS_BRKPAS] = CAT_NONE,
+    [ARM64_INS_BRKPB]  = CAT_NONE,
+    [ARM64_INS_BRKPBS] = CAT_NONE,
+
+    // termination
+    [ARM64_INS_CTERMEQ] = CAT_NONE,
+    [ARM64_INS_CTERMNE] = CAT_NONE,
+
+    // === Scalable Matrix Extension (SME) =====================================
+
+    // move slice to/from a vector register
+    [ARM64_INS_MOVA] = CAT_NONE,
+
+    // fill zeros
+    [ARM64_INS_ZERO] = CAT_NONE,
+
+    // add horizontally
+    [ARM64_INS_ADDHA] = CAT_NONE,
+
+    // add vertically
+    [ARM64_INS_ADDVA] = CAT_NONE,
+
+    // sum of outer products
+    [ARM64_INS_SMOPS]  = CAT_NONE,
+    [ARM64_INS_UMOPS]  = CAT_NONE,
+    [ARM64_INS_SUMOPS] = CAT_NONE,
+    [ARM64_INS_USMOPS] = CAT_NONE,
+    [ARM64_INS_FMOPS]  = CAT_NONE,
+    [ARM64_INS_BFMOPS] = CAT_NONE,
+
+    // sum of outer products and accumulate
+    [ARM64_INS_SMOPA]  = CAT_NONE,
+    [ARM64_INS_UMOPA]  = CAT_NONE,
+    [ARM64_INS_SUMOPA] = CAT_NONE,
+    [ARM64_INS_USMOPA] = CAT_NONE,
+    [ARM64_INS_FMOPA]  = CAT_NONE,
+    [ARM64_INS_BFMOPA] = CAT_NONE,
+
+    // === Address authentication ==============================================
+
+    // insert auth code for data address
+    [ARM64_INS_PACDA]  = CAT_NONE,
+    [ARM64_INS_PACDB]  = CAT_NONE,
+    [ARM64_INS_PACDZA] = CAT_NONE,
+    [ARM64_INS_PACDZB] = CAT_NONE,
+    [ARM64_INS_PACGA]  = CAT_NONE,
+
+    // insert auth code A for instruction address
+    [ARM64_INS_PACIA]     = CAT_NONE,
+    [ARM64_INS_PACIA1716] = CAT_NONE,
+    [ARM64_INS_PACIASP]   = CAT_NONE,
+    [ARM64_INS_PACIAZ]    = CAT_NONE,
+    [ARM64_INS_PACIZA]    = CAT_NONE,
+
+    // insert auth code B for instruction address
+    [ARM64_INS_PACIB]     = CAT_NONE,
+    [ARM64_INS_PACIB1716] = CAT_NONE,
+    [ARM64_INS_PACIBSP]   = CAT_NONE,
+    [ARM64_INS_PACIBZ]    = CAT_NONE,
+    [ARM64_INS_PACIZB]    = CAT_NONE,
+
+    // authenticate data address
+    [ARM64_INS_AUTDA]  = CAT_NONE,
+    [ARM64_INS_AUTDB]  = CAT_NONE,
+    [ARM64_INS_AUTDZA] = CAT_NONE,
+    [ARM64_INS_AUTDZB] = CAT_NONE,
+
+    // authenticate instruction address code A
+    [ARM64_INS_AUTIA]     = CAT_NONE,
+    [ARM64_INS_AUTIA1716] = CAT_NONE,
+    [ARM64_INS_AUTIASP]   = CAT_NONE,
+    [ARM64_INS_AUTIAZ]    = CAT_NONE,
+    [ARM64_INS_AUTIZA]    = CAT_NONE,
+
+    // authenticate instruction address code B
+    [ARM64_INS_AUTIB]     = CAT_NONE,
+    [ARM64_INS_AUTIB1716] = CAT_NONE,
+    [ARM64_INS_AUTIBSP]   = CAT_NONE,
+    [ARM64_INS_AUTIBZ]    = CAT_NONE,
+    [ARM64_INS_AUTIZB]    = CAT_NONE,
+
+    // strip auth code
+    [ARM64_INS_XPACD]   = CAT_NONE,
+    [ARM64_INS_XPACI]   = CAT_NONE,
+    [ARM64_INS_XPACLRI] = CAT_NONE,
+
+    // === Algorithms ==========================================================
+
+    // aes
+    [ARM64_INS_AESD]   = CAT_NONE,
+    [ARM64_INS_AESE]   = CAT_NONE,
+    [ARM64_INS_AESIMC] = CAT_NONE,
+    [ARM64_INS_AESMC]  = CAT_NONE,
+
+    // sha
+    [ARM64_INS_SHA1C]     = CAT_NONE,
+    [ARM64_INS_SHA1H]     = CAT_NONE,
+    [ARM64_INS_SHA1M]     = CAT_NONE,
+    [ARM64_INS_SHA1P]     = CAT_NONE,
+    [ARM64_INS_SHA1SU0]   = CAT_NONE,
+    [ARM64_INS_SHA1SU1]   = CAT_NONE,
+    [ARM64_INS_SHA256H]   = CAT_NONE,
+    [ARM64_INS_SHA256H2]  = CAT_NONE,
+    [ARM64_INS_SHA256SU0] = CAT_NONE,
+    [ARM64_INS_SHA256SU1] = CAT_NONE,
+    [ARM64_INS_SHA512H]   = CAT_NONE,
+    [ARM64_INS_SHA512H2]  = CAT_NONE,
+    [ARM64_INS_SHA512SU0] = CAT_NONE,
+    [ARM64_INS_SHA512SU1] = CAT_NONE,
+
+    // crc
+    [ARM64_INS_CRC32B]  = CAT_NONE,
+    [ARM64_INS_CRC32CB] = CAT_NONE,
+    [ARM64_INS_CRC32CH] = CAT_NONE,
+    [ARM64_INS_CRC32CW] = CAT_NONE,
+    [ARM64_INS_CRC32CX] = CAT_NONE,
+    [ARM64_INS_CRC32H]  = CAT_NONE,
+    [ARM64_INS_CRC32W]  = CAT_NONE,
+    [ARM64_INS_CRC32X]  = CAT_NONE,
+
+    // sm3
+    [ARM64_INS_SM3SS1]    = CAT_NONE,
+    [ARM64_INS_SM3TT1A]   = CAT_NONE,
+    [ARM64_INS_SM3TT1B]   = CAT_NONE,
+    [ARM64_INS_SM3TT2A]   = CAT_NONE,
+    [ARM64_INS_SM3TT2B]   = CAT_NONE,
+    [ARM64_INS_SM3PARTW1] = CAT_NONE,
+    [ARM64_INS_SM3PARTW2] = CAT_NONE,
+
+    // sm4
+    [ARM64_INS_SM4E]    = CAT_NONE,
+    [ARM64_INS_SM4EKEY] = CAT_NONE,
+
+    // =========================================================================
+
+    [ARM64_INS_ENDING] = -1};
+
+void udf_decode_reg(context_t *ctx, struct qemu_plugin_insn *insn);
+
+/* .sample is used in the qemu plugin to sample if a capture should be
+   generated. it generates a capture for lotto if random_number % .sample == 0
+
+   .sample = 1 always generates a capture for this category
+   .sample = UINT32_MAX generates a capture in about every 2^32 instructions for
+   this category
+ */
+static const struct {
+    const char *const func;
+    void (*const cb)(context_t *ctx, struct qemu_plugin_insn *insn);
+    const uint32_t sample;
+} mapping_cat[] = {
+    [CAT_SYS_YIELD] =
+        {
+            .func   = "yield ins",
+            .cb     = INSTR_YIELD ? register_insn_cb : NULL,
+            .sample = 1,
+        },
+    [CAT_FUNC_EXIT] =
+        {
+            .func   = "ret",
+            .cb     = INSTR_RET ? register_insn_cb : NULL,
+            .sample = 1,
+        },
+    [CAT_BEFORE_AREAD] =
+        {
+            .func   = "aread",
+            .cb     = INSTR_AREAD ? register_mem_cb : NULL,
+            .sample = 1,
+        },
+    [CAT_BEFORE_READ] =
+        {
+            .func   = "read",
+            .cb     = INSTR_READ ? register_mem_cb : NULL,
+            .sample = 1000,
+        },
+    [CAT_BEFORE_AWRITE] =
+        {
+            .func   = "awrite",
+            .cb     = INSTR_AWRITE ? register_mem_cb : NULL,
+            .sample = 1,
+        },
+    [CAT_BEFORE_WRITE] =
+        {
+            .func   = "write",
+            .cb     = INSTR_WRITE ? register_mem_cb : NULL,
+            .sample = 1000,
+        },
+    [CAT_FUNC_ENTRY] =
+        {
+            .func   = "branch",
+            .cb     = INSTR_FUNC ? register_insn_cb : NULL,
+            .sample = 1,
+        },
+    [CAT_BEFORE_CMPXCHG] =
+        {
+            .func   = "cas*",
+            .cb     = INSTR_CAS ? register_mem_cb : NULL,
+            .sample = 1,
+        },
+    [CAT_BEFORE_FENCE] =
+        {
+            .func   = "DMB/DSB",
+            .cb     = INSTR_DMB ? register_mem_cb : NULL,
+            .sample = 1,
+        },
+    [CAT_EXTRA_HS_CALL] =
+        {
+            .func   = "SMC/HVC/SVC syscall/hypercall",
+            .cb     = INSTR_HS_CALL ? register_insn_cb : NULL,
+            .sample = 1,
+        },
+    [CAT_EXTRA_WF] =
+        {
+            .func   = "WFE/WFI",
+            .cb     = INSTR_WF ? register_insn_cb : NULL,
+            .sample = 1,
+        },
+    [CAT_EXTRA_UDF] =
+        {
+            .func   = "udf",
+            .cb     = udf_decode_reg,
+            .sample = 1,
+        },
+};
+
+#else
+    #error "This file must be included only once"
+#endif

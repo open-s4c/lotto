@@ -1,0 +1,10 @@
+[package]
+name = "handler_rinflex"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lotto.workspace = true
+bincode.workspace = true
+
+rinflex = { path="../../lib/rinflex/" }

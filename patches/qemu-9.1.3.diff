@@ -1,0 +1,509 @@
+From beb3a4104f5318f7aede2a443771cb3ddfce0429 Mon Sep 17 00:00:00 2001
+From: Smail AIDER <smail.aider@huawei.com>
+Date: Fri, 20 Sep 2024 19:33:17 +0800
+Subject: [PATCH 1/4] qemu: Port qemu patch for q-lotto to qemu-v9.1.0
+
+---
+ accel/tcg/tcg-accel-ops-mttcg.c | 23 +++++++++++++++++++++++
+ include/qemu/futex.h            | 15 +++++++++++++++
+ plugins/qemu-plugins.symbols    |  1 +
+ system/runstate.c               | 21 +++++++++++++++++++++
+ target/arm/tcg/translate-a64.c  |  4 ++++
+ 5 files changed, 64 insertions(+)
+
+diff --git a/accel/tcg/tcg-accel-ops-mttcg.c b/accel/tcg/tcg-accel-ops-mttcg.c
+index 49814ec4aff..9c883d54bcd 100644
+--- a/accel/tcg/tcg-accel-ops-mttcg.c
++++ b/accel/tcg/tcg-accel-ops-mttcg.c
+@@ -56,6 +56,24 @@ static void mttcg_force_rcu(Notifier *notify, void *data)
+     async_run_on_cpu(cpu, do_nothing, RUN_ON_CPU_NULL);
+ }
+ 
++/*
++ * forwards pointers of CPUState and CPUArchState (CPUARMState) struct to qlotto
++ */
++void (*qlotto_register_cpu_f)(unsigned int cpu_index, void *cpu, void *cpuenv) = NULL;
++void (*gdb_register_cpu_f)(unsigned int cpu_index, void *cpu, void *cpuenv) = NULL;
++
++void set_qlotto_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv));
++void set_qlotto_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv))
++{
++    qlotto_register_cpu_f = func;
++}
++
++void set_gdb_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv));
++void set_gdb_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv))
++{
++    gdb_register_cpu_f = func;
++}
++
+ /*
+  * In the multi-threaded case each vCPU has its own thread. The TLS
+  * variable current_cpu can be used deep in the code to find the
+@@ -88,6 +106,11 @@ static void *mttcg_cpu_thread_fn(void *arg)
+     /* process any pending work */
+     cpu->exit_request = 1;
+ 
++    if(NULL != qlotto_register_cpu_f)
++	qlotto_register_cpu_f(cpu->cpu_index, cpu, cpu_env(cpu));
++    if(NULL != gdb_register_cpu_f)
++	gdb_register_cpu_f(cpu->cpu_index, cpu, cpu_env(cpu));
++
+     do {
+         if (cpu_can_run(cpu)) {
+             int r;
+diff --git a/include/qemu/futex.h b/include/qemu/futex.h
+index 91ae88966e1..536aa05b77d 100644
+--- a/include/qemu/futex.h
++++ b/include/qemu/futex.h
+@@ -16,16 +16,31 @@
+ 
+ #include <sys/syscall.h>
+ #include <linux/futex.h>
++#include <lotto/evec.h>
++#include <lotto/check.h>
+ 
+ #define qemu_futex(...)              syscall(__NR_futex, __VA_ARGS__)
+ 
+ static inline void qemu_futex_wake(void *f, int n)
+ {
++    if (lotto_loaded()) {
++	lotto_evec_wake(f, (uint32_t) n);
++	return;
++    }
+     qemu_futex(f, FUTEX_WAKE, n, NULL, NULL, 0);
+ }
+ 
+ static inline void qemu_futex_wait(void *f, unsigned val)
+ {
++    if (lotto_loaded()) {
++	lotto_evec_prepare(f);
++	if (*(int*)f == (int)val) {
++	    lotto_evec_wait(f);
++	} else {
++	    lotto_evec_cancel(f);
++	}
++	return;
++    }
+     while (qemu_futex(f, FUTEX_WAIT, (int) val, NULL, NULL, 0)) {
+         switch (errno) {
+         case EWOULDBLOCK:
+diff --git a/plugins/qemu-plugins.symbols b/plugins/qemu-plugins.symbols
+index ca773d8d9fe..2d46914c4a1 100644
+--- a/plugins/qemu-plugins.symbols
++++ b/plugins/qemu-plugins.symbols
+@@ -54,4 +54,5 @@
+   qemu_plugin_uninstall;
+   qemu_plugin_update_ns;
+   qemu_plugin_vcpu_for_each;
++  qemu_plugin_delayed_save_snapshot;
+ };
+diff --git a/system/runstate.c b/system/runstate.c
+index a0e2a5fd22d..51087006dd1 100644
+--- a/system/runstate.c
++++ b/system/runstate.c
+@@ -818,12 +818,33 @@ static bool main_loop_should_exit(int *status)
+     return false;
+ }
+ 
++#include "migration/snapshot.h"
++
++void qemu_plugin_delayed_save_snapshot(char* snapshot_str);
++bool delayed_snashot_awaits = false;
++char* delayed_snapshot_str = NULL;
++
++void qemu_plugin_delayed_save_snapshot(char* snapshot_str)
++{
++    if (!delayed_snashot_awaits) {
++	delayed_snapshot_str = snapshot_str;
++	delayed_snashot_awaits = true;
++    }
++}
++
+ int qemu_main_loop(void)
+ {
+     int status = EXIT_SUCCESS;
+ 
+     while (!main_loop_should_exit(&status)) {
+         main_loop_wait(false);
++
++	/* check if we have a delayed plugin snapshot waiting */
++	if (delayed_snashot_awaits && delayed_snapshot_str != NULL) {
++	    save_snapshot(delayed_snapshot_str, true, NULL, false, NULL, NULL);
++	    delayed_snapshot_str = NULL;
++	    delayed_snashot_awaits = false;
++	}
+     }
+ 
+     return status;
+diff --git a/target/arm/tcg/translate-a64.c b/target/arm/tcg/translate-a64.c
+index 4684e7eb6ea..835c533161d 100644
+--- a/target/arm/tcg/translate-a64.c
++++ b/target/arm/tcg/translate-a64.c
+@@ -12155,6 +12155,10 @@ static void aarch64_tr_translate_insn(DisasContextBase *dcbase, CPUState *cpu)
+         disas_sme_fa64(s, insn);
+     }
+ 
++    if ((insn & 0xFFFF0000) == 0) {
++	    return;
++    }
++
+     if (!disas_a64(s, insn) &&
+         !disas_sme(s, insn) &&
+         !disas_sve(s, insn)) {
+-- 
+2.47.3
+
+From 55ae2eb036a1d3a7f10ab5dcec307601cc47dcec Mon Sep 17 00:00:00 2001
+From: Martin Beck <martin.beck1@huawei.com>
+Date: Mon, 18 Nov 2024 09:48:18 +0100
+Subject: [PATCH 2/4] Qlotto: Adds callbacks for cpu_kick; adds tests for qeak
+ functions being null
+
+---
+ accel/tcg/cpu-exec.c            | 10 +++++++++
+ accel/tcg/tcg-accel-ops-mttcg.c | 36 ++++++++++++++++++++++++---------
+ system/cpus.c                   | 15 ++++++++++++++
+ 3 files changed, 52 insertions(+), 9 deletions(-)
+
+diff --git a/accel/tcg/cpu-exec.c b/accel/tcg/cpu-exec.c
+index 8163295f34b..b0db9e0654f 100644
+--- a/accel/tcg/cpu-exec.c
++++ b/accel/tcg/cpu-exec.c
+@@ -433,6 +433,10 @@ const void *HELPER(lookup_tb_ptr)(CPUArchState *env)
+     return tb->tc.ptr;
+ }
+ 
++extern void (*into_qemu_from_guest_f)(unsigned int cpu_index);
++extern void (*into_qemu_from_guest_unsafe_f)(unsigned int cpu_index);
++extern void (*into_guest_from_qemu_f)(unsigned int cpu_index);
++
+ /* Execute a TB, and fix up the CPU state afterwards if necessary */
+ /*
+  * Disable CFI checks.
+@@ -454,8 +458,12 @@ cpu_tb_exec(CPUState *cpu, TranslationBlock *itb, int *tb_exit)
+         log_cpu_exec(log_pc(cpu, itb), cpu, itb);
+     }
+ 
++    if(NULL != into_guest_from_qemu_f)
++        into_guest_from_qemu_f(cpu->cpu_index);
+     qemu_thread_jit_execute();
+     ret = tcg_qemu_tb_exec(cpu_env(cpu), tb_ptr);
++    if(NULL != into_qemu_from_guest_f)
++        into_qemu_from_guest_f(cpu->cpu_index);
+     cpu->neg.can_do_io = true;
+     qemu_plugin_disable_mem_helpers(cpu);
+     /*
+@@ -1034,6 +1042,8 @@ static int cpu_exec_setjmp(CPUState *cpu, SyncClocks *sc)
+     /* Prepare setjmp context for exception handling. */
+     if (unlikely(sigsetjmp(cpu->jmp_env, 0) != 0)) {
+         cpu_exec_longjmp_cleanup(cpu);
++        if(NULL != into_qemu_from_guest_unsafe_f)
++            into_qemu_from_guest_unsafe_f(cpu->cpu_index);
+     }
+ 
+     return cpu_exec_loop(cpu, sc);
+diff --git a/accel/tcg/tcg-accel-ops-mttcg.c b/accel/tcg/tcg-accel-ops-mttcg.c
+index 9c883d54bcd..085cb7e6fea 100644
+--- a/accel/tcg/tcg-accel-ops-mttcg.c
++++ b/accel/tcg/tcg-accel-ops-mttcg.c
+@@ -59,21 +59,39 @@ static void mttcg_force_rcu(Notifier *notify, void *data)
+ /*
+  * forwards pointers of CPUState and CPUArchState (CPUARMState) struct to qlotto
+  */
+-void (*qlotto_register_cpu_f)(unsigned int cpu_index, void *cpu, void *cpuenv) = NULL;
+-void (*gdb_register_cpu_f)(unsigned int cpu_index, void *cpu, void *cpuenv) = NULL;
+-
+-void set_qlotto_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv));
+-void set_qlotto_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv))
++void (*qlotto_register_cpu_f)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc) = NULL;
++void (*gdb_register_cpu_f)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc) = NULL;
++void (*into_qemu_from_guest_f)(unsigned int cpu_index) = NULL;
++void (*into_qemu_from_guest_unsafe_f)(unsigned int cpu_index) = NULL;
++void (*into_guest_from_qemu_f)(unsigned int cpu_index) = NULL;
++
++void set_qlotto_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc));
++void set_qlotto_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc))
+ {
+     qlotto_register_cpu_f = func;
+ }
+ 
+-void set_gdb_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv));
+-void set_gdb_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv))
++void set_gdb_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc));
++void set_gdb_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc))
+ {
+     gdb_register_cpu_f = func;
+ }
+ 
++void set_into_qemu_from_guest(void (*func)(unsigned int cpu_index));
++void set_into_qemu_from_guest(void (*func)(unsigned int cpu_index)){
++    into_qemu_from_guest_f = func;
++}
++
++void set_into_qemu_from_guest_unsafe(void (*func)(unsigned int cpu_index));
++void set_into_qemu_from_guest_unsafe(void (*func)(unsigned int cpu_index)){
++    into_qemu_from_guest_unsafe_f = func;
++}
++
++void set_into_guest_from_qemu(void (*func)(unsigned int cpu_index));
++void set_into_guest_from_qemu(void (*func)(unsigned int cpu_index)){
++    into_guest_from_qemu_f = func;
++}
++
+ /*
+  * In the multi-threaded case each vCPU has its own thread. The TLS
+  * variable current_cpu can be used deep in the code to find the
+@@ -107,9 +125,9 @@ static void *mttcg_cpu_thread_fn(void *arg)
+     cpu->exit_request = 1;
+ 
+     if(NULL != qlotto_register_cpu_f)
+-	qlotto_register_cpu_f(cpu->cpu_index, cpu, cpu_env(cpu));
++    	qlotto_register_cpu_f(cpu->cpu_index, cpu, cpu_env(cpu), &cpu->cc);
+     if(NULL != gdb_register_cpu_f)
+-	gdb_register_cpu_f(cpu->cpu_index, cpu, cpu_env(cpu));
++	    gdb_register_cpu_f(cpu->cpu_index, cpu, cpu_env(cpu), &cpu->cc);
+ 
+     do {
+         if (cpu_can_run(cpu)) {
+diff --git a/system/cpus.c b/system/cpus.c
+index 1c818ff6828..4b61c1b5ad3 100644
+--- a/system/cpus.c
++++ b/system/cpus.c
+@@ -486,6 +486,17 @@ void cpus_kick_thread(CPUState *cpu)
+ #endif
+ }
+ 
++
++__attribute__((weak)) uint64_t get_task_id(void);
++
++void (*qemu_cpu_kick_cb_f)(void *cpu) = NULL;
++void register_qemu_cpu_kick_cb(void (*func)(void *cpu));
++void register_qemu_cpu_kick_cb(void (*func)(void *cpu))
++{
++    qemu_cpu_kick_cb_f = func;
++}
++
++
+ void qemu_cpu_kick(CPUState *cpu)
+ {
+     qemu_cond_broadcast(cpu->halt_cond);
+@@ -494,6 +505,10 @@ void qemu_cpu_kick(CPUState *cpu)
+     } else { /* default */
+         cpus_kick_thread(cpu);
+     }
++
++    if (NULL != qemu_cpu_kick_cb_f) {
++        qemu_cpu_kick_cb_f(cpu);
++    }
+ }
+ 
+ void qemu_cpu_kick_self(void)
+-- 
+2.47.3
+
+From 9667221cf37f34b3cefa37adb9325700b34b8868 Mon Sep 17 00:00:00 2001
+From: Martin Beck <martin.beck1@huawei.com>
+Date: Thu, 28 Nov 2024 10:39:35 +0100
+Subject: [PATCH 3/4] Macro niceness
+
+---
+ accel/tcg/cpu-exec.c            | 27 +++++++----
+ accel/tcg/tcg-accel-ops-mttcg.c | 81 +++++++++++++++++++--------------
+ 2 files changed, 64 insertions(+), 44 deletions(-)
+
+diff --git a/accel/tcg/cpu-exec.c b/accel/tcg/cpu-exec.c
+index b0db9e0654f..c3d1d8f2c3b 100644
+--- a/accel/tcg/cpu-exec.c
++++ b/accel/tcg/cpu-exec.c
+@@ -42,6 +42,8 @@
+ #include "internal-common.h"
+ #include "internal-target.h"
+ 
++#include <lotto/qlotto/qemu/callbacks.h>
++
+ /* -icount align implementation. */
+ 
+ typedef struct SyncClocks {
+@@ -433,9 +435,13 @@ const void *HELPER(lookup_tb_ptr)(CPUArchState *env)
+     return tb->tc.ptr;
+ }
+ 
+-extern void (*into_qemu_from_guest_f)(unsigned int cpu_index);
+-extern void (*into_qemu_from_guest_unsafe_f)(unsigned int cpu_index);
+-extern void (*into_guest_from_qemu_f)(unsigned int cpu_index);
++// REGISTER_GLOBAL_EXTERN(into_qemu_from_guest, void, unsigned int cpu_index)
++// REGISTER_GLOBAL_EXTERN(into_qemu_from_guest_unsafe, void, unsigned int cpu_index)
++// REGISTER_GLOBAL_EXTERN(into_guest_from_qemu, void, unsigned int cpu_index)
++
++// extern void (*into_qemu_from_guest_f)(unsigned int cpu_index);
++// extern void (*into_qemu_from_guest_unsafe_f)(unsigned int cpu_index);
++// extern void (*into_guest_from_qemu_f)(unsigned int cpu_index);
+ 
+ /* Execute a TB, and fix up the CPU state afterwards if necessary */
+ /*
+@@ -458,12 +464,14 @@ cpu_tb_exec(CPUState *cpu, TranslationBlock *itb, int *tb_exit)
+         log_cpu_exec(log_pc(cpu, itb), cpu, itb);
+     }
+ 
+-    if(NULL != into_guest_from_qemu_f)
+-        into_guest_from_qemu_f(cpu->cpu_index);
++    WEAK_CALL(into_guest_from_qemu, cpu->cpu_index)
++    // if(NULL != into_guest_from_qemu_f)
++    //     into_guest_from_qemu_f(cpu->cpu_index);
+     qemu_thread_jit_execute();
+     ret = tcg_qemu_tb_exec(cpu_env(cpu), tb_ptr);
+-    if(NULL != into_qemu_from_guest_f)
+-        into_qemu_from_guest_f(cpu->cpu_index);
++    WEAK_CALL(into_qemu_from_guest, cpu->cpu_index)
++    // if(NULL != into_qemu_from_guest_f)
++    //     into_qemu_from_guest_f(cpu->cpu_index);
+     cpu->neg.can_do_io = true;
+     qemu_plugin_disable_mem_helpers(cpu);
+     /*
+@@ -1042,8 +1050,9 @@ static int cpu_exec_setjmp(CPUState *cpu, SyncClocks *sc)
+     /* Prepare setjmp context for exception handling. */
+     if (unlikely(sigsetjmp(cpu->jmp_env, 0) != 0)) {
+         cpu_exec_longjmp_cleanup(cpu);
+-        if(NULL != into_qemu_from_guest_unsafe_f)
+-            into_qemu_from_guest_unsafe_f(cpu->cpu_index);
++        WEAK_CALL(into_qemu_from_guest_unsafe, cpu->cpu_index)
++        // if(NULL != into_qemu_from_guest_unsafe_f)
++        //     into_qemu_from_guest_unsafe_f(cpu->cpu_index);
+     }
+ 
+     return cpu_exec_loop(cpu, sc);
+diff --git a/accel/tcg/tcg-accel-ops-mttcg.c b/accel/tcg/tcg-accel-ops-mttcg.c
+index 085cb7e6fea..304c1dfb2ef 100644
+--- a/accel/tcg/tcg-accel-ops-mttcg.c
++++ b/accel/tcg/tcg-accel-ops-mttcg.c
+@@ -36,6 +36,8 @@
+ #include "tcg-accel-ops.h"
+ #include "tcg-accel-ops-mttcg.h"
+ 
++#include <lotto/qlotto/qemu/callbacks.h>
++
+ typedef struct MttcgForceRcuNotifier {
+     Notifier notifier;
+     CPUState *cpu;
+@@ -59,38 +61,45 @@ static void mttcg_force_rcu(Notifier *notify, void *data)
+ /*
+  * forwards pointers of CPUState and CPUArchState (CPUARMState) struct to qlotto
+  */
+-void (*qlotto_register_cpu_f)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc) = NULL;
+-void (*gdb_register_cpu_f)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc) = NULL;
+-void (*into_qemu_from_guest_f)(unsigned int cpu_index) = NULL;
+-void (*into_qemu_from_guest_unsafe_f)(unsigned int cpu_index) = NULL;
+-void (*into_guest_from_qemu_f)(unsigned int cpu_index) = NULL;
+-
+-void set_qlotto_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc));
+-void set_qlotto_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc))
+-{
+-    qlotto_register_cpu_f = func;
+-}
+-
+-void set_gdb_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc));
+-void set_gdb_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc))
+-{
+-    gdb_register_cpu_f = func;
+-}
+ 
+-void set_into_qemu_from_guest(void (*func)(unsigned int cpu_index));
+-void set_into_qemu_from_guest(void (*func)(unsigned int cpu_index)){
+-    into_qemu_from_guest_f = func;
+-}
+-
+-void set_into_qemu_from_guest_unsafe(void (*func)(unsigned int cpu_index));
+-void set_into_qemu_from_guest_unsafe(void (*func)(unsigned int cpu_index)){
+-    into_qemu_from_guest_unsafe_f = func;
+-}
+-
+-void set_into_guest_from_qemu(void (*func)(unsigned int cpu_index));
+-void set_into_guest_from_qemu(void (*func)(unsigned int cpu_index)){
+-    into_guest_from_qemu_f = func;
+-}
++REGISTER_GLOBAL_DEFINE(qlotto_register_cpu, void, unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc)
++REGISTER_GLOBAL_DEFINE(gdb_register_cpu, void, unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc)
++REGISTER_GLOBAL_DEFINE(into_qemu_from_guest, void, unsigned int cpu_index)
++REGISTER_GLOBAL_DEFINE(into_qemu_from_guest_unsafe, void, unsigned int cpu_index)
++REGISTER_GLOBAL_DEFINE(into_guest_from_qemu, void, unsigned int cpu_index)
++
++// void (*qlotto_register_cpu_f)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc) = NULL;
++// void (*gdb_register_cpu_f)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc) = NULL;
++// void (*into_qemu_from_guest_f)(unsigned int cpu_index) = NULL;
++// void (*into_qemu_from_guest_unsafe_f)(unsigned int cpu_index) = NULL;
++// void (*into_guest_from_qemu_f)(unsigned int cpu_index) = NULL;
++
++// void set_qlotto_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc));
++// void set_qlotto_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc))
++// {
++//     qlotto_register_cpu_f = func;
++// }
++
++// void set_gdb_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc));
++// void set_gdb_register_cpu(void (*func)(unsigned int cpu_index, void *cpu, void *cpuenv, void *cpustatecc))
++// {
++//     gdb_register_cpu_f = func;
++// }
++
++// void set_into_qemu_from_guest(void (*func)(unsigned int cpu_index));
++// void set_into_qemu_from_guest(void (*func)(unsigned int cpu_index)){
++//     into_qemu_from_guest_f = func;
++// }
++
++// void set_into_qemu_from_guest_unsafe(void (*func)(unsigned int cpu_index));
++// void set_into_qemu_from_guest_unsafe(void (*func)(unsigned int cpu_index)){
++//     into_qemu_from_guest_unsafe_f = func;
++// }
++
++// void set_into_guest_from_qemu(void (*func)(unsigned int cpu_index));
++// void set_into_guest_from_qemu(void (*func)(unsigned int cpu_index)){
++//     into_guest_from_qemu_f = func;
++// }
+ 
+ /*
+  * In the multi-threaded case each vCPU has its own thread. The TLS
+@@ -124,10 +133,12 @@ static void *mttcg_cpu_thread_fn(void *arg)
+     /* process any pending work */
+     cpu->exit_request = 1;
+ 
+-    if(NULL != qlotto_register_cpu_f)
+-    	qlotto_register_cpu_f(cpu->cpu_index, cpu, cpu_env(cpu), &cpu->cc);
+-    if(NULL != gdb_register_cpu_f)
+-	    gdb_register_cpu_f(cpu->cpu_index, cpu, cpu_env(cpu), &cpu->cc);
++    WEAK_CALL(qlotto_register_cpu, cpu->cpu_index, cpu, cpu_env(cpu), &cpu->cc)
++    WEAK_CALL(gdb_register_cpu, cpu->cpu_index, cpu, cpu_env(cpu), &cpu->cc)
++    // if(NULL != qlotto_register_cpu_f)
++    // 	qlotto_register_cpu_f(cpu->cpu_index, cpu, cpu_env(cpu), &cpu->cc);
++    // if(NULL != gdb_register_cpu_f)
++	//     gdb_register_cpu_f(cpu->cpu_index, cpu, cpu_env(cpu), &cpu->cc);
+ 
+     do {
+         if (cpu_can_run(cpu)) {
+-- 
+2.47.3
+
+From 46911425db71b40852f3ab8b484ecc4a52fd5ae1 Mon Sep 17 00:00:00 2001
+From: Dmitry Ivanov <dmitry.ivanov1@huawei.com>
+Date: Thu, 27 Mar 2025 13:40:12 +0000
+Subject: [PATCH 4/4] Put yield in spinlock
+
+---
+ include/qemu/thread.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/qemu/thread.h b/include/qemu/thread.h
+index fb74e21c08a..1832495306f 100644
+--- a/include/qemu/thread.h
++++ b/include/qemu/thread.h
+@@ -255,6 +255,7 @@ static inline void qemu_spin_lock(QemuSpin *spin)
+ #endif
+     while (unlikely(qatomic_xchg(&spin->value, 1))) {
+         while (qatomic_read(&spin->value)) {
++            sched_yield();
+             cpu_relax();
+         }
+     }
+-- 
+2.47.3
+

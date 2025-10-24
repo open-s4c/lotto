@@ -1,0 +1,77 @@
+diff --git a/tools/sched_ext/Makefile b/tools/sched_ext/Makefile
+index ca3815e572d8..8408be61a0b8 100644
+--- a/tools/sched_ext/Makefile
++++ b/tools/sched_ext/Makefile
+@@ -62,7 +62,7 @@ BINDIR := $(OUTPUT_DIR)/bin
+ BPFOBJ := $(BPFOBJ_DIR)/libbpf.a
+ ifneq ($(CROSS_COMPILE),)
+ HOST_BUILD_DIR		:= $(OBJ_DIR)/host
+-HOST_OUTPUT_DIR	:= host-tools
++HOST_OUTPUT_DIR	:= ${OUTPUT_DIR}/../host-tools
+ HOST_INCLUDE_DIR	:= $(HOST_OUTPUT_DIR)/include
+ else
+ HOST_BUILD_DIR		:= $(OBJ_DIR)
+@@ -92,7 +92,6 @@ endif
+ CFLAGS += -g -O2 -rdynamic -pthread -Wall -Werror $(GENFLAGS)			\
+ 	  -I$(INCLUDE_DIR) -I$(GENDIR) -I$(LIBDIR)				\
+ 	  -I$(TOOLSINCDIR) -I$(APIDIR) -I$(CURDIR)/include
+-
+ # Silence some warnings when compiled with clang
+ ifneq ($(LLVM),)
+ CFLAGS += -Wno-unused-command-line-argument
+@@ -118,7 +117,7 @@ endef
+ BPF_CFLAGS = -g -D__TARGET_ARCH_$(SRCARCH)					\
+ 	     $(if $(IS_LITTLE_ENDIAN),-mlittle-endian,-mbig-endian)		\
+ 	     -I$(CURDIR)/include -I$(CURDIR)/include/bpf-compat			\
+-	     -I$(INCLUDE_DIR) -I$(APIDIR)					\
++	     -I$(INCLUDE_DIR) -I${HOST_INCLUDE_DIR} -I$(APIDIR)					\
+ 	     -I../../include							\
+ 	     $(call get_sys_includes,$(CLANG))					\
+ 	     -Wall -Wno-compare-distinct-pointer-types				\
+@@ -136,19 +135,25 @@ $(MAKE_DIRS):
+ $(BPFOBJ): $(wildcard $(BPFDIR)/*.[ch] $(BPFDIR)/Makefile)			\
+ 	   $(APIDIR)/linux/bpf.h						\
+ 	   | $(OBJ_DIR)/libbpf
+-	$(Q)$(MAKE) $(submake_extras) -C $(BPFDIR) OUTPUT=$(OBJ_DIR)/libbpf/	\
++
++$(HOST_BPFOBJ): $(wildcard $(BPFDIR)/*.[ch] $(BPFDIR)/Makefile)                 \
++           $(APIDIR)/linux/bpf.h                                                \
++           | $(OBJ_DIR)/libbpf
++	$(Q)$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(submake_extras) -C $(BPFDIR) OUTPUT=$(OBJ_DIR)/libbpf/	\
+ 		    EXTRA_CFLAGS='-g -O0 -fPIC'					\
+-		    DESTDIR=$(OUTPUT_DIR) prefix= all install_headers
++		    DESTDIR=$(HOST_OUTPUT_DIR) prefix= all install_headers
+ 
+ $(DEFAULT_BPFTOOL): $(wildcard $(BPFTOOLDIR)/*.[ch] $(BPFTOOLDIR)/Makefile)	\
+ 		    $(HOST_BPFOBJ) | $(HOST_BUILD_DIR)/bpftool
+ 	$(Q)$(MAKE) $(submake_extras)  -C $(BPFTOOLDIR)				\
+ 		    ARCH= CROSS_COMPILE= CC=$(HOSTCC) LD=$(HOSTLD)		\
+-		    EXTRA_CFLAGS='-g -O0'					\
++		    EXTRA_CFLAGS='-g -O0 -I ${HOST_INCLUDE_DIR}'		\
+ 		    OUTPUT=$(HOST_BUILD_DIR)/bpftool/				\
+ 		    LIBBPF_OUTPUT=$(HOST_BUILD_DIR)/libbpf/			\
+ 		    LIBBPF_DESTDIR=$(HOST_OUTPUT_DIR)/				\
+ 		    prefix= DESTDIR=$(HOST_OUTPUT_DIR)/ install-bin
++	mkdir -p $(HOST_OUTPUT_DIR)/sbin
++	cp -f $(HOST_BUILD_DIR)/bpftool/bpftool $(HOST_OUTPUT_DIR)/sbin
+ 
+ $(INCLUDE_DIR)/vmlinux.h: $(VMLINUX_BTF) $(BPFTOOL) | $(INCLUDE_DIR)
+ ifeq ($(VMLINUX_H),)
+@@ -176,7 +181,7 @@ $(INCLUDE_DIR)/%.bpf.skel.h: $(SCXOBJ_DIR)/%.bpf.o $(INCLUDE_DIR)/vmlinux.h $(BP
+ 
+ SCX_COMMON_DEPS := include/scx/common.h include/scx/user_exit_info.h | $(BINDIR)
+ 
+-c-sched-targets = scx_simple scx_qmap scx_central scx_flatcg
++c-sched-targets = scx_simple scx_qmap scx_central scx_flatcg scx_sched_rand
+ 
+ $(addprefix $(BINDIR)/,$(c-sched-targets)): \
+ 	$(BINDIR)/%: \
+@@ -185,7 +190,7 @@ $(addprefix $(BINDIR)/,$(c-sched-targets)): \
+ 		$(SCX_COMMON_DEPS)
+ 	$(eval sched=$(notdir $@))
+ 	$(CC) $(CFLAGS) -c $(sched).c -o $(SCXOBJ_DIR)/$(sched).o
+-	$(CC) -o $@ $(SCXOBJ_DIR)/$(sched).o $(HOST_BPFOBJ) $(LDFLAGS)
++	$(CC) -o $@ $(SCXOBJ_DIR)/$(sched).o $(BPFOBJ) $(LDFLAGS)
+ 
+ $(c-sched-targets): %: $(BINDIR)/%
+ 

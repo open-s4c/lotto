@@ -1,0 +1,195 @@
+From 802ff11a09f303442a6ec831b9030d5a4324ec5e Mon Sep 17 00:00:00 2001
+From: Martin Beck <martin.beck2@gmx.de>
+Date: Tue, 18 Mar 2025 10:15:48 +0100
+Subject: [PATCH] Adds scx_sched_rand scheduler
+
+---
+ tools/sched_ext/scx_sched_rand.bpf.c | 114 +++++++++++++++++++++++++++
+ tools/sched_ext/scx_sched_rand.c     |  54 +++++++++++++
+ 2 files changed, 168 insertions(+)
+ create mode 100644 tools/sched_ext/scx_sched_rand.bpf.c
+ create mode 100644 tools/sched_ext/scx_sched_rand.c
+
+diff --git a/tools/sched_ext/scx_sched_rand.bpf.c b/tools/sched_ext/scx_sched_rand.bpf.c
+new file mode 100644
+index 000000000000..0506d43f3d55
+--- /dev/null
++++ b/tools/sched_ext/scx_sched_rand.bpf.c
+@@ -0,0 +1,114 @@
++#include <scx/common.bpf.h>
++
++char _license[] SEC("license") = "GPL";
++
++UEI_DEFINE(uei);
++
++#define SCHED_RAND_DSQ 0
++
++#include <bpf/bpf_core_read.h>
++
++struct trace_event_raw_bpf_trace_printk___x {};
++
++#undef bpf_printk
++#define bpf_printk(fmt, ...)                                                    \
++({                                                                              \
++         static char ____fmt[] = fmt "\0";                                       \
++         if (bpf_core_type_exists(struct trace_event_raw_bpf_trace_printk___x)) {\
++                 bpf_trace_printk(____fmt, sizeof(____fmt) - 1, ##__VA_ARGS__);  \
++            } else {                                                                \
++                 ____fmt[sizeof(____fmt) - 2] = '\n';                            \
++                 bpf_trace_printk(____fmt, sizeof(____fmt), ##__VA_ARGS__);      \
++            }                                                                       \
++     })
++
++struct {
++	__uint(type, BPF_MAP_TYPE_HASH);
++	__uint(key_size, sizeof(u64));
++	__uint(value_size, sizeof(u64));
++	__uint(max_entries, 1000000);			/* [local, global] */
++} pids_seen SEC(".maps");
++	
++static u64 pid_count(u64 pid) {
++	int result = 0;
++
++	u64 *seen_cnt = bpf_map_lookup_elem(&pids_seen, &pid);
++	
++	if (seen_cnt) {
++		(*seen_cnt)++;
++		return *seen_cnt;
++	}
++
++	u64 init_value = 1;
++	result = bpf_map_update_elem(&pids_seen, &pid, &init_value, BPF_NOEXIST);
++	if (result == 0) {
++    	bpf_printk("Got PID %lu\n", pid);
++	}
++	return 1;
++}
++
++
++s32 BPF_STRUCT_OPS(sched_rand_select_cpu, struct task_struct *p, s32 prev_cpu, u64 wake_flags)
++{
++	bool is_idle = false;
++	s32 cpu;
++
++	cpu = scx_bpf_select_cpu_dfl(p, prev_cpu, wake_flags, &is_idle);
++
++	return cpu;
++}
++
++s32 BPF_STRUCT_OPS(sched_rand_enqueue, struct task_struct *p, u64 enq_flags)
++{
++	u64 vtime = (bpf_get_prandom_u32() << 31) | bpf_get_prandom_u32(); 
++
++	u64 slice = 10 * 1000; /* 10us slice runtime*/
++	scx_bpf_dsq_insert_vtime(p, SCHED_RAND_DSQ, slice, vtime,
++					enq_flags);
++
++	pid_count(p->pid);
++
++	return 0;
++}
++
++s32 BPF_STRUCT_OPS(sched_rand_dispatch, s32 cpu, struct task_struct *prev)
++{
++	scx_bpf_dsq_move_to_local(SCHED_RAND_DSQ);
++	return 0;
++}
++
++void BPF_STRUCT_OPS(sched_rand_running, struct task_struct *p)
++{
++	return;
++}
++
++void BPF_STRUCT_OPS(sched_rand_stopping, struct task_struct *p, bool runnable)
++{
++	return;
++}
++
++void BPF_STRUCT_OPS(sched_rand_enable, struct task_struct *p)
++{
++	return;
++}
++
++s32 BPF_STRUCT_OPS_SLEEPABLE(sched_rand_init)
++{
++	return scx_bpf_create_dsq(SCHED_RAND_DSQ, -1);
++}
++
++void BPF_STRUCT_OPS(sched_rand_exit, struct scx_exit_info *ei)
++{
++	UEI_RECORD(uei, ei);
++}
++
++SCX_OPS_DEFINE(sched_rand_ops,
++	       .select_cpu		= (void *)sched_rand_select_cpu,
++	       .enqueue			= (void *)sched_rand_enqueue,
++	       .dispatch		= (void *)sched_rand_dispatch,
++	       .running			= (void *)sched_rand_running,
++	       .stopping		= (void *)sched_rand_stopping,
++	       .enable			= (void *)sched_rand_enable,
++	       .init			= (void *)sched_rand_init,
++	       .exit			= (void *)sched_rand_exit,
++	       .name			= "sched_rand");
+diff --git a/tools/sched_ext/scx_sched_rand.c b/tools/sched_ext/scx_sched_rand.c
+new file mode 100644
+index 000000000000..d2bf48e37c72
+--- /dev/null
++++ b/tools/sched_ext/scx_sched_rand.c
+@@ -0,0 +1,54 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (c) 2022 Meta Platforms, Inc. and affiliates.
++ * Copyright (c) 2022 Tejun Heo <tj@kernel.org>
++ * Copyright (c) 2022 David Vernet <dvernet@meta.com>
++ */
++#include <stdio.h>
++#include <unistd.h>
++#include <signal.h>
++#include <libgen.h>
++#include <bpf/bpf.h>
++#include <scx/common.h>
++#include "scx_sched_rand.bpf.skel.h"
++#include <linux/ring_buffer.h>
++
++static volatile int exit_req;
++
++static void sigint_handler(int simple)
++{
++	exit_req = 1;
++}
++
++int main(int argc, char **argv)
++{
++	struct scx_sched_rand *skel;
++	struct bpf_link *link;
++	// __u32 opt;
++	__u64 ecode;
++
++	printf("start up scx_sched_rand\n");
++	fflush(stdout);
++
++	// libbpf_set_print(libbpf_print_fn);
++	signal(SIGINT, sigint_handler);
++	signal(SIGTERM, sigint_handler);
++restart:
++	skel = SCX_OPS_OPEN(sched_rand_ops, scx_sched_rand);
++
++	SCX_OPS_LOAD(skel, sched_rand_ops, scx_sched_rand, uei);
++
++	link = SCX_OPS_ATTACH(skel, sched_rand_ops, scx_sched_rand);
++
++	while (!exit_req && !UEI_EXITED(skel, uei)) {
++		sleep(1);
++	}
++
++	bpf_link__destroy(link);
++	ecode = UEI_REPORT(skel, uei);
++	scx_sched_rand__destroy(skel);
++
++	if (UEI_ECODE_RESTART(ecode))
++		goto restart;
++	return 0;
++}
+-- 
+2.47.2
+

@@ -1,0 +1,313 @@
+cmake_minimum_required(VERSION 3.20)
+project(lotto-test-integration LANGUAGES C CXX)
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+    set(LOTTO_FRONTEND_LIST POSIX QEMU)
+
+    set(PARENT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../..)
+    include(${PARENT_SOURCE_DIR}/cmake/stable_options.cmake)
+    include_directories(${PARENT_SOURCE_DIR}/include)
+    add_subdirectory(${PARENT_SOURCE_DIR}/deps/libvsync libvsync)
+
+    file(GLOB SRCS *.c *.cpp)
+    foreach(SRC ${SRCS})
+        get_filename_component(TEST ${SRC} NAME_WLE)
+        add_executable(${TEST} ${SRC})
+        target_link_libraries(${TEST} PRIVATE vsync pthread)
+    endforeach()
+    return()
+endif()
+# disable clang tidy for this folder
+unset(CMAKE_C_CLANG_TIDY)
+
+# trace-pc does not work with aarch64 integration tests in the current lit
+# testing setup
+if(off)
+    set(LIB_TRACE_PC "trace_pc")
+    set(COMPILE_OPTION_TRACE_PC "-fsanitize-coverage=trace-pc")
+endif()
+
+# ##############################################################################
+# Lit setup
+# ##############################################################################
+
+set(LIT_CFG lit/lit.cfg)
+configure_file(lit.cfg.in ${LIT_CFG} @ONLY)
+
+set(LIT_CFG_PATH ${CMAKE_CURRENT_BINARY_DIR}/${LIT_CFG})
+
+set(LIT_WORKERS
+    1
+    CACHE STRING "Number of lit workers")
+set(LIT_TIMEOUT
+    300
+    CACHE STRING "Lit timeout")
+
+macro(forward_to_parent_scope VARS)
+    foreach(VAR ${VARS})
+        set(${VAR}
+            ${${VAR}}
+            PARENT_SCOPE)
+    endforeach()
+endmacro()
+
+macro(add_lit_c_tests)
+    set(oneValueArgs NIGHTLY_TESTS DAILY_SCRIPTS DAILY_DEPS NIGHTLY_SCRIPTS
+                     NIGHTLY_DEPS)
+    set(multiValueArgs SCRIPTS DEPS)
+    set(PREFIX ADD_LIT_C_TESTS)
+    cmake_parse_arguments(${PREFIX} "" "${oneValueArgs}" "${multiValueArgs}"
+                          ${ARGN})
+    file(GLOB SRCS *.c)
+    foreach(SRC ${SRCS})
+        get_filename_component(TEST ${SRC} NAME_WLE)
+
+        set(COPIED_SRC "${CMAKE_CURRENT_BINARY_DIR}/lit/${TEST}.c")
+
+        add_executable(${TEST} ${SRC})
+        target_include_directories(${TEST}
+                                   PRIVATE . ${PROJECT_SOURCE_DIR}/include)
+        if("${LOTTO_TESTS_WITH_TSAN}" AND NOT "${TEST}" MATCHES "^notsan_")
+            set(SANITIZE -fsanitize=thread)
+        else()
+            unset(SANITIZE)
+        endif()
+        target_compile_options(
+            ${TEST} PUBLIC ${SANITIZE} -O0 -g -DVATOMIC_BUILTINS
+                           ${COMPILE_OPTION_TRACE_PC})
+        target_link_options(${TEST} PUBLIC -rdynamic)
+        if(${TEST} MATCHES "^tsano_" OR NOT "${LOTTO_TSAN_RUNTIME}")
+            set(TSAN tsano)
+        else()
+            set(TSAN tsan)
+        endif()
+        target_link_libraries(${TEST} PRIVATE vsync ${TSAN} ${LIB_TRACE_PC}
+                                              pthread)
+
+        if(${SRC} MATCHES "safe_stack")
+            # Whitelist until error is fixed
+            target_compile_options(${TEST} PRIVATE -Wno-shorten-64-to-32)
+        endif()
+        foreach(DEP ${${PREFIX}_DEPS})
+            list(APPEND ${DEP} ${TEST})
+        endforeach()
+        foreach(SCRIPT ${${PREFIX}_SCRIPTS})
+            list(APPEND ${SCRIPT} ${COPIED_SRC})
+        endforeach()
+        if(${TEST} IN_LIST ${${PREFIX}_NIGHTLY_TESTS})
+            list(APPEND ${${PREFIX}_NIGHTLY_DEPS} ${TEST})
+            list(APPEND ${${PREFIX}_NIGHTLY_SCRIPTS} ${COPIED_SRC})
+        else()
+            list(APPEND ${${PREFIX}_DAILY_DEPS} ${TEST})
+            list(APPEND ${${PREFIX}_DAILY_SCRIPTS} ${COPIED_SRC})
+        endif()
+        add_lit_target(lit-${TEST} ${LIT_WORKERS} ${LIT_TIMEOUT} COPIED_SRC)
+        add_dependencies(lit-${TEST} lit-prepare ${TEST})
+    endforeach()
+endmacro()
+
+macro(add_lit_cpp_tests)
+    set(oneValueArgs NIGHTLY_TESTS DAILY_SCRIPTS DAILY_DEPS NIGHTLY_SCRIPTS
+                     NIGHTLY_DEPS)
+    set(multiValueArgs SCRIPTS DEPS)
+    set(PREFIX ADD_LIT_CPP_TESTS)
+    cmake_parse_arguments(${PREFIX} "" "${oneValueArgs}" "${multiValueArgs}"
+                          ${ARGN})
+    file(GLOB SRCS *.cpp)
+    foreach(SRC ${SRCS})
+        get_filename_component(TEST ${SRC} NAME_WLE)
+
+        set(COPIED_SRC "${CMAKE_CURRENT_BINARY_DIR}/lit/${TEST}.cpp")
+
+        add_executable(${TEST} ${SRC})
+        if("${LOTTO_TESTS_WITH_TSAN}")
+            set(SANITIZE -fsanitize=thread)
+        else()
+            unset(SANITIZE)
+        endif()
+        target_compile_options(${TEST} PUBLIC -O0 -g -DVATOMIC_BUILTINS)
+        target_link_options(${TEST} PUBLIC -rdynamic)
+        if(${TEST} MATCHES "^tsano_" OR NOT "${LOTTO_TSAN_RUNTIME}")
+            set(TSAN tsano)
+        else()
+            set(TSAN tsan)
+        endif()
+        target_link_libraries(${TEST} PRIVATE vsync pthread)
+        foreach(DEP ${${PREFIX}_DEPS})
+            list(APPEND ${DEP} ${TEST})
+        endforeach()
+        foreach(SCRIPT ${${PREFIX}_SCRIPTS})
+            list(APPEND ${SCRIPT} ${COPIED_SRC})
+        endforeach()
+        if(${TEST} IN_LIST ${${PREFIX}_NIGHTLY_TESTS})
+            list(APPEND ${${PREFIX}_NIGHTLY_DEPS} ${TEST})
+            list(APPEND ${${PREFIX}_NIGHTLY_SCRIPTS} ${COPIED_SRC})
+        else()
+            list(APPEND ${${PREFIX}_DAILY_DEPS} ${TEST})
+            list(APPEND ${${PREFIX}_DAILY_SCRIPTS} ${COPIED_SRC})
+        endif()
+        add_lit_target(lit-${TEST} ${LIT_WORKERS} ${LIT_TIMEOUT} COPIED_SRC)
+        add_dependencies(lit-${TEST} lit-prepare ${TEST})
+    endforeach()
+endmacro()
+
+macro(add_lit_sh_tests)
+    set(oneValueArgs NIGHTLY_TESTS DAILY_SCRIPTS DAILY_DEPS NIGHTLY_SCRIPTS
+                     NIGHTLY_DEPS)
+    set(multiValueArgs SCRIPTS DEMO_SCRIPTS DEMO_DEPS TEST_SCRIPTS)
+    set(PREFIX ADD_LIT_SH_TESTS)
+    cmake_parse_arguments(${PREFIX} "" "${oneValueArgs}" "${multiValueArgs}"
+                          ${ARGN})
+    file(GLOB SRCS *.sh)
+    foreach(SRC ${SRCS})
+        get_filename_component(TEST ${SRC} NAME_WLE)
+        string(REGEX REPLACE "(.*)(_demo.*)" \\1 DEMO ${TEST})
+        set(COPIED_SRC "${CMAKE_CURRENT_BINARY_DIR}/lit/${TEST}.sh")
+
+        add_lit_target(lit-${TEST} ${LIT_WORKERS} ${LIT_TIMEOUT} COPIED_SRC)
+        add_dependencies(lit-${TEST} lit-prepare)
+        if(TARGET ${DEMO})
+            foreach(DEMO_SCRIPT ${${PREFIX}_DEMO_SCRIPTS})
+                list(APPEND ${DEMO_SCRIPT} ${COPIED_SRC})
+            endforeach()
+            foreach(DEMO_DEP ${${PREFIX}_DEMO_DEPS})
+                list(APPEND ${DEMO_DEP} ${DEMO})
+            endforeach()
+            add_dependencies(lit-${TEST} ${DEMO})
+        else()
+            foreach(TEST_SCRIPT ${${PREFIX}_TEST_SCRIPTS})
+                list(APPEND ${TEST_SCRIPT} ${COPIED_SRC})
+            endforeach()
+            if(${TEST} IN_LIST ${${PREFIX}_NIGHTLY_TESTS})
+                list(APPEND ${${PREFIX}_NIGHTLY_SCRIPTS} ${COPIED_SRC})
+            else()
+                list(APPEND ${${PREFIX}_DAILY_SCRIPTS} ${COPIED_SRC})
+            endif()
+        endif()
+    endforeach()
+endmacro()
+
+set(LIT_WORKERS
+    1
+    CACHE STRING "Number of lit workers")
+set(LIT_TIMEOUT
+    300
+    CACHE STRING "Lit timeout")
+
+set(LIT_SRCS "")
+set(LIT_DEPS "")
+set(LIT_TESTS "")
+set(LIT_TESTS_DEPS "")
+
+# ##############################################################################
+# Tests by pipeline
+# ##############################################################################
+
+set(LIT_NIGHTLY_TESTS)
+
+set(LIT_DAILY_TIMEOUT
+    180
+    CACHE STRING "Lit daily timeout")
+set(LIT_NIGHTLY_TIMEOUT
+    600
+    CACHE STRING "Lit nightly timeout")
+
+set(LIT_DAILY_SRCS "")
+set(LIT_DAILY_DEPS "")
+set(LIT_NIGHTLY_SRCS "")
+set(LIT_NIGHTLY_DEPS "")
+set(LIT_DEMOS "")
+set(LIT_DEMOS_DEPS "")
+
+add_lit_prepare()
+add_lit_c_tests(
+    SCRIPTS
+    LIT_SRCS
+    LIT_TESTS
+    DEPS
+    LIT_DEPS
+    LIT_TESTS_DEPS
+    NIGHTLY_TESTS
+    LIT_NIGHTLY_TESTS
+    DAILY_SCRIPTS
+    LIT_DAILY_SRCS
+    DAILY_DEPS
+    LIT_DAILY_DEPS
+    NIGHTLY_SCRIPTS
+    LIT_NIGHTLY_SRCS
+    NIGHTLY_DEPS
+    LIT_NIGHTLY_DEPS)
+add_lit_cpp_tests(
+    SCRIPTS
+    LIT_SRCS
+    LIT_TESTS
+    DEPS
+    LIT_DEPS
+    LIT_TESTS_DEPS
+    LIT_NIGHTLY_DEPS
+    NIGHTLY_TESTS
+    LIT_NIGHTLY_TESTS
+    DAILY_SCRIPTS
+    LIT_DAILY_SRCS
+    DAILY_DEPS
+    LIT_DAILY_DEPS
+    NIGHTLY_SCRIPTS
+    LIT_NIGHTLY_SRCS
+    NIGHTLY_DEPS
+    LIT_NIGHTLY_DEPS)
+add_lit_sh_tests(
+    SCRIPTS
+    LIT_SRCS
+    LIT_TESTS
+    TEST_SCRIPTS
+    LIT_SRCS
+    LIT_TESTS
+    DEMO_SCRIPTS
+    LIT_SRCS
+    LIT_DEMOS
+    DEMO_DEPS
+    LIT_DEMOS_DEPS
+    NIGHTLY_TESTS
+    LIT_NIGHTLY_TESTS
+    DAILY_SCRIPTS
+    LIT_DAILY_SRCS
+    DAILY_DEPS
+    LIT_DAILY_DEPS
+    NIGHTLY_SCRIPTS
+    LIT_NIGHTLY_SRCS
+    NIGHTLY_DEPS
+    LIT_NIGHTLY_DEPS)
+
+add_lit_target(lit-nightly ${LIT_WORKERS} ${LIT_NIGHTLY_TIMEOUT}
+               LIT_NIGHTLY_SRCS)
+add_dependencies(lit-nightly lit-prepare ${LIT_NIGHTLY_DEPS})
+
+add_lit_target(lit-daily ${LIT_WORKERS} ${LIT_DAILY_TIMEOUT} LIT_DAILY_SRCS)
+add_dependencies(lit-daily lit-prepare ${LIT_DAILY_DEPS})
+
+add_lit_target(lit-demos ${LIT_WORKERS} ${LIT_TIMEOUT} LIT_DEMOS)
+add_dependencies(lit-demos lit-prepare ${LIT_DEMOS_DEPS})
+
+# ##############################################################################
+# General rules
+# ##############################################################################
+
+add_lit_target(lit ${LIT_WORKERS} ${LIT_TIMEOUT} LIT_SRCS)
+add_dependencies(lit lit-prepare ${LIT_DEPS})
+add_lit_target(lit-tests ${LIT_WORKERS} ${LIT_TIMEOUT} LIT_TESTS)
+add_dependencies(lit-tests lit-prepare ${LIT_TESTS_DEPS})
+
+# ##############################################################################
+# Crosscompile for Qlotto
+# ##############################################################################
+
+if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
+    ExternalProject_Add(
+        integration-arm64-linux
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+        BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/arm64-linux
+        BUILD_ALWAYS 1
+        CMAKE_ARGS
+            -DCMAKE_TOOLCHAIN_FILE:PATH=${CMAKE_SOURCE_DIR}/cmake/arm64.cmake
+            -DCMAKE_C_FLAGS="-static" -DLOTTO_FRONTEND=QEMU
+        INSTALL_COMMAND "")
+endif()

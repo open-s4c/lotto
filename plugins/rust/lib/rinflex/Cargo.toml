@@ -1,0 +1,14 @@
+[package]
+name = "rinflex"
+version = "0.1.0"
+edition = "2021"
+description = "Common stuff between rinflex CLI driver and engine"
+
+[dependencies]
+lotto = { workspace = true, features = ["stable_address_map"] }
+bincode.workspace = true
+libc = "*"
+thiserror = "2"
+
+[dev-dependencies]
+lotto_link.workspace = true

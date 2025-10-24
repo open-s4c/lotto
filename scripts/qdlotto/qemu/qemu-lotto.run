@@ -1,0 +1,187 @@
+#!/bin/bash
+# Usage: qemu.run [--no-debug] [ -- ] [qemu_args...]
+
+source scripts/qdlotto.env
+if [ $? -ne 0 ]; then
+  echo "Error sourcing environment scripts/qdlotto.env"
+  exit 1
+fi
+
+EXTRA_ARGS=""
+CPU_TYPE="cortex-a53"
+CPU_NUM="4"
+
+ : ${DO_SNAPSHOT:=0}
+ : ${SNAPSHOT:=}
+ : ${LOTTO_VCPU_OFFSET:=2}
+ : ${USE_ISO:=}
+ : ${USE_VDB:=}
+
+USE_QCOW=0
+
+if [ ${DO_SNAPSHOT} -ne 0 -o "x${SNAPSHOT}" != "x" ]; then
+  USE_QCOW=1
+  EXT_IMG="qcow2"
+  EXT_FORM="qcow2"
+else
+  USE_QCOW=0
+  EXT_IMG="img"
+  EXT_FORM="raw"
+fi
+
+function check_gen_qcow {
+  image_base=$1
+  if [ ${USE_QCOW} -eq 0 ]; then
+    return
+  fi
+
+  if [ -f ${image_base}.${EXT_IMG} ]; then
+    if [ ${DO_SNAPSHOT} -eq 1 ]; then
+      rm ${image_base}.${EXT_IMG}
+    else
+      return
+    fi
+  fi
+
+  qemu-img convert -f raw -O qcow2 ${image_base}.img ${image_base}.${EXT_IMG}
+  cp -f ${image_base}.${EXT_IMG} ${image_base}.${EXT_IMG}.orig
+}
+
+TOTAL_MEM_MB=8192
+
+CPU_ARGS="-cpu ${CPU_TYPE} -smp ${CPU_NUM}"
+MEMORY_ARGS="-m size=${TOTAL_MEM_MB}M"
+
+ : ${VIRTIO_VDB_BLK_DEVICE:=}
+ : ${ISO_DEVICE:=}
+
+FLASH_FILE_BASE="${DIR_EFI}/qemu_efi"
+FLASH_BLK_DEVICE="-drive if=pflash,file=${FLASH_FILE_BASE}.${EXT_IMG},format=${EXT_FORM}"
+check_gen_qcow ${FLASH_FILE_BASE}
+
+VDA_DISK_FILE_BASE="${DIR_QEMU}/alpine"
+VIRTIO_VDA_BLK_DEVICE="-drive if=none,file=${VDA_DISK_FILE_BASE}.${EXT_IMG},format=${EXT_FORM},id=disk0 -device virtio-blk-device,drive=disk0"
+check_gen_qcow ${VDA_DISK_FILE_BASE}
+
+if [ "x${USE_VDB}" != "x" -a -f "${USE_VDB}" ]; then
+  VDB_DISK_FILE="${USE_VDB}"
+  VIRTIO_VDB_BLK_DEVICE="-drive if=none,file=${VDB_DISK_FILE},id=disk1 -device virtio-blk-device,drive=disk1"
+#  VIRTIO_VDB_BLK_DEVICE="-drive if=none,file=${VDB_DISK_FILE}"
+fi
+
+if [ "x${USE_ISO}" != "x" -a -f "${USE_ISO}" ]; then
+  ISO_DISK_FILE="${USE_ISO}"
+  ISO_DEVICE="-drive if=virtio,file=${ISO_DISK_FILE},format=raw"
+fi
+
+ : ${DO_GDB:=0}
+
+ : ${DO_RECORD:=0}
+ : ${DO_REPLAY:=0}
+ : ${DO_STRESS:=0}
+ : ${DO_DEBUG:=0}
+ : ${DO_INFLEX:=0}
+
+ : ${DO_SNAPSHOT:=0}
+
+ : ${USE_PLUGIN:=0}
+ : ${PLUGIN_ARGS:=""}
+
+ : ${RECORD_ARGS:="--handler-race disable --handler-ichpt disable -s random"}
+# : ${RECORD_ARGS:="-s random"}
+# : ${RECORD_ARGS:=""}
+ : ${UNIVERSAL_ARGS:=""} # for example "-v"
+ : ${TERMINATION_ARGS:=""}
+ : ${TERM_SEC=10}
+
+RUN_QEMU=1
+USE_PLUGIN=0
+LOTTO_CMD=""
+GDB_CMD=""
+QEMU_CMD="qemu-system-aarch64"
+
+if [ ${DO_GDB} -ne 0 ]; then
+  GDB_CMD="gdb --args"
+fi
+
+if [ "x${SNAPSHOT}" != "x" ]; then
+  LOTTO_VCPU_OFFSET=3
+  UNIVERSAL_ARGS="${UNIVERSAL_ARGS} --before-run ./scripts/qemu/restore_images.sh --after-run ./scripts/qemu/restore_images.sh"
+fi
+
+if [ ${DO_RECORD} -ne 0 ]; then
+  USE_PLUGIN=1
+  LOTTO_CMD="${LOTTO} record ${RECORD_ARGS} ${UNIVERSAL_ARGS} -- "
+fi
+
+if [ ${DO_REPLAY} -ne 0 ]; then
+  RUN_QEMU=0
+  LOTTO_CMD="${LOTTO} record ${RECORD_ARGS} ${UNIVERSAL_ARGS} -- "
+fi
+
+if [ ${DO_STRESS} -ne 0 ]; then
+  USE_PLUGIN=1
+  TERMINATION_ARGS="${TERMINATION_ARGS} --termination-type TIME --termination-limit ${TERM_SEC}"
+  LOTTO_CMD="${LOTTO} stress ${RECORD_ARGS} ${UNIVERSAL_ARGS} ${TERMINATION_ARGS} -- "
+fi
+
+if [ ${DO_DEBUG} -ne 0 ]; then
+  RUN_QEMU=0
+  LOTTO_CMD="${LOTTO} debug --symbol-files \"${ELF_KERNEL}:${ELF_SYSMGR}\" ${UNIVERSAL_ARGS}"
+fi
+
+if [ ${DO_INFLEX} -ne 0 ]; then
+  RUN_QEMU=0
+  TERMINATION_ARGS="${TERMINATION_ARGS} --termination-type TIME --termination-limit ${TERM_SEC}"
+  LOTTO_CMD="${LOTTO} inflex ${UNIVERSAL_ARGS}"
+fi
+
+if [ ${DO_SNAPSHOT} -ne 0 ]; then
+  USE_PLUGIN=1
+  LOTTO_CMD=""
+fi
+
+if [ "x${SNAPSHOT}" != "x" ]; then
+  if [ "${SNAPSHOT}" == "latest" ]; then
+    SNAPSHOT=`qemu-img snapshot -l "${USB_STICK_FILE_BASE}.qcow2" | tail -n 1 | tr -s ' ' | cut -d ' ' -f 2`
+  fi
+  SNAPSHOT_ARGS="-loadvm ${SNAPSHOT}"
+  echo "Using snapshot: ${SNAPSHOT}"
+else
+  SNAPSHOT_ARGS=""
+fi
+
+
+if [ ${USE_PLUGIN} -eq 1 ]; then
+  PLUGIN_ARGS="-plugin ${LOTTO_BUILD}/src/qlotto/libqlotto-plug.so -d plugin"
+fi
+
+if [ ${RUN_QEMU} -eq 1 ]; then
+  set -x
+  ${GDB_CMD} \
+  ${LOTTO_CMD} \
+  ${QEMU_CMD} \
+    -M virt \
+    -nographic \
+    ${CPU_ARGS} \
+    ${MEMORY_ARGS} \
+    ${DEBUG_ARGS} \
+    -netdev user,id=eth0,net=192.168.76.0/24,dhcpstart=192.168.76.9 \
+    -device virtio-net-device,netdev=eth0 \
+    ${FLASH_BLK_DEVICE} \
+    ${VIRTIO_VDA_BLK_DEVICE} \
+    ${VIRTIO_VDB_BLK_DEVICE} \
+    ${ISO_DEVICE} \
+    -no-reboot \
+    ${PLUGIN_ARGS} \
+    ${SNAPSHOT_ARGS} \
+    ${LOAD_VM_ARGS} "$@"
+else
+  if [ ${DO_REPLAY} -ne 0 ]; then
+    ${GDB_CMD} ${LOTTO_CMD}
+  fi
+fi
+
+if [ ${DO_SNAPSHOT} -ne 0 ]; then
+  ./scripts/qemu/save_images.sh
+fi

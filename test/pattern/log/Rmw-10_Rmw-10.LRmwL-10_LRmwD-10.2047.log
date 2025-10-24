@@ -1,0 +1,51 @@
+tid=2 id=1
+tid=3 id=1
+tid=2 id=2 data=0x1
+tid=3 id=2
+
+tid=3 id=1
+tid=2 id=1
+tid=3 id=2
+tid=2 id=2 data=0x3
+
+tid=2 id=1
+tid=3 id=1
+tid=3 id=2
+tid=2 id=2 data=0x7
+
+tid=3 id=1
+tid=2 id=1
+tid=2 id=2 data=0xf
+tid=3 id=2
+
+tid=2 id=1
+tid=2 id=2 data=0x1f
+tid=3 id=1
+tid=3 id=2
+
+tid=2 id=1
+tid=3 id=1
+tid=2 id=2 data=0x3f
+tid=3 id=2
+
+tid=3 id=1
+tid=2 id=1
+tid=3 id=2
+tid=2 id=2 data=0x7f
+
+tid=2 id=1
+tid=3 id=1
+tid=3 id=2
+tid=2 id=2 data=0xff
+
+tid=3 id=1
+tid=2 id=1
+tid=2 id=2 data=0x1ff
+tid=3 id=2
+
+tid=2 id=1
+tid=2 id=2 data=0x3ff
+tid=3 id=1
+tid=3 id=2
+
+tid=1 id=3 data=0x7ff

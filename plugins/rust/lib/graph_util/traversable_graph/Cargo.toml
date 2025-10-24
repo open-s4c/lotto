@@ -1,0 +1,13 @@
+[package]
+name = "traversable_graph"
+version = "0.1.0"
+edition = "2021"
+description = "Implements algorithms on a normal graph"
+
+[dependencies]
+event_utils = { path = "../event_utils" }
+
+rustc-hash = { version = "1.1.0", features = [] }
+log = "0.4.20"
+rand = "0.8.5"
+string-builder = "0.2.0"

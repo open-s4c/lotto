@@ -1,0 +1,23 @@
+[package]
+name = "rusty_handlers"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+lotto.workspace = true
+
+handler_await_address = { path = "await_address" }
+handler_spin_loop = { path = "verification_spin_loop" }
+handler_perf = { path = "perf" }
+handler_trust = { path = "trust" }
+
+# rinflex
+handler_rinflex = { path = "rinflex", optional = true }
+
+[features]
+demo = []
+stable_address_map = ["dep:handler_rinflex", "lotto/stable_address_map"]

@@ -1,0 +1,14 @@
+[package]
+name = "lotto_macros"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "2.0.77", features = ["full"] }
+darling = "0.20.10"
+once_cell = "1.19.0"
+
+[lib]
+proc-macro = true

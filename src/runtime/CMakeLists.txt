@@ -1,8 +1,19 @@
 add_library(lotto_runtime SHARED
     runtime.c
-    intercept_stub.c
+    interceptor.c
+    mediator.c
+    intercept_pthread.c
+    intercept_posix.c
+    intercept_order.c
+    intercept_mutex.c
+    intercept_malloc.c
+    intercept_evec.c
+    intercept_rsrc_deadlock.c
+    intercept_tsan.c
     subs_pthread.c
-    rsrc_deadlock_stub.c
+    handler_config.c
+    switcher_stub.c
+    thread_id.c
     ../engine/engine.c
     ../engine/sequencer.c
     ../engine/recorder.c

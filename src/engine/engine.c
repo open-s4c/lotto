@@ -15,6 +15,7 @@
 #include <lotto/brokers/catmgr.h>
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/statemgr.h>
+#include <lotto/engine/engine.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/sys/logger_block.h>

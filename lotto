@@ -4,6 +4,12 @@
 
 set -eu
 
+if [ "$(uname -a)" = "Darwin" ]; then
+	SO=dylib
+else
+	SO=so
+fi
+
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 DICE_SCRIPT_DEFAULT="${SCRIPT_DIR}/deps/dice/scripts/dice"
 DICE_SCRIPT=""
@@ -29,9 +35,9 @@ if [ -z "${DICE_SCRIPT}" ]; then
     DICE_SCRIPT="${DICE_SCRIPT_DEFAULT}"
 fi
 
-RUNTIME_LIB="${LOTTO_RUNTIME_LIB:-${SCRIPT_DIR}/build/src/runtime/liblotto.dylib}"
+RUNTIME_LIB="${LOTTO_RUNTIME_LIB:-${SCRIPT_DIR}/build/src/runtime/liblotto.$SO}"
 if [ ! -f "${RUNTIME_LIB}" ]; then
-    ALT="${SCRIPT_DIR}/src/runtime/liblotto.dylib"
+    ALT="${SCRIPT_DIR}/src/runtime/liblotto.$SO"
     if [ -f "${ALT}" ]; then
         RUNTIME_LIB="${ALT}"
     else
@@ -183,14 +189,14 @@ esac
 
 dice_cmd=""
 if [ -n "${target}" ] && [ -n "${RUNTIME_LIB}" ] && [ -x "${DICE_SCRIPT}" ]; then
-    set -- "${DICE_SCRIPT}" -preload "${RUNTIME_LIB}" "${subcommand}"
+    set -- "${DICE_SCRIPT}" -with "${RUNTIME_LIB}"
     if [ -n "${flags}" ]; then
         for word in ${flags}; do
             set -- "$@" "${word}"
         done
     fi
     if [ -n "${target}" ]; then
-        set -- "$@" -- "${target}"
+        set -- "$@" "${target}"
         if [ -n "${target_args}" ]; then
             for word in ${target_args}; do
                 set -- "$@" "${word}"
@@ -199,7 +205,7 @@ if [ -n "${target}" ] && [ -n "${RUNTIME_LIB}" ] && [ -x "${DICE_SCRIPT}" ]; the
     fi
     dice_cmd="$*"
     if [ "${LOTTO_REAL_EXEC:-0}" != "0" ]; then
-        "$@" || true
+        exec "$@" || true
     fi
 fi
 

@@ -1,0 +1,6 @@
+#!/bin/sh
+exec env TSANO_LIBDIR=build/deps/dice-build/deps/tsano \
+	DICE_BUILD=build/deps/dice-build \
+	DICE_SOURCE=deps/dice \
+	LOTTO_REAL_EXEC=1 \
+	./lotto $@

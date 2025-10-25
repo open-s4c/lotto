@@ -5,6 +5,7 @@
 #include <lotto/base/arg.h>
 #include <lotto/base/category.h>
 #include <lotto/base/task_id.h>
+#include <dice/types.h>
 
 #define CTX_NARGS 4
 
@@ -22,6 +23,7 @@ typedef struct context {
 #endif
     const char *func;      ///< Debugging information
     uintptr_t func_addr;   ///< Address of intercepted call
+    metadata_t *md;         ///< Dice metadata for TLS-aware consumers
     arg_t args[CTX_NARGS]; ///< Additional arguments
 } context_t;
 

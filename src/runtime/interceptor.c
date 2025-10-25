@@ -2,10 +2,10 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "interceptor.h"
 #include <lotto/base/category.h>
 #include <lotto/base/reason.h>
 #include <lotto/base/task_id.h>
-#include <lotto/runtime/intercept.h>
 #include <lotto/runtime/mediator.h>
 #include <lotto/runtime/runtime.h>
 #include <lotto/sys/assert.h>
@@ -15,8 +15,6 @@
 #define MAX_FINI 32
 
 typedef void (*fini_t)(void);
-
-static bool g_intercept_initialized;
 static fini_t g_fini[MAX_FINI];
 static size_t g_fini_count;
 
@@ -37,18 +35,6 @@ handle_status(context_t *ctx, mediator_status_t status)
     }
 }
 
-bool
-lotto_intercept_initialized(void)
-{
-    return g_intercept_initialized;
-}
-
-void
-lotto_set_interceptor_initialized(void)
-{
-    g_intercept_initialized = true;
-}
-
 static bool
 is_task_create(const char *func)
 {
@@ -58,11 +44,16 @@ is_task_create(const char *func)
 void
 intercept_capture(context_t *ctx)
 {
-    if (!g_intercept_initialized || ctx == NULL) {
+    if (ctx == NULL) {
         return;
     }
 
-    mediator_t *m = mediator_get_data(ctx->cat == CAT_TASK_INIT);
+    metadata_t *md = ctx->md;
+    if (md == NULL) {
+        return;
+    }
+
+    mediator_t *m = mediator_tls(md);
     if (mediator_capture(m, ctx)) {
         return;
     }
@@ -74,11 +65,16 @@ intercept_capture(context_t *ctx)
 mediator_t *
 intercept_before_call(context_t *ctx)
 {
-    if (!g_intercept_initialized || ctx == NULL) {
+    if (ctx == NULL) {
         return NULL;
     }
 
-    mediator_t *m = mediator_get_data(false);
+    metadata_t *md = ctx->md;
+    if (md == NULL) {
+        return NULL;
+    }
+
+    mediator_t *m = mediator_tls(md);
     if (!mediator_capture(m, ctx)) {
         mediator_status_t status = mediator_resume(m, ctx);
         handle_status(ctx, status);
@@ -87,21 +83,28 @@ intercept_before_call(context_t *ctx)
 }
 
 void
-intercept_after_call(const char *func)
+intercept_after_call(context_t *ctx)
 {
-    if (!g_intercept_initialized) {
+    if (ctx == NULL) {
         return;
     }
 
-    mediator_t *m = mediator_get_data(false);
-    category_t cat = is_task_create(func) ? CAT_TASK_CREATE : CAT_CALL;
-    context_t *ctx_ptr = ctx();
-    ctx_ptr->func = func;
-    ctx_ptr->cat  = cat;
+    metadata_t *md = ctx->md;
+    if (md == NULL) {
+        return;
+    }
 
-    mediator_return(m, ctx_ptr);
-    mediator_status_t status = mediator_resume(m, ctx_ptr);
-    handle_status(ctx_ptr, status);
+    if (ctx->func == NULL) {
+        ctx->func = "unknown";
+    }
+    if (ctx->cat == CAT_NONE) {
+        ctx->cat = is_task_create(ctx->func) ? CAT_TASK_CREATE : CAT_CALL;
+    }
+
+    mediator_t *m = mediator_tls(md);
+    mediator_return(m, ctx);
+    mediator_status_t status = mediator_resume(m, ctx);
+    handle_status(ctx, status);
 }
 
 void *

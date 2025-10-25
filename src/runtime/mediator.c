@@ -1,9 +1,10 @@
-#include <pthread.h>
-#include <sched.h>
 #include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
 
+#include <dice/log.h>
+#include <dice/self.h>
+
+#include <lotto/base/category.h>
+#include <lotto/base/context.h>
 #include <lotto/engine/engine.h>
 #include <lotto/runtime/mediator.h>
 #include <lotto/runtime/runtime.h>
@@ -12,47 +13,32 @@
 #include <lotto/sys/assert.h>
 #include <lotto/sys/now.h>
 
-extern task_id next_task_id(void);
+static mediator_t mediator_key_;
 
-static pthread_key_t mediator_tls_key;
-static pthread_once_t mediator_tls_once = PTHREAD_ONCE_INIT;
-
-static void
-mediator_tls_destructor(void *ptr)
+mediator_t *
+mediator_tls(metadata_t *md)
 {
-    mediator_t *m = (mediator_t *)ptr;
-    if (m != NULL) {
-        mediator_fini(m);
-        free(m);
+    if (md == NULL) {
+        log_fatal("mediator_tls: missing metadata");
     }
-}
 
-static void
-mediator_tls_init(void)
-{
-    ASSERT(pthread_key_create(&mediator_tls_key, mediator_tls_destructor) == 0);
-}
-
-mediator_t *
-mediator_init(void)
-{
-    mediator_t *m = (mediator_t *)calloc(1, sizeof(*m));
-    ASSERT(m != NULL);
-    m->id                  = next_task_id();
-    m->registration_status = MEDIATOR_REGISTRATION_DONE;
-    return m;
-}
-
-mediator_t *
-mediator_get_data(bool new_task)
-{
-    (void)new_task;
-    pthread_once(&mediator_tls_once, mediator_tls_init);
-    mediator_t *m = (mediator_t *)pthread_getspecific(mediator_tls_key);
+    mediator_t *m = SELF_TLS(md, &mediator_key_);
     if (m == NULL) {
-        m = mediator_init();
-        ASSERT(pthread_setspecific(mediator_tls_key, m) == 0);
+        log_fatal("mediator_tls: allocation failure");
     }
+
+    if (m->registration_status == MEDIATOR_REGISTRATION_NONE) {
+        m->id                  = (task_id)self_id(md);
+        m->registration_status = MEDIATOR_REGISTRATION_DONE;
+
+        context_t *bootstrap = ctx();
+        bootstrap->func      = "mediator_bootstrap";
+        bootstrap->cat       = CAT_NONE;
+        bootstrap->id        = m->id;
+        bootstrap->md        = md;
+        engine_resume(bootstrap);
+    }
+
     return m;
 }
 

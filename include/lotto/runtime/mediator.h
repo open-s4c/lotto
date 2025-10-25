@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include <dice/types.h>
+
 #include <lotto/base/context.h>
 #include <lotto/base/plan.h>
 #include <lotto/base/reason.h>
@@ -30,8 +32,7 @@ typedef struct mediator {
     reason_t pending_reason;
 } mediator_t;
 
-mediator_t *mediator_get_data(bool new_task);
-mediator_t *mediator_init(void);
+mediator_t *mediator_tls(metadata_t *md);
 bool mediator_capture(mediator_t *m, context_t *ctx);
 mediator_status_t mediator_resume(mediator_t *m, context_t *ctx);
 void mediator_return(mediator_t *m, context_t *ctx);

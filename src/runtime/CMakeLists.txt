@@ -41,8 +41,11 @@ set_target_properties(lotto_runtime PROPERTIES OUTPUT_NAME lotto)
 # Pull in dice object files from the subtree build.
 target_sources(lotto_runtime PRIVATE
     $<TARGET_OBJECTS:dice.o>
-    $<TARGET_OBJECTS:dice-dispatch.o>
     $<TARGET_OBJECTS:dice-self.o>
+    $<TARGET_OBJECTS:dice-pthread_create.o>
+    $<TARGET_OBJECTS:dice-pthread_mutex.o>
+    $<TARGET_OBJECTS:dice-pthread_cond.o>
+    $<TARGET_OBJECTS:dice-tsan.o>
 )
 
 target_include_directories(lotto_runtime

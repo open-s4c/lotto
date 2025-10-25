@@ -17,96 +17,85 @@
 #include "interceptor.h"
 #include <lotto/rsrc_deadlock.h>
 
-static inline context_t *
-ctx_task_create(struct pthread_create_event *ev, metadata_t *md)
+static inline void
+ctx_task_create(context_t *c, struct pthread_create_event *ev,
+                metadata_t *md)
 {
-    context_t *c = ctx();
     c->md        = md;
     c->func       = "pthread_create";
     c->cat        = CAT_TASK_CREATE;
     c->args[0]    = arg_ptr(ev->thread);
     c->args[1]    = arg_ptr(ev->attr);
     c->args[2]    = arg_ptr(ev->run);
-    return c;
 }
 
-static inline context_t *
-ctx_mutex(const char *func, pthread_mutex_t *mutex, metadata_t *md)
+static inline void
+ctx_mutex(context_t *c, const char *func, pthread_mutex_t *mutex,
+          metadata_t *md)
 {
-    context_t *c = ctx();
     c->md        = md;
     c->func       = func;
     c->cat        = CAT_CALL;
     c->args[0]    = arg_ptr(mutex);
-    return c;
 }
 
-static inline context_t *
-ctx_cond(const char *func, pthread_mutex_t *mutex, metadata_t *md)
+static inline void
+ctx_cond(context_t *c, const char *func, pthread_mutex_t *mutex,
+         metadata_t *md)
 {
-    context_t *c = ctx();
     c->md        = md;
     c->func       = func;
     c->cat        = CAT_CALL;
     c->args[0]    = arg_ptr(mutex);
-    return c;
 }
 
-static inline context_t *
-ctx_join(struct pthread_join_event *ev, metadata_t *md)
+static inline void
+ctx_join(context_t *c, struct pthread_join_event *ev, metadata_t *md)
 {
-    context_t *c = ctx();
     c->md        = md;
     c->func       = "pthread_join";
     c->cat        = CAT_JOIN;
     c->args[0]    = arg_ptr(&ev->thread);
     c->args[1]    = arg_ptr(ev->ptr);
     c->args[2]    = arg_ptr(&ev->ret);
-    return c;
 }
 
-static inline context_t *
-ctx_thread_start(bool detached, metadata_t *md)
+static inline void
+ctx_thread_start(context_t *c, bool detached, metadata_t *md)
 {
-    context_t *c = ctx();
     c->md        = md;
     c->func       = "pthread_thread_start";
     c->cat        = CAT_TASK_INIT;
     c->args[0]    = arg(uintptr_t, (uintptr_t)pthread_self());
     c->args[1]    = arg(bool, detached);
-    return c;
 }
 
-static inline context_t *
-ctx_thread_exit(struct pthread_exit_event *ev, metadata_t *md)
+static inline void
+ctx_thread_exit(context_t *c, struct pthread_exit_event *ev, metadata_t *md)
 {
-    context_t *c = ctx();
     c->md        = md;
     c->func       = "pthread_exit";
     c->cat        = CAT_EXIT;
     c->args[0]    = arg_ptr(ev != NULL ? ev->ptr : NULL);
-    return c;
 }
 
 static inline void
 send_after(const char *func, category_t cat, metadata_t *md)
 {
-    if (intercept_after_call != NULL) {
-        context_t *c = ctx();
-        c->func      = func;
-        c->cat       = cat;
-        c->md        = md;
-        intercept_after_call(c);
-    }
+    context_t *c = ctx();
+    c->func      = func;
+    c->cat       = cat;
+    c->md        = md;
+    intercept_after_call(c);
 }
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_THREAD_CREATE, {
     (void)chain;
     (void)type;
     struct pthread_create_event *ev = EVENT_PAYLOAD(event);
-    if (intercept_before_call != NULL) {
-        (void)intercept_before_call(ctx_task_create(ev, md));
-    }
+    context_t *c = ctx();
+    ctx_task_create(c, ev, md);
+    (void)intercept_before_call(c);
     return PS_OK;
 })
 
@@ -123,9 +112,9 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
     (void)chain;
     (void)type;
     (void)event;
-    if (intercept_capture != NULL) {
-        intercept_capture(ctx_thread_start(false, md));
-    }
+    context_t *c = ctx();
+    ctx_thread_start(c, false, md);
+    intercept_capture(c);
     return PS_OK;
 })
 
@@ -135,9 +124,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_THREAD_JOIN, {
 
     struct pthread_join_event *ev = EVENT_PAYLOAD(event);
     ev->ret                       = EINTR;
-    if (intercept_capture != NULL) {
-        intercept_capture(ctx_join(ev, md));
-    }
+    context_t *c = ctx();
+    ctx_join(c, ev, md);
+    intercept_capture(c);
     return PS_OK;
 })
 
@@ -155,9 +144,9 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_EXIT, {
     (void)type;
 
     struct pthread_exit_event *ev = EVENT_PAYLOAD(event);
-    if (intercept_capture != NULL) {
-        intercept_capture(ctx_thread_exit(ev, md));
-    }
+    context_t *c = ctx();
+    ctx_thread_exit(c, ev, md);
+    intercept_capture(c);
     return PS_OK;
 })
 
@@ -167,10 +156,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_LOCK, {
 
     struct pthread_mutex_lock_event *ev = EVENT_PAYLOAD(event);
     lotto_rsrc_acquiring(ev->mutex);
-    if (intercept_before_call != NULL) {
-        (void)intercept_before_call(
-            ctx_mutex("pthread_mutex_lock", ev->mutex, md));
-    }
+    context_t *c = ctx();
+    ctx_mutex(c, "pthread_mutex_lock", ev->mutex, md);
+    (void)intercept_before_call(c);
     return PS_OK;
 })
 
@@ -190,10 +178,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_TIMEDLOCK, {
 
     struct pthread_mutex_timedlock_event *ev = EVENT_PAYLOAD(event);
     lotto_rsrc_acquiring(ev->mutex);
-    if (intercept_before_call != NULL) {
-        (void)intercept_before_call(
-            ctx_mutex("pthread_mutex_timedlock", ev->mutex, md));
-    }
+    context_t *c = ctx();
+    ctx_mutex(c, "pthread_mutex_timedlock", ev->mutex, md);
+    (void)intercept_before_call(c);
     return PS_OK;
 })
 
@@ -212,10 +199,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_TRYLOCK, {
     (void)type;
 
     struct pthread_mutex_trylock_event *ev = EVENT_PAYLOAD(event);
-    if (intercept_before_call != NULL) {
-        (void)intercept_before_call(
-            ctx_mutex("pthread_mutex_trylock", ev->mutex, md));
-    }
+    context_t *c = ctx();
+    ctx_mutex(c, "pthread_mutex_trylock", ev->mutex, md);
+    (void)intercept_before_call(c);
     return PS_OK;
 })
 
@@ -234,10 +220,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_UNLOCK, {
     (void)type;
 
     struct pthread_mutex_unlock_event *ev = EVENT_PAYLOAD(event);
-    if (intercept_before_call != NULL) {
-        (void)intercept_before_call(
-            ctx_mutex("pthread_mutex_unlock", ev->mutex, md));
-    }
+    context_t *c = ctx();
+    ctx_mutex(c, "pthread_mutex_unlock", ev->mutex, md);
+    (void)intercept_before_call(c);
     return PS_OK;
 })
 
@@ -256,10 +241,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_WAIT, {
     (void)type;
 
     struct pthread_cond_wait_event *ev = EVENT_PAYLOAD(event);
-    if (intercept_before_call != NULL) {
-        (void)intercept_before_call(
-            ctx_cond("pthread_cond_wait", ev->mutex, md));
-    }
+    context_t *c = ctx();
+    ctx_cond(c, "pthread_cond_wait", ev->mutex, md);
+    (void)intercept_before_call(c);
     return PS_OK;
 })
 
@@ -277,10 +261,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_TIMEDWAIT, {
     (void)type;
 
     struct pthread_cond_timedwait_event *ev = EVENT_PAYLOAD(event);
-    if (intercept_before_call != NULL) {
-        (void)intercept_before_call(
-            ctx_cond("pthread_cond_timedwait", ev->mutex, md));
-    }
+    context_t *c = ctx();
+    ctx_cond(c, "pthread_cond_timedwait", ev->mutex, md);
+    (void)intercept_before_call(c);
     return PS_OK;
 })
 

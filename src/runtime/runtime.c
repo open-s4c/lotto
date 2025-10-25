@@ -5,13 +5,12 @@
 #include <lotto/base/context.h>
 #include <lotto/base/reason.h>
 #include <lotto/engine/engine.h>
-#include <lotto/runtime/intercept.h>
+#include "interceptor.h"
 #include <lotto/runtime/runtime.h>
 
 int
 lotto_runtime_init(void)
 {
-    lotto_set_interceptor_initialized();
     return 0;
 }
 

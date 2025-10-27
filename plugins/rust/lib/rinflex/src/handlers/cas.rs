@@ -1,17 +1,20 @@
 //! # CAS predictor
 //!
-//! This handler records information to predict whether a CAS
-//! operation can succeed or not.
+//! Originally this handler records information to predict whether a
+//! CAS operation can succeed or not, but now it is extended to record
+//! all memory operations.
 
 use lotto::collections::FxHashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::LazyLock;
+use std::sync::Mutex;
 
-use crate::modify::{Modify, ModifyKind, VAddr};
+use crate::memory_access::{MemoryAccess, MemoryOperationExt, Modify, ModifyKind, Read, VAddr};
+use crate::sized_read;
 use bincode::{Decode, Encode};
 use lotto::base::category::Category;
 use lotto::base::{HandlerArg, Value};
-use lotto::brokers::Marshable;
+use lotto::brokers::{Marshable, Stateful};
 use lotto::cli::flags::{FlagKey, STR_CONVERTER_BOOL};
 use lotto::engine::handler::{Handler, TaskId};
 use lotto::log::*;
@@ -25,7 +28,7 @@ static HANDLER: LazyLock<CasPredictor> = LazyLock::new(|| CasPredictor {
     pers: Persistent {
         tasks: FxHashMap::default(),
     },
-    rt_map: FxHashMap::default(),
+    rt_map: Mutex::new(FxHashMap::default()),
 });
 
 #[derive(Stateful)]
@@ -36,63 +39,146 @@ struct CasPredictor {
     pers: Persistent,
 
     // Real-time values from the current execution.
-    rt_map: FxHashMap<TaskId, Modify>,
+    rt_map: Mutex<FxHashMap<TaskId, MemoryAccess>>,
+}
+
+impl CasPredictor {
+    fn update_task_from_ctx(&mut self, ctx: &raw::context_t) {
+        if !self.cfg.enabled.load(Ordering::Relaxed) {
+            return;
+        }
+        if let Some(ma) = ctx_to_memory_access(ctx) {
+            self.pers.tasks.insert(TaskId(ctx.id), ma.clone());
+            self.rt_map
+                .try_lock()
+                .expect("single-thread")
+                .insert(TaskId(ctx.id), ma.clone());
+        } else {
+            // Not a memory access. They must not be present in the
+            // trace, or other non-memory-access events will be
+            // associated a value!
+            self.pers.tasks.remove(&TaskId(ctx.id));
+            self.rt_map
+                .try_lock()
+                .expect("single-thread")
+                .remove(&TaskId(ctx.id));
+        }
+    }
 }
 
 //
 // Handler
 //
-
 impl Handler for CasPredictor {
     fn handle(&mut self, ctx: &raw::context_t, _event: &mut raw::event_t) {
-        if !self.cfg.enabled.load(Ordering::Relaxed) {
-            return;
-        }
-        let kind: Option<ModifyKind> = match ctx.cat {
-            // CAS
-            Category::CAT_BEFORE_CMPXCHG
-            | Category::CAT_AFTER_CMPXCHG_S
-            | Category::CAT_AFTER_CMPXCHG_F => Some(ModifyKind::Cas {
-                expected: get_val(ctx.args[2]),
-                new: get_val(ctx.args[3]),
-            }),
-
-            // RMW
-            Category::CAT_BEFORE_RMW | Category::CAT_AFTER_RMW => Some(ModifyKind::Rmw {
-                value: get_val(ctx.args[2]),
-            }),
-
-            // XCHG
-            Category::CAT_BEFORE_XCHG | Category::CAT_AFTER_XCHG => Some(ModifyKind::Xchg {
-                value: get_val(ctx.args[2]),
-            }),
-
-            // Plain writes
-            Category::CAT_BEFORE_WRITE => Some(ModifyKind::Write),
-
-            // Atomic writes
-            Category::CAT_BEFORE_AWRITE | Category::CAT_AFTER_AWRITE => Some(ModifyKind::AWrite {
-                value: get_val(ctx.args[2]),
-            }),
-
-            // Ignore other non-modifying operations
-            _ => None,
-        };
-
-        if let Some(kind) = kind {
-            let raw_addr = get_addr(ctx.args[0]);
-            let addr = VAddr::get(ctx, raw_addr);
-            let size = get_val(ctx.args[1]);
-            let item = Modify {
-                addr,
-                real_addr: raw_addr as u64,
-                size: size as u8,
-                kind,
-            };
-            self.rt_map.insert(TaskId::new(ctx.id), item.clone());
-            self.pers.tasks.insert(TaskId::new(ctx.id), item);
-        }
+        self.update_task_from_ctx(ctx);
     }
+
+    // fn posthandle(&mut self, ctx: &raw::context_t) {
+    //     // We need to save the "real" read value, which is only
+    //     // available after the event is resumed.
+    //     self.update_task_from_ctx(ctx);
+    // }
+}
+
+#[inline]
+fn ctx_to_memory_access(ctx: &raw::context_t) -> Option<MemoryAccess> {
+    ctx_to_modify(ctx)
+        .map(MemoryAccess::Modify)
+        .or_else(|| ctx_to_read(ctx).map(MemoryAccess::Read))
+}
+
+#[inline]
+fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
+    if !ctx.cat.is_write() {
+        return None;
+    }
+
+    let raw_addr = get_addr(ctx.args[0]);
+    let addr = VAddr::get(ctx, raw_addr);
+    let size = get_val(ctx.args[1]);
+    let is_after = ctx.cat.is_after();
+
+    let kind: ModifyKind = match ctx.cat {
+        // CAS
+        Category::CAT_BEFORE_CMPXCHG
+        | Category::CAT_AFTER_CMPXCHG_S
+        | Category::CAT_AFTER_CMPXCHG_F => ModifyKind::Cas {
+            is_after,
+            expected: get_val(ctx.args[2]),
+            new: get_val(ctx.args[3]),
+        },
+
+        // RMW
+        Category::CAT_BEFORE_RMW | Category::CAT_AFTER_RMW => ModifyKind::Rmw {
+            is_after,
+            delta: get_val(ctx.args[2]),
+        },
+
+        // XCHG
+        Category::CAT_BEFORE_XCHG | Category::CAT_AFTER_XCHG => ModifyKind::Xchg {
+            is_after,
+            value: get_val(ctx.args[2]),
+        },
+
+        // Plain writes
+        Category::CAT_BEFORE_WRITE => ModifyKind::Write,
+
+        // Atomic writes
+        Category::CAT_BEFORE_AWRITE | Category::CAT_AFTER_AWRITE => ModifyKind::AWrite {
+            is_after,
+            value: get_val(ctx.args[2]),
+        },
+
+        // Ignore other non-modifying operations
+        _ => panic!("Some modify categories are not handled"),
+    };
+
+    // NOTE: We need to get the value early for the order enforcer to
+    // detect whether the event should be blocked.
+    let read_value = None; // For now, disable read_value completely.
+
+    // let read_value = if ctx.cat.is_read() {
+    //     if ctx.cat.is_before() {
+    //         let value = unsafe { sized_read(raw_addr as u64, size as usize) };
+    //         Some(value)
+    //     } else {
+    //         // BEFORE should be *immediately* followed by AFTER in the
+    //         // said thread.  Use the old, recorded value.
+    //         get_memory_access_value(TaskId(ctx.id))
+    //     }
+    // } else {
+    //     None
+    // };
+
+    let item = Modify {
+        addr,
+        real_addr: raw_addr as u64,
+        size: size as u8,
+        kind,
+        read_value,
+    };
+    Some(item)
+}
+
+#[inline]
+fn ctx_to_read(ctx: &raw::context_t) -> Option<Read> {
+    let (addr, size) = match ctx.cat {
+        Category::CAT_BEFORE_READ | Category::CAT_BEFORE_AREAD | Category::CAT_AFTER_AREAD => {
+            (get_val(ctx.args[0]), get_val(ctx.args[1]))
+        }
+        _ => {
+            return None;
+        }
+    };
+    // let value = unsafe { sized_read(addr, size as usize) };
+    let value = 0;
+    Some(Read {
+        size: size as u8,
+        real_addr: addr,
+        addr: VAddr::get(ctx, addr as usize),
+        value,
+    })
 }
 
 fn get_addr(arg: raw::arg_t) -> usize {
@@ -133,13 +219,13 @@ impl Marshable for Config {
 
 #[derive(Encode, Decode, Debug)]
 struct Persistent {
-    tasks: FxHashMap<TaskId, Modify>,
+    tasks: FxHashMap<TaskId, MemoryAccess>,
 }
 
 impl Marshable for Persistent {
     fn print(&self) {
-        for (id, modify) in self.tasks.iter() {
-            info!("task {} {:?}", id, modify);
+        for (id, ma) in self.tasks.iter() {
+            info!("task {} {:?}", id, ma);
         }
     }
 }
@@ -182,12 +268,56 @@ pub fn register_flags() {
 // Interfaces
 //
 
-/// Get the modify info of a task.
-pub fn get_modify(id: TaskId) -> Option<Modify> {
+/// Get the memory access info of a task.
+pub fn get_memory_access(id: TaskId) -> Option<MemoryAccess> {
     HANDLER.pers.tasks.get(&id).cloned()
 }
 
-/// Get realtime modify info.
-pub fn get_rt_modify(id: TaskId) -> Option<Modify> {
-    HANDLER.rt_map.get(&id).cloned()
+/// Get the real-time memory access info of a task.
+pub fn get_rt_memory_access(id: TaskId) -> Option<MemoryAccess> {
+    HANDLER
+        .rt_map
+        .try_lock()
+        .expect("single thread")
+        .get(&id)
+        .cloned()
+}
+
+/// Get the memory access's value of a task.
+pub fn get_memory_access_value(id: TaskId) -> Option<u64> {
+    get_memory_access(id).map(|ma| ma.loaded_value()).flatten()
+}
+
+/// Update memory values
+pub fn update_memory_access(id: TaskId) {
+    let pers = unsafe { &mut *HANDLER.persistent_ptr() };
+    if let Some(ma) = pers.tasks.get_mut(&id) {
+        update(ma, id);
+    }
+    let mut rt_map = HANDLER.rt_map.try_lock().expect("single-thread");
+    if let Some(ma) = rt_map.get_mut(&id) {
+        update(ma, id);
+    }
+}
+
+fn update(ma: &mut MemoryAccess, id: TaskId) {
+    match ma {
+        MemoryAccess::Read(r) => {
+            r.value = unsafe { r.reload_value() };
+        }
+        MemoryAccess::Modify(
+            m @ Modify {
+                read_value: Some(_),
+                ..
+            },
+        ) => {
+            if !m.kind.is_after() {
+                m.read_value = unsafe { m.reload_value() };
+            } else {
+                // BEFORE's value should have been updated.
+                m.read_value = get_memory_access_value(id);
+            }
+        }
+        _ => {}
+    }
 }

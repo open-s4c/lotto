@@ -1,4 +1,3 @@
-
 use lotto::log::*;
 
 pub use handler_await_address;

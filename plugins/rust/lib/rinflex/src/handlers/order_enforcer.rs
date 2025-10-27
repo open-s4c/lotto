@@ -1,21 +1,24 @@
-/// # Order Enforcer
-///
-/// - Supply ordering constraints through config
-/// - During execution, only counters are modified
-/// - Upon exit, the results are saved in FINAL states
-use handlers::event;
-use handlers::event::get_event;
+//! # Order Enforcer
+//!
+//! - Supply ordering constraints through config
+//! - During execution, only counters are modified
+//! - Upon exit, the results are saved in FINAL states
 use lotto::base::reason::*;
+use lotto::base::Category;
 use lotto::base::TidSet;
+use lotto::base::Value;
 use lotto::brokers::statemgr::*;
+use lotto::cli::flags::STR_CONVERTER_NONE;
+use lotto::cli::FlagKey;
 use lotto::collections::FxHashMap;
 use lotto::engine::handler::*;
 use lotto::log::*;
 use lotto::raw;
-use lotto::raw::base_category;
 use lotto::Stateful;
 use std::sync::LazyLock;
 
+use crate::handlers::event;
+use crate::num::U64OrInf;
 use crate::*;
 
 pub static HANDLER: LazyLock<OrderEnforcer> = LazyLock::new(|| OrderEnforcer {
@@ -23,7 +26,18 @@ pub static HANDLER: LazyLock<OrderEnforcer> = LazyLock::new(|| OrderEnforcer {
     fin: Final::default(),
     block: FxHashMap::default(),
     shutdown: false,
+    max_clock: get_max_clock(),
 });
+
+fn get_max_clock() -> U64OrInf {
+    let max_clock_str = std::env::var("LOTTO_RINFLEX_MAX_CLOCK").unwrap_or_default();
+    let max_clock_uval = max_clock_str.parse::<u64>().unwrap_or_default();
+    if max_clock_uval <= 1 {
+        U64OrInf::inf()
+    } else {
+        U64OrInf::from(max_clock_uval)
+    }
+}
 
 #[derive(Stateful)]
 pub struct OrderEnforcer {
@@ -37,11 +51,13 @@ pub struct OrderEnforcer {
 
     /// Handler stopped. Do not respond to `TOPIC_NEXT` anymore.
     pub shutdown: bool,
+
+    pub max_clock: U64OrInf,
 }
 
 impl Handler for OrderEnforcer {
     fn handle(&mut self, ctx: &raw::context_t, cappt: &mut raw::event_t) {
-        if ctx.cat == base_category::CAT_NONE || self.fin.constraints.len() == 0 {
+        if ctx.cat == Category::CAT_NONE || self.fin.constraints.len() == 0 {
             return;
         }
 
@@ -59,6 +75,12 @@ impl Handler for OrderEnforcer {
             return;
         }
 
+        if U64OrInf::from(cappt.clk) > self.max_clock {
+            self.shutdown = true;
+            cappt.reason = REASON_IGNORE;
+            return;
+        }
+
         // Check if we should block the current thread.
         let constraints = &mut self.fin.constraints;
 
@@ -67,6 +89,13 @@ impl Handler for OrderEnforcer {
             if self.block.get(&id).is_some() {
                 continue;
             }
+            // It is possible that a Read event now reads a different
+            // value, because another Write event happened before its
+            // resumption. Update the read value to the current value.
+
+            // NOTE: disabled for now.
+            // event::update_event(id);
+
             let e = match event::get_rt_event(id) {
                 None => {
                     panic!(
@@ -97,16 +126,13 @@ impl Handler for OrderEnforcer {
          * the engine can pick any task, including ones that are already
          * blocked, which is handled in TOPIC_NEXT_TASK above. */
     }
-}
 
-impl ExecuteHandler for OrderEnforcer {
-    fn handle_execute(&mut self, tid: TaskId, ctx_info: &ContextInfo) {
-        if self.shutdown
-            || ctx_info.cat == base_category::CAT_NONE
-            || self.fin.constraints.is_empty()
-        {
+    fn posthandle(&mut self, ctx: &raw::context_t) {
+        if self.shutdown || ctx.cat == Category::CAT_NONE || self.fin.constraints.is_empty() {
             return;
         }
+
+        let tid = TaskId(ctx.id);
 
         /* The sequencer can pick a blocked thread if we returned an empty
          * tset. Guard against this case here (not in the handler to give
@@ -115,15 +141,19 @@ impl ExecuteHandler for OrderEnforcer {
         if let Some(cnt) = self.block.get(&tid) {
             self.fin.should_discard = true;
             debug!("Shutting down due to Lotto picking thread {} for ANY_TASK which is blocked by {} constraints", tid, cnt);
+            debug!(
+                "discard from order_enforcer because task {} is blocked",
+                tid
+            );
             return;
         }
 
         /* Reconstruct last event */
-        let last_e = match get_event(tid) {
+        let last_e = match event::get_event(tid) {
             Some(e) => e,
             None => panic!(
                 "Cannot retrieve an event for task {} (cat {})",
-                tid, ctx_info.cat
+                tid, ctx.cat
             ),
         };
 
@@ -132,14 +162,16 @@ impl ExecuteHandler for OrderEnforcer {
             let source = &mut constraint.c.source;
             let target = &mut constraint.c.target;
 
-            /* check if *last_event* is a target */
+            /* check if last executed instruction is target */
             if target.equals(&last_e) && target.cnt > 0 {
                 target.cnt -= 1;
                 continue;
             }
 
-            /* check if *last_event* is a source, in that case, (possibly)
-             * unblock c, and decrease source counter. */
+            /* check if last executed instruction is source, in that
+             * case, (possibly) unblock c, and decrease source
+             * counter.
+             */
             if source.equals(&last_e) && source.cnt > 0 {
                 source.cnt -= 1;
                 if source.cnt > 0 {
@@ -196,10 +228,16 @@ impl StateTopicSubscriber for OrderEnforcer {
 fn should_block(cur: &Event, constraint: &Constraint) -> bool {
     let source = &constraint.c.source;
     let target = &constraint.c.target;
-    debug!(
-        "checking [t:{},cat:{},cnt:{}] with {}",
-        cur.t.id, cur.t.cat, cur.cnt, constraint
-    );
+    if cur.t == source.t || cur.t == target.t {
+        debug!(
+            "checking [t:{},cat:{},cnt:{},read:{:?}] with {}",
+            cur.t.id,
+            cur.t.cat,
+            cur.cnt,
+            cur.m.as_ref().map(MemoryAccess::loaded_value).flatten(),
+            constraint
+        );
+    }
 
     if source.cnt == 0 || target.cnt != 1 {
         // This constraint will not be broken however the scheduling is.
@@ -213,55 +251,52 @@ fn should_block(cur: &Event, constraint: &Constraint) -> bool {
         return true;
     }
 
-    if target.t.cat == base_category::CAT_AFTER_CMPXCHG_S
-        && cur.t.cat == base_category::CAT_BEFORE_CMPXCHG
-        && cur.t.pc == target.t.pc
-        && cur.stacktrace == target.stacktrace
-        && source.m.is_some()
-        && cur.m.is_some()
-        && source
-            .m
-            .clone()
-            .unwrap()
-            .conflicting_with(&cur.m.clone().unwrap())
-        && cur.m.clone().unwrap().predict_cas()
-    {
-        /* CAS check: effectively consider AFTER_CMPXCHG_S as "BEFORE_CAS
-         * that is predicted to succeed".
-         *
-         * This is because E -> T -> AFTER_CMPXCHG_S is equivalent to E ->
-         * AFTER_CMPXCHG_S -> T.
-         *
-         * Therefore, if target is AFTER_CMPXCHG_S, we need to insert T
-         * before the corresponding BEFORE_CMPXCHG, which is only correct
-         * when BEFORE_CMPXCHG is followed immediately by AFTER_CMPXCHG_S,
-         * so we need to predict whether it will succeed.
-         */
-        debug!("cas-block-s");
-        return true;
-    }
-
-    if target.t.cat == base_category::CAT_AFTER_CMPXCHG_F
-        && cur.t.cat == base_category::CAT_BEFORE_CMPXCHG
-        && cur.t.id == target.t.id
-        && cur.t.pc == target.t.pc
-        && cur.stacktrace == target.stacktrace
-        && source.m.is_some()
-        && cur.m.is_some()
-        && source
-            .m
-            .clone()
-            .unwrap()
-            .conflicting_with(&cur.m.clone().unwrap())
-        && !cur.m.clone().unwrap().predict_cas()
-    {
-        /* Similar to CAT_AFTER_CMPXCHG_S. */
-        debug!("cas-block-f");
-        return true;
+    /* CAS check: effectively regard AFTER_CMPXCHG_S as
+     * "BEFORE_CAS that is predicted to succeed".
+     *
+     * This is because E -> T -> AFTER_CMPXCHG_S is equivalent to E ->
+     * AFTER_CMPXCHG_S -> T.
+     *
+     * Therefore, if target is AFTER_CMPXCHG_S, we need to insert T
+     * before the corresponding BEFORE_CMPXCHG, which is only correct
+     * when BEFORE_CMPXCHG is followed immediately by AFTER_CMPXCHG_S,
+     * so we need to predict whether it will succeed.
+     */
+    if let Some((cas_success, cas_after_event)) = convert_cas_before_to_after(cur.clone()) {
+        // let source_conflicting_with_cur = source.m.is_some()
+        //     && cur.m.is_some()
+        //     && source
+        //         .m
+        //         .clone()
+        //         .unwrap()
+        //         .conflicting_with(&cur.m.clone().unwrap());
+        if cas_after_event.equals(target)
+        // && source_conflicting_with_cur
+        {
+            if cas_success {
+                debug!("cas-block-s");
+            } else {
+                debug!("cas-block-f");
+            }
+            return true;
+        }
     }
 
     debug!("fallback-unblockable");
     false
+}
+
+fn convert_cas_before_to_after(mut cur: Event) -> Option<(bool, Event)> {
+    if cur.t.cat != Category::CAT_BEFORE_CMPXCHG {
+        return None;
+    }
+    if cur.m.clone().unwrap().predict_cas() {
+        cur.t.cat = Category::CAT_AFTER_CMPXCHG_S;
+        Some((true, cur))
+    } else {
+        cur.t.cat = Category::CAT_AFTER_CMPXCHG_F;
+        Some((false, cur))
+    }
 }
 
 #[derive(Encode, Decode, Debug, Default)]
@@ -301,10 +336,29 @@ pub fn register() {
     lotto::engine::handler::register(&*HANDLER);
     lotto::brokers::statemgr::register(&*HANDLER);
     lotto::brokers::statemgr::subscribe_to_statemgr_topics(&*HANDLER);
-    lotto::engine::pubsub::subscribe_execute(&*HANDLER);
 }
 
-pub fn register_flags() {}
+unsafe extern "C" fn _flag_rinflex_max_clock_callback(v: raw::value, _: *mut std::ffi::c_void) {
+    let v = Value::from(v);
+    let max_clock_uval = v.as_uval();
+    let max_clock_str = format!("{}", max_clock_uval);
+    std::env::set_var("LOTTO_RINFLEX_MAX_CLOCK", max_clock_str);
+}
+
+pub static FLAG_RINFLEX_MAX_CLOCK: FlagKey = FlagKey::new(
+    c"FLAG_RINFLEX_MAX_CLOCK",
+    c"",
+    c"rinflex-max-clock",
+    c"INT",
+    c"Workaround for livelocks",
+    Value::U64(0),
+    &STR_CONVERTER_NONE,
+    Some(_flag_rinflex_max_clock_callback),
+);
+
+pub fn register_flags() {
+    let _ = FLAG_RINFLEX_MAX_CLOCK.get();
+}
 
 //
 // Interfaces for CLI

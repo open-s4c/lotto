@@ -12,6 +12,7 @@ use lotto::raw;
 use crate::error::Error;
 use crate::handlers;
 use crate::progress::ProgressBar;
+use crate::stats::STATS;
 
 pub struct Inflex {
     input: PathBuf,
@@ -109,17 +110,15 @@ impl Inflex {
             let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
             bar.set_prefix_string(format!("IIP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
-            let success_forever = always(self.rounds, || {
-                loop {
-                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                    let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if should_discard_execution(&self.temp_output)? {
-                        bar.tick_invalid();
-                        continue;
-                    }
-                    bar.tick_valid();
-                    return Ok(exitcode == 0);
+            let success_forever = always(self.rounds, || loop {
+                flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                let exitcode = checked_execute(&self.input, &flags, true)?;
+                if should_discard_execution(&self.temp_output)? {
+                    bar.tick_invalid();
+                    continue;
                 }
+                bar.tick_valid();
+                return Ok(exitcode == 0);
             })?;
             Ok(success_forever)
         })
@@ -138,17 +137,15 @@ impl Inflex {
             let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
             bar.set_prefix_string(format!("IP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
-            let fail_forever = always(self.rounds, || {
-                loop {
-                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                    let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if should_discard_execution(&self.temp_output)? {
-                        bar.tick_invalid();
-                        continue;
-                    }
-                    bar.tick_valid();
-                    return Ok(exitcode != 0);
+            let fail_forever = always(self.rounds, || loop {
+                flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                let exitcode = checked_execute(&self.input, &flags, true)?;
+                if should_discard_execution(&self.temp_output)? {
+                    bar.tick_invalid();
+                    continue;
                 }
+                bar.tick_valid();
+                return Ok(exitcode != 0);
             })?;
             Ok(fail_forever)
         })
@@ -244,7 +241,13 @@ pub fn checked_execute(trace: &Path, flags: &Flags, config: bool) -> Result<i32,
     unsafe {
         raw::exec_info_replay_envvars();
     }
-    let exitcode = execute(args, flags, config);
+    let exitcode = {
+        let exec_start_instant = std::time::Instant::now();
+        let exitcode = execute(args, flags, config);
+        STATS.tick_run();
+        STATS.count_run_time(exec_start_instant);
+        exitcode
+    };
     if exitcode == 130 {
         return Err(Error::Interrupted);
     }
@@ -254,7 +257,7 @@ pub fn checked_execute(trace: &Path, flags: &Flags, config: bool) -> Result<i32,
 /// Check if this execution should be discarded.
 pub fn should_discard_execution(output: &Path) -> Result<bool, Error> {
     let mut rec = Trace::load_file(output);
-    let last = rec.last().expect("last record");
+    let last = rec.last().expect("no last record");
 
     // Lotto crashed?
     if last.reason.is_runtime() {
@@ -263,6 +266,7 @@ pub fn should_discard_execution(output: &Path) -> Result<bool, Error> {
 
     // Should ignore? Probably from handler_drop.
     if last.reason == raw::reason::REASON_IGNORE {
+        STATS.tick_discarded_run();
         return Ok(true);
     }
 
@@ -278,6 +282,7 @@ pub fn should_discard_execution(output: &Path) -> Result<bool, Error> {
             );
         }
         if handlers::order_enforcer::should_discard() {
+            STATS.tick_discarded_run();
             return Ok(true);
         }
     }

@@ -133,6 +133,7 @@ impl RecInflex {
             ip.checked_sub(1).expect("IP cannot be 0"),
             &self.trace_fail,
             &self.trace_success,
+            true,
         )?;
 
         // find IIP
@@ -183,6 +184,7 @@ impl RecInflex {
                 iip - 1,
                 &self.trace_success,
                 &self.trace_fail,
+                true,
             )?;
             symm_set.push(pair);
             self.inflex_pair(iip - 1, depth + 1, symm_set)
@@ -216,10 +218,10 @@ impl RecInflex {
             let exitcode = loop {
                 // We tried for 100r times, yet no single valid run found.
                 // Use a separate invalid_cnt because bar.invalid_ticks is shared.
-                if bar.valid_ticks == 0 && invalid_cnt > 100 * self.rounds {
-                    warn!("Cannot find a valid execution");
-                    return Err(Error::ExecutionNotFound);
-                }
+                // if bar.valid_ticks == 0 && invalid_cnt > 100 * self.rounds {
+                //     warn!("Cannot find a valid execution");
+                //     return Err(Error::ExecutionNotFound);
+                // }
                 flags.set_by_opt(&flag_seed(), Value::U64(now()));
                 let exitcode = checked_execute(&check_trace, &flags, true)?;
                 if should_discard_execution(&self.trace_temp)? {
@@ -248,13 +250,17 @@ impl RecInflex {
         let out = self.attach_constraints_to_trace(&self.input, 0, &self.constraints);
         self.pop();
         let out = out?;
+        println!("Checking file {}", out.display());
         let _replay = EnvScope::new("LOTTO_REPLAY", &out);
         let _record = EnvScope::new("LOTTO_RECORD", &self.trace_temp);
         let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let mut flags = self.flags.to_owned();
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
-        let always_succeed = always(self.rounds, || {
+        let always_result = always(self.rounds, || {
             let exitcode = loop {
+                if bar.valid_ticks == 0 && bar.invalid_ticks == 10 * self.rounds {
+                    return Err(Error::ExecutionNotFound);
+                }
                 flags.set_by_opt(&flag_seed(), Value::U64(now()));
                 let exitcode = checked_execute(&out, &flags, true)?;
                 if should_discard_execution(&self.trace_temp)? {
@@ -265,9 +271,23 @@ impl RecInflex {
             };
             bar.tick_valid();
             Ok(exitcode == 0)
-        })?;
+        });
         bar.done();
-        Ok(always_succeed)
+        match always_result {
+            Ok(true) |
+            // Flipping a constraint might cause inconsistency that
+            // makes it possible to find a satisfying execution. In
+            // this case we just accept it.
+            Err(Error::ExecutionNotFound) => {
+                Ok(true)
+            }
+            Ok(false) => {
+                Ok(false)
+            }
+            e @ Err(_) => {
+                e
+            }
+        }
     }
 
     /// Similar to [`get_trace`], but it tries to search backwards
@@ -287,19 +307,17 @@ impl RecInflex {
         let _record = EnvScope::new("LOTTO_RECORD", &output);
         let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let mut flags = self.flags.clone();
-        let mut cnt = 0;
         let mut replay_goal = last_valid_clk;
         let mut backoff = 1u64;
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
         bar.set_prefix_string(format!("goal={}", replay_goal));
         loop {
-            cnt += 1;
-            if cnt > self.rounds {
-                if replay_goal == 0 {
-                    warn!("Cannot find satisfying execution at clock 0 in get_trace_from_zero");
-                    return Err(Error::ExecutionNotFound);
-                }
-                cnt = 0;
+            if bar.valid_ticks > self.rounds && replay_goal == 0 {
+                warn!("Cannot find satisfying execution at clock 0 in get_trace_from_zero");
+                return Err(Error::ExecutionNotFound);
+            } else if (bar.valid_ticks > self.rounds && replay_goal > 0)
+                || (bar.valid_ticks == 0 && bar.invalid_ticks > self.rounds * 10)
+            {
                 if self.use_linear_backoff {
                     backoff = (last_valid_clk / 20).max(1);
                 } else {
@@ -330,6 +348,7 @@ impl RecInflex {
         replay_goal: Clock,
         input: &Path,
         output: &Path,
+        unlimited: bool,
     ) -> Result<(), Error> {
         let input = self.attach_constraints_to_trace(input, replay_goal, &self.constraints)?;
         let _replay = EnvScope::new("LOTTO_REPLAY", &input);
@@ -338,8 +357,9 @@ impl RecInflex {
         let mut flags = self.flags.clone();
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds * 10);
         loop {
-            if bar.valid_ticks > self.rounds * 10
-                || bar.valid_ticks == 0 && bar.invalid_ticks > self.rounds * 10
+            if !unlimited
+                && (bar.valid_ticks > self.rounds * 10
+                    || bar.valid_ticks == 0 && bar.invalid_ticks > self.rounds * 10)
             {
                 warn!("Cannot find satisfying execution in get_trace");
                 return Err(Error::ExecutionNotFound);
@@ -521,12 +541,9 @@ impl RecInflex {
             let Some(event) = handlers::event::get_event(TaskId(r.id)) else {
                 continue;
             };
-            let transition = event.t;
-            let stacktrace = event.stacktrace;
+            // `cnt` is meta. It counts the number of occurrences of (event-except-cnt).
             for constraint in &mut constraints {
-                if constraint.c.target.t == transition
-                    && constraint.c.target.stacktrace == stacktrace
-                {
+                if constraint.c.target.equals(&event) {
                     constraint.c.target.cnt = constraint.c.target.cnt.saturating_sub(1);
                     if constraint.c.target.cnt == 0 && constraint.c.source.cnt != 0 {
                         panic!(
@@ -535,9 +552,7 @@ impl RecInflex {
                         );
                     }
                 }
-                if constraint.c.source.t == transition
-                    && constraint.c.source.stacktrace == stacktrace
-                {
+                if constraint.c.source.equals(&event) {
                     constraint.c.source.cnt = constraint.c.source.cnt.saturating_sub(1);
                 }
             }

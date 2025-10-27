@@ -1,5 +1,7 @@
+use lotto::base::Category;
 use lotto::collections::FxHashMap;
-use lotto::{base::Category, base::StableAddress, raw, Stateful};
+use lotto::raw;
+use lotto::Stateful;
 use lotto::{
     base::Value,
     brokers::statemgr::*,
@@ -7,13 +9,15 @@ use lotto::{
     engine::handler::{self, TaskId},
     log::*,
 };
+use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::LazyLock;
 
 use crate::handlers::cas;
 use crate::handlers::stacktrace;
 use crate::idmap::IdMap;
-use crate::{Event, StackTrace};
+use crate::memory_access::MemoryAccess;
+use crate::{Event, GenericEventCore, StackTrace, Transition};
 
 pub static HANDLER: LazyLock<EventHandler> = LazyLock::new(|| EventHandler {
     cfg: Config {
@@ -26,6 +30,9 @@ pub static HANDLER: LazyLock<EventHandler> = LazyLock::new(|| EventHandler {
     st_map: IdMap::default(),
 });
 
+/// The index in the `st_map`.
+type StackTraceId = usize;
+
 #[derive(Stateful)]
 pub struct EventHandler {
     #[config]
@@ -33,31 +40,58 @@ pub struct EventHandler {
     #[persistent]
     pub pers: Persistent,
 
-    pub pc_cnt: FxHashMap<(TaskId, StableAddress, Category, usize), u64>,
+    pub pc_cnt: FxHashMap<GenericEventCore<StackTraceId>, u64>,
 
     // Do not store stacktrace in pc_cnt to save some RAM.
     pub st_map: IdMap<StackTrace>,
 }
 
 impl handler::Handler for EventHandler {
-    fn handle(&mut self, ctx: &raw::context_t, event: &mut raw::event_t) {
+    fn handle(&mut self, ctx: &raw::context_t, e: &mut raw::event_t) {
         if !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
         let id = TaskId::new(ctx.id);
-        let stacktrace = stacktrace::get_task_stacktrace(id).unwrap_or(Vec::new());
-        let stid = self.st_map.put(&stacktrace);
-        let mut event = Event::new(ctx, event, stacktrace.clone());
-        let pc = event.t.pc.clone();
+        let stacktrace = stacktrace::get_task_stacktrace(id).unwrap_or_default();
+        let ma = cas::get_rt_memory_access(id);
+        // let stid = self.st_map.put(&stacktrace);
+        let transition = Transition::new(ctx);
+        let ecore = GenericEventCore {
+            t: transition.clone(),
+            _phantom: PhantomData,
+            // stacktrace: stid,
+            // addr: ma.as_ref().map(|ma| ma.addr().to_owned()),
+            // rval: ma.as_ref().map(MemoryAccess::loaded_value).flatten(),
+        };
         let cnt = *self
             .pc_cnt
-            .entry((id, pc, ctx.cat, stid))
+            .entry(ecore)
             .and_modify(|c| *c += 1)
             .or_insert(1);
-        event.cnt = cnt;
-        event.m = cas::get_modify(id);
+        let event = Event {
+            t: transition,
+            clk: e.clk,
+            cnt,
+            stacktrace,
+            m: ma,
+        };
+        //println!("handle_event: {}", event);
         self.pers.tasks.insert(id, event);
     }
+
+    // fn posthandle(&mut self, ctx: &raw::context_t) {
+    //     if ctx.cat == Category::CAT_NONE || !self.cfg.enabled.load(Ordering::Relaxed) {
+    //         return;
+    //     }
+    //     let entry = self
+    //         .pers
+    //         .tasks
+    //         .get_mut(&TaskId(ctx.id))
+    //         .expect("handler_event's posthandle expects event data from capture");
+    //     // Task i just executed a memory operation, and we should
+    //     // update the value to reflect the "real" value.
+    //     entry.m = cas::get_rt_memory_access(TaskId(ctx.id));
+    // }
 }
 
 //
@@ -129,12 +163,25 @@ pub fn get_event(task: TaskId) -> Option<Event> {
 }
 
 /// Get real-time event.
+///
+/// Call [`update_event`] if you need to access the "current" memory
+/// value.
 pub fn get_rt_event(task: TaskId) -> Option<Event> {
     HANDLER.pers.tasks.get(&task).cloned().map(|mut event| {
         if event.m.as_ref().is_some_and(|m| m.has_invalid_real_addr()) {
-            event.m = cas::get_rt_modify(task);
+            event.m = cas::get_rt_memory_access(task);
             assert!(event.m.is_some(), "RT event should have RT modify");
         }
         event
     })
+}
+
+/// Update the event record (both persistent and rt). This will in
+/// turn update the [`MemoryAccess`] records.
+pub fn update_event(task: TaskId) {
+    cas::update_memory_access(task);
+    let pers = unsafe { &mut *HANDLER.persistent_mut() };
+    if let Some(e) = pers.tasks.get_mut(&task) {
+        e.m = cas::get_memory_access(task);
+    }
 }

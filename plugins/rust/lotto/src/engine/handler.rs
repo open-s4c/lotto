@@ -1,4 +1,3 @@
-
 #![allow(clippy::ptr_arg)]
 
 pub use crate::base::TaskId;
@@ -18,8 +17,14 @@ use std::sync::{Mutex, MutexGuard, TryLockResult};
 
 type DynHandler = dyn Handler + Sync;
 
+/// A bare-bones Handler interface that closely corresponds to the C
+/// counterpart.
 pub trait Handler {
-    fn handle(&mut self, ctx: &raw::context_t, event: &mut raw::event_t);
+    /// Called during capture.
+    fn handle(&mut self, _ctx: &raw::context_t, _event: &mut raw::event_t) {}
+
+    /// Called during resume.
+    fn posthandle(&mut self, _ctx: &raw::context_t) {}
 }
 
 pub(crate) struct HandlerList {

@@ -349,7 +349,7 @@ pub fn init() {
     {
         // Subscribes to call from the sequencer_resume with the task-id to run.
         use raw::ps_subscribe;
-        
+
         unsafe {
             ps_subscribe(
                 lotto_sys::CHAIN_LOTTO as u16,

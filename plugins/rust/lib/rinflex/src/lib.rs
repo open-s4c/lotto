@@ -7,26 +7,31 @@ pub mod error;
 pub mod handlers;
 pub mod idmap;
 pub mod inflex;
-pub mod modify;
+pub mod memory_access;
+pub mod num;
 pub mod progress;
 pub mod rec_inflex;
 pub mod report;
+pub mod stats;
 pub mod trace;
 pub mod vaddr;
 
 use lotto::base::{Category, Clock, StableAddress, StableAddressMethod, TaskId};
 use lotto::brokers::{Decode, Encode};
+use lotto::log::*;
 use lotto::raw;
-use modify::Modify;
+use memory_access::MemoryAccess;
 use report::Instruction;
 use std::hash::Hash;
+use std::marker::PhantomData;
 use std::path::PathBuf;
+use std::sync::atomic::{fence, Ordering};
 
 /// A transition of a program state.
 ///
-/// A transition is only defined by the essentials of an event --
-/// something happened, and what.  It doesn't concern itself with any
-/// history or program state.
+/// A transition is a state transition out of context. It doesn't
+/// concern itself with any history or program state. It is almost
+/// meaningless without proper context ([`Event`]).
 #[derive(Encode, Decode, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Transition {
     pub id: TaskId,
@@ -47,15 +52,7 @@ impl Transition {
 
 impl std::fmt::Display for Transition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            r"{{
-  id: {},
-  cat: {},
-  pc: {},
-}}",
-            self.id, self.cat, self.pc
-        )
+        write!(f, r"[id:{}, cat:{}, pc:{}]", self.id, self.cat, self.pc)
     }
 }
 
@@ -82,21 +79,37 @@ impl std::fmt::Display for StackFrameId {
         if let Some(sname) = &self.sname {
             return write!(f, "{}", sname);
         }
-        write!(f, "{}(+{:04x})", self.fname, self.offset)
+        let fname = self.fname.rsplit("/").next().unwrap_or(&self.fname);
+        write!(f, "{}(+{:04x})", fname, self.offset)
     }
 }
 
 /// The stacktrace when an event happened.
-pub type StackTrace = Vec<StackFrameId>;
+#[derive(Clone, Encode, Decode, Debug, Hash, PartialEq, Eq, Default)]
+pub struct StackTrace(pub Vec<StackFrameId>);
+
+impl std::fmt::Display for StackTrace {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (i, stid) in self.0.iter().enumerate() {
+            write!(f, "{}{}", if i == 0 { "[" } else { ", " }, stid)?;
+        }
+        write!(f, "]")?;
+        Ok(())
+    }
+}
 
 /// A concrete event.
 ///
-/// It is basically a transition with some metadata.
+/// It is essentially a transition enriched with important auxiliary
+/// data.
 ///
 /// An event happens only if the corresponding transition is enabled
-/// for the program state. Therefore, an event is essentially a tuple
-/// of `(ProgramState, Transition)`, and it results in a new program
-/// state.
+/// for the program state. Therefore, an event can be viewed as a
+/// tuple of `(ProgramState, Transition)`, and it results in a new
+/// program state.
+///
+/// For more information regarding why the definition includes Modify
+/// and Read, refer to the documentation of the [memory_access] mod.
 #[derive(Encode, Decode, Clone, Debug, Hash)]
 pub struct Event {
     /// The program transition to which this event is associated.
@@ -111,29 +124,82 @@ pub struct Event {
     /// Stacktrace.
     pub stacktrace: StackTrace,
 
-    /// Modify information.
-    pub m: Option<Modify>,
+    /// Memory access information.
+    pub m: Option<MemoryAccess>,
 }
 
-impl std::fmt::Display for Event {
+/// The equivalence "core" of an [`Event`].
+///
+/// `c1 == c2` if and only if `e1.equals(e2)`
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
+pub struct GenericEventCore<StackTraceType> {
+    pub t: Transition,
+    // pub stacktrace: StackTraceType,
+    // pub addr: Option<vaddr::VAddr>,
+    // pub rval: Option<u64>,
+    pub _phantom: PhantomData<StackTraceType>,
+}
+
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
+pub struct GenericEventCoreRef<'a, StackTraceType> {
+    pub t: &'a Transition,
+    // pub stacktrace: &'a StackTraceType,
+    // pub addr: Option<&'a vaddr::VAddr>,
+    // pub rval: Option<u64>,
+    pub _phantom: PhantomData<&'a StackTraceType>,
+}
+
+type EventCore = GenericEventCore<StackTrace>;
+type EventCoreRef<'a> = GenericEventCoreRef<'a, StackTrace>;
+
+impl From<Event> for EventCore {
+    fn from(value: Event) -> Self {
+        EventCore {
+            t: value.t,
+            _phantom: PhantomData,
+            // stacktrace: value.stacktrace,
+            // addr: value.m.as_ref().map(|m| m.addr().to_owned()),
+            // rval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
+        }
+    }
+}
+
+impl<'a> From<&'a Event> for EventCoreRef<'a> {
+    fn from(value: &'a Event) -> Self {
+        EventCoreRef {
+            t: &value.t,
+            _phantom: PhantomData,
+            // stacktrace: &value.stacktrace,
+            // addr: value.m.as_ref().map(MemoryAccess::addr),
+            // rval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
+        }
+    }
+}
+
+impl<'a, T: std::fmt::Display> std::fmt::Display for GenericEventCoreRef<'a, T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{} [cnt={}, clk={}]",
-            self.t,
-            self.cnt,
-            self.clk //self.t, self.clk, self.cnt, self.m, self.stacktrace
-        )
+        write!(f, "{{\n")?;
+        write!(f, "  t: {},\n", self.t)?;
+        // write!(f, "  st: {},\n", self.stacktrace)?;
+        // write!(f, "  loc: {:?},\n", self.addr)?;
+        // write!(f, "  rval: {:?},\n", self.rval)?;
+        write!(f, "}}")?;
+        Ok(())
     }
 }
 
 impl Event {
-    /// Compares the equality of two events.
+    /// Compares the equality of two events, *without* cnt.
     ///
-    /// NOTE: This corresponds to in `event_equals_light` the C code,
-    /// whereas the default `PartialEq` corresponds to `event_equals.`
+    /// Theoretically, two events are equivalent, if and only if, the
+    /// local behavior of e1.id is not changed at all when e1 is
+    /// replaced by e2 and e1.id == e2.id.
+    ///
+    /// Note that, `cnt` is removed from the equality because cnt is
+    /// only meta-level information, and it is not part of the formal
+    /// definition of the event.
     pub fn equals(&self, other: &Self) -> bool {
-        self.t == other.t && self.stacktrace == other.stacktrace
+        EventCoreRef::from(self) == EventCoreRef::from(other)
     }
 
     /// Create an [`Event`] from a Lotto capture that only fills in
@@ -167,21 +233,23 @@ impl Event {
             self.cnt,
             self.t.pc,
             self.t.cat,
+            // self.m.as_ref().map(MemoryAccess::loaded_value).flatten(),
             self.stacktrace
+                .0
                 .iter()
                 .map(|x| x.to_string())
                 .collect::<Vec<_>>()
                 .join(","),
             self.instruction().display()?
         );
-        let n = self.stacktrace.len();
+        let n = self.stacktrace.0.len();
         if n < 2 {
             return Ok(result);
         }
         let mut j = n - 1;
         while j >= 1 {
-            let callee = &self.stacktrace[j];
-            let caller = &self.stacktrace[j - 1];
+            let callee = &self.stacktrace.0[j];
+            let caller = &self.stacktrace.0[j - 1];
             let call_pc_map_addr = callee.call_pc.as_map_address();
             let call_insn = Instruction {
                 path: PathBuf::from(&caller.fname),
@@ -203,6 +271,13 @@ impl Event {
             j -= 1;
         }
         Ok(result)
+    }
+}
+
+impl std::fmt::Display for Event {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let ecore = EventCoreRef::from(self);
+        write!(f, "{}x{}", ecore, self.cnt)
     }
 }
 
@@ -286,3 +361,17 @@ impl std::fmt::Display for Constraint {
 ///
 /// NOTE: Corresponds to `ocbag_t` in the C code.
 pub type ConstraintSet = Vec<Constraint>;
+
+pub unsafe fn sized_read(addr: u64, size: usize) -> u64 {
+    fence(Ordering::SeqCst);
+
+    let value = match size {
+        1 => std::ptr::read_unaligned(addr as *const u8) as u64,
+        2 => std::ptr::read_unaligned(addr as *const u16) as u64,
+        4 => std::ptr::read_unaligned(addr as *const u32) as u64,
+        8 => std::ptr::read_unaligned(addr as *const u64),
+        _ => panic!("invalid size"),
+    };
+
+    value
+}

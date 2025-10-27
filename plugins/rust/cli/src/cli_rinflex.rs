@@ -9,6 +9,7 @@ use lotto::*;
 use rec_inflex::{Outcome, RecInflex};
 use rinflex::error::Error;
 use rinflex::handlers::flags::*;
+use rinflex::stats::STATS;
 use rinflex::*;
 
 #[lotto::subcmd(
@@ -129,13 +130,25 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
         println!("OK, found another failing trace!");
     }
 
+    let mut num_ocs = 0;
+    let mut num_virt_ocs = 0;
+    println!("");
     for c in &rinflex.constraints {
         println!(
             "------ . ------ . ------ . ------ . ------ {}",
             if c.virt { "[virtual]" } else { "" }
         );
         println!("{}", c.c.display().unwrap());
+        num_ocs += 1;
+        if c.virt {
+            num_virt_ocs += 1;
+        }
     }
+
+    println!("");
+    println!("#total OCs = {}", num_ocs);
+    println!("#virtual OCs = {}", num_virt_ocs);
+    STATS.report();
 
     Ok(())
 }

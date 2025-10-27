@@ -1,4 +1,3 @@
-
 use std::{
     backtrace::{Backtrace, BacktraceStatus},
     panic::{self, PanicHookInfo},

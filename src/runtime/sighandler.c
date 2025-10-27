@@ -60,13 +60,15 @@ _write_uint64(int fd, uint64_t n)
 {
     do {
         char digit = CAST_TYPE(char, '0' + n % 10);
-        write(fd, &digit, 1);
+        if (write(fd, &digit, 1) < 0) {
+            return;
+        }
         n /= 10;
     } while (n > 0);
 }
 
 static void
-_hanlde(reason_t user_reason, reason_t runtime_reason)
+_handle(reason_t user_reason, reason_t runtime_reason)
 {
     mediator_disable_registration();
     mediator_t *m   = get_mediator(false);
@@ -94,31 +96,31 @@ _hanlde(reason_t user_reason, reason_t runtime_reason)
 static void
 _handle_sigint(int sig, siginfo_t *si, void *arg)
 {
-    _hanlde(REASON_SIGINT, REASON_RUNTIME_SIGINT);
+    _handle(REASON_SIGINT, REASON_RUNTIME_SIGINT);
 }
 
 static void
 _handle_segfault(int sig, siginfo_t *si, void *arg)
 {
-    _hanlde(REASON_SEGFAULT, REASON_RUNTIME_SEGFAULT);
+    _handle(REASON_SEGFAULT, REASON_RUNTIME_SEGFAULT);
 }
 
 static void
 _handle_sigabrt(int sig, siginfo_t *si, void *arg)
 {
-    _hanlde(REASON_SIGABRT, REASON_RUNTIME_SIGABRT);
+    _handle(REASON_SIGABRT, REASON_RUNTIME_SIGABRT);
 }
 
 static void
 _handle_sigterm(int sig, siginfo_t *si, void *arg)
 {
-    _hanlde(REASON_SIGTERM, REASON_RUNTIME_SIGTERM);
+    _handle(REASON_SIGTERM, REASON_RUNTIME_SIGTERM);
 }
 
 static void
 _handle_sigkill(int sig, siginfo_t *si, void *arg)
 {
-    _hanlde(REASON_SIGKILL, REASON_RUNTIME_SIGKILL);
+    _handle(REASON_SIGKILL, REASON_RUNTIME_SIGKILL);
 }
 
 static void

@@ -28,20 +28,24 @@ set(MODS
     dice-tsan.o
     dice-stacktrace.o)
 
-set(PRIO_dice-self 4)
-set(PRIO_dice-microcb 5)
+set(SLOT_dice-self 4)
+set(SLOT_dice-microcb 5)
 
 set(OBJS ${MODS} dice.o)
 foreach(TARGET ${OBJS})
   get_filename_component(MOD ${TARGET} NAME_WLE)
-  if(PRIO_${MOD})
-    target_compile_options(${TARGET} PRIVATE -DDICE_MODULE_PRIO=${PRIO_${MOD}})
+  if(SLOT_${MOD})
+    target_compile_options(${TARGET} PRIVATE -DDICE_MODULE_SLOT=${SLOT_${MOD}})
   endif()
   target_compile_options(${TARGET} PRIVATE -fPIC)
 endforeach()
 
 add_library(micro-dice SHARED)
 target_link_libraries(micro-dice PUBLIC ${OBJS} dice-box.o pthread)
+if(APPLE)
+  target_link_libraries(micro-dice PRIVATE stdc++)
+endif()
+
 if(${ENABLE_SANITIZER})
   target_link_options(micro-dice PRIVATE ${LIBSAN_SHARED})
 endif()

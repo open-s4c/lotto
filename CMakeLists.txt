@@ -1,17 +1,15 @@
-# Copyright (C) Huawei Technologies Co., Ltd. 2025. All rights reserved.
-# SPDX-License-Identifier: 0BSD
+# Copyright (C) 2025 Huawei Technologies Co., Ltd.                             #
+# SPDX-License-Identifier: 0BSD                                                #
 
 cmake_minimum_required(VERSION 3.20)
 project(
   dice
   LANGUAGES C CXX ASM
-  VERSION 0.2)
+  VERSION 1.2)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_compile_options(-Wall -Wextra -Werror)
-
-option(DICE_INTERPOSE_MEMCPY "Build dice-memcpy (memcpy, memset, memmove)" off)
 
 # LTO setup
 option(DICE_LTO "Build Dice with LTO" on)
@@ -79,6 +77,20 @@ add_subdirectory(scripts)
 add_subdirectory(deps)
 add_subdirectory(include)
 add_subdirectory(src)
+
+set(DICE_SCRIPT
+    env DICE_BUILD=${PROJECT_BINARY_DIR} DICE_SOURCE=${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/scripts/dice)
+
+if(APPLE)
+  set(SO dylib)
+  set(PRELOAD DYLD_INSERT_LIBRARIES)
+  set(LIBRARY_PATH DYLD_LIBRARY_PATH)
+else()
+  set(SO so)
+  set(PRELOAD LD_PRELOAD)
+  set(LIBRARY_PATH LD_LIBRARY_PATH)
+endif()
 
 if(PROJECT_IS_TOP_LEVEL)
   set(TESTS_DEFAULT on)

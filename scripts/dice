@@ -59,6 +59,9 @@ while [ "$#" != "0" ]; do
         -cxa)
             PRELOAD="$PRELOAD:$DICE_DIR/dice-cxa.$SO"
         ;;
+        -logger)
+            PRELOAD="$PRELOAD:$DICE_DIR/dice-logger.$SO"
+        ;;
         -pthread)
             PRELOAD="$PRELOAD:$DICE_DIR/dice-pthread_create.$SO"
             PRELOAD="$PRELOAD:$DICE_DIR/dice-pthread_mutex.$SO"
@@ -85,6 +88,9 @@ PRELOAD="$LIBDICE$PRELOAD"
 
 # prefix tsano's libdir if necessary
 TSANO="env TSANO_LIBDIR=$TSANO_LIBDIR $TSANO"
+
+# in case running with ASAN, disable link order check
+export ASAN_OPTIONS=verify_asan_link_order=0
 
 # execute command
 if [ $SO = "dylib" ]; then

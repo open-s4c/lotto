@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Huawei Technologies Co., Ltd. 2025. All rights reserved.
+ * Copyright (C) 2025 Huawei Technologies Co., Ltd.
  * SPDX-License-Identifier: 0BSD
  */
 #include <pthread.h>
@@ -21,14 +21,18 @@ typedef struct {
 DICE_NORET
 INTERPOSE(void, pthread_exit, void *ptr)
 {
-    struct pthread_exit_event ev = {.pc = INTERPOSE_PC, .ptr = ptr};
+    struct pthread_exit_event ev = {
+        .pc   = INTERPOSE_PC,
+        .ptr  = ptr,
+        .func = REAL_FUNC(pthread_exit),
+    };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_THREAD_EXIT, &ev, 0);
-    REAL(pthread_exit, ptr);
+    ev.func(ptr);
     exit(1); // unreachable
 }
 
 static void *
-_trampoline(void *targ)
+trampoline_(void *targ)
 {
     trampoline_t *t      = (trampoline_t *)targ;
     void *arg            = t->arg;
@@ -49,31 +53,44 @@ INTERPOSE(int, pthread_create, pthread_t *thread, const pthread_attr_t *attr,
     t  = mempool_alloc(sizeof(trampoline_t));
     *t = (trampoline_t){.arg = arg, .run = run};
 
-    struct pthread_create_event ev = {.pc     = INTERPOSE_PC,
-                                      .thread = thread,
-                                      .attr   = attr,
-                                      .run    = run,
-                                      .arg    = arg};
+    struct pthread_create_event ev = {
+        .pc     = INTERPOSE_PC,
+        .thread = thread,
+        .attr   = attr,
+        .run    = run,
+        .arg    = arg,
+        .func   = REAL_FUNC(pthread_create),
+    };
 
     metadata_t md = {0};
     PS_PUBLISH(INTERCEPT_BEFORE, EVENT_THREAD_CREATE, &ev, &md);
-    ev.ret = REAL(pthread_create, thread, attr, _trampoline, t);
+    ev.ret = ev.func(thread, attr, trampoline_, t);
     PS_PUBLISH(INTERCEPT_AFTER, EVENT_THREAD_CREATE, &ev, &md);
     return ev.ret;
 }
 
 INTERPOSE(int, pthread_join, pthread_t thread, void **ptr)
 {
-    struct pthread_join_event ev = {.pc     = INTERPOSE_PC,
-                                    .thread = thread,
-                                    .ptr    = ptr};
+    struct pthread_join_event ev = {
+        .pc     = INTERPOSE_PC,
+        .thread = thread,
+        .ptr    = ptr,
+        .func   = REAL_FUNC(pthread_join),
+    };
 
     metadata_t md = {0};
     PS_PUBLISH(INTERCEPT_BEFORE, EVENT_THREAD_JOIN, &ev, &md);
-    ev.ret = REAL(pthread_join, thread, ptr);
+    ev.ret = ev.func(thread, ptr);
     PS_PUBLISH(INTERCEPT_AFTER, EVENT_THREAD_JOIN, &ev, &md);
 
     return ev.ret;
 }
 
+/* Advertise event type names for debugging messages */
+PS_ADVERTISE_TYPE(EVENT_THREAD_START)
+PS_ADVERTISE_TYPE(EVENT_THREAD_EXIT)
+PS_ADVERTISE_TYPE(EVENT_THREAD_CREATE)
+PS_ADVERTISE_TYPE(EVENT_THREAD_JOIN)
+
+/* Mark module initialization (optional) */
 DICE_MODULE_INIT()

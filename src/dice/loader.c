@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Huawei Technologies Co., Ltd. 2025. All rights reserved.
+ * Copyright (C) 2025 Huawei Technologies Co., Ltd.
  * SPDX-License-Identifier: 0BSD
  */
 #include <assert.h>
@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DICE_MODULE_PRIO 2
+#define DICE_MODULE_SLOT 1
 #include <dice/events/dice.h>
 #include <dice/log.h>
 #include <dice/mempool.h>
@@ -25,15 +25,15 @@ int ps_dispatch_max(void);
 void ps_init_();
 
 static DICE_CTOR void
-_init()
+init_()
 {
     ps_init_();
 }
 
 static void
-_load_plugin(const char *path)
+load_plugin_(const char *path)
 {
-    log_debug("[%4d] LOAD: %s", DICE_MODULE_PRIO, path);
+    log_debug("[%4d] LOAD: %s", DICE_MODULE_SLOT, path);
     void *handle = dlopen(path, RTLD_GLOBAL | RTLD_LAZY);
     char *err    = dlerror();
     if (!handle)
@@ -41,7 +41,7 @@ _load_plugin(const char *path)
 }
 
 static char *
-_strdup(const char *str)
+strdup_(const char *str)
 {
     if (str == NULL)
         return NULL;
@@ -55,12 +55,12 @@ _strdup(const char *str)
 }
 
 PS_SUBSCRIBE(CHAIN_CONTROL, EVENT_DICE_INIT, {
-    log_debug("[%4d] INIT: %s ...", DICE_MODULE_PRIO, __FILE__);
+    log_debug("[%4d] INIT: %s ...", DICE_MODULE_SLOT, __FILE__);
     const char *envvar = getenv(PRELOAD);
-    log_debug("[%4d] LOAD: builtin modules: 0..%d", DICE_MODULE_PRIO,
+    log_debug("[%4d] LOAD: builtin modules: 0..%d", DICE_MODULE_SLOT,
               ps_dispatch_max());
     if (envvar != NULL) {
-        char *plugins = _strdup(envvar);
+        char *plugins = strdup_(envvar);
         assert(plugins);
 
         char *path = strtok(plugins, ":");
@@ -68,10 +68,10 @@ PS_SUBSCRIBE(CHAIN_CONTROL, EVENT_DICE_INIT, {
         // skip first
         path = strtok(NULL, ":");
         while (path != NULL) {
-            _load_plugin(path);
+            load_plugin_(path);
             path = strtok(NULL, ":");
         }
         mempool_free(plugins);
     }
-    log_debug("[%4d] DONE: %s", DICE_MODULE_PRIO, __FILE__);
+    log_debug("[%4d] DONE: %s", DICE_MODULE_SLOT, __FILE__);
 })

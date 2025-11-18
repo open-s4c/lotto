@@ -1,12 +1,13 @@
 /*
- * Copyright (C) Huawei Technologies Co., Ltd. 2025. All rights reserved.
+ * Copyright (C) 2025 Huawei Technologies Co., Ltd.
  * SPDX-License-Identifier: 0BSD
  */
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 
-#define DICE_MODULE_PRIO 1
+#define DICE_MODULE_SLOT 0
+#include "tweaks.h"
 #include <dice/mempool.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>
@@ -20,7 +21,7 @@ struct sub {
     chain_id chain;
     chain_id type;
     ps_callback_f cb;
-    int prio;
+    int slot;
     struct sub *next;
 };
 
@@ -33,7 +34,7 @@ struct chain {
     struct type types[MAX_TYPES];
 };
 
-static struct chain _chains[MAX_CHAINS];
+static struct chain chains_[MAX_CHAINS];
 
 // -----------------------------------------------------------------------------
 // initializer
@@ -46,23 +47,26 @@ ps_initd_(void)
         NONE,
         START,
         BLOCK,
-    } _state          = NONE;
-    static bool ready = false;
+    } state_ = NONE;
 
-    if (likely(ready)) {
+#if !defined(__clang__)
+    static bool ready_ = false;
+#endif
+
+    if (likely(ready_)) {
         return true;
     }
 
-    switch (_state) {
+    switch (state_) {
         case NONE:
             // This must be the main thread, at latest the thread creation.
-            _state = START;
+            state_ = START;
             PS_PUBLISH(CHAIN_CONTROL, EVENT_DICE_INIT, 0, 0);
-            ready = true;
+            ready_ = true;
             PS_PUBLISH(CHAIN_CONTROL, EVENT_DICE_READY, 0, 0);
             return true;
         case START:
-            _state = BLOCK;
+            state_ = BLOCK;
             return true;
         case BLOCK:
             // The publication above is still running, drop nested publications.
@@ -73,13 +77,17 @@ ps_initd_(void)
     }
 }
 
-
 DICE_HIDE void
 ps_init_(void)
 {
     (void)ps_initd_();
 }
 
+/* Advertise event type names for debugging messages */
+PS_ADVERTISE_TYPE(EVENT_DICE_READY)
+PS_ADVERTISE_TYPE(EVENT_DICE_INIT)
+
+/* Mark module initialization (optional) */
 DICE_MODULE_INIT()
 
 // -----------------------------------------------------------------------------
@@ -87,21 +95,21 @@ DICE_MODULE_INIT()
 // -----------------------------------------------------------------------------
 
 static void
-_ps_subscribe_sorted(struct sub **cur, chain_id chain, type_id type,
-                     ps_callback_f cb, int prio, bool any_type)
+ps_subscribe_sorted_(struct sub **cur, chain_id chain, type_id type,
+                     ps_callback_f cb, int slot, bool any_type)
 {
-    // any_type is set if this subscription was from ANY_TYPE
+    // any_type is set if this subscription was from ANY_EVENT
     struct sub *sub;
     struct sub *next = NULL;
 
-    if (*cur == NULL || prio < (*cur)->prio) {
+    if (*cur == NULL || slot < (*cur)->slot) {
         next = *cur;
         goto insert;
-    } else if (prio == (*cur)->prio && !any_type) {
+    } else if (slot == (*cur)->slot && !any_type) {
         next = *cur;
         goto insert;
     } else {
-        _ps_subscribe_sorted(&(*cur)->next, chain, type, cb, prio, any_type);
+        ps_subscribe_sorted_(&(*cur)->next, chain, type, cb, slot, any_type);
         return;
     }
 
@@ -111,53 +119,60 @@ insert:
     *sub = (struct sub){.chain = chain,
                         .type  = type,
                         .cb    = cb,
-                        .prio  = prio,
+                        .slot  = slot,
                         .next  = next};
     *cur = sub;
 }
 
 static int
-_ps_subscribe_type(chain_id chain, type_id type, ps_callback_f cb, int prio,
+ps_subscribe_type_(chain_id chain, type_id type, ps_callback_f cb, int slot,
                    bool any_type)
 {
-    (void)prio;
     if (type > MAX_TYPES)
         return PS_INVALID;
 
-    struct type *ev = &_chains[chain].types[type];
+    struct type *ev = &chains_[chain].types[type];
 
     // increment the idx of next subscription
     ev->count++;
 
     // register subscription
-    _ps_subscribe_sorted(&ev->head, chain, type, cb, prio, any_type);
+    ps_subscribe_sorted_(&ev->head, chain, type, cb, slot, any_type);
 
     return PS_OK;
 }
 
-int
-ps_subscribe(chain_id chain, type_id type, ps_callback_f cb, int prio)
+static int
+ps_subscribe_(chain_id chain, type_id type, ps_callback_f cb, int slot)
 {
     ps_init_(); // ensure initialized
 
-    log_debug("Subscribe %u_%u_%d", chain, type, prio);
-    if (ps_dispatch_chain_on_(chain) && prio <= ps_dispatch_max()) {
-        log_debug("Ignore subscription %u_%u_%d", chain, type, prio);
+    log_debug("Subscribe %s/%s/%d", ps_chain_str(chain), ps_type_str(type),
+              slot);
+    if (ps_dispatch_chain_on_(chain) && slot <= ps_dispatch_max()) {
+        log_debug("Ignore subscription %s/%s/%d", ps_chain_str(chain),
+                  ps_type_str(type), slot);
         return PS_OK;
     }
     if (chain == CHAIN_CONTROL)
         return PS_OK;
     if (chain > MAX_CHAINS)
         return PS_INVALID;
-    if (type != ANY_TYPE)
-        return _ps_subscribe_type(chain, type, cb, prio, false);
+    if (type != ANY_EVENT)
+        return ps_subscribe_type_(chain, type, cb, slot, false);
 
     int err;
     for (size_t i = 1; i < MAX_TYPES; i++)
-        if ((err = _ps_subscribe_type(chain, i, cb, prio, true)) != 0)
+        if ((err = ps_subscribe_type_(chain, i, cb, slot, true)) != 0)
             return err;
 
     return PS_OK;
+}
+
+DICE_WEAK int
+ps_subscribe(chain_id chain, type_id type, ps_callback_f cb, int slot)
+{
+    return ps_subscribe_(chain, type, cb, slot);
 }
 
 // -----------------------------------------------------------------------------
@@ -165,15 +180,15 @@ ps_subscribe(chain_id chain, type_id type, ps_callback_f cb, int prio)
 // -----------------------------------------------------------------------------
 
 static enum ps_err
-_ps_publish(const chain_id chain, const type_id type, void *event,
-            metadata_t *md)
+ps_callback_(const chain_id chain, const type_id type, void *event,
+             metadata_t *md)
 {
     if (unlikely(chain >= MAX_CHAINS))
         return PS_INVALID;
-    if (unlikely(type == ANY_TYPE || type >= MAX_TYPES))
+    if (unlikely(type == ANY_EVENT || type >= MAX_TYPES))
         return PS_INVALID;
 
-    struct type *ev = &_chains[chain].types[type];
+    struct type *ev = &chains_[chain].types[type];
     struct sub *cur = ev->head;
     while (cur) {
         // now we call the callback and abort the chain if the subscriber
@@ -203,10 +218,10 @@ DICE_WEAK enum ps_err
 ps_publish(const chain_id chain, const type_id type, void *event,
            metadata_t *md)
 {
-    if (unlikely(!ps_initd_()))
+    if (PS_NOT_INITD_())
         return PS_DROP_EVENT;
 
-    log_debug("Publish %u_%u", chain, type);
+    log_debug("Publish %s/%s", ps_chain_str(chain), ps_type_str(type));
     enum ps_err err = ps_dispatch_(chain, type, event, md);
 
     if (likely(err == PS_STOP_CHAIN))
@@ -215,5 +230,5 @@ ps_publish(const chain_id chain, const type_id type, void *event,
     if (likely(err == PS_DROP_EVENT))
         return PS_DROP_EVENT;
 
-    return _ps_publish(chain, type, event, md);
+    return ps_callback_(chain, type, event, md);
 }

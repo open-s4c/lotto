@@ -59,7 +59,6 @@ void recorder_fini(clk_t clk, task_id id, reason_t reason);
  * @param input trace to be replayed, may be NULL
  * @param output trace to record, may be NULL
  */
-
 void recorder_init(trace_t *input, trace_t *output);
 
 /**

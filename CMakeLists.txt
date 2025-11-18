@@ -6,7 +6,7 @@ project(
     LANGUAGES C)
 
 set(DICE_LOG_LEVEL
-    "DEBUG"
+    "INFO"
     CACHE STRING "" FORCE)
 
 set(LOTTO_DICE_UPSTREAM_DIR "${CMAKE_SOURCE_DIR}/deps/dice")
@@ -54,7 +54,7 @@ add_subdirectory("${LOTTO_DICE_SOURCE_DIR}" "${LOTTO_DICE_BINARY_DIR}"
                  EXCLUDE_FROM_ALL)
 
 include_directories(include)
-add_subdirectory(src/runtime)
+add_subdirectory(src)
 
 enable_testing()
 add_subdirectory(test)

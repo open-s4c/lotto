@@ -12,7 +12,6 @@ run_alice(void *arg)
 {
     (void)arg;
     g_ctrl = 1;
-    sched_yield();
     g_data = 1;
     return NULL;
 }
@@ -21,9 +20,7 @@ static void *
 run_bob(void *arg)
 {
     (void)arg;
-    while (!g_ctrl) {
-        sched_yield();
-    }
+    while (!g_ctrl) {}
 
     int val = g_data;
     if (val != 1) {

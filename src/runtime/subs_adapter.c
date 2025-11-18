@@ -18,6 +18,8 @@
 #include <lotto/base/context.h>
 #include <lotto/rsrc_deadlock.h>
 
+DICE_MODULE_INIT({})
+
 static inline void
 ctx_task_create(context_t *c, struct pthread_create_event *ev, metadata_t *md)
 {
@@ -97,6 +99,35 @@ send_after(const char *func, category_t cat, metadata_t *md)
     intercept_after_call(c);
 }
 
+// -----------------------------------------------------------------------------
+// thread_start and thread_exit
+// -----------------------------------------------------------------------------
+
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
+    (void)chain;
+    (void)type;
+    (void)event;
+    context_t *c = ctx();
+    ctx_thread_start(c, false, md);
+    intercept_capture(c);
+    return PS_OK;
+})
+
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_EXIT, {
+    (void)chain;
+    (void)type;
+
+    struct pthread_exit_event *ev = EVENT_PAYLOAD(event);
+    context_t *c                  = ctx();
+    ctx_thread_exit(c, ev, md);
+    intercept_capture(c);
+    return PS_OK;
+})
+
+// -----------------------------------------------------------------------------
+// pthread_create and pthread_join
+// -----------------------------------------------------------------------------
+
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_THREAD_CREATE, {
     (void)chain;
     (void)type;
@@ -113,16 +144,6 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_THREAD_CREATE, {
     (void)event;
 
     send_after("pthread_create", CAT_TASK_CREATE, md);
-    return PS_OK;
-})
-
-PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
-    (void)chain;
-    (void)type;
-    (void)event;
-    context_t *c = ctx();
-    ctx_thread_start(c, false, md);
-    intercept_capture(c);
     return PS_OK;
 })
 
@@ -148,16 +169,9 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_THREAD_JOIN, {
     return PS_OK;
 })
 
-PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_EXIT, {
-    (void)chain;
-    (void)type;
-
-    struct pthread_exit_event *ev = EVENT_PAYLOAD(event);
-    context_t *c                  = ctx();
-    ctx_thread_exit(c, ev, md);
-    intercept_capture(c);
-    return PS_OK;
-})
+// -----------------------------------------------------------------------------
+// pthread_mutex
+// -----------------------------------------------------------------------------
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_LOCK, {
     (void)chain;
@@ -245,6 +259,10 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MUTEX_UNLOCK, {
     return PS_OK;
 })
 
+// -----------------------------------------------------------------------------
+// pthread_cond
+// -----------------------------------------------------------------------------
+
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_WAIT, {
     (void)chain;
     (void)type;
@@ -285,6 +303,10 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_COND_TIMEDWAIT, {
     return PS_OK;
 })
 
+// -----------------------------------------------------------------------------
+// sched_yield
+// -----------------------------------------------------------------------------
+
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SCHED_YIELD, {
     (void)chain;
     (void)type;
@@ -302,4 +324,33 @@ INTERPOSE(int, sched_yield, void)
     return 0;
 }
 
-DICE_MODULE_INIT({})
+// -----------------------------------------------------------------------------
+// memory accesses
+//
+// EVENT_MA_READ                 30       ./include/dice/events/memaccess.h
+// EVENT_MA_WRITE                31       ./include/dice/events/memaccess.h
+// EVENT_MA_AREAD                32       ./include/dice/events/memaccess.h
+// EVENT_MA_AWRITE               33       ./include/dice/events/memaccess.h
+// EVENT_MA_RMW                  34       ./include/dice/events/memaccess.h
+// EVENT_MA_XCHG                 35       ./include/dice/events/memaccess.h
+// EVENT_MA_CMPXCHG              36       ./include/dice/events/memaccess.h
+// EVENT_MA_CMPXCHG_WEAK         37       ./include/dice/events/memaccess.h
+// EVENT_MA_FENCE                38       ./include/dice/events/memaccess.h
+// -----------------------------------------------------------------------------
+#include <dice/events/memaccess.h>
+
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_MA_READ, {
+    context_t *c = ctx();
+    c->md        = md;
+    c->cat       = CAT_BEFORE_READ;
+    intercept_capture(c);
+    return PS_OK;
+})
+
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_MA_WRITE, {
+    context_t *c = ctx();
+    c->md        = md;
+    c->cat       = CAT_BEFORE_WRITE;
+    intercept_capture(c);
+    return PS_OK;
+})

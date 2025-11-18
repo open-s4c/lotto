@@ -30,10 +30,6 @@ jobs:
              -DCMAKE_CXX_COMPILER=${{ matrix.cfg.cxx }}
              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
-      - name: Enable memcpy interposition?
-        if: ${{ matrix.cfg.cc == 'gcc' }}
-        run: cmake -S. -Bbuild -DDICE_INTERPOSE_MEMCPY=on
-
       - name: Build
         run: cmake --build build
       - name: Test
@@ -110,8 +106,8 @@ jobs:
         run: cmake --install build
 
   test-macos:
-    if: false
-    runs-on: macos-latest
+    if: true
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
         with:

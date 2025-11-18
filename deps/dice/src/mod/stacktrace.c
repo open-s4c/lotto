@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Huawei Technologies Co., Ltd. 2025. All rights reserved.
+ * Copyright (C) 2025 Huawei Technologies Co., Ltd.
  * SPDX-License-Identifier: 0BSD
  */
 /*******************************************************************************
@@ -7,22 +7,28 @@
  * @brief Publishes func_entry and func_exit events from TSAN instrumentation.
  *
  ******************************************************************************/
+#include <stdint.h>
+
 #include <dice/chains/intercept.h>
 #include <dice/events/stacktrace.h>
 #include <dice/events/thread.h>
 #include <dice/interpose.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>
-#include <stdint.h>
 
+/* Advertise event type names for debugging messages */
+PS_ADVERTISE_TYPE(EVENT_STACKTRACE_ENTER)
+PS_ADVERTISE_TYPE(EVENT_STACKTRACE_EXIT)
+
+/* Mark module initialization (optional) */
 DICE_MODULE_INIT()
 
-static void _check_main_start(void *caller);
+static inline void check_main_start_(void *caller);
 
 void
 __tsan_func_entry(void *caller)
 {
-    _check_main_start(INTERPOSE_PC);
+    check_main_start_(INTERPOSE_PC);
     stacktrace_event_t ev = {.caller = caller, .pc = INTERPOSE_PC};
 
     metadata_t md = {0};
@@ -42,17 +48,17 @@ __tsan_func_exit(void)
  * -------------------------------------------------------------------------- */
 #if !defined(DICE_MAIN_START_DISABLE)
 static void
-_main_exit()
+main_exit_()
 {
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_THREAD_EXIT, 0, 0);
     log_debug("main thread exits");
 }
 static void
-_main_start()
+main_start_()
 {
     log_debug("main thread starts");
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_THREAD_START, 0, 0);
-    atexit(_main_exit);
+    atexit(main_exit_);
 }
 #endif
 
@@ -62,7 +68,7 @@ _main_start()
 #if defined(DICE_MAIN_START_DISABLE)
 
 static inline void
-_check_main_start(void *retpc)
+check_main_start_(void *retpc)
 {
     (void)retpc;
 }
@@ -76,11 +82,12 @@ _check_main_start(void *retpc)
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
-    #include <sys/stat.h>
     #include <unistd.h>
 
+    #include <sys/stat.h>
+
 static int
-_phdr_cb(struct dl_phdr_info *info, size_t size, void *data)
+phdr_cb_(struct dl_phdr_info *info, size_t size, void *data)
 {
     (void)size;
     const char *exe = (const char *)data;
@@ -92,7 +99,7 @@ _phdr_cb(struct dl_phdr_info *info, size_t size, void *data)
 }
 
 static void *
-_find_main_address(void)
+find_main_address_(void)
 {
     char exe[PATH_MAX];
     ssize_t n = readlink("/proc/curproc/exe", exe, sizeof(exe) - 1);
@@ -110,7 +117,7 @@ _find_main_address(void)
 
     // 2) runtime slide (ASLR) of the main executable
     uintptr_t slide = 0;
-    int rc          = dl_iterate_phdr(_phdr_cb, exe);
+    int rc          = dl_iterate_phdr(phdr_cb_, exe);
     if (rc > 1)
         slide = (uintptr_t)(rc - 1); // see phdr_cb trick above
 
@@ -120,20 +127,20 @@ _find_main_address(void)
 
     #define MAX_MAIN_THREAD_DISTANCE 128
 static inline void
-_check_main_start(void *retpc)
+check_main_start_(void *retpc)
 {
-    static void *_main_ptr = NULL;
-    static bool _started   = false;
-    if (_main_ptr == NULL)
-        _main_ptr = _find_main_address();
+    static void *main_ptr_ = NULL;
+    static bool started_   = false;
+    if (main_ptr_ == NULL)
+        main_ptr_ = find_main_address_();
 
 
-    if (!_started) {
-        uintptr_t diff = (uintptr_t)retpc - (uintptr_t)_main_ptr;
+    if (!started_) {
+        uintptr_t diff = (uintptr_t)retpc - (uintptr_t)main_ptr_;
         log_debug("diff: 0x%lx=%lu", diff, diff);
         if (diff < MAX_MAIN_THREAD_DISTANCE) {
-            _started = true;
-            _main_start();
+            started_ = true;
+            main_start_();
         }
     }
 }
@@ -141,7 +148,7 @@ _check_main_start(void *retpc)
 #elif defined(__linux__)
 
 static inline void
-_check_main_start(void *retpc)
+check_main_start_(void *retpc)
 {
     (void)retpc;
 }
@@ -160,9 +167,9 @@ INTERPOSE(int, __libc_start_main, main_f mainf, int argc, char **ubp_av,
           void (*init)(void), void (*fini)(void), void (*rtld_fini)(void),
           void *stack_end)
 {
-    _main_start();
-    return REAL_CALL(__libc_start_main, 0, mainf, argc, ubp_av, init, fini,
-                     rtld_fini, stack_end);
+    main_start_();
+    return REAL(__libc_start_main, mainf, argc, ubp_av, init, fini, rtld_fini,
+                stack_end);
 }
 
     #else  // but no GLIBC, eg, Alpine
@@ -170,9 +177,19 @@ INTERPOSE(int, __libc_start_main, main_f mainf, int argc, char **ubp_av,
 INTERPOSE(int, __libc_start_main, main_f mainf, int argc, char **argv,
           void (*init)(void), void (*fini)(void), void (*rtld_fini)(void))
 {
-    _main_start();
-    return REAL_CALL(__libc_start_main, 0, mainf, argc, argv, init, fini,
-                     rtld_fini);
+    main_start_();
+    return REAL(__libc_start_main, mainf, argc, argv, init, fini, rtld_fini);
 }
-    #endif // defined(__linux__)
+    #endif // defined(__GLIBC__)
+
+#elif defined(__APPLE__)
+
+static inline void
+check_main_start_(void *retpc)
+{
+    main_start_();
+    (void)retpc;
+}
+
+
 #endif

@@ -22,23 +22,29 @@
 #include <dice/pubsub.h>
 
 
-#ifndef DICE_MODULE_PRIO
-    #define DICE_MODULE_PRIO 9999
+#ifndef DICE_MODULE_SLOT
+    /* Subscription slot for the current translation unit. Lower values run
+     * first. Builtin modules reserve slots 0..MAX_BUILTIN_SLOTS-1; plugin
+     * modules should stay above that range. */
+    #define DICE_MODULE_SLOT 9999
 #endif
 
-// should enable ps_dispatch?
-#if DICE_MODULE_PRIO < 16
+/* Enable ps_dispatch if within the maximum number of builtin slots */
+#if DICE_MODULE_SLOT < MAX_BUILTIN_SLOTS
     #include <dice/dispatch.h>
 #else
-    #define PS_DISPATCH_DECL(CHAIN, TYPE, SLOT)
+    #define PS_DISPATCH_DEF(CHAIN, TYPE, SLOT)
 #endif
 
+/* DICE_MODULE_INIT wraps the constructor logic of a module. The callback runs
+ * exactly once even if the module is linked multiple times (e.g., builtin plus
+ * plugin builds). */
 #define DICE_MODULE_INIT(CODE)                                                 \
-    static bool _module_init()                                                 \
+    static bool module_init_()                                                 \
     {                                                                          \
-        static bool _done = false;                                             \
-        if (!_done) {                                                          \
-            _done = true;                                                      \
+        static bool done_ = false;                                             \
+        if (!done_) {                                                          \
+            done_ = true;                                                      \
             do {                                                               \
                 CODE                                                           \
             } while (0);                                                       \
@@ -46,19 +52,21 @@
         }                                                                      \
         return false;                                                          \
     }                                                                          \
-    static DICE_CTOR void _module_ctr()                                        \
+    static DICE_CTOR void module_ctr_()                                        \
     {                                                                          \
-        if (_module_init())                                                    \
-            log_debug("[%4d] INIT: %s", DICE_MODULE_PRIO, __FILE__);           \
+        if (module_init_())                                                    \
+            log_debug("[%4d] INIT: %s", DICE_MODULE_SLOT, __FILE__);           \
     }                                                                          \
     PS_SUBSCRIBE(CHAIN_CONTROL, EVENT_DICE_INIT, {                             \
-        if (_module_init())                                                    \
-            log_debug("[%4d] INIT! %s", DICE_MODULE_PRIO, __FILE__);           \
+        if (module_init_())                                                    \
+            log_debug("[%4d] INIT! %s", DICE_MODULE_SLOT, __FILE__);           \
     })
 
 
+/* DICE_MODULE_FINI marks a destructor hook. Use it for cleanup that must run
+ * when the module is unloaded. */
 #define DICE_MODULE_FINI(CODE)                                                 \
-    static DICE_DTOR void _module_fini()                                       \
+    static DICE_DTOR void module_fini_()                                       \
     {                                                                          \
         if (1) {                                                               \
             CODE                                                               \
@@ -73,12 +81,19 @@
  * planning for the relation between handlers. The order is either given
  * by linking order (if compilation units are linked together) or by the
  * order of shared libraries in LD_PRELOAD.
+ *
+ * The PS_SUBSCRIBE macro also registers the chain and type names in the pubsub.
+ * This is helpful for debugging.
  */
-#define PS_SUBSCRIBE_SLOT(CHAIN, TYPE, SLOT, HANDLER)                          \
-    PS_HANDLER_DECL(CHAIN, TYPE, SLOT, HANDLER)                                \
-    PS_DISPATCH_DECL(CHAIN, TYPE, SLOT)                                        \
-    static void DICE_CTOR _ps_subscribe_##CHAIN##_##TYPE(void)                 \
+#define PS_SUBSCRIBE(CHAIN, TYPE, HANDLER)                                     \
+    PS_SUBSCRIBE_SLOT(CHAIN, #CHAIN, TYPE, #TYPE, DICE_MODULE_SLOT, HANDLER)
+
+#define PS_SUBSCRIBE_SLOT(CHAIN, CNAME, TYPE, TNAME, SLOT, HANDLER)            \
+    PS_HANDLER_DEF(CHAIN, TYPE, SLOT, HANDLER)                                 \
+    PS_DISPATCH_DEF(CHAIN, TYPE, SLOT)                                         \
+    static void DICE_CTOR ps_subscribe_##CHAIN##_##TYPE##_(void)               \
     {                                                                          \
+        ps_register_chain(CHAIN, CNAME);                                       \
         int err =                                                              \
             ps_subscribe(CHAIN, TYPE, PS_HANDLER(CHAIN, TYPE, SLOT), SLOT);    \
         if (err != PS_OK)                                                      \
@@ -86,7 +101,23 @@
                       err);                                                    \
     }
 
-#define PS_SUBSCRIBE(CHAIN, TYPE, HANDLER)                                     \
-    PS_SUBSCRIBE_SLOT(CHAIN, TYPE, DICE_MODULE_PRIO, HANDLER)
+/* PS_ADVERTISE macro registers the chain and type names in the pubsub. This is
+ * optional and only helpful for debugging.
+ */
+#define PS_ADVERTISE(CHAIN, TYPE)                                              \
+    static void DICE_CTOR ps_advertise_##CHAIN##_##TYPE##_(void)               \
+    {                                                                          \
+        ps_register_chain(CHAIN, #CHAIN);                                      \
+        ps_register_type(TYPE, #TYPE);                                         \
+    }
+
+/* PS_ADVERTISE_TYPE macro registers the event type name in the pubsub registry.
+ * This is optional and only helpful for debugging.
+ */
+#define PS_ADVERTISE_TYPE(TYPE)                                                \
+    static void DICE_CTOR ps_advertise_type_##TYPE##_(void)                    \
+    {                                                                          \
+        ps_register_type(TYPE, #TYPE);                                         \
+    }
 
 #endif /* DICE_MODULE_H */

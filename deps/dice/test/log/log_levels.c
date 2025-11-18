@@ -15,7 +15,9 @@ static char *strings[MAX_EXP] = {0};
 static char **head            = &strings[0];
 static char **tail            = &strings[0];
 
-INTERPOSE(ssize_t, write, int fd, const void *buf, size_t count)
+REAL_DECL(ssize_t, write, int, const void *, size_t);
+ssize_t
+write(int fd, const void *buf, size_t count)
 {
     static int nest = 0;
     if (nest == 1) {
@@ -24,17 +26,19 @@ INTERPOSE(ssize_t, write, int fd, const void *buf, size_t count)
     ensure(nest == 0);
     nest++;
     if (*tail == NULL) {
-        log_printf("ERROR: *tail is NULL\n");
-        log_printf("tail == %p\n", tail);
-        log_printf("strings == %p\n", &strings[0]);
-        abort();
+        log_abort(
+            "ERROR: *tail is NULL\n"
+            "tail == %p\n"
+            "strings == %p\n",
+            tail, &strings[0]);
     }
     ensure(tail < head);
     if (strncmp((char *)buf, *tail, count) != 0) {
-        log_printf("ERROR: unexpected entry\n");
-        log_printf("exp: %s\n", *tail);
-        log_printf("buf: %s\n", (char *)buf);
-        abort();
+        log_abort(
+            "ERROR: unexpected entry\n"
+            "exp: %s\n"
+            "buf: %s\n",
+            *tail, (char *)buf);
     }
     tail++;
     nest--;
@@ -63,13 +67,21 @@ main()
     log_printf("print");
     ensure(empty());
 
-    // this should always work, but we remove the abort to about actually
-    // aborting
+    // this should always work, we temporarily remove exit
     expect("dice: ");
     expect("fatal");
     expect("\n");
-#define abort()
+#define exit(...)
     log_fatal("fatal");
+#undef exit
+    ensure(empty());
+
+    // this should always work, we temporarily remove abort
+    expect("dice: ");
+    expect("abort");
+    expect("\n");
+#define abort()
+    log_abort("abort");
 #undef abort
     ensure(empty());
 

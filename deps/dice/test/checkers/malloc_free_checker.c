@@ -1,13 +1,13 @@
 /*
- * Copyright (C) Huawei Technologies Co., Ltd. 2025. All rights reserved.
+ * Copyright (C) 2025 Huawei Technologies Co., Ltd.
  * SPDX-License-Identifier: 0BSD
  */
 
-#include <dice/ensure.h>
 #include <stdio.h>
 
 #include <dice/chains/capture.h>
 #include <dice/chains/intercept.h>
+#include <dice/ensure.h>
 #include <dice/events/malloc.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>
@@ -21,7 +21,7 @@ static int captured[] = {
     [EVENT_FREE]   = 0,
 };
 
-PS_SUBSCRIBE(CAPTURE_BEFORE, ANY_TYPE, {
+PS_SUBSCRIBE(CAPTURE_BEFORE, ANY_EVENT, {
     switch (type) {
         case EVENT_MALLOC:
         case EVENT_CALLOC:

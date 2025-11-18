@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Huawei Technologies Co., Ltd. 2025. All rights reserved.
+ * Copyright (C) 2025 Huawei Technologies Co., Ltd.
  * SPDX-License-Identifier: 0BSD
  */
 #include <assert.h>
@@ -16,11 +16,12 @@ INTERPOSE(int, pthread_rwlock_rdlock, pthread_rwlock_t *lock)
         .pc   = INTERPOSE_PC,
         .lock = lock,
         .ret  = 0,
+        .func = REAL_FUNC(pthread_rwlock_rdlock),
     };
 
     metadata_t md = {0};
     PS_PUBLISH(INTERCEPT_BEFORE, EVENT_RWLOCK_RDLOCK, &ev, &md);
-    ev.ret = REAL(pthread_rwlock_rdlock, lock);
+    ev.ret = ev.func(lock);
     PS_PUBLISH(INTERCEPT_AFTER, EVENT_RWLOCK_RDLOCK, &ev, &md);
     return ev.ret;
 }
@@ -34,11 +35,12 @@ INTERPOSE(int, pthread_rwlock_timedrdlock, pthread_rwlock_t *lock,
         .lock    = lock,
         .abstime = abstime,
         .ret     = 0,
+        .func    = REAL_FUNC(pthread_rwlock_timedrdlock),
     };
 
     metadata_t md = {0};
     PS_PUBLISH(INTERCEPT_BEFORE, EVENT_RWLOCK_TIMEDRDLOCK, &ev, &md);
-    ev.ret = REAL(pthread_rwlock_timedrdlock, lock, abstime);
+    ev.ret = ev.func(lock, abstime);
     PS_PUBLISH(INTERCEPT_AFTER, EVENT_RWLOCK_TIMEDRDLOCK, &ev, &md);
     return ev.ret;
 }
@@ -50,11 +52,12 @@ INTERPOSE(int, pthread_rwlock_tryrdlock, pthread_rwlock_t *lock)
         .pc   = INTERPOSE_PC,
         .lock = lock,
         .ret  = 0,
+        .func = REAL_FUNC(pthread_rwlock_tryrdlock),
     };
 
     metadata_t md = {0};
     PS_PUBLISH(INTERCEPT_BEFORE, EVENT_RWLOCK_TRYRDLOCK, &ev, &md);
-    ev.ret = REAL(pthread_rwlock_tryrdlock, lock);
+    ev.ret = ev.func(lock);
     PS_PUBLISH(INTERCEPT_AFTER, EVENT_RWLOCK_TRYRDLOCK, &ev, &md);
     return ev.ret;
 }
@@ -65,11 +68,12 @@ INTERPOSE(int, pthread_rwlock_wrlock, pthread_rwlock_t *lock)
         .pc   = INTERPOSE_PC,
         .lock = lock,
         .ret  = 0,
+        .func = REAL_FUNC(pthread_rwlock_wrlock),
     };
 
     metadata_t md = {0};
     PS_PUBLISH(INTERCEPT_BEFORE, EVENT_RWLOCK_WRLOCK, &ev, &md);
-    ev.ret = REAL(pthread_rwlock_wrlock, lock);
+    ev.ret = ev.func(lock);
     PS_PUBLISH(INTERCEPT_AFTER, EVENT_RWLOCK_WRLOCK, &ev, &md);
     return ev.ret;
 }
@@ -83,11 +87,12 @@ INTERPOSE(int, pthread_rwlock_timedwrlock, pthread_rwlock_t *lock,
         .lock    = lock,
         .abstime = abstime,
         .ret     = 0,
+        .func    = REAL_FUNC(pthread_rwlock_timedwrlock),
     };
 
     metadata_t md = {0};
     PS_PUBLISH(INTERCEPT_BEFORE, EVENT_RWLOCK_TIMEDWRLOCK, &ev, &md);
-    ev.ret = REAL(pthread_rwlock_timedwrlock, lock, abstime);
+    ev.ret = ev.func(lock, abstime);
     PS_PUBLISH(INTERCEPT_AFTER, EVENT_RWLOCK_TIMEDWRLOCK, &ev, &md);
     return ev.ret;
 }
@@ -99,11 +104,12 @@ INTERPOSE(int, pthread_rwlock_trywrlock, pthread_rwlock_t *lock)
         .pc   = INTERPOSE_PC,
         .lock = lock,
         .ret  = 0,
+        .func = REAL_FUNC(pthread_rwlock_trywrlock),
     };
 
     metadata_t md = {0};
     PS_PUBLISH(INTERCEPT_BEFORE, EVENT_RWLOCK_TRYWRLOCK, &ev, &md);
-    ev.ret = REAL(pthread_rwlock_trywrlock, lock);
+    ev.ret = ev.func(lock);
     PS_PUBLISH(INTERCEPT_AFTER, EVENT_RWLOCK_TRYWRLOCK, &ev, &md);
     return ev.ret;
 }
@@ -114,13 +120,24 @@ INTERPOSE(int, pthread_rwlock_unlock, pthread_rwlock_t *lock)
         .pc   = INTERPOSE_PC,
         .lock = lock,
         .ret  = 0,
+        .func = REAL_FUNC(pthread_rwlock_unlock),
     };
 
     metadata_t md = {0};
     PS_PUBLISH(INTERCEPT_BEFORE, EVENT_RWLOCK_UNLOCK, &ev, &md);
-    ev.ret = REAL(pthread_rwlock_unlock, lock);
+    ev.ret = ev.func(lock);
     PS_PUBLISH(INTERCEPT_AFTER, EVENT_RWLOCK_UNLOCK, &ev, &md);
     return ev.ret;
 }
 
+/* Advertise event type names for debugging messages */
+PS_ADVERTISE_TYPE(EVENT_PTHREAD_RWLOCK_RDLOCK)
+PS_ADVERTISE_TYPE(EVENT_PTHREAD_RWLOCK_TIMEDRDLOCK)
+PS_ADVERTISE_TYPE(EVENT_PTHREAD_RWLOCK_TRYRDLOCK)
+PS_ADVERTISE_TYPE(EVENT_PTHREAD_RWLOCK_WRLOCK)
+PS_ADVERTISE_TYPE(EVENT_PTHREAD_RWLOCK_TIMEDWRLOCK)
+PS_ADVERTISE_TYPE(EVENT_PTHREAD_RWLOCK_TRYWRLOCK)
+PS_ADVERTISE_TYPE(EVENT_PTHREAD_RWLOCK_UNLOCK)
+
+/* Mark module initialization (optional) */
 DICE_MODULE_INIT()

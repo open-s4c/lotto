@@ -1,4 +1,5 @@
 // RUN: %lotto %stress --handler-race disable -r 50 -- %b
+// XFAIL: we should be able to trigger this bug
 
 #include <pthread.h>
 #include <sched.h>

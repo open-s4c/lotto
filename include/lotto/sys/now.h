@@ -10,6 +10,8 @@
 #include <lotto/sys/time.h>
 #include <lotto/util/casts.h>
 
+#define sys_clock_gettime clock_gettime
+
 typedef uint64_t nanosec_t;
 
 #define NOW_NANOSECOND  (CAST_TYPE(uint64_t, 1))

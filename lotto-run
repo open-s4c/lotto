@@ -1,0 +1,81 @@
+#!/bin/sh
+set -eu
+
+if [ "$(uname -a)" = "Darwin" ]; then
+	SO=dylib
+else
+	SO=so
+fi
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
+DICE_SCRIPT_DEFAULT="${SCRIPT_DIR}/deps/dice/scripts/dice"
+DICE_SCRIPT=""
+
+pick_dice_script() {
+    if [ -z "${DICE_SCRIPT}" ] && [ -n "$1" ] && [ -x "$1" ]; then
+        DICE_SCRIPT="$1"
+    fi
+}
+
+if [ -n "${LOTTO_DICE_SCRIPT:-}" ]; then
+    pick_dice_script "${LOTTO_DICE_SCRIPT}"
+fi
+
+if [ -n "${LOTTO_BUILD_DIR:-}" ]; then
+    pick_dice_script "${LOTTO_BUILD_DIR}/deps/dice/scripts/dice"
+fi
+
+pick_dice_script "${SCRIPT_DIR}/build/deps/dice/scripts/dice"
+pick_dice_script "${SCRIPT_DIR}/../build/deps/dice/scripts/dice"
+
+if [ -z "${DICE_SCRIPT}" ]; then
+    DICE_SCRIPT="${DICE_SCRIPT_DEFAULT}"
+fi
+
+RUNTIME_LIB="${LOTTO_RUNTIME_LIB:-${SCRIPT_DIR}/build/src/runtime/liblotto.$SO}"
+if [ ! -f "${RUNTIME_LIB}" ]; then
+    ALT="${SCRIPT_DIR}/src/runtime/liblotto.$SO"
+    if [ -f "${ALT}" ]; then
+        RUNTIME_LIB="${ALT}"
+    else
+        RUNTIME_LIB=""
+    fi
+fi
+
+if [ $# -lt 1 ]; then
+    echo "[lotto-run] error: missing command" >&2
+    exit 2
+fi
+
+target=""
+flags=""
+target_args=""
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --)
+            shift
+            if [ $# -gt 0 ]; then
+                target="$1"
+                shift
+                if [ $# -gt 0 ]; then
+                    target_args="$*"
+                fi
+            fi
+            break
+            ;;
+        *)
+	    # ignore anything before --
+            shift
+            ;;
+    esac
+done
+
+echo "[lotto-run] ${target}"
+
+exec env TSANO_LIBDIR=build/deps/dice-build/deps/tsano \
+	DICE_BUILD=build/deps/dice-build \
+	DICE_SOURCE=deps/dice \
+	${DICE_SCRIPT} \
+	-with "${RUNTIME_LIB}" \
+	${target}

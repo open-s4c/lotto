@@ -1,5 +1,5 @@
-lotto = "@LOTTO_PATH@"
-stress = stress
+lotto =
+stress = "@LOTTO_PATH@-stress"
 inflex = inflex
 debug = debug
 trace = trace

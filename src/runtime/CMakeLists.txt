@@ -16,6 +16,8 @@ add_library(
     ../engine/dispatcher.c
     ../engine/prng_stub.c
     ../engine/handlers/handler_creation.c
+    ../engine/handlers/handler_blocking.c
+    ../engine/handlers/handler_mutex.c
     # base files
     ../base/marshable.c
     ../base/map.c
@@ -34,10 +36,11 @@ add_library(
     ../sys/libc_wrappers.c
     ../sys/stream_file.c
     ../sys/stream_impl.c
-    ../brokers/statemgr_stub.c
+    ../brokers/statemgr.c
     ../brokers/pubsub_stub.c
     ../brokers/catmgr_stub.c
     ../states/sequencer.c
+    ../states/handlers/handler_blocking.c
     #
 )
 set_target_properties(lotto_runtime PROPERTIES OUTPUT_NAME lotto)

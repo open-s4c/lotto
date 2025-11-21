@@ -63,16 +63,16 @@ log_emit(log_emit_level_t level, const char *fmt, va_list args)
             log_fatal(": %s", buf);
             break;
         case LOG_EMIT_ERROR:
-            log_error(": %s", buf);
+            log_printf(": %s", buf);
             break;
         case LOG_EMIT_WARN:
-            log_warn(": %s", buf);
+            log_printf(": %s", buf);
             break;
         case LOG_EMIT_INFO:
-            log_info(": %s", buf);
+            log_printf(": %s", buf);
             break;
         case LOG_EMIT_DEBUG:
-            log_debug(": %s", buf);
+            log_printf(": %s", buf);
             break;
     }
 }

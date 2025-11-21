@@ -173,24 +173,26 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_THREAD_JOIN, {
 // pthread_mutex
 // -----------------------------------------------------------------------------
 
-PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_LOCK, {
-    (void)chain;
-    (void)type;
+static int
+pthread_nop_zero_()
+{
+    return 0;
+}
+static int
+pthread_nop_one_()
+{
+    return 1;
+}
 
+PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_LOCK, {
     struct pthread_mutex_lock_event *ev = EVENT_PAYLOAD(event);
-    lotto_rsrc_acquiring(ev->mutex);
+
     context_t *c = ctx();
     ctx_mutex(c, "pthread_mutex_lock", ev->mutex, md);
-    (void)intercept_before_call(c);
-    return PS_OK;
-})
+    c->cat = CAT_MUTEX_ACQUIRE;
+    intercept_capture(c);
 
-PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MUTEX_LOCK, {
-    (void)chain;
-    (void)type;
-    (void)event;
-
-    send_after("pthread_mutex_lock", CAT_CALL, md);
+    ev->func = pthread_nop_zero_;
     return PS_OK;
 })
 
@@ -204,6 +206,8 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_TIMEDLOCK, {
     context_t *c = ctx();
     ctx_mutex(c, "pthread_mutex_timedlock", ev->mutex, md);
     (void)intercept_before_call(c);
+
+    ev->func = pthread_nop_zero_;
     return PS_OK;
 })
 
@@ -225,6 +229,12 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_TRYLOCK, {
     context_t *c                           = ctx();
     ctx_mutex(c, "pthread_mutex_trylock", ev->mutex, md);
     (void)intercept_before_call(c);
+
+    arg_t *ok = (arg_t *)&c->args[1];
+    if (ok->value.u8 == 0)
+        ev->func = pthread_nop_zero_;
+    else
+        ev->func = pthread_nop_one_;
     return PS_OK;
 })
 
@@ -241,21 +251,13 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MUTEX_TRYLOCK, {
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_UNLOCK, {
     (void)chain;
     (void)type;
-
     struct pthread_mutex_unlock_event *ev = EVENT_PAYLOAD(event);
-    context_t *c                          = ctx();
+
+    context_t *c = ctx();
     ctx_mutex(c, "pthread_mutex_unlock", ev->mutex, md);
-    (void)intercept_before_call(c);
-    return PS_OK;
-})
-
-PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MUTEX_UNLOCK, {
-    (void)chain;
-    (void)type;
-
-    struct pthread_mutex_unlock_event *ev = EVENT_PAYLOAD(event);
-    send_after("pthread_mutex_unlock", CAT_CALL, md);
-    lotto_rsrc_released(ev->mutex);
+    c->cat = CAT_MUTEX_RELEASE;
+    (void)intercept_capture(c);
+    ev->func = pthread_nop_zero_;
     return PS_OK;
 })
 

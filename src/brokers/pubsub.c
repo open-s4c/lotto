@@ -1,3 +1,5 @@
+/*
+ */
 #include <lotto/brokers/pubsub.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>

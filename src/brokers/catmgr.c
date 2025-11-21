@@ -1,3 +1,5 @@
+/*
+ */
 #define LOG_PREFIX LOG_CUR_FILE
 #define LOG_BLOCK  LOG_CUR_BLOCK
 #include <lotto/base/marshable.h>

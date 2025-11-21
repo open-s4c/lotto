@@ -2,7 +2,7 @@
 
 #include <pthread.h>
 
-#define N_THREADS 4
+#define N_THREADS 100
 
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 

@@ -1,10 +1,11 @@
 #ifndef LOTTO_LOGGER_H
 #define LOTTO_LOGGER_H
 
-#include <dice/log.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <dice/log.h>
 
 #ifndef LOG_CUR_FILE
     #define LOG_CUR_FILE                                                       \
@@ -45,6 +46,10 @@ typedef enum log_emit_level {
     LOG_EMIT_DEBUG,
 } log_emit_level_t;
 
+
+// dice has no log_error yet
+#define log_error log_warn
+
 static inline void
 log_emit(log_emit_level_t level, const char *fmt, va_list args)
 {
@@ -52,27 +57,29 @@ log_emit(log_emit_level_t level, const char *fmt, va_list args)
     int n = vsnprintf(buf, sizeof(buf), fmt, args);
     if (n < 0)
         return;
+
     switch (level) {
         case LOG_EMIT_FATAL:
-            log_fatal("%s", buf);
+            log_fatal(": %s", buf);
             break;
         case LOG_EMIT_ERROR:
-            log_warn("%s", buf);
+            log_error(": %s", buf);
             break;
         case LOG_EMIT_WARN:
-            log_warn("%s", buf);
+            log_warn(": %s", buf);
             break;
         case LOG_EMIT_INFO:
-            log_info("%s", buf);
+            log_info(": %s", buf);
             break;
         case LOG_EMIT_DEBUG:
-            log_debug("%s", buf);
+            log_debug(": %s", buf);
             break;
     }
 }
 
 #if defined(__clang__) || defined(__GNUC__)
-    #define LOTTO_PRINTF_ATTR(pos) __attribute__((format(printf, pos, (pos + 1))))
+    #define LOTTO_PRINTF_ATTR(pos)                                             \
+        __attribute__((format(printf, pos, (pos + 1))))
 #else
     #define LOTTO_PRINTF_ATTR(pos)
 #endif
@@ -102,6 +109,7 @@ DEFINE_LOG_WRAPPER(log_debugf, LOG_EMIT_DEBUG)
     #define log_println(fmt, ...) log_printf(fmt "\n", ##__VA_ARGS__)
 
     #ifdef LOG_DISABLE
+        #error
         #include <lotto/util/unused.h>
         #undef log_infof
         #define log_infof(...) LOTTO_UNUSED(__VA_ARGS__)

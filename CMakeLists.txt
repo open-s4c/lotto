@@ -9,6 +9,10 @@ set(DICE_LOG_LEVEL
     "INFO"
     CACHE STRING "" FORCE)
 
+set(LOTTO_LOG_LEVEL
+    "DEBUG"
+    CACHE STRING "" FORCE)
+
 set(LOTTO_DICE_UPSTREAM_DIR "${CMAKE_SOURCE_DIR}/deps/dice")
 set(LOTTO_DICE_PATCH_FILE
     "${CMAKE_SOURCE_DIR}/patches/dice/0001-Adjust-dice-for-lotto-integration.patch"
@@ -54,6 +58,7 @@ add_subdirectory("${LOTTO_DICE_SOURCE_DIR}" "${LOTTO_DICE_BINARY_DIR}"
                  EXCLUDE_FROM_ALL)
 
 include_directories(include)
+add_compile_definitions(LOG_LEVEL=${LOTTO_LOG_LEVEL})
 add_subdirectory(src)
 
 enable_testing()

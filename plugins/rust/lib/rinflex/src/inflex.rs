@@ -124,6 +124,62 @@ impl Inflex {
         })
     }
 
+    pub fn run_inverse_fast(&self) -> Result<Clock, Error> {
+        let mut flags = self.flags.clone();
+
+        if self.crep {
+            lotto::crep::backup_make();
+        }
+
+        let mut iip = self.min;
+        let mut last_iip = 0;
+        let mut confidence = 0;
+
+        if self.report_progress {
+            info!("inverse inflex input = {}", self.input.display());
+        }
+
+        let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
+        let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
+        let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+
+        let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
+        while confidence <= self.rounds && iip < self.last_clk {
+            iip = binary_search(iip, self.last_clk, |clk| {
+                flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
+                loop {
+                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                    if self.crep {
+                        lotto::crep::backup_restore();
+                    }
+                    let return_code = checked_execute(&self.input, &flags, true)?;
+                    if should_discard_execution(&self.temp_output)? {
+                        bar.tick_invalid();
+                        continue;
+                    }
+                    return Ok(return_code == 0);
+                }
+            })?;
+
+            if iip == last_iip {
+                confidence += 1;
+                bar.tick_valid();
+            } else {
+                last_iip = iip;
+                confidence = 1;
+                let mut rec = Trace::load_file(&self.input);
+                rec.truncate(&self.candidate, iip);
+
+                // Start a new progress bar.  The idea is to keep a
+                // trace of attempted clocks on the terminal.
+                bar = ProgressBar::new(self.report_progress, "", self.rounds);
+                bar.set_prefix_string(format!("IIP={}", iip));
+            }
+        }
+
+        Ok(iip)
+    }
+
     /// Find the (normal) inflection point using probablistic binary
     /// search.
     pub fn run(&self) -> Result<Clock, Error> {

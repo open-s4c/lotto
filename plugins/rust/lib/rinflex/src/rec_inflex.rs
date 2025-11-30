@@ -142,7 +142,7 @@ impl RecInflex {
         inflex.output = self.trace_temp.clone();
         inflex.report_progress = self.report_progress;
         inflex.min = ip - 1;
-        let iip = inflex.run_inverse()?;
+        let iip = inflex.run_inverse_fast()?;
         info!("IIP is {}", iip);
         let target = self.event_at_clock(&self.flags, &self.trace_success, iip)?;
         info!("Target event is\n{}", target.display()?);

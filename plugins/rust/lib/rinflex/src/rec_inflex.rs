@@ -157,6 +157,9 @@ impl RecInflex {
         //     return Ok(pair);
         // }
 
+        // Prevent events from the same thread.
+        let same_thread = pair.source.t.id == pair.target.t.id;
+
         // Check for symmetric ordering constraints.
         //
         // It is possible that following a prefix, there are IP, IIP1,
@@ -166,15 +169,17 @@ impl RecInflex {
         // will be incorrectly labeled as incorrect and dropped.
         // Here, check if the OC is repeatedly found. If it is
         // repeated, it means the OC is actually correct.
-        for s in symm_set.iter() {
-            if s.equals(&pair) {
-                info!("Repeated OC considered correct");
-                return Ok(pair);
+        if !same_thread {
+            for s in symm_set.iter() {
+                if s.equals(&pair) {
+                    info!("Repeated OC considered correct");
+                    return Ok(pair);
+                }
             }
         }
 
         // multiple bug handling.
-        if self.pair_can_reproduce_bug(&pair, ip)? {
+        if !same_thread && self.pair_can_reproduce_bug(&pair, ip)? {
             info!("Correct");
             Ok(pair)
         } else {

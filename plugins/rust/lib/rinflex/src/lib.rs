@@ -291,6 +291,12 @@ pub struct PrimitiveConstraint {
     pub target: Event,
 }
 
+impl PartialEq for PrimitiveConstraint {
+    fn eq(&self, other: &Self) -> bool {
+        self.equals(other)
+    }
+}
+
 impl std::fmt::Display for PrimitiveConstraint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}) ==> ({})", self.source, self.target)

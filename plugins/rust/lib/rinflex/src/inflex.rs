@@ -127,10 +127,6 @@ impl Inflex {
     pub fn run_inverse_fast(&self) -> Result<Clock, Error> {
         let mut flags = self.flags.clone();
 
-        if self.crep {
-            lotto::crep::backup_make();
-        }
-
         let mut iip = self.min;
         let mut last_iip = 0;
         let mut confidence = 0;
@@ -149,9 +145,6 @@ impl Inflex {
                 flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                    if self.crep {
-                        lotto::crep::backup_restore();
-                    }
                     let return_code = checked_execute(&self.input, &flags, true)?;
                     if should_discard_execution(&self.temp_output)? {
                         bar.tick_invalid();

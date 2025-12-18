@@ -203,7 +203,7 @@ STATIC void
 _mutex_handle(const context_t *ctx, event_t *e)
 {
     ASSERT(e);
-    if (e->skip || !mutex_config()->enabled)
+    if (e->skip) //|| !mutex_config()->enabled)
         return;
 
     ASSERT(ctx);

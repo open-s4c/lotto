@@ -44,18 +44,18 @@ dispatch_event(const context_t *ctx, event_t *e)
     /* dispatch to handlers */
     _handle_chain(ctx, e);
 
-    if (0 && !e->is_chpt) {
+    if (!e->is_chpt) {
         ASSERT(e->next == NO_TASK || e->next == ctx->id);
         return ctx->id;
     }
 
     /* Decision has been made by some handler, comply */
-    if (0 && e->next != NO_TASK) {
+    if (e->next != NO_TASK) {
         return e->next;
     }
 
     /* If no task left in tidset, pick any */
-    if (1 || tidset_size(&e->tset) == 0) {
+    if (tidset_size(&e->tset) == 0) {
         // TODO: this always returns ANY_TASK. Fix it
         return ANY_TASK;
     }

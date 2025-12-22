@@ -18,6 +18,7 @@ add_library(
     ../engine/handlers/handler_creation.c
     ../engine/handlers/handler_blocking.c
     ../engine/handlers/handler_mutex.c
+    ../engine/handlers/handler_yield.c
     # base files
     ../base/marshable.c
     ../base/map.c
@@ -41,6 +42,7 @@ add_library(
     ../brokers/catmgr_stub.c
     ../states/sequencer.c
     ../states/handlers/handler_blocking.c
+    ../states/handlers/handler_yield.c
     #
 )
 set_target_properties(lotto_runtime PROPERTIES OUTPUT_NAME lotto)

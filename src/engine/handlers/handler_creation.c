@@ -67,6 +67,8 @@ _creation_handle(const context_t *ctx, event_t *e)
             e->next            = ANY_TASK;
             e->is_chpt         = true;
             e->readonly        = true;
+            if (!tidset_has(&_state.registered, ctx->id))
+                (void)tidset_insert(&_state.registered, ctx->id);
             break;
 
         case CAT_TASK_INIT:

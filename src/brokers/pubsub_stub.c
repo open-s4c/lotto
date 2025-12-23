@@ -4,7 +4,7 @@
 #include <lotto/brokers/pubsub.h>
 
 void
-ps_subscribe(topic_t t, ps_callback_f cb, void *arg)
+lotto_ps_subscribe(topic_t t, lotto_ps_callback_f cb, void *arg)
 {
     (void)t;
     (void)cb;
@@ -12,7 +12,7 @@ ps_subscribe(topic_t t, ps_callback_f cb, void *arg)
 }
 
 void
-ps_publish(topic_t t, struct value v)
+lotto_ps_publish(topic_t t, struct value v)
 {
     (void)t;
     (void)v;

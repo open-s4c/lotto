@@ -76,9 +76,9 @@
 #else
     // PS interface not generated, fall back to normal pub sub
     #define PS_SUBSCRIBE_INTERFACE(topic, CALLBACK)                            \
-        PS_SUBSCRIBE(topic, CALLBACK)
+        LOTTO_PS_SUBSCRIBE(topic, CALLBACK)
 
-    #define PS_PUBLISH_INTERFACE(topic, val) ps_publish(topic, val);
+    #define PS_PUBLISH_INTERFACE(topic, val) lotto_ps_publish(topic, val);
 #endif
 
 #endif

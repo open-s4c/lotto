@@ -14,11 +14,14 @@ add_library(
     ../engine/sequencer.c
     ../engine/recorder.c
     ../engine/dispatcher.c
-    ../engine/prng_stub.c
     ../engine/handlers/handler_creation.c
     ../engine/handlers/handler_blocking.c
     ../engine/handlers/handler_mutex.c
     ../engine/handlers/handler_yield.c
+    ../states/prng.c
+    ../states/sequencer.c
+    ../states/handlers/handler_blocking.c
+    ../states/handlers/handler_yield.c
     # base files
     ../base/marshable.c
     ../base/map.c
@@ -40,9 +43,6 @@ add_library(
     ../brokers/statemgr.c
     ../brokers/pubsub_stub.c
     ../brokers/catmgr_stub.c
-    ../states/sequencer.c
-    ../states/handlers/handler_blocking.c
-    ../states/handlers/handler_yield.c
     #
 )
 set_target_properties(lotto_runtime PROPERTIES OUTPUT_NAME lotto)

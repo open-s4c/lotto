@@ -22,6 +22,9 @@ typedef struct replay {
     task_id id;
 } replay_t;
 
+// TODO: experimental config creation from within runtime
+void recorder_config(void);
+
 /**
  * Record the current state at clock `clk`.
  * TODO: maybe reason needs to be passed.

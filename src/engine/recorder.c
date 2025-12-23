@@ -24,13 +24,15 @@
 
 #define IS_AFTER_KIND(x) (((x) & (RECORD_START | RECORD_CONFIG)) != 0)
 
-void __attribute__((noinline)) recorder_end_trace()
+void __attribute__((noinline))
+recorder_end_trace()
 {
     log_debugf("trace fully loaded\n");
     // nothing happends here
 }
 
-void __attribute__((noinline)) recorder_end_replay()
+void __attribute__((noinline))
+recorder_end_replay()
 {
     log_debugf("end of replay\n");
     PS_PUBLISH_INTERFACE(TOPIC_REPLAY_END, nil);
@@ -78,6 +80,20 @@ _recorder_out(record_t *r)
     ASSERT(r->kind != RECORD_NONE);
     int ok = trace_append(_recorder.output, r);
     ASSERT(ok == TRACE_OK);
+}
+
+void
+recorder_config(void)
+{
+    if (!_recorder.output)
+        return;
+    // create CONFIG record using the statemgr. The flag values are by now
+    // received by the subscribers and their configurations are ready to be
+    // marshaled.
+    record_t *r = record_alloc(statemgr_size(STATE_TYPE_CONFIG));
+    r->kind     = RECORD_CONFIG;
+    (void)statemgr_marshal(r->data, STATE_TYPE_CONFIG);
+    _recorder_out(r);
 }
 
 static void

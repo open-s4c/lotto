@@ -218,8 +218,10 @@ sequencer_resume(const context_t *ctx)
 {
     struct value val = any(ctx);
     PS_PUBLISH_INTERFACE(TOPIC_NEXT_TASK, val);
-    if (ctx->id == 1 && ctx->cat == CAT_NONE)
+    if (ctx->id == 1 && ctx->cat == CAT_NONE) {
+        recorder_config();
         return;
+    }
 
     if (_seq.should_record ||
         (sequencer_config()->slack > 0 && CAT_SLACK(_seq.prev_cat) &&
@@ -346,13 +348,15 @@ _add_pending_unblocked(task_id id)
     caslock_release(&_seq.pending.lock);
 }
 
-void __attribute__((noinline)) sequencer_clk_met()
+void __attribute__((noinline))
+sequencer_clk_met()
 {
     log_debugf("clk met\n");
     clk_bound = 0;
 }
 
-void __attribute__((noinline)) sequencer_time_met()
+void __attribute__((noinline))
+sequencer_time_met()
 {
     log_debugf("time met\n");
     time_bound_ns = 0;

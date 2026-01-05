@@ -12,18 +12,18 @@ add_library(
     # engine files
     ../engine/engine.c
     ../engine/sequencer.c
+    ../states/sequencer.c
     ../engine/recorder.c
     ../engine/dispatcher.c
+    ../states/prng.c
     ../engine/handlers/handler_creation.c
     ../engine/handlers/handler_blocking.c
+    ../states/handlers/handler_blocking.c
     ../engine/handlers/handler_mutex.c
     ../engine/handlers/handler_yield.c
-    ../engine/handlers/handler_enforce.c
-    ../states/prng.c
-    ../states/sequencer.c
-    ../states/handlers/handler_blocking.c
     ../states/handlers/handler_yield.c
-    ../states/handlers/handler_enforce.c
+    # ../engine/handlers/handler_enforce.c
+    # ../states/handlers/handler_enforce.c
     # base files
     ../base/marshable.c
     ../base/map.c

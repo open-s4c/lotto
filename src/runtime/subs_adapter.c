@@ -160,12 +160,13 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_THREAD_JOIN, {
 })
 
 PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_THREAD_JOIN, {
-    (void)chain;
-    (void)type;
-    (void)event;
+    struct pthread_join_event *ev = EVENT_PAYLOAD(event);
+    context_t *c                  = ctx();
+    c->func                       = "pthread_join";
+    c->cat                        = CAT_CALL;
+    c->md                         = md;
+    intercept_after_call(c);
 
-    // send_after("pthread_join", CAT_JOIN, md);
-    send_after("pthread_join", CAT_CALL, md);
     return PS_OK;
 })
 

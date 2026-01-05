@@ -196,6 +196,7 @@ impl RecInflex {
             &self.trace_fail,
             &self.trace_fail_alt,
             false,
+            false,
         );
         self.constraints.pop();
         match result {
@@ -233,6 +234,7 @@ impl RecInflex {
             &self.trace_fail,
             &self.trace_success,
             true,
+            true,
         )?;
 
         // Find IIP.
@@ -259,6 +261,7 @@ impl RecInflex {
                 iip - 1,
                 &self.trace_success,
                 &self.trace_fail,
+                true,
                 true,
             )?;
             symm_set.push(pair);
@@ -301,18 +304,23 @@ impl RecInflex {
         input: &Path,
         output: &Path,
         unlimited: bool,
+        try_hard: bool,
     ) -> Result<(), Error> {
         let input = self.attach_constraints_to_trace(input, replay_goal, &self.constraints)?;
         info!("get_trace: input={}", input.display());
         let _replay = EnvScope::new("LOTTO_REPLAY", &input);
         let _record = EnvScope::new("LOTTO_RECORD", &output);
-        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+        let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "");
+        let rounds = if try_hard {
+            self.rounds * 10
+        } else {
+            self.rounds
+        };
         let mut flags = self.flags.clone();
-        let mut bar = ProgressBar::new(self.report_progress, "", self.rounds * 10);
+        let mut bar = ProgressBar::new(self.report_progress, "", rounds);
         loop {
             if !unlimited
-                && (bar.valid_ticks > self.rounds * 10
-                    || bar.valid_ticks == 0 && bar.invalid_ticks > self.rounds * 10)
+                && (bar.valid_ticks > rounds || bar.valid_ticks == 0 && bar.invalid_ticks > rounds)
             {
                 warn!("Cannot find satisfying execution in get_trace");
                 return Err(Error::ExecutionNotFound);

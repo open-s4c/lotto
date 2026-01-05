@@ -1,4 +1,3 @@
-use lotto::base::Category;
 use lotto::collections::FxHashMap;
 use lotto::raw;
 use lotto::Stateful;
@@ -16,7 +15,6 @@ use std::sync::LazyLock;
 use crate::handlers::cas;
 use crate::handlers::stacktrace;
 use crate::idmap::IdMap;
-use crate::memory_access::MemoryAccess;
 use crate::{Event, GenericEventCore, StackTrace, Transition};
 
 pub static HANDLER: LazyLock<EventHandler> = LazyLock::new(|| EventHandler {

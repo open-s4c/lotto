@@ -10,7 +10,6 @@ use std::sync::LazyLock;
 use std::sync::Mutex;
 
 use crate::memory_access::{MemoryAccess, MemoryOperationExt, Modify, ModifyKind, Read, VAddr};
-use crate::sized_read;
 use bincode::{Decode, Encode};
 use lotto::base::category::Category;
 use lotto::base::{HandlerArg, Value};

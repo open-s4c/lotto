@@ -2,7 +2,6 @@ use std::path::{Path, PathBuf};
 
 use lotto::base::category::Category;
 use lotto::base::envvar::EnvScope;
-use lotto::base::flags;
 use lotto::base::flags::*;
 use lotto::base::Trace;
 use lotto::base::{Clock, Record, TaskId, Value};
@@ -16,7 +15,6 @@ use lotto::sys::Stream;
 
 use crate::error::Error;
 use crate::handlers;
-use crate::inflex::binary_search;
 use crate::inflex::{always, checked_execute, should_discard_execution};
 use crate::progress::ProgressBar;
 use crate::{inflex, trace, Constraint, ConstraintSet, Event, PrimitiveConstraint};
@@ -564,16 +562,6 @@ impl RecInflex {
             }
         }
         false
-    }
-
-    #[inline(always)]
-    fn push(&mut self, c: Constraint) {
-        self.constraints.push(c)
-    }
-
-    #[inline(always)]
-    fn pop(&mut self) {
-        let _c = self.constraints.pop().expect("pop must match a push");
     }
 }
 

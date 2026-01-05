@@ -18,7 +18,7 @@ impl TidSet {
         }
     }
 
-    pub fn iter(&self) -> Iter {
+    pub fn iter(&self) -> Iter<'_> {
         Iter { tset: self, idx: 0 }
     }
 }

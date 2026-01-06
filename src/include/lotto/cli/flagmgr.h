@@ -245,6 +245,8 @@ flags_t *flags_default();
 #define FLAGS_PARSE_ERROR 1
 #define FLAGS_PARSE_HELP  -1
 
+void flags_print(const flags_t *flags);
+
 /**
  * Initializes flags parsing args with selection sel of flags.
  *

@@ -1,4 +1,5 @@
 pub mod args;
+pub mod flagmgr;
 pub mod flags;
 
 pub use args::Args;

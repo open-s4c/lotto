@@ -1,5 +1,5 @@
-// ALLOW_RETRIES: 100
-// RUN: (! %lotto %stress -s random --handler-mutex disable -v -- %b 2>&1) | %check
+// ALLOW_RETRIES: 10
+// RUN: (! %lotto %stress -- %x) | %check
 // CHECK: Deadlock detected!
 
 #include <pthread.h>

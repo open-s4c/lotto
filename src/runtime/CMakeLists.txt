@@ -26,6 +26,8 @@ add_library(
     ../states/handlers/handler_yield.c
     ../engine/handlers/handler_watchdog.c
     ../states/handlers/handler_watchdog.c
+    ../engine/handlers/handler_deadlock.c
+    ../states/handlers/handler_deadlock.c
     # ../engine/handlers/handler_enforce.c
     # ../states/handlers/handler_enforce.c
     # base files
@@ -33,6 +35,7 @@ add_library(
     ../base/map.c
     ../base/tidmap.c
     ../base/tidset.c
+    ../base/tidbag.c
     ../base/category.c
     ../base/slot.c
     ../base/plan.c

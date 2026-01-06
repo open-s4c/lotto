@@ -34,7 +34,7 @@ while [ $# -gt 0 ]; do
 done
 
 echo "[lotto-stress] ${target}"
-count=10
-for i in $(seq 1 10); do
+count=100
+for i in $(seq 1 $count); do
 	$DIR/lotto-run -- ${target}
 done

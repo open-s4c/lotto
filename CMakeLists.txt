@@ -6,14 +6,14 @@ project(lotto LANGUAGES C)
 # ------------------------------------------------------------------------------
 
 set(LOTTO_LOG_LEVEL
-    "DEBUG"
+    "INFO"
     CACHE STRING "" FORCE)
 
 # ------------------------------------------------------------------------------
 # Dice
 # ------------------------------------------------------------------------------
 set(DICE_LOG_LEVEL
-    ${LOTTO_LOG_LEVEL}
+    "INFO"
     CACHE STRING "" FORCE)
 
 set(DICE_DISPATCH_CHAINS

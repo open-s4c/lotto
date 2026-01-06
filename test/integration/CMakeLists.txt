@@ -4,8 +4,8 @@ lotto_ensure_tikl(TIKL_EXECUTABLE TIKL_CHECK_EXECUTABLE)
 set(LOTTO_PATH "${CMAKE_SOURCE_DIR}/lotto")
 configure_file(tikl.cfg.in "${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg" @ONLY)
 
-set(TSAN_mp_test ON)
 set(TSAN_0003-await-increment ON)
+set(TSAN_0005-atomic-message-passing ON)
 
 file(GLOB SRCS "000*.c")
 list(SORT SRCS)

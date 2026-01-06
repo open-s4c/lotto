@@ -439,3 +439,15 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_AREAD, {
     intercept_capture(c);
     return PS_OK;
 })
+
+PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MA_AWRITE, {
+    context_t *c = ctx(.cat = CAT_BEFORE_AWRITE, .md = md);
+    intercept_capture(c);
+    return PS_OK;
+})
+
+PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_AWRITE, {
+    context_t *c = ctx(.cat = CAT_AFTER_AWRITE, .md = md);
+    intercept_capture(c);
+    return PS_OK;
+})

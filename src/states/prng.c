@@ -21,7 +21,6 @@
 static prng_t _prng;
 REGISTER_CONFIG(_prng, { log_infof("seed = %u\n", _prng.seed); })
 PS_SUBSCRIBE_INTERFACE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
-    log_printf("PRNG ========!!! seed = %u\n", _prng.seed);
     const char *var = getenv("LOTTO_SEED");
     if (var) {
         _prng.seed = atoi(var);
@@ -29,10 +28,7 @@ PS_SUBSCRIBE_INTERFACE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
     }
 })
 
-DICE_MODULE_INIT({
-    _prng.seed = time(0);
-    log_printf("PRNG ========> seed = %u\n", _prng.seed);
-})
+DICE_MODULE_INIT({ _prng.seed = time(0); })
 
 prng_t *
 prng()

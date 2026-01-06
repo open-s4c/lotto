@@ -28,6 +28,8 @@ add_library(
     ../states/handlers/handler_watchdog.c
     ../engine/handlers/handler_deadlock.c
     ../states/handlers/handler_deadlock.c
+    ../engine/handlers/handler_atomic.c
+    ../states/handlers/handler_atomic.c
     # ../engine/handlers/handler_enforce.c
     # ../states/handlers/handler_enforce.c
     # base files

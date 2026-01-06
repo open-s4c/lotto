@@ -1,5 +1,3 @@
-/*
- */
 #define LOG_PREFIX LOG_CUR_FILE
 #define LOG_BLOCK  LOG_CUR_BLOCK
 #include <lotto/base/marshable.h>
@@ -200,6 +198,7 @@ _save(const context_t *ctx, const event_t *e)
 static void
 check_aslr()
 {
+    #if 0
     char *randomize_va_space = "/proc/sys/kernel/randomize_va_space";
     FILE *fp                 = sys_fopen(randomize_va_space, "r");
     if (!fp) {
@@ -214,6 +213,7 @@ check_aslr()
             log_warnf("ASLR enabled but no stable address method\n");
         }
     }
+    #endif
 }
 
 void

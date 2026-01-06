@@ -417,17 +417,25 @@ INTERPOSE(int, sched_yield, void)
 #include <dice/events/memaccess.h>
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_MA_READ, {
-    context_t *c = ctx();
-    c->md        = md;
-    c->cat       = CAT_BEFORE_READ;
+    context_t *c = ctx(.cat = CAT_BEFORE_READ, .md = md);
     intercept_capture(c);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_MA_WRITE, {
-    context_t *c = ctx();
-    c->md        = md;
-    c->cat       = CAT_BEFORE_WRITE;
+    context_t *c = ctx(.cat = CAT_BEFORE_WRITE, .md = md);
+    intercept_capture(c);
+    return PS_OK;
+})
+
+PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MA_AREAD, {
+    context_t *c = ctx(.cat = CAT_BEFORE_AREAD, .md = md);
+    intercept_capture(c);
+    return PS_OK;
+})
+
+PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_AREAD, {
+    context_t *c = ctx(.cat = CAT_AFTER_AREAD, .md = md);
     intercept_capture(c);
     return PS_OK;
 })

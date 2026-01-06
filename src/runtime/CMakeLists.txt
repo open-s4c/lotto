@@ -24,6 +24,8 @@ add_library(
     ../engine/handlers/handler_evec.c
     ../engine/handlers/handler_yield.c
     ../states/handlers/handler_yield.c
+    ../engine/handlers/handler_watchdog.c
+    ../states/handlers/handler_watchdog.c
     # ../engine/handlers/handler_enforce.c
     # ../states/handlers/handler_enforce.c
     # base files

@@ -1,6 +1,9 @@
 // RUN: %lotto %record -- %x | grep LAST_THREAD | tee %x.record
 // RUN: %lotto %replay -- %x | grep LAST_THREAD | tee %x.replay
 // RUN: diff %x.record %x.replay
+//
+// We need TSAN instrumentation to run this with the watchdog OR we need
+// libvsync annotation to information Lotto about the spinloop.
 
 #include <assert.h>
 #include <inttypes.h>

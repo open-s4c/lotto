@@ -1,6 +1,6 @@
-// RUN: %lotto %record -- %b | grep LAST_THREAD |  tee  %b.record
-// RUN: %lotto %record -- %b | grep LAST_THREAD |  tee  %b.replay
-// RUN: diff %b.record %b.replay
+// RUN: %lotto %record -- %x | grep LAST_THREAD | tee %x.record
+// RUN: %lotto %replay -- %x | grep LAST_THREAD | tee %x.replay
+// RUN: diff %x.record %x.replay
 
 #include <assert.h>
 #include <inttypes.h>
@@ -42,7 +42,7 @@ main(void)
         if (pthread_create(&threads[i], NULL, thread, (void *)(uint64_t)i))
             return 1;
     }
-    // vatomic_await_eq(&ready, NTHREADS);
+    vatomic_await_eq(&ready, NTHREADS);
     vatomic_write(&start, 1);
 
     for (int i = 0; i < NTHREADS; ++i) {

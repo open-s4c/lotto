@@ -7,4 +7,5 @@ debug = debug
 trace = trace
 show = show
 check = "@TIKL_CHECK_EXECUTABLE@" %s
-x = $(basename %b)
+BUILD_DIR = "@CMAKE_CURRENT_BINARY_DIR@"
+x = %BUILD_DIR/$(basename $(basename %b .c) .cpp)

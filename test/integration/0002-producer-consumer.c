@@ -1,7 +1,9 @@
-// RUN: %lotto %stress -- %b | %check
-// CHECK: assert failed: d != NULL
+// RUN: %lotto %record -- %x | grep TEST_LOG | tee %x.record
+// RUN: %lotto %replay -- %x | grep TEST_LOG | tee %x.replay
+// RUN: diff %x.record %x.replay
 
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #define K 64
@@ -42,6 +44,7 @@ sender(void *arg)
         pthread_mutex_lock(&g_mutex);
         g_data[i] = d;
         g_next    = i;
+        printf("TEST_LOG PRODUCE %d\n", i);
         pthread_cond_broadcast(&g_cond);
         pthread_mutex_unlock(&g_mutex);
     }
@@ -70,6 +73,7 @@ receiver(void *arg)
             g_data[idx] = NULL;
             pthread_mutex_unlock(&g_mutex);
             consume_data(d);
+            printf("TEST_LOG CONSUME %d\n", idx);
             ++idx;
         } else if (g_done) {
             pthread_mutex_unlock(&g_mutex);
@@ -82,17 +86,21 @@ receiver(void *arg)
     return NULL;
 }
 
+#define NTHREADS 8
+
 int
 main(void)
 {
-    pthread_t t1;
-    pthread_t t2;
+    pthread_t t[NTHREADS];
 
-    pthread_create(&t1, NULL, sender, NULL);
-    pthread_create(&t2, NULL, receiver, NULL);
+    for (int i = 0; i < NTHREADS / 2; i++)
+        pthread_create(&t[i], NULL, sender, NULL);
 
-    pthread_join(t1, NULL);
-    pthread_join(t2, NULL);
+    for (int i = NTHREADS / 2; i < NTHREADS; i++)
+        pthread_create(&t[i], NULL, receiver, NULL);
+
+    for (int i = 0; i < NTHREADS; i++)
+        pthread_join(t[i], NULL);
 
     return 0;
 }

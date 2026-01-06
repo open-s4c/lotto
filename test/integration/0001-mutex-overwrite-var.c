@@ -1,8 +1,6 @@
-// RUN: %lotto %record -- %b
-// //| grep LAST_THREAD
-// //  tee  %b.record
-// RN: %lotto %replay -- %b | grep LAST_THREAD |  tee  %b.replay
-// RN: diff %b.record %b.replay
+// RUN: %lotto %record -- %x | grep LAST_THREAD | tee %x.record
+// RUN: %lotto %replay -- %x | grep LAST_THREAD | tee %x.replay
+// RUN: diff %x.record %x.replay
 
 #include <assert.h>
 #include <inttypes.h>

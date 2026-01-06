@@ -161,7 +161,7 @@ wait_child(pid_t pid)
         if (WIFSIGNALED(wstatus)) {
             sys_fprintf(stdout, "Signal %s received\n",
                         strsignal(WTERMSIG(wstatus)));
-            retval = 1;
+            retval = -WTERMSIG(wstatus);
             break;
         }
         if (WIFSTOPPED(wstatus)) {

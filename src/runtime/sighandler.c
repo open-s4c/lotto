@@ -47,8 +47,9 @@ _backtrace_print()
     size = backtrace(array, BACKTRACE_DEPTH);
 
     // print out all the frames to stderr
-    fflush(logger_fp());
-    backtrace_symbols_fd(array, size, fileno(logger_fp()));
+    FILE *f = logger_fp() ? : stdout;
+    fflush(f);
+    backtrace_symbols_fd(array, size, fileno(f));
     #endif
 #endif
 }

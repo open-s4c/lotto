@@ -6,16 +6,14 @@ configure_file(tikl.cfg.in "${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg" @ONLY)
 
 set(TSAN_mp_test ON)
 
-file(GLOB SRCS "*_test.c")
+file(GLOB SRCS "*.c")
 list(SORT SRCS)
 message(STATUS "integration tests: ${SRCS}")
 foreach(SRC ${SRCS})
     get_filename_component(TARGET ${SRC} NAME_WE)
     add_executable(${TARGET} ${SRC})
 
-    if(NOT ${TARGET} STREQUAL "mp_test")
-        continue()
-    endif()
+    # if(NOT ${TARGET} STREQUAL "mp_test") continue() endif()
 
     target_link_libraries(${TARGET} PRIVATE pthread)
     list(APPEND INTEGRATION_TEST_TARGETS ${TARGET})

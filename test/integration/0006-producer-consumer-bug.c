@@ -1,4 +1,4 @@
-// RUN: (! %lotto %stress -r 10 -- %b 2>&1) | %check
+// RUN: (! %lotto %stress -- %b 2>&1) | %check
 // CHECK: assert failed: d != NULL
 
 #include <pthread.h>
@@ -12,7 +12,7 @@ typedef struct {
 
 static data_t *g_data[K + 1];
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t g_cond = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t g_cond   = PTHREAD_COND_INITIALIZER;
 static int g_next;
 static int g_done;
 
@@ -61,13 +61,12 @@ receiver(void *arg)
 
     while (1) {
         pthread_mutex_lock(&g_mutex);
-        while (!g_done
-               && (idx > g_next || g_data[idx] == NULL)) {
+        while (!g_done && (idx > g_next || g_data[idx] == NULL)) {
             pthread_cond_wait(&g_cond, &g_mutex);
         }
 
         if (idx <= g_next && g_data[idx] != NULL) {
-            data_t *d = g_data[idx];
+            data_t *d   = g_data[idx];
             g_data[idx] = NULL;
             pthread_mutex_unlock(&g_mutex);
             consume_data(d);

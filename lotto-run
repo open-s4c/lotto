@@ -73,9 +73,9 @@ done
 
 echo "[lotto-run] ${target}"
 
-exec env TSANO_LIBDIR=build/dice/deps/tsano \
-	DICE_BUILD=build/dice \
-	DICE_SOURCE=deps/dice \
+exec env TSANO_LIBDIR=${SCRIPT_DIR}/build/dice/deps/tsano \
+	DICE_BUILD=${SCRIPT_DIR}/build/dice \
+	DICE_SOURCE=${SCRIPT_DIR}/deps/dice \
 	${DICE_SCRIPT} \
 	-with "${RUNTIME_LIB}" \
 	${target}

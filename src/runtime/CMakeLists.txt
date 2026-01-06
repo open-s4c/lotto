@@ -15,11 +15,13 @@ add_library(
     ../states/sequencer.c
     ../engine/recorder.c
     ../engine/dispatcher.c
+    ../engine/clock.c
     ../states/prng.c
     ../engine/handlers/handler_creation.c
     ../engine/handlers/handler_blocking.c
     ../states/handlers/handler_blocking.c
     ../engine/handlers/handler_mutex.c
+    ../engine/handlers/handler_evec.c
     ../engine/handlers/handler_yield.c
     ../states/handlers/handler_yield.c
     # ../engine/handlers/handler_enforce.c

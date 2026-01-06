@@ -1,5 +1,7 @@
 lotto =
 stress = "@LOTTO_PATH@-stress"
+record = env LOTTO_RECORD=%x.trace "@LOTTO_PATH@-run"
+replay = env LOTTO_REPLAY=%x.trace "@LOTTO_PATH@-run"
 inflex = inflex
 debug = debug
 trace = trace

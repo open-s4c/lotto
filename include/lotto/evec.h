@@ -5,21 +5,25 @@
 #include <stdint.h>
 #include <time.h>
 
+#include <dice/pubsub.h>
+
 enum lotto_timed_wait_status {
     TIMED_WAIT_OK,
     TIMED_WAIT_TIMEOUT,
     TIMED_WAIT_INVALID
 };
 
-void _lotto_evec_prepare(void *addr) __attribute__((weak));
-void _lotto_evec_wait(void *addr) __attribute__((weak));
+void _lotto_evec_prepare(void *addr, metadata_t *md) __attribute__((weak));
+void _lotto_evec_wait(void *addr, metadata_t *md) __attribute__((weak));
 enum lotto_timed_wait_status
-_lotto_evec_timed_wait(void *addr, const struct timespec *restrict abstime)
+_lotto_evec_timed_wait(void *addr, const struct timespec *restrict abstime,
+                       metadata_t *md) __attribute__((weak));
+void _lotto_evec_cancel(void *addr, metadata_t *md) __attribute__((weak));
+void _lotto_evec_wake(void *addr, uint32_t cnt, metadata_t *md)
     __attribute__((weak));
-void _lotto_evec_cancel(void *addr) __attribute__((weak));
-void _lotto_evec_wake(void *addr, uint32_t cnt) __attribute__((weak));
-void _lotto_evec_move(void *src, void *dst) __attribute__((weak));
-
+void _lotto_evec_move(void *src, void *dst, metadata_t *md)
+    __attribute__((weak));
+#if 0
 static inline void
 lotto_evec_prepare(void *addr)
 {
@@ -68,5 +72,5 @@ lotto_evec_move(void *src, void *dst)
         _lotto_evec_move(src, dst);
     }
 }
-
+#endif
 #endif /* LOTTO_EVEC_H */

@@ -24,7 +24,7 @@
 #include <lotto/util/once.h>
 
 #define log(ctx, fmt, ...)                                                     \
-    log_debugf("[t:%lu, " CONTRACT(" clk:%lu,") "pc:0x%lx] " fmt "\n",         \
+    log_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx] " fmt "\n",         \
                ctx->id, CONTRACT(_ghost.clk, ) ctx->pc & 0xfff, ##__VA_ARGS__)
 
 CONTRACT(enum state{

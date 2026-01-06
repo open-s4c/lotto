@@ -45,13 +45,13 @@ sender(void *arg)
         g_data[i] = d;
         g_next    = i;
         printf("TEST_LOG PRODUCE %d\n", i);
-        pthread_cond_broadcast(&g_cond);
+        pthread_cond_signal(&g_cond);
         pthread_mutex_unlock(&g_mutex);
     }
 
     pthread_mutex_lock(&g_mutex);
     g_done = 1;
-    pthread_cond_broadcast(&g_cond);
+    pthread_cond_signal(&g_cond);
     pthread_mutex_unlock(&g_mutex);
     return NULL;
 }

@@ -30,11 +30,16 @@ add_library(
     ../states/handlers/handler_deadlock.c
     ../engine/handlers/handler_atomic.c
     ../states/handlers/handler_atomic.c
+    ../engine/handlers/handler_race.c
+    ../states/handlers/handler_race.c
+    ../engine/handlers/handler_ichpt.c
+    ../states/handlers/handler_ichpt.c
     # ../engine/handlers/handler_enforce.c
     # ../states/handlers/handler_enforce.c
     # base files
     ../base/marshable.c
     ../base/map.c
+    ../base/bag.c
     ../base/tidmap.c
     ../base/tidset.c
     ../base/tidbag.c
@@ -42,6 +47,7 @@ add_library(
     ../base/slot.c
     ../base/plan.c
     ../base/record_granularity.c
+    ../base/stable_address.c
     ../base/record.c
     ../base/string.c
     ../base/trace_file.c

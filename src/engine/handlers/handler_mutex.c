@@ -1,5 +1,3 @@
-/*
- */
 #include <errno.h>
 
 #define LOG_PREFIX LOG_CUR_FILE
@@ -134,6 +132,7 @@ _posthandle_tryacquire(task_id id, uint64_t addr)
     }
     return EBUSY;
 }
+STATIC_ASSERT(EBUSY != 0, "EBUSY should not be 0 (success)");
 
 static void
 _handle_acquire(task_id id, uint64_t addr)

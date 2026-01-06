@@ -35,19 +35,9 @@ static inline void
 ctx_mutex(context_t *c, const char *func, pthread_mutex_t *mutex,
           metadata_t *md)
 {
-    c->md      = md;
-    c->func    = func;
-    c->cat     = CAT_CALL;
-    c->args[0] = arg_ptr(mutex);
-}
-
-static inline void
-ctx_cond(context_t *c, const char *func, pthread_mutex_t *mutex, metadata_t *md)
-{
-    c->md      = md;
-    c->func    = func;
-    c->cat     = CAT_CALL;
-    c->args[0] = arg_ptr(mutex);
+    c->md   = md;
+    c->func = func;
+    c->cat  = CAT_CALL;
 }
 
 static inline void
@@ -104,9 +94,6 @@ send_after(const char *func, category_t cat, metadata_t *md)
 // -----------------------------------------------------------------------------
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
-    (void)chain;
-    (void)type;
-    (void)event;
     context_t *c = ctx();
     ctx_thread_start(c, false, md);
     intercept_capture(c);
@@ -114,9 +101,6 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
 })
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_EXIT, {
-    (void)chain;
-    (void)type;
-
     struct pthread_exit_event *ev = EVENT_PAYLOAD(event);
     context_t *c                  = ctx();
     ctx_thread_exit(c, ev, md);
@@ -129,8 +113,6 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_EXIT, {
 // -----------------------------------------------------------------------------
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_THREAD_CREATE, {
-    (void)chain;
-    (void)type;
     struct pthread_create_event *ev = EVENT_PAYLOAD(event);
     context_t *c                    = ctx();
     ctx_task_create(c, ev, md);
@@ -139,18 +121,11 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_THREAD_CREATE, {
 })
 
 PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_THREAD_CREATE, {
-    (void)chain;
-    (void)type;
-    (void)event;
-
     send_after("pthread_create", CAT_TASK_CREATE, md);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_THREAD_JOIN, {
-    (void)chain;
-    (void)type;
-
     struct pthread_join_event *ev = EVENT_PAYLOAD(event);
     ev->ret                       = EINTR;
     context_t *c                  = ctx();
@@ -194,9 +169,8 @@ pthread_nop_ETIMEDOUT_()
 int
 _lotto_mutex_lock(const char *func, void *mutex, metadata_t *md)
 {
-    context_t *c = ctx();
-    ctx_mutex(c, func, mutex, md);
-    c->cat = CAT_MUTEX_ACQUIRE;
+    context_t *c = ctx(.func = func, .cat = CAT_MUTEX_ACQUIRE, .md = md,
+                       .args = {arg_ptr(mutex)});
     (void)intercept_capture(c);
     return 0;
 }
@@ -211,9 +185,8 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_LOCK, {
 int
 _lotto_mutex_trylock(const char *func, void *mutex, metadata_t *md)
 {
-    context_t *c = ctx();
-    ctx_mutex(c, func, mutex, md);
-    c->cat = CAT_MUTEX_TRYACQUIRE;
+    context_t *c = ctx(.func = func, .cat = CAT_MUTEX_TRYACQUIRE, .md = md,
+                       .args = {arg_ptr(mutex)});
     (void)intercept_capture(c);
     arg_t *ok = (arg_t *)&c->args[1];
     return ok->value.u8;
@@ -232,9 +205,8 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_TRYLOCK, {
 int
 _lotto_mutex_unlock(const char *func, void *mutex, metadata_t *md)
 {
-    context_t *c = ctx();
-    ctx_mutex(c, func, mutex, md);
-    c->cat = CAT_MUTEX_RELEASE;
+    context_t *c = ctx(.func = func, .cat = CAT_MUTEX_RELEASE, .md = md,
+                       .args = {arg_ptr(mutex)});
     (void)intercept_capture(c);
     return 0;
 }
@@ -248,15 +220,8 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_UNLOCK, {
 
 #if !defined(__APPLE__)
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_TIMEDLOCK, {
-    (void)chain;
-    (void)type;
-
     struct pthread_mutex_timedlock_event *ev = EVENT_PAYLOAD(event);
-    lotto_rsrc_acquiring(ev->mutex);
-    context_t *c = ctx();
-    ctx_mutex(c, "pthread_mutex_timedlock", ev->mutex, md);
-    (void)intercept_before_call(c);
-
+    (void)_lotto_mutex_lock("pthread_mutex_timedlock", ev->mutex, md);
     ev->func = pthread_nop_zero_;
     return PS_OK;
 })
@@ -385,9 +350,6 @@ ___pthread_cond_clockwait64(pthread_cond_t *cond, pthread_mutex_t *mutex,
 // -----------------------------------------------------------------------------
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SCHED_YIELD, {
-    (void)chain;
-    (void)type;
-    (void)event;
     context_t *c = ctx();
     ctx_sched_yield(c, md);
     intercept_capture(c);
@@ -417,37 +379,49 @@ INTERPOSE(int, sched_yield, void)
 #include <dice/events/memaccess.h>
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_MA_READ, {
-    context_t *c = ctx(.cat = CAT_BEFORE_READ, .md = md);
+    struct ma_read_event *ev = EVENT_PAYLOAD(event);
+    context_t *c             = ctx(.cat = CAT_BEFORE_READ, .md = md,
+                                   .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
     intercept_capture(c);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_MA_WRITE, {
-    context_t *c = ctx(.cat = CAT_BEFORE_WRITE, .md = md);
+    struct ma_write_event *ev = EVENT_PAYLOAD(event);
+    context_t *c              = ctx(.cat = CAT_BEFORE_WRITE, .md = md,
+                                    .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
     intercept_capture(c);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MA_AREAD, {
-    context_t *c = ctx(.cat = CAT_BEFORE_AREAD, .md = md);
+    struct ma_aread_event *ev = EVENT_PAYLOAD(event);
+    context_t *c              = ctx(.cat = CAT_BEFORE_AREAD, .md = md,
+                                    .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
     intercept_capture(c);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_AREAD, {
-    context_t *c = ctx(.cat = CAT_AFTER_AREAD, .md = md);
+    struct ma_aread_event *ev = EVENT_PAYLOAD(event);
+    context_t *c              = ctx(.cat = CAT_AFTER_AREAD, .md = md,
+                                    .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
     intercept_capture(c);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MA_AWRITE, {
-    context_t *c = ctx(.cat = CAT_BEFORE_AWRITE, .md = md);
+    struct ma_awrite_event *ev = EVENT_PAYLOAD(event);
+    context_t *c               = ctx(.cat = CAT_BEFORE_AWRITE, .md = md,
+                                     .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
     intercept_capture(c);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_AWRITE, {
-    context_t *c = ctx(.cat = CAT_AFTER_AWRITE, .md = md);
+    struct ma_awrite_event *ev = EVENT_PAYLOAD(event);
+    context_t *c               = ctx(.cat = CAT_AFTER_AWRITE, .md = md,
+                                     .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
     intercept_capture(c);
     return PS_OK;
 })

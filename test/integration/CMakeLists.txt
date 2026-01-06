@@ -6,6 +6,7 @@ configure_file(tikl.cfg.in "${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg" @ONLY)
 
 set(TSAN_0003-await-increment ON)
 set(TSAN_0005-atomic-message-passing ON)
+set(TSAN_0006-racy-message-passing ON)
 
 file(GLOB SRCS "000*.c")
 list(SORT SRCS)

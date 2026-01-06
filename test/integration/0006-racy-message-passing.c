@@ -1,5 +1,5 @@
 // RUN: %lotto %stress -- %x
-// XFAIL: we should be able to trigger this bug
+// XFAIL: we should be able to trigger the race (abort_on_race = true)
 
 #include <pthread.h>
 #include <sched.h>

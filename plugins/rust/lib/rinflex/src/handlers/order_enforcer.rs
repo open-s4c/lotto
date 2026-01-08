@@ -210,6 +210,12 @@ impl StateTopicSubscriber for OrderEnforcer {
                 .iter()
                 .any(|old| old.c.source.equals(&c.c.source) && old.c.target.equals(&c.c.target))
         };
+        let seen: Vec<_> = self
+            .cfg
+            .new_constraints
+            .iter()
+            .filter(|new| already_has(new))
+            .collect();
         let unseen: Vec<_> = self
             .cfg
             .new_constraints
@@ -218,6 +224,28 @@ impl StateTopicSubscriber for OrderEnforcer {
             .collect();
         debug!("Adding {} new constraints: {:#?}", unseen.len(), unseen);
         self.fin.constraints.extend(unseen.into_iter().cloned());
+
+        // However, if there are loops involved, there might be legit
+        // constraints that consist of exactly the same
+        // transitions. This can happen during essentiality check:
+        //   { A1 -> B2, !!(A1 -> B1) }
+        // To deal with this, we try to pick the smallest counter.
+        for cur in self.fin.constraints.iter_mut() {
+            for new in seen.iter() {
+                if cur.c.equals(&new.c) {
+                    let oldcnt = cur.c.target.cnt;
+                    let newcnt = oldcnt.min(new.c.target.cnt);
+                    cur.c.target.cnt = newcnt;
+                    if newcnt < oldcnt {
+                        debug!(
+                            "Updating constraint {} target to a smaller counter (from {} to {})",
+                            cur.c, oldcnt, newcnt
+                        );
+                    }
+                }
+            }
+        }
+
         // Do not clear new_constraints so that lotto show can display them.
     }
 }
@@ -230,7 +258,7 @@ fn should_block(cur: &Event, constraint: &Constraint) -> bool {
     let target = &constraint.c.target;
     if cur.t == source.t || cur.t == target.t {
         debug!(
-            "checking [t:{},cat:{},cnt:{},read:{:?}] with {}",
+            "checking [t:{},cat:{},cnt:{},read:{:?}] against {}",
             cur.t.id,
             cur.t.cat,
             cur.cnt,

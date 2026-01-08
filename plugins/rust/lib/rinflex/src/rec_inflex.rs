@@ -277,8 +277,20 @@ impl RecInflex {
             };
             info!("Found an essentiality witness\n{}", virt_pair);
             if virt_pair.source.t.id == virt_pair.target.t.id {
-                info!("invalid pair!");
-                continue;
+                println!("invalid essentiality pair!");
+                println!("current failing trace: {}", self.trace_fail.display());
+                println!(
+                    "alt fail trace (output of EC): {}",
+                    trace_fail_alt.display()
+                );
+                println!("virt_pair is {}", virt_pair);
+                println!(
+                    "ip = {}, iip = {} (EC replayed up to IP-1={})",
+                    ip,
+                    iip,
+                    ip - 1
+                );
+                panic!();
             }
             self.constraints.push(Constraint {
                 c: virt_pair,
@@ -304,6 +316,10 @@ impl RecInflex {
         unlimited: bool,
         try_hard: bool,
     ) -> Result<(), Error> {
+        info!(
+            "get_trace: attaching constraints, #constraints = {}",
+            self.constraints.len()
+        );
         let input = self.attach_constraints_to_trace(input, replay_goal, &self.constraints)?;
         info!("get_trace: input={}", input.display());
         let _replay = EnvScope::new("LOTTO_REPLAY", &input);

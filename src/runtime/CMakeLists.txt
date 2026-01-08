@@ -34,6 +34,8 @@ add_library(
     ../states/handlers/handler_race.c
     ../engine/handlers/handler_ichpt.c
     ../states/handlers/handler_ichpt.c
+    ../engine/handlers/handler_pos.c
+    ../states/handlers/handler_pos.c
     # ../engine/handlers/handler_enforce.c
     # ../states/handlers/handler_enforce.c
     # base files

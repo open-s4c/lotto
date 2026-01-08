@@ -1,8 +1,6 @@
 #include <stdbool.h>
 
-#include <dice/log.h>
 #include <dice/self.h>
-
 #include <lotto/base/category.h>
 #include <lotto/base/context.h>
 #include <lotto/engine/engine.h>
@@ -11,6 +9,7 @@
 #include <lotto/runtime/switcher.h>
 #include <lotto/states/sequencer.h>
 #include <lotto/sys/assert.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/now.h>
 
 static mediator_t mediator_key_;
@@ -45,10 +44,10 @@ mediator_tls(metadata_t *md)
 static inline void
 mediator_plan_reset(mediator_t *m)
 {
-    m->plan.actions = ACTION_NONE;
+    m->plan.actions         = ACTION_NONE;
     m->plan.any_task_filter = NULL;
-    m->plan.next = NO_TASK;
-    m->plan.with_slack = false;
+    m->plan.next            = NO_TASK;
+    m->plan.with_slack      = false;
 }
 
 bool
@@ -79,9 +78,9 @@ mediator_in_capture(const mediator_t *m)
 static void
 mediator_process_shutdown(mediator_t *m, reason_t reason)
 {
-    m->finito              = true;
-    m->has_pending_reason  = true;
-    m->pending_reason      = reason;
+    m->finito             = true;
+    m->has_pending_reason = true;
+    m->pending_reason     = reason;
 }
 
 bool
@@ -108,9 +107,10 @@ mediator_capture(mediator_t *m, context_t *ctx)
         (void)plan_done(&m->plan);
         switch (action) {
             case ACTION_WAKE: {
-                nanosec_t slack = m->plan.with_slack ?
-                                      sequencer_config()->slack * NOW_MILLISECOND :
-                                      0;
+                nanosec_t slack =
+                    m->plan.with_slack ?
+                        sequencer_config()->slack * NOW_MILLISECOND :
+                        0;
                 switcher_wake(m->plan.next, slack);
                 break;
             }
@@ -166,8 +166,9 @@ mediator_resume(mediator_t *m, context_t *ctx)
                 break;
             case ACTION_SHUTDOWN:
                 mediator_process_shutdown(m, m->plan.reason);
-                status = IS_REASON_SHUTDOWN(m->plan.reason) ? MEDIATOR_SHUTDOWN :
-                                                              MEDIATOR_ABORT;
+                status = IS_REASON_SHUTDOWN(m->plan.reason) ?
+                             MEDIATOR_SHUTDOWN :
+                             MEDIATOR_ABORT;
                 break;
             case ACTION_CONTINUE:
                 break;
@@ -179,7 +180,7 @@ mediator_resume(mediator_t *m, context_t *ctx)
     mediator_plan_reset(m);
 
     if (m->has_pending_reason) {
-        reason_t reason = m->pending_reason;
+        reason_t reason       = m->pending_reason;
         m->has_pending_reason = false;
         lotto_exit(ctx, reason);
     }

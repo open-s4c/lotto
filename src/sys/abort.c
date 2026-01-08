@@ -6,11 +6,6 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#ifdef NDEBUG
-    #error                                                                     \
-        "NDEBUG is defined. Running lotto without assertions enabled is likely unwanted."
-#endif
-#include <assert.h>
 
 #include <lotto/sys/abort.h>
 #include <lotto/sys/logger.h>

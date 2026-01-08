@@ -17,6 +17,7 @@
 #include <lotto/base/category.h>
 #include <lotto/base/context.h>
 #include <lotto/rsrc_deadlock.h>
+#include <lotto/sys/logger.h>
 
 DICE_MODULE_INIT({})
 

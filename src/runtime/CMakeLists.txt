@@ -54,6 +54,7 @@ add_library(
     ../base/trace_impl.c
     # sys, brokers, and others
     ../sys/abort.c
+    ../sys/logger.c
     ../sys/libc_wrappers.c
     ../sys/stream_file.c
     ../sys/stream_impl.c
@@ -63,6 +64,7 @@ add_library(
     #
 )
 set_target_properties(lotto_runtime PROPERTIES OUTPUT_NAME lotto)
+target_compile_definitions(lotto_runtime PRIVATE DICE_LOG_H)
 
 # Pull in dice object files from the subtree build.
 target_sources(

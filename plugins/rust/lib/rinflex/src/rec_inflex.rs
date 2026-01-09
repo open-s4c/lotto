@@ -325,16 +325,18 @@ impl RecInflex {
         let _replay = EnvScope::new("LOTTO_REPLAY", &input);
         let _record = EnvScope::new("LOTTO_RECORD", &output);
         let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
-        let rounds = if try_hard {
+        let max_rounds = self.rounds * 10;
+        let valid_rounds = if try_hard {
             self.rounds * 10
         } else {
             self.rounds
         };
         let mut flags = self.flags.clone();
-        let mut bar = ProgressBar::new(self.report_progress, "", rounds);
+        let mut bar = ProgressBar::new(self.report_progress, "", valid_rounds);
         loop {
             if !unlimited
-                && (bar.valid_ticks > rounds || bar.valid_ticks == 0 && bar.invalid_ticks > rounds)
+                && (bar.valid_ticks > valid_rounds
+                    || bar.valid_ticks == 0 && bar.invalid_ticks > max_rounds)
             {
                 warn!("Cannot find satisfying execution in get_trace");
                 return Err(Error::ExecutionNotFound);

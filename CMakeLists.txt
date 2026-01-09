@@ -31,6 +31,8 @@ include_directories(deps/dice/deps/libvsync/include)
 include_directories(include)
 include_directories(src/include)
 
+include(cmake/utils.cmake)
+include(cmake/pubsub.cmake)
 add_subdirectory(src)
 
 # ------------------------------------------------------------------------------

@@ -1,0 +1,5 @@
+file(GLOB SRCS *.py)
+foreach(SRC ${SRCS})
+    get_filename_component(SRC_NAME ${SRC} NAME_WLE)
+    make_blob(blob-${SRC_NAME} ${SRC} "")
+endforeach()

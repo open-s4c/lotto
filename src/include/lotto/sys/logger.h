@@ -38,11 +38,6 @@ void logger_printf(const char *fmt, ...) PRINTFLIKE;
     #define logger_infoln(fmt, ...)  logger_infof(fmt "\n", ##__VA_ARGS__)
     #define logger_println(fmt, ...) logger_printf(fmt "\n", ##__VA_ARGS__)
 
-    #define logger_debug(fmt, ...) logger_debugf(fmt "\n", ##__VA_ARGS__)
-    #define logger_info(fmt, ...)  logger_infof(fmt "\n", ##__VA_ARGS__)
-    #define logger_print(fmt, ...) logger_printf(fmt "\n", ##__VA_ARGS__)
-    #define logger_fatal(fmt, ...) logger_fatalf(fmt "\n", ##__VA_ARGS__)
-
     #define LOG_CUR_FILE                                                       \
         (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 

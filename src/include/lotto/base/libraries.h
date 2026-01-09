@@ -1,0 +1,12 @@
+#ifndef LOTTO_LIBRARIES_H
+#define LOTTO_LIBRARIES_H
+
+#define LIBLOTTO   "liblotto.so"
+#define LIBCREP    "libcrep.so"
+#define LIBVDSO    "linux-vdso.so"
+#define LIBACHK    "libachk.so"
+#define LIBRUNTIME "libruntime.so"
+#define LIBENGINE  "libengine.so"
+#define LIBASAN    "@LIBASAN_PATH@"
+
+#endif

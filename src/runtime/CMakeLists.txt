@@ -1,4 +1,44 @@
 add_library(
+    lotto_runtime_cli SHARED
+    ../states/sequencer.c
+    ../states/prng.c
+    ../states/handlers/handler_blocking.c
+    ../states/handlers/handler_yield.c
+    ../states/handlers/handler_watchdog.c
+    ../states/handlers/handler_deadlock.c
+    ../states/handlers/handler_atomic.c
+    ../states/handlers/handler_race.c
+    ../states/handlers/handler_ichpt.c
+    ../states/handlers/handler_pos.c
+    # base files
+    ../base/marshable.c
+    ../base/map.c
+    ../base/bag.c
+    ../base/tidmap.c
+    ../base/tidset.c
+    ../base/tidbag.c
+    ../base/category.c
+    ../base/slot.c
+    ../base/plan.c
+    ../base/record_granularity.c
+    ../base/stable_address.c
+    ../base/record.c
+    ../base/string.c
+    ../base/trace_file.c
+    ../base/trace_impl.c
+    # sys, brokers, and others
+    ../sys/abort.c
+    ../sys/logger.c
+    ../sys/libc_wrappers.c
+    ../sys/stream_file.c
+    ../sys/stream_impl.c
+    ../brokers/statemgr.c
+    ../brokers/pubsub_stub.c
+    ../brokers/catmgr_stub.c
+    #
+)
+
+add_library(
     lotto_runtime SHARED
     # runtime files
     ../runtime/runtime.c

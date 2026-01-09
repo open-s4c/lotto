@@ -120,7 +120,7 @@ clock_print(void)
 {
     struct timespec ts;
     clock_time(&ts);
-    log_debugf("Lotto clock: %5lu sec %09lu nsec\n", ts.tv_sec, ts.tv_nsec);
+    logger_debugf("Lotto clock: %5lu sec %09lu nsec\n", ts.tv_sec, ts.tv_nsec);
 }
 
 void

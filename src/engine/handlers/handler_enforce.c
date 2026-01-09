@@ -55,7 +55,7 @@ _read_val(const arg_t *ptr, size_t width)
             v.value.u8 = *(uint8_t *)p;
             break;
         default:
-            log_fatalf("unexpected width %u\n", ptr->width);
+            logger_fatalf("unexpected width %u\n", ptr->width);
     }
     return v;
 }
@@ -106,7 +106,7 @@ _as_expected(const context_t *ctx)
 
 #define REPORT(fmt, F, n, x, y)                                                \
     do {                                                                       \
-        log_errorf("MISMATCH [field: %s, expected: " fmt ", actual: " fmt      \
+        logger_errorf("MISMATCH [field: %s, expected: " fmt ", actual: " fmt      \
                    "]\n",                                                      \
                    #n, F(x), F(y));                                            \
     } while (0)
@@ -127,7 +127,7 @@ _report(const context_t *ctx)
         (ctx->cat == CAT_BEFORE_READ || ctx->cat == CAT_BEFORE_AREAD)) {
         arg_t a = _read_val(&ctx->args[0], ctx->args[1].value.u64);
         if (enforce_state()->val.value.u64 != a.value.u64) {
-            log_errorf("MISMATCH [field: val, expected: %lu, actual: %lu]\n",
+            logger_errorf("MISMATCH [field: val, expected: %lu, actual: %lu]\n",
                        enforce_state()->val.value.u64, a.value.u64);
         }
     }
@@ -137,15 +137,15 @@ _report(const context_t *ctx)
     if (ctx->cat == CAT_ENFORCE && !EQUAL_DATA) {
         struct value val = on();
         PS_PUBLISH_INTERFACE(TOPIC_ENFORCE_VIOLATED, val);
-        log_errorf("MISMATCH [field: enforce, expected: ");
+        logger_errorf("MISMATCH [field: enforce, expected: ");
         for (size_t i = 0; i < ENFORCE_DATA_SIZE; i++) {
-            log_errorf("%2.2x", enforce_state()->data[i]);
+            logger_errorf("%2.2x", enforce_state()->data[i]);
         }
-        log_errorf(", actual: ");
+        logger_errorf(", actual: ");
         for (size_t i = 0; i < ctx->args[1].value.u64; i++) {
-            log_errorf("%2.2x", *((unsigned char *)ctx->args[0].value.ptr + i));
+            logger_errorf("%2.2x", *((unsigned char *)ctx->args[0].value.ptr + i));
         }
-        log_errorf("]\n");
+        logger_errorf("]\n");
     }
 
     if (!EQUAL_SEED) {
@@ -202,7 +202,7 @@ check_aslr()
     char *randomize_va_space = "/proc/sys/kernel/randomize_va_space";
     FILE *fp                 = sys_fopen(randomize_va_space, "r");
     if (!fp) {
-        log_warnf("Can't read ASLR status\n");
+        logger_warnf("Can't read ASLR status\n");
     } else {
         char aslr[1];
         sys_fread(aslr, 1, 1, fp);
@@ -210,7 +210,7 @@ check_aslr()
             (MODE(PC) || MODE(ADDRESS) || MODE(DATA) || MODE(CUSTOM)) &&
             sequencer_config()->stable_address_method ==
                 STABLE_ADDRESS_METHOD_NONE) {
-            log_warnf("ASLR enabled but no stable address method\n");
+            logger_warnf("ASLR enabled but no stable address method\n");
         }
     }
     #endif
@@ -227,12 +227,12 @@ _handle(const context_t *ctx, event_t *cp)
     }
     if (cp->replay && cp->clk == enforce_state()->clk) {
         if (!_as_expected(ctx)) {
-            log_errorf(
+            logger_errorf(
                 "Replay mismatch! cappt = [clk: %lu, id: %lu, cat: %s, pc: "
                 "%p]\n",
                 cp->clk, ctx->id, category_str(ctx->cat), (void *)ctx->pc);
             _report(ctx);
-            log_fatalf("unexpected capture point\n");
+            logger_fatalf("unexpected capture point\n");
             sys_abort();
         }
     }

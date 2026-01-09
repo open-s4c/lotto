@@ -1,6 +1,3 @@
-/*
- */
-
 #define LOG_PREFIX LOG_CUR_FILE
 #define LOG_BLOCK  LOG_CUR_BLOCK
 #include <lotto/base/reason.h>
@@ -59,7 +56,7 @@ _rsrc_next(struct rsrc *it)
 static void
 _acquiring(task_id id, uintptr_t addr)
 {
-    log_debugf("[%lx] aquiring resource 0x%lx\n", id, addr);
+    logger_debugf("[%lx] aquiring resource 0x%lx\n", id, addr);
     struct rsrc *rsrc = _rsrc_init(&_state.resources, addr);
     tidbag_insert(&rsrc->tasks, id);
     rsrc->owner = mutex_owner((void *)addr);
@@ -70,12 +67,12 @@ _released(task_id id, uintptr_t addr)
 {
     struct rsrc *rsrc = (struct rsrc *)map_find(&_state.resources, addr);
     if (!rsrc) {
-        log_errorf("an unacquired resource is being released\n");
+        logger_errorf("an unacquired resource is being released\n");
         return !deadlock_config()->extra_release_check;
     }
 
     task_id owner = rsrc->owner;
-    log_debugf("[%lx] releasing resource 0x%lx owned by %lu\n", id, addr,
+    logger_debugf("[%lx] releasing resource 0x%lx owned by %lu\n", id, addr,
                owner);
     tidbag_remove(&rsrc->tasks, id);
 
@@ -97,7 +94,7 @@ _check_deadlock_iter(task_id tid, uint64_t key, task_id cycle)
         return false;
 
     if (cycle == tid) {
-        log_errorf("Deadlock detected!\n");
+        logger_errorf("Deadlock detected!\n");
         return true;
     }
 
@@ -142,7 +139,7 @@ _check_deadlock_iter(task_id tid, uint64_t key, task_id cycle)
             tidbag_insert(&it->tasks, cur);
 
             if (res) {
-                log_errorf("  (tid: %lu) <- (rsrc: 0x%lx) <- (tid: %lu) \n",
+                logger_errorf("  (tid: %lu) <- (rsrc: 0x%lx) <- (tid: %lu) \n",
                            cur, key, tid);
                 return true;
             }
@@ -162,15 +159,15 @@ _check_deadlock(task_id tid, uint64_t key)
 static void
 _lost_error_strict(task_id owner, uintptr_t addr)
 {
-    log_errorf("Deadlock detected! (lost resource)\n");
-    log_errorf("Task %lu finished without releasing 0x%lx\n", owner, addr);
+    logger_errorf("Deadlock detected! (lost resource)\n");
+    logger_errorf("Task %lu finished without releasing 0x%lx\n", owner, addr);
 }
 
 static void
 _lost_error(task_id owner, task_id waiter, uintptr_t addr)
 {
     _lost_error_strict(owner, addr);
-    log_errorf("Task %lu is waiting for 0x%lx\n", waiter, addr);
+    logger_errorf("Task %lu is waiting for 0x%lx\n", waiter, addr);
 }
 
 static bool

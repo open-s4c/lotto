@@ -39,8 +39,8 @@ _check_deadlock(task_id waiter, uint64_t key, task_id cycle)
 {
     ASSERT(waiter != NO_TASK);
     if (cycle == waiter) {
-        log_errorf("Deadlock detected!\n");
-        log_errorf("Wait chain: %lu <- ", waiter);
+        logger_errorf("Deadlock detected!\n");
+        logger_errorf("Wait chain: %lu <- ", waiter);
         return true;
     }
 
@@ -60,8 +60,8 @@ _check_deadlock(task_id waiter, uint64_t key, task_id cycle)
 
     if (_check_deadlock(mtx->owner, it->ti.key,
                         cycle == NO_TASK ? waiter : cycle)) {
-        log_printf("%lu", waiter);
-        log_printf("%s", (cycle == NO_TASK ? "\n" : " <- "));
+        logger_printf("%lu", waiter);
+        logger_printf("%s", (cycle == NO_TASK ? "\n" : " <- "));
         return true;
     }
     return false;
@@ -114,7 +114,7 @@ _should_wait(task_id id)
 static int
 _posthandle_tryacquire(task_id id, uint64_t addr)
 {
-    log_debugf("[%lu] mutex tryaquire 0x%lx\n", id, addr);
+    logger_debugf("[%lu] mutex tryaquire 0x%lx\n", id, addr);
     ASSERT(!tidset_has(&_state.waiters, id));
 
     struct mtx *mtx = _mutex_init(addr);
@@ -126,7 +126,7 @@ _posthandle_tryacquire(task_id id, uint64_t addr)
 
     if (mtx->owner == id) {
         mtx->count++;
-        log_debugf("[%lu] mutex (try)aquired 0x%lx (count: %d)\n", id, addr,
+        logger_debugf("[%lu] mutex (try)aquired 0x%lx (count: %d)\n", id, addr,
                    mtx->count);
         return 0;
     }
@@ -137,7 +137,7 @@ STATIC_ASSERT(EBUSY != 0, "EBUSY should not be 0 (success)");
 static void
 _handle_acquire(task_id id, uint64_t addr)
 {
-    log_debugf("[%lu] mutex aquire 0x%lx\n", id, addr);
+    logger_debugf("[%lu] mutex aquire 0x%lx\n", id, addr);
     ASSERT(!tidset_has(&_state.waiters, id));
 
     struct mtx *mtx = _mutex_init(addr);
@@ -152,7 +152,7 @@ _handle_acquire(task_id id, uint64_t addr)
 static void
 _posthandle_acquire(task_id id, uint64_t addr)
 {
-    log_debugf("[%lu] mutex aquire 0x%lx\n", id, addr);
+    logger_debugf("[%lu] mutex aquire 0x%lx\n", id, addr);
     ASSERT(!tidset_has(&_state.waiters, id));
 
     struct mtx *mtx = _mutex_init(addr);
@@ -165,7 +165,7 @@ _posthandle_acquire(task_id id, uint64_t addr)
 
     ASSERT(mtx->owner == id && "deadlock due to disrespecting locks");
     mtx->count++;
-    log_debugf("[%lu] mutex aquired 0x%lx (count: %d)\n", id, addr, mtx->count);
+    logger_debugf("[%lu] mutex aquired 0x%lx (count: %d)\n", id, addr, mtx->count);
 }
 
 static void
@@ -173,15 +173,15 @@ _posthandle_release(task_id id, uint64_t addr)
 {
     struct mtx *mtx = (struct mtx *)map_find(&_state.mutexes, addr);
     if (!mtx) {
-        log_errorf("an unacquired mutex is being released\n");
+        logger_errorf("an unacquired mutex is being released\n");
         return;
     }
 
-    log_debugf("[%lu] mutex release 0x%lx (count: %d)\n", id, addr,
+    logger_debugf("[%lu] mutex release 0x%lx (count: %d)\n", id, addr,
                mtx->count - 1);
 
     if (mtx->owner != id) {
-        log_errorf(
+        logger_errorf(
             "undefined behavior: task %lu releases mutex 0x%lx owned by task "
             "%lu\n",
             id, addr, mtx->owner);
@@ -225,7 +225,7 @@ _mutex_handle(const context_t *ctx, event_t *e)
     /* remove waiting tasks from the tset */
     if (_remove_waiters(&e->tset, ctx->id) && mutex_config()->deadlock_check &&
         _check_deadlock(ctx->id, addr, NO_TASK)) {
-        log_errorf("Aborting on deadlock\n");
+        logger_errorf("Aborting on deadlock\n");
         e->reason = REASON_RSRC_DEADLOCK;
     }
 }

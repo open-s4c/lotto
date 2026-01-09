@@ -30,7 +30,7 @@ lotto_runtime_init(void)
     _start = now();
     /* prepare engine configuration and initilize engine */
     if ((var = getenv("LOTTO_RECORD")) && var[0]) {
-        log_debugf("record: %s\n", var);
+        logger_debugf("record: %s\n", var);
         stream_t *st = stream_file_alloc();
         stream_file_out(st, var);
         _recorder = trace_file_create(st);
@@ -43,7 +43,7 @@ lotto_runtime_init(void)
     }
 
     if ((var = getenv("LOTTO_REPLAY")) && var[0]) {
-        log_debugf("replay: %s\n", var);
+        logger_debugf("replay: %s\n", var);
         stream_t *st = stream_file_alloc();
         stream_file_in(st, var);
         _replayer = trace_file_create(st);

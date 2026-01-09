@@ -15,6 +15,7 @@
 #include <lotto/engine/handlers/ichpt.h>
 #include <lotto/states/handlers/ichpt.h>
 #include <lotto/states/sequencer.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
 
@@ -93,7 +94,7 @@ _ichpt_handle(const context_t *ctx, event_t *e)
 
     if (is_ichpt(ctx->pc)) {
         it_is_ichpt();
-        log_infof("[%lx] instruction change point at pc %p\n", tid,
+        logger_infof("[%lx] instruction change point at pc %p\n", tid,
                   (void *)ctx->pc);
         e->is_chpt = true;
     }

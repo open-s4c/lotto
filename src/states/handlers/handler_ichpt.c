@@ -16,14 +16,14 @@ _item_print(const marshable_t *m)
     char str[STABLE_ADDRESS_MAX_STR_LEN];
     const item_t *i = (item_t *)m;
     stable_address_sprint(&i->addr, str);
-    log_infof("  %s\n", str);
+    logger_infof("  %s\n", str);
 }
 #define MARSHABLE_ITEM MARSHABLE_STATIC_PRINTABLE(sizeof(item_t), _item_print)
 
 static void
 _print_m(const marshable_t *m)
 {
-    log_infof("instruction addresses:\n");
+    logger_infof("instruction addresses:\n");
     bag_t *b = (bag_t *)m;
     const bagitem_t *it;
     for (it = bag_iterate(b); it; it = bag_next(it)) {

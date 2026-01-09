@@ -24,7 +24,7 @@
 #include <lotto/util/once.h>
 
 #define log(ctx, fmt, ...)                                                     \
-    log_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx] " fmt "\n",         \
+    logger_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx] " fmt "\n",         \
                ctx->id, CONTRACT(_ghost.clk, ) ctx->pc & 0xfff, ##__VA_ARGS__)
 
 CONTRACT(enum state{
@@ -97,7 +97,7 @@ CONTRACT(static void _check_plan(const context_t *ctx, plan_t p) {
             break;
         default:
             plan_print(p);
-            log_fatalf("(cat: %s) plan mismatch\n", category_str(ctx->cat));
+            logger_fatalf("(cat: %s) plan mismatch\n", category_str(ctx->cat));
     }
 })
 
@@ -106,7 +106,7 @@ engine_init(trace_t *input, trace_t *output)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
-    log_debugf("starting...\n");
+    logger_debugf("starting...\n");
     PS_PUBLISH_INTERFACE(TOPIC_ENGINE_START, nil);
     recorder_init(input, output);
 }
@@ -128,7 +128,7 @@ engine_fini(const context_t *ctx, reason_t reason)
     } else if (IS_REASON_ABORT(reason)) {
         success = false;
     } else {
-        log_errorf("Unknown termination reason\n");
+        logger_errorf("Unknown termination reason\n");
         success = false;
     }
     if (getenv("LOTTO_MODIFY_RETURN_CODE") != NULL &&
@@ -210,7 +210,7 @@ engine_return(const context_t *ctx)
     CONTRACT({
         ASSERT(ctx->id != NO_TASK);
         if (vatomic_read(&_ghost.state) == FINISHED) {
-            log_warnf("ignoring engine_return after fini (t: %lu)\n", ctx->id);
+            logger_warnf("ignoring engine_return after fini (t: %lu)\n", ctx->id);
             return;
         }
         ASSERT(vatomic_get_dec(&_ghost.pending_calls) > 0);

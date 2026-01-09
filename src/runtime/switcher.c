@@ -52,7 +52,7 @@ switcher_status_t
 switcher_yield(task_id id, bool (*any_task_filter)(task_id))
 {
     task_id prev, next;
-    log_debugf("YIELD  task %lu\n", id);
+    logger_debugf("YIELD  task %lu\n", id);
 
     vmutex_acquire(&_switcher.mutex);
     int bucket = (int)(id % LOTTO_SWITCHER_NBUCKETS);
@@ -102,7 +102,7 @@ switcher_yield(task_id id, bool (*any_task_filter)(task_id))
     vmutex_release(&_switcher.mutex);
 
     _lotto_switcher_resuming();
-    log_debugf("RESUME task %lu\n", id);
+    logger_debugf("RESUME task %lu\n", id);
 
     return status;
 }
@@ -113,7 +113,7 @@ void
 switcher_wake(task_id id, nanosec_t slack)
 {
     vmutex_acquire(&_switcher.mutex);
-    log_debugf("WAKE   task %lu\n", id);
+    logger_debugf("WAKE   task %lu\n", id);
 
     ASSERT(_switcher.next == NO_TASK);
     ASSERT(id != NO_TASK);
@@ -138,7 +138,7 @@ void
 switcher_abort()
 {
     vmutex_acquire(&_switcher.mutex);
-    log_debugf("ABORT called\n");
+    logger_debugf("ABORT called\n");
     _switcher.status = SWITCHER_ABORTED;
     vmutex_release(&_switcher.mutex);
 }

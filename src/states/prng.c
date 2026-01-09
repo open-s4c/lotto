@@ -19,12 +19,12 @@
 #define PRNG_MASK 0xFFFFFFFF
 
 static prng_t _prng;
-REGISTER_CONFIG(_prng, { log_infof("seed = %u\n", _prng.seed); })
+REGISTER_CONFIG(_prng, { logger_infof("seed = %u\n", _prng.seed); })
 PS_SUBSCRIBE_INTERFACE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
     const char *var = getenv("LOTTO_SEED");
     if (var) {
         _prng.seed = atoi(var);
-        log_debugf("Seed from envvar: %u\n", _prng.seed);
+        logger_debugf("Seed from envvar: %u\n", _prng.seed);
     }
 })
 

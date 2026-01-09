@@ -72,7 +72,7 @@ _creation_handle(const context_t *ctx, event_t *e)
             break;
 
         case CAT_TASK_INIT:
-            log_debugf("Register tid %lu (parent: %lu)\n", ctx->id,
+            logger_debugf("Register tid %lu (parent: %lu)\n", ctx->id,
                        _state.last_parent);
             ENSURE(tidset_insert(&_state.registered, ctx->id) &&
                    "a task is reregistered");
@@ -89,7 +89,7 @@ _creation_handle(const context_t *ctx, event_t *e)
         default:
             if (!tidset_insert(&_state.registered, ctx->id))
                 break;
-            log_debugf("Registering task %lu\n", ctx->id);
+            logger_debugf("Registering task %lu\n", ctx->id);
             break;
     }
 

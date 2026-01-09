@@ -17,7 +17,7 @@ static slot_t _last;
 void
 dispatcher_register(slot_t slot, handle_f handle)
 {
-    log_debugf("slot: %s\n", slot_str(slot));
+    logger_debugf("slot: %s\n", slot_str(slot));
     ASSERT(slot < SLOT_END_);
     ASSERT(handle != NULL && "empty registrations are not allowed");
     ASSERT(_slots[slot].handle == NULL &&
@@ -73,7 +73,7 @@ dispatch_event(const context_t *ctx, event_t *e)
             return tidset_get(&e->tset, 0);
 
         default:
-            log_debugf("Selector %d\n", e->selector);
+            logger_debugf("Selector %d\n", e->selector);
     }
     ASSERT(0);
     return NO_TASK;

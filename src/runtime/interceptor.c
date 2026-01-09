@@ -123,7 +123,7 @@ intercept_lookup_call(const char *func)
 void *
 intercept_warn_call(const char *func)
 {
-    log_warnf("warn call '%s'\n", func);
+    logger_warnf("warn call '%s'\n", func);
     return real_func(func, 0);
 }
 

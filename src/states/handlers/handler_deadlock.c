@@ -13,10 +13,10 @@ static deadlock_config_t _config = {
 };
 
 REGISTER_CONFIG(_config, {
-    log_infof("enabled             = %s\n", _config.enabled ? "on" : "off");
-    log_infof("lost_resource_check = %s\n",
+    logger_infof("enabled             = %s\n", _config.enabled ? "on" : "off");
+    logger_infof("lost_resource_check = %s\n",
               _config.lost_resource_check ? "on" : "off");
-    log_infof("extra_release_check = %s\n",
+    logger_infof("extra_release_check = %s\n",
               _config.extra_release_check ? "on" : "off");
 })
 

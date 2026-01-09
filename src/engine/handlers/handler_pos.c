@@ -195,16 +195,16 @@ STATIC void
 _pos_print(const marshable_t *m)
 {
     const tidmap_t *s = (const tidmap_t *)m;
-    log_infof("available events (tid, prio, addr, is_write) = [");
+    logger_infof("available events (tid, prio, addr, is_write) = [");
     const tiditem_t *cur = tidmap_iterate(s);
     bool first           = true;
     for (; cur; cur = tidmap_next(cur)) {
         if (!first)
-            log_printf(", ");
+            logger_printf(", ");
         first     = false;
         task_t *t = (task_t *)cur;
-        log_printf("(%lu, %lu, %lu, %s)", cur->key, t->priority, t->addr,
+        logger_printf("(%lu, %lu, %lu, %s)", cur->key, t->priority, t->addr,
                    t->is_write ? "true" : "false");
     }
-    log_println("]");
+    logger_println("]");
 }

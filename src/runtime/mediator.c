@@ -18,12 +18,12 @@ mediator_t *
 mediator_tls(metadata_t *md)
 {
     if (md == NULL) {
-        log_fatal("mediator_tls: missing metadata");
+        logger_fatalf("mediator_tls: missing metadata");
     }
 
     mediator_t *m = SELF_TLS(md, &mediator_key_);
     if (m == NULL) {
-        log_fatal("mediator_tls: allocation failure");
+        logger_fatalf("mediator_tls: allocation failure");
     }
 
     if (m->registration_status == MEDIATOR_REGISTRATION_NONE) {

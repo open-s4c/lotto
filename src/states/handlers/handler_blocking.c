@@ -27,7 +27,7 @@ REGISTER_PERSISTENT(_returned, {
 STATIC void
 _returned_print(const marshable_t *m)
 {
-    log_infof("returned tasks: ");
+    logger_infof("returned tasks: ");
     tidset_print(m);
 }
 

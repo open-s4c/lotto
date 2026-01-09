@@ -1,5 +1,3 @@
-/*
- */
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -12,7 +10,7 @@
 #include <lotto/sys/logger.h>
 #include <lotto/sys/stdio.h>
 
-static enum log_level _level = LOG_INFO;
+static enum logger_level _level = LOG_INFO;
 static FILE *_fp             = NULL;
 
 #define LOG_PRINTF                                                             \
@@ -27,7 +25,7 @@ static FILE *_fp             = NULL;
     } while (0)
 
 void
-logger_set_level(enum log_level l)
+logger_set_level(enum logger_level l)
 {
     _level = l;
 }
@@ -39,20 +37,20 @@ logger_fp(void)
 }
 
 void
-logger(enum log_level l, FILE *fp)
+logger(enum logger_level l, FILE *fp)
 {
     _level = l;
     _fp    = fp;
 }
 
 __attribute__((format(printf, 1, 2))) void
-log_printf(const char *fmt, ...)
+logger_printf(const char *fmt, ...)
 {
     LOG_PRINTF;
 }
 
 __attribute__((format(printf, 1, 2))) void
-log_fatalf(const char *fmt, ...)
+logger_fatalf(const char *fmt, ...)
 {
     LOG_PRINTF;
     fflush(_fp);
@@ -60,28 +58,28 @@ log_fatalf(const char *fmt, ...)
 }
 
 __attribute__((format(printf, 1, 2))) void
-log_errorf(const char *fmt, ...)
+logger_errorf(const char *fmt, ...)
 {
     LOG_PRINTF;
     fflush(_fp);
 }
 
 __attribute__((format(printf, 1, 2))) void
-log_warnf(const char *fmt, ...)
+logger_warnf(const char *fmt, ...)
 {
     if (_level >= LOG_WARN)
         LOG_PRINTF;
 }
 
 __attribute__((format(printf, 1, 2))) void
-log_infof(const char *fmt, ...)
+logger_infof(const char *fmt, ...)
 {
     if (_level >= LOG_INFO)
         LOG_PRINTF;
 }
 
 __attribute__((format(printf, 1, 2))) void
-log_debugf(const char *fmt, ...)
+logger_debugf(const char *fmt, ...)
 {
     if (_level >= LOG_DEBUG)
         LOG_PRINTF;

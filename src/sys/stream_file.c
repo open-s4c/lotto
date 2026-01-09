@@ -72,7 +72,7 @@ stream_file_in(stream_t *s, const char *fname)
 {
     int fd = sys_open(fname, O_RDONLY, 0);
     if (fd == -1)
-        log_fatalf("error: could not open file '%s'\n", fname);
+        logger_fatalf("error: could not open file '%s'\n", fname);
 
     stream_file_init(s, fd);
 }
@@ -83,7 +83,7 @@ stream_file_out(stream_t *s, const char *fname)
     int fd = sys_open(fname, O_CREAT | O_WRONLY | O_TRUNC,
                       S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
     if (fd == -1)
-        log_fatalf("error: could not open file '%s'\n", fname);
+        logger_fatalf("error: could not open file '%s'\n", fname);
 
     stream_file_init(s, fd);
 }

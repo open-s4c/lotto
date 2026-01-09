@@ -25,7 +25,7 @@ NORETURN void
 sys_assert_fail(const char *a, const char *file, unsigned int line,
                 const char *func)
 {
-    log_errorf("assert failed %s(): %s:%u: %s\n", func, file,
+    logger_errorf("assert failed %s(): %s:%u: %s\n", func, file,
                (unsigned int)line, a);
     fflush(stderr);
     sys_abort();

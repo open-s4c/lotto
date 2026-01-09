@@ -66,7 +66,6 @@ add_library(
     #
 )
 set_target_properties(lotto_runtime PROPERTIES OUTPUT_NAME lotto)
-target_compile_definitions(lotto_runtime PRIVATE DICE_LOG_H)
 
 # Pull in dice object files from the subtree build.
 target_sources(

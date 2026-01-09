@@ -20,9 +20,9 @@ static pos_config_t _config = {
 };
 
 REGISTER_CONFIG(_config, {
-    log_infof("wd_threshold = %lu\n", _config.wd_threshold);
-    log_infof("wd_divisor   = %lu\n", _config.wd_divisor);
-    log_infof("enabled      = %s\n", _config.enabled ? "on" : "off");
+    logger_infof("wd_threshold = %lu\n", _config.wd_threshold);
+    logger_infof("wd_divisor   = %lu\n", _config.wd_divisor);
+    logger_infof("enabled      = %s\n", _config.enabled ? "on" : "off");
 })
 
 pos_config_t *

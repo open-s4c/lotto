@@ -252,11 +252,11 @@ tidbag_print(const marshable_t *m)
 {
     ASSERT(m);
     const tidbag_t *tbag = (const tidbag_t *)m;
-    log_printf("[");
+    logger_printf("[");
     for (size_t i = 0; i < tbag->size; i++) {
         if (i != 0)
-            log_printf(", ");
-        log_printf("%lu", tbag->tasks[i]);
+            logger_printf(", ");
+        logger_printf("%lu", tbag->tasks[i]);
     }
-    log_printf("]\n");
+    logger_printf("]\n");
 }

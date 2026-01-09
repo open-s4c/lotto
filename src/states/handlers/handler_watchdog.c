@@ -7,8 +7,8 @@
 static watchdog_config_t _config;
 
 REGISTER_CONFIG(_config, {
-    log_infof("enabled = %s\n", _config.enabled ? "on" : "off");
-    log_infof("budget  = %lu\n", _config.budget);
+    logger_infof("enabled = %s\n", _config.enabled ? "on" : "off");
+    logger_infof("budget  = %lu\n", _config.budget);
 })
 
 watchdog_config_t *

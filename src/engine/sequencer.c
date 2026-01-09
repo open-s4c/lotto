@@ -33,7 +33,7 @@
 #include <vsync/spinlock/caslock.h>
 
 #define log(ctx, fmt, ...)                                                     \
-    log_debugf("[t:%lu, clk:%lu, pc:0x%lx] " fmt "\n", ctx->id, _seq.clk,      \
+    logger_debugf("[t:%lu, clk:%lu, pc:0x%lx] " fmt "\n", ctx->id, _seq.clk,      \
                ctx->pc & 0xfff, ##__VA_ARGS__)
 
 typedef struct {
@@ -246,7 +246,7 @@ void
 sequencer_fini(const context_t *ctx, reason_t reason)
 {
     recorder_fini(_seq.clk, ctx->id, reason);
-    log_debugf("[lotto] chpts: %lu, switches: %lu, clks: %lu\n",
+    logger_debugf("[lotto] chpts: %lu, switches: %lu, clks: %lu\n",
                _seq.chpt_count, _seq.switch_count, _seq.clk);
 }
 
@@ -351,14 +351,14 @@ _add_pending_unblocked(task_id id)
 void __attribute__((noinline))
 sequencer_clk_met()
 {
-    log_debugf("clk met\n");
+    logger_debugf("clk met\n");
     clk_bound = 0;
 }
 
 void __attribute__((noinline))
 sequencer_time_met()
 {
-    log_debugf("time met\n");
+    logger_debugf("time met\n");
     time_bound_ns = 0;
 }
 

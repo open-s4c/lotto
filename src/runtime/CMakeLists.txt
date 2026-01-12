@@ -9,6 +9,7 @@ add_library(
     ../runtime/switcher.c
     ../runtime/thread_id.c
     ../runtime/await_stubs.c
+    ../runtime/sighandler.c
     # engine files
     ../engine/engine.c
     ../engine/sequencer.c

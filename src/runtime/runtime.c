@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "interceptor.h"
+#include "sighandler.h"
 #include <dice/module.h>
 #include <lotto/base/context.h>
 #include <lotto/base/reason.h>
@@ -13,11 +13,6 @@ static nanosec_t _start;
 static trace_t *_recorder;
 static trace_t *_replayer;
 static FILE *_logger_fp;
-
-void
-sighandler_init(void)
-{
-}
 
 void LOTTO_CONSTRUCTOR
 lotto_runtime_init(void)
@@ -53,7 +48,7 @@ lotto_runtime_init(void)
 
 
     /* initialize subcomponents */
-    // sighandler_init();
+    sighandler_init();
     engine_init(_replayer, _recorder);
 }
 

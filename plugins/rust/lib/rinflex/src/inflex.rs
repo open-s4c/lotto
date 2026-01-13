@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use lotto::base::{Clock, Flags, Trace};
+use lotto::base::{Clock, Flags, Prng, Trace};
 use lotto::base::{EnvScope, Value};
 use lotto::cli::execute;
 use lotto::cli::flags::*;
@@ -290,6 +290,11 @@ pub fn checked_execute(trace: &Path, flags: &Flags, config: bool) -> Result<i32,
     unsafe {
         raw::exec_info_replay_envvars();
     }
+    // Make sure `execute` uses the seed from `flags`, as it might
+    // append another config record which uses the current engine's
+    // seed.
+    let seed = flags.get_value(&flag_seed()).as_u64();
+    Prng::current_mut().seed = seed as u32;
     let exitcode = {
         let exec_start_instant = std::time::Instant::now();
         let exitcode = execute(args, flags, config);

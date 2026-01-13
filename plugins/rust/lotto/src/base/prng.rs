@@ -9,7 +9,7 @@ impl Prng {
     }
 
     /// Retrieve the current global PRNG instance.
-    pub fn current_mut() -> &'static Prng {
+    pub fn current_mut() -> &'static mut Prng {
         unsafe { Prng::wrap_mut(raw::prng()) }
     }
 }

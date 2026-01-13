@@ -4,6 +4,11 @@
 // RUN: (! %lotto %stress -s random --stable-address-method MAP --handler-address enable --handler-cas enable --handler-stacktrace enable --handler-event enable -- %b)
 // RUN: %lotto %rinflex -r 30 2>&1 | iconv -t utf-8 -f utf-8 -c | filecheck %s
 
+// CHECK: ------ . ------ . ------ . ------ . ------
+// CHECK: event - tid: {{[0-9]+}}, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: BEFORE_AWRITE
+// CHECK-NEXT: [setter]
+// CHECK: event - tid: {{[0-9]+}}, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: BEFORE_AREAD
+// CHECK-NEXT: [checker]
 
 // clang-format on
 
@@ -14,22 +19,20 @@
 
 atomic_int flag = 0;
 
+/* The number of virtual OCs is expected to be (N_SETTER - 1). */
+#define N_CHECKER 1
+#define N_SETTER  2
+#define N         (N_CHECKER + N_SETTER)
+
 void *
-f1(void *arg)
+setter(void *arg)
 {
     flag = 1;
     return NULL;
 }
 
 void *
-f2(void *arg)
-{
-    flag = 1;
-    return NULL;
-}
-
-void *
-f3(void *arg)
+checker(void *arg)
 {
     assert(flag == 0);
     return NULL;
@@ -38,14 +41,13 @@ f3(void *arg)
 int
 main()
 {
-    pthread_t t1, t2, t3;
-
-    pthread_create(&t1, NULL, f1, NULL);
-    pthread_create(&t2, NULL, f2, NULL);
-    pthread_create(&t3, NULL, f3, NULL);
-    pthread_join(t1, NULL);
-    pthread_join(t2, NULL);
-    pthread_join(t3, NULL);
+    pthread_t t[N];
+    for (int i = 0; i < N; ++i) {
+        pthread_create(&t[i], NULL, i == 0 ? checker : setter, NULL);
+    }
+    for (int i = 0; i < N; ++i) {
+        pthread_join(t[i], NULL);
+    }
     return 0;
 }
 

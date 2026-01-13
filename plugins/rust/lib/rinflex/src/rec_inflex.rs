@@ -317,11 +317,16 @@ impl RecInflex {
         try_hard: bool,
     ) -> Result<(), Error> {
         info!(
-            "get_trace: attaching constraints, #constraints = {}",
+            "get_trace: attaching constraints, #constraints={}",
             self.constraints.len()
         );
         let input = self.attach_constraints_to_trace(input, replay_goal, &self.constraints)?;
-        info!("get_trace: input={}", input.display());
+        info!(
+            "get_trace: input={}, output={}, replay_goal={}",
+            input.display(),
+            output.display(),
+            replay_goal
+        );
         let _replay = EnvScope::new("LOTTO_REPLAY", &input);
         let _record = EnvScope::new("LOTTO_RECORD", &output);
         let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");

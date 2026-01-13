@@ -2,8 +2,8 @@
  */
 #include <string.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/marshable.h>
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/statemgr.h>
@@ -53,7 +53,7 @@ _header_unmarshal(const void *buf)
     header_t h = {0};
     sys_memcpy(&h, buf, sizeof(header_t));
     if (h.canary != CANARY)
-        log_fatalf("unmarshal error: dead canary\n");
+        logger_fatalf("unmarshal error: dead canary\n");
 
     return h;
 }
@@ -105,7 +105,7 @@ _statemgr_unmarshal(statemgr_t *mgr, const void *buf)
         ASSERT(h.index == i);
 
         if ((m = mgr->entries[i].m) == NULL) {
-            log_warnf(
+            logger_warnf(
                 "unmarshal error: index %zu not registered, "
                 "skipping.\n",
                 h.index);
@@ -235,6 +235,6 @@ statemgr_record_unmarshal(const record_t *r)
             statemgr_unmarshal(r->data, STATE_TYPE_CONFIG, true);
             break;
         default:
-            log_fatalf("unexpected %s record\n", kind_str(r->kind));
+            logger_fatalf("unexpected %s record\n", kind_str(r->kind));
     }
 }

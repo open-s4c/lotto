@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/callrec.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
@@ -29,7 +29,7 @@ callrec_create(const char *fn)
         fp = sys_fopen(fn, "w+");
 
     if (fp == NULL)
-        log_fatalf("could not open file '%s'", fn);
+        logger_fatalf("could not open file '%s'", fn);
 
     callrec_t r = {
         .fp        = fp,

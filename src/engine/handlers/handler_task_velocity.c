@@ -7,8 +7,8 @@
  * - If the event is mutable, the handler remove the given task from a tidset
  * according to the probability
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
 #include <lotto/base/tidmap.h>
 #include <lotto/brokers/statemgr.h>
@@ -48,17 +48,17 @@ STATIC void
 _task_velocity_print(const marshable_t *m)
 {
     const state_t *s = (const state_t *)m;
-    log_printf("prob   = [");
+    logger_printf("prob   = [");
     const tiditem_t *cur = tidmap_iterate(&s->map);
     bool first           = true;
     for (; cur; cur = tidmap_next(cur)) {
         if (!first)
-            log_printf(", ");
+            logger_printf(", ");
         first     = false;
         task_t *t = (task_t *)cur;
-        log_printf("%lu:%lu", cur->key, t->probability);
+        logger_printf("%lu:%lu", cur->key, t->probability);
     }
-    log_println("]");
+    logger_println("]");
 }
 
 static bool

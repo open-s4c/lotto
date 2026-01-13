@@ -27,7 +27,7 @@ plan_done(plan_t *p)
 void
 plan_print(plan_t p)
 {
-    log_debugln("type = 0x%x next = %lu", p.actions, p.next);
+    logger_debugln("type = 0x%x next = %lu", p.actions, p.next);
 }
 
 bool

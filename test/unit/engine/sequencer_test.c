@@ -115,7 +115,7 @@ expect_unmarshaled()
 int
 clock_gettime(clockid_t clk_id, struct timespec *tp)
 {
-    log_printf("read clock: %.5f\n", in_sec(mock.now));
+    logger_printf("read clock: %.5f\n", in_sec(mock.now));
     tp->tv_sec  = (long)(mock.now / NOW_SECOND);
     tp->tv_nsec = (long)(mock.now % NOW_SECOND);
 
@@ -215,7 +215,7 @@ static void
 test_replay()
 {
     PS_PUBLISH_INTERFACE(TOPIC_ENGINE_START, nil);
-    logger(LOG_DEBUG, stderr);
+    logger(LOGGER_DEBUG, stderr);
     printf("Test: %s\n", __FUNCTION__);
     task_id tid          = 1;
     task_id other        = 2;

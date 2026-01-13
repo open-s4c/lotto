@@ -3,8 +3,8 @@
 #include <stddef.h>
 #include <string.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/tidmap.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
@@ -185,7 +185,7 @@ ot_clear(ot_set *oset)
 void
 race_print(race_t race)
 {
-    log_infof(
+    logger_infof(
         "RACE: T%lx and T%lx at addr=0x%lx between (instr = {0x%lx, "
         "0x%lx})\n",
         race.loc1.id, race.loc2.id, race.addr, race.loc1.pc, race.loc2.pc);
@@ -290,9 +290,9 @@ _race_handle(const context_t *ctx, event_t *e)
     }
 
     if (race_config()->abort_on_race) {
-        log_errorf("Data race detected at addr: %p (strict mode)\n",
+        logger_errorf("Data race detected at addr: %p (strict mode)\n",
                    (void *)race.addr);
-        log_fatalf("(tid: %lx instr: %p) and (tid: %lx instr: %p)\n",
+        logger_fatalf("(tid: %lx instr: %p) and (tid: %lx instr: %p)\n",
                    race.loc1.id, (void *)race.loc1.pc, race.loc2.id,
                    (void *)race.loc2.pc);
     } else

@@ -55,7 +55,7 @@ _write_next_file(stream_chunked_file_t *stream)
     stream->read_only  = false;
     ASSERT(stream->current_fp);
     if (stream->current_fp == NULL)
-        log_fatalf("could not open %s\n", filename);
+        logger_fatalf("could not open %s\n", filename);
     stream->total_files++;
 }
 
@@ -98,7 +98,7 @@ _read_next_file(stream_chunked_file_t *stream)
     stream->current_fp = sys_fopen(filename, "r");
     stream->read_only  = true;
     if (stream->current_fp == NULL)
-        log_fatalf("could not open %s\n", filename);
+        logger_fatalf("could not open %s\n", filename);
 }
 
 static size_t
@@ -172,7 +172,7 @@ _set_chunk(stream_t *stream, uint64_t chunk)
     stream_file->current_fp = sys_fopen(filename, "r");
     stream_file->read_only  = true;
     if (stream_file->current_fp == NULL)
-        log_fatalf("could not open %s\n", filename);
+        logger_fatalf("could not open %s\n", filename);
     return true;
 }
 

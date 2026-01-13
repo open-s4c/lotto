@@ -1,7 +1,7 @@
 /*
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/tidbag.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
@@ -27,14 +27,14 @@ _region_filter_handle(const context_t *ctx, event_t *e)
     switch (ctx->cat) {
         case CAT_REGION_IN:
             if (!tidbag_has(&_in_region, tid)) {
-                log_infof("enter region %lx\n", tid);
+                logger_infof("enter region %lx\n", tid);
             }
             tidbag_insert(&_in_region, tid);
             break;
         case CAT_REGION_OUT:
             tidbag_remove(&_in_region, tid);
             if (!tidbag_has(&_in_region, tid)) {
-                log_infof("leave region %lx\n", tid);
+                logger_infof("leave region %lx\n", tid);
             }
             break;
         default:

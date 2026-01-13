@@ -36,12 +36,12 @@ uint8_t
 rsp_chr_to_hex(uint8_t chr)
 {
     if (chr >= '0' && chr <= '9') {
-        // log_infof( "rsp_chr_to_hex 1 %c to %x\n", chr, chr - '0');
+        // logger_infof( "rsp_chr_to_hex 1 %c to %x\n", chr, chr - '0');
         return chr - '0';
     }
 
     if (chr >= 'a' && chr <= 'f') {
-        // log_infof( "rsp_chr_to_hex 2 %c to %x\n", chr, chr + 10 - 'a');
+        // logger_infof( "rsp_chr_to_hex 2 %c to %x\n", chr, chr + 10 - 'a');
         return chr + 10 - 'a';
     }
 
@@ -87,7 +87,7 @@ rsp_hex_to_str(char *str, uint64_t hex, uint64_t num_chars_to_use)
 
     // TODO: remove!
     //  str[chr_length] = '\0';
-    //  log_infof( "Coverted 0x%lx to %s\n", hex, str);
+    //  logger_infof( "Coverted 0x%lx to %s\n", hex, str);
 
     ASSERT(hex == 0);
 
@@ -108,7 +108,7 @@ rsp_str_to_hex(char *str, uint64_t str_len)
         hex |= rsp_chr_to_hex(chr);
     }
 
-    // log_infof( "Coverted %s to 0x%lx\n", str, hex);
+    // logger_infof( "Coverted %s to 0x%lx\n", str, hex);
 
     return hex;
 }
@@ -260,7 +260,7 @@ rsp_construct_pkt(uint8_t *pkt, uint8_t *msg, uint64_t msg_len)
     uint8_t chksum1 = CAST_TYPE(uint8_t, rsp_hex_to_chr(chk_sum >> 4));
     uint8_t chksum2 = CAST_TYPE(uint8_t, rsp_hex_to_chr(chk_sum & 0xF));
 
-    // log_infof( "Calculated checksum: %c%c\n", chksum1, chksum2);
+    // logger_infof( "Calculated checksum: %c%c\n", chksum1, chksum2);
 
     pkt[pkt_idx] = chksum1;
     pkt_idx++;

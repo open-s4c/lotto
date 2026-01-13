@@ -3,7 +3,6 @@
 #ifndef LOTTO_NOW_H
 #define LOTTO_NOW_H
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -26,7 +25,7 @@ now(void)
     struct timespec ts;
 
     if (sys_clock_gettime(CLOCK_MONOTONIC, &ts)) {
-        log_infof("ERROR: could not get clock time\n");
+        logger_infof("ERROR: could not get clock time\n");
         exit(-1);
     }
 

@@ -24,7 +24,7 @@ qlotto_add_event(map_t *emap, uint64_t e_pc, category_t cat, char *func_name)
     event            = (eventi_t *)map_register(emap, e_pc);
     event->cat       = cat;
     event->func_name = func_name;
-    // log_infof( "Event added 0x%lx\n", b_pc);
+    // logger_infof( "Event added 0x%lx\n", b_pc);
 }
 
 void

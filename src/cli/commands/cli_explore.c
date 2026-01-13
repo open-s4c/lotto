@@ -29,7 +29,7 @@ DECLARE_FLAG_TEMPORARY_DIRECTORY;
 DECLARE_FLAG_NO_PRELOAD;
 DECLARE_FLAG_LOGGER_BLOCK;
 DECLARE_FLAG_CREP;
-DECLARE_FLAG_LOG_FILE;
+DECLARE_FLAG_LOGGER_FILE;
 
 static uint64_t round_index;
 static const category_t cats[] = {CAT_TASK_CREATE, CAT_NONE};
@@ -116,7 +116,7 @@ explore(args_t *args, flags_t *flags)
             flags_get_sval(flags, flag_memmgr_user()));
 
     envvar_t vars[] = {
-        {"LOTTO_LOG_FILE", .sval = flags_get_sval(flags, FLAG_LOG_FILE)},
+        {"LOTTO_LOGGER_FILE", .sval = flags_get_sval(flags, FLAG_LOGGER_FILE)},
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, FLAG_OUTPUT)},
         {"LOTTO_REPLAY", .sval = "temp.trace"},
         {"LOTTO_LOGGER_BLOCK",
@@ -165,7 +165,7 @@ init()
                     FLAG_EXPLORE_EXPECT_FAILURE,
                     FLAG_EXPLORE_MIN,
                     FLAG_CREP,
-                    FLAG_LOG_FILE,
+                    FLAG_LOGGER_FILE,
                     0};
     subcmd_register(explore, "explore", "", "Exhaustively explore a trace",
                     true, sel, _default_flags, SUBCMD_GROUP_TRACE);

@@ -134,7 +134,7 @@ vcpu_wfe_capture(unsigned int cpu_index, void *udata)
     // __perf_transition_qemu(tid, STATE_Q_GUEST, STATE_Q_PLUGIN, false);
     // context_t ctx       = *(context_t *)udata;
     // CPUARMState *armcpu = qlotto_get_armcpu(cpu_index);
-    // log_debugf("[%lu] WFI executed!\n", get_task_id());
+    // logger_debugf("[%lu] WFI executed!\n", get_task_id());
     // __perf_transition_qemu(tid, STATE_Q_PLUGIN, STATE_Q_GUEST, false);
 }
 
@@ -145,7 +145,7 @@ vcpu_wfi_capture(unsigned int cpu_index, void *udata)
     // __perf_transition_qemu(tid, STATE_Q_GUEST, STATE_Q_PLUGIN, false);
     // context_t ctx       = *(context_t *)udata;
     // CPUARMState *armcpu = qlotto_get_armcpu(cpu_index);
-    // log_debugf("[%lu] WFI executed!\n", get_task_id());
+    // logger_debugf("[%lu] WFI executed!\n", get_task_id());
     // __perf_transition_qemu(tid, STATE_Q_PLUGIN, STATE_Q_GUEST, false);
 }
 
@@ -162,7 +162,7 @@ vcpu_trace_start_capture(unsigned int cpu_index, void *udata)
     // into_qemu(cpu_index);
 
     // if( (trace_id & 0xFFFFF) == 0x0c008) {
-    //     logger_set_level(LOG_DEBUG);
+    //     logger_set_level(LOGGER_DEBUG);
     // }
 
     // clean up uniq executed tbs
@@ -210,7 +210,7 @@ vcpu_trace_start_capture(unsigned int cpu_index, void *udata)
                         (gpointer)(uintptr_t)lotto_entry_count);
 
     for (uint64_t tid = 0; tid < MAX_TASKS; tid++) {
-        // log_infof( "[%lu] Inserting read count %lu\n", tid,
+        // logger_infof( "[%lu] Inserting read count %lu\n", tid,
         // frontend_perf_state.read_count[tid]);
         g_hash_table_insert(
             frontend_perf_state.read_trace[tid], (gpointer)(uintptr_t)trace_id,
@@ -245,9 +245,9 @@ vcpu_trace_start_capture(unsigned int cpu_index, void *udata)
 
     if (0) {
         if (trace_id < UDF_TRACE_END_) {
-            log_infof("Trace [%s] start\n", udf_trace_str(trace_id));
+            logger_infof("Trace [%s] start\n", udf_trace_str(trace_id));
         } else {
-            log_infof("Trace [0x%lx] start\n", trace_id & 0xFFFFF);
+            logger_infof("Trace [0x%lx] start\n", trace_id & 0xFFFFF);
         }
     }
 #endif
@@ -355,7 +355,7 @@ vcpu_trace_end_capture(unsigned int cpu_index, void *udata)
         }
     }
 
-    // log_infof( "Adding hist %u value %u : %lu\n", h,
+    // logger_infof( "Adding hist %u value %u : %lu\n", h,
     // frontend_perf_state.hist_count[h], uniq_num);
 
     g_hash_table_insert(frontend_perf_state.hist_trace,
@@ -367,22 +367,22 @@ vcpu_trace_end_capture(unsigned int cpu_index, void *udata)
 
     if (0) {
         if (trace_id < UDF_TRACE_END_) {
-            log_infof("Trace [%s] end\n", udf_trace_str(trace_id));
+            logger_infof("Trace [%s] end\n", udf_trace_str(trace_id));
         } else {
-            log_infof("Trace [0x%lx] end\n", trace_id & 0xFFFFF);
+            logger_infof("Trace [0x%lx] end\n", trace_id & 0xFFFFF);
         }
-        log_infof("  Uniq TB executed:      %11lu\n", uniq_num);
-        log_infof("  WFE executed:          %11lu (%lu)\n", wfe_diff,
+        logger_infof("  Uniq TB executed:      %11lu\n", uniq_num);
+        logger_infof("  WFE executed:          %11lu (%lu)\n", wfe_diff,
                   wfe_count);
-        log_infof("  WFI executed:          %11lu (%lu)\n", wfi_diff,
+        logger_infof("  WFI executed:          %11lu (%lu)\n", wfi_diff,
                   wfi_count);
-        log_infof("  Instructions executed: %11lu\n", icount_diff);
-        log_infof("  Wall clock progress:   %11lu (ns)\n", wclock_diff);
-        log_infof("  Watchdog triggers:     %11lu (%lu)\n", watchdog_diff,
+        logger_infof("  Instructions executed: %11lu\n", icount_diff);
+        logger_infof("  Wall clock progress:   %11lu (ns)\n", wclock_diff);
+        logger_infof("  Watchdog triggers:     %11lu (%lu)\n", watchdog_diff,
                   watchdog_count);
-        log_infof("  vCPU Kick count:       %11lu (%lu)\n", kick_diff,
+        logger_infof("  vCPU Kick count:       %11lu (%lu)\n", kick_diff,
                   kick_count);
-        log_infof("  lotto entry count:     %11lu (%lu)\n", lotto_entry_diff,
+        logger_infof("  lotto entry count:     %11lu (%lu)\n", lotto_entry_diff,
                   lotto_entry_count);
     }
 
@@ -427,7 +427,7 @@ vcpu_trace_end_capture(unsigned int cpu_index, void *udata)
         sys_fprintf(frontend_perf_state.perf_file, "\n");
     }
 
-    logger_set_level(LOG_ERROR);
+    logger_set_level(LOGGER_ERROR);
 #endif
     __perf_transition_qemu(tid, STATE_Q_PLUGIN, STATE_Q_GUEST, false);
 }
@@ -543,17 +543,17 @@ frontend_perf_exit(void)
         frontend_perf_state.wtime_shutdown - frontend_perf_state.wtime_startup;
 
     uint64_t iic = icounter_get(get_instruction_counter());
-    log_infof("\n");
-    log_infof("Inst / sec: %.3f (total time)\n",
+    logger_infof("\n");
+    logger_infof("Inst / sec: %.3f (total time)\n",
               (double)iic / ((double)time_diff / (double)NOW_SECOND));
-    log_infof("Inst / sec: %.3f (guest time)\n",
+    logger_infof("Inst / sec: %.3f (guest time)\n",
               (double)iic / ((double)global_time_guest / (double)NOW_SECOND));
-    log_infof("### global time usage: ###\n");
-    log_infof("   Time spent in  QEmu: %6.3f%%\n", global_percent_qemu);
-    log_infof("   Time spent in Lotto: %6.3f%%\n", global_percent_lotto);
-    log_infof("   Time spent in guest: %6.3f%%\n", global_percent_guest);
-    log_infof("\n");
-    log_infof("### per-thread [task id] time usage: ###\n");
+    logger_infof("### global time usage: ###\n");
+    logger_infof("   Time spent in  QEmu: %6.3f%%\n", global_percent_qemu);
+    logger_infof("   Time spent in Lotto: %6.3f%%\n", global_percent_lotto);
+    logger_infof("   Time spent in guest: %6.3f%%\n", global_percent_guest);
+    logger_infof("\n");
+    logger_infof("### per-thread [task id] time usage: ###\n");
     for (uint64_t i = 1; i < get_task_count(); i++) {
         nanosec_t local_time_total = 0;
         nanosec_t local_time_qemu  = frontend_perf_state.time_qemu_tid[i];
@@ -570,24 +570,24 @@ frontend_perf_exit(void)
         double local_percent_lotto =
             100.0 * (double)local_time_lotto / (double)local_time_total;
 
-        log_infof("   [%lu] Time spent in     QEmu: %6.3f%%\n", i,
+        logger_infof("   [%lu] Time spent in     QEmu: %6.3f%%\n", i,
                   local_percent_qemu);
-        log_infof("   [%lu] Time spent in    Lotto: %6.3f%%\n", i,
+        logger_infof("   [%lu] Time spent in    Lotto: %6.3f%%\n", i,
                   local_percent_lotto);
-        log_infof("   [%lu] Time spent in    guest: %6.3f%%\n", i,
+        logger_infof("   [%lu] Time spent in    guest: %6.3f%%\n", i,
                   local_percent_guest);
-        log_infof("\n");
+        logger_infof("\n");
     }
     __perf_print_results();
 
-    // log_infof( "Histogram of uniq tb per transition
+    // logger_infof( "Histogram of uniq tb per transition
     // guest->lotto\n");
     // g_hash_table_foreach(frontend_perf_state.hist[HIST_TRANS], print_hash,
     // NULL);
 
     for (uint64_t tid = 1; tid < get_task_count(); tid++) {
         uint64_t num_entries = frontend_perf_state.hist_count[HIST_TRANS][tid];
-        log_infof("[%lu] %lu entries\n", tid, num_entries);
+        logger_infof("[%lu] %lu entries\n", tid, num_entries);
         char fn[1024];
         sys_snprintf(fn, 1024, "uniq_tb_hist_%lu.log", tid);
         FILE *f = sys_fopen(fn, "w");
@@ -597,9 +597,9 @@ frontend_perf_exit(void)
                 frontend_perf_state.hist[HIST_TRANS][tid],
                 (gpointer)(uintptr_t)num);
             sys_fprintf(f, "%lu,", val);
-            // log_infof( "[%lu] %7lu: %7lu\n", tid, num, val);
+            // logger_infof( "[%lu] %7lu: %7lu\n", tid, num, val);
         }
-        log_infof("\n");
+        logger_infof("\n");
         sys_fclose(f);
     }
 

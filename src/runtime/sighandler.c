@@ -157,7 +157,7 @@ __assert_fail(const char *assertion, const char *file, line_int line,
         REAL(__assert_fail, assertion, file, line, function);
 
     long unsigned int tid = get_task_id();
-    log_println("[%lu] assert failed %s(): %s:%u: %s\n", tid, function, file,
+    logger_println("[%lu] assert failed %s(): %s:%u: %s\n", tid, function, file,
                 (unsigned int)line, assertion);
 
     _backtrace_print();

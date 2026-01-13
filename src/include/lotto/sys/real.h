@@ -47,13 +47,13 @@ real_func_impl(const char *fname, const char *lib, bool try)
         if (func == NULL) {
             if (try)
                 return NULL;
-            log_fatalf("could not find: %s",
+            logger_fatalf("could not find: %s",
                        dlerror()); // TODO: avoid infinite loop by not using
                                    // sys_ functions
         }
 
         if (0 == dladdr(func, &info)) {
-            log_fatalf("could not get DL_info struct for %s :%s", fname,
+            logger_fatalf("could not get DL_info struct for %s :%s", fname,
                        dlerror());
         }
 
@@ -64,12 +64,12 @@ real_func_impl(const char *fname, const char *lib, bool try)
     if (handle == NULL) {
         if (try)
             return NULL;
-        log_fatalf("dlopen failed:%s", dlerror());
+        logger_fatalf("dlopen failed:%s", dlerror());
     }
 
     void *func = dlsym(handle, fname);
     if (func == NULL && !try) {
-        log_fatalf("could not find:%s", dlerror());
+        logger_fatalf("could not find:%s", dlerror());
     }
 
     return func;

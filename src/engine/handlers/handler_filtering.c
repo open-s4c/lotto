@@ -2,8 +2,8 @@
  */
 #include <string.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/brokers/catmgr.h>
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/statemgr.h>
@@ -72,7 +72,7 @@ _load_configfile(const char *fname)
         return;
     FILE *fp = fopen(fname, "r");
     if (fp == NULL) {
-        log_debugln("Failed to opened filtering configuration: %s", fname);
+        logger_debugln("Failed to opened filtering configuration: %s", fname);
         return;
     }
     sys_fseek(fp, 0, SEEK_END);
@@ -124,7 +124,7 @@ _parse_config()
         return;
 
     // if (!sys_strncmp(config_data + i, "type=", sys_strlen("type=")))
-    //     log_info[l].type = atoll(config_data + i + 5);
+    //     logger_info[l].type = atoll(config_data + i + 5);
 
     config_data = deblank(config_data, config_data_length);
 
@@ -150,7 +150,7 @@ _parse_config()
 #undef GEN_CAT
 
 #define GEN_CAT(cat)                                                           \
-    log_debugln("%s = %f", category_str(CAT_##cat), _drop[CAT_##cat]);
+    logger_debugln("%s = %f", category_str(CAT_##cat), _drop[CAT_##cat]);
 void
 _print_config(){FOR_EACH_CATEGORY}
 #undef GEN_CAT

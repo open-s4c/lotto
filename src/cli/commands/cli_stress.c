@@ -63,7 +63,7 @@ trust_cleanup(flags_t *flags)
 int
 stress(args_t *args, flags_t *flags)
 {
-    setenv("LOTTO_LOG_FILE", flags_get_sval(flags, FLAG_LOG_FILE), true);
+    setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, FLAG_LOGGER_FILE), true);
 
     preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
             flags_is_on(flags, FLAG_VERBOSE),
@@ -137,7 +137,7 @@ init()
                     FLAG_LOGGER_BLOCK,
                     FLAG_BEFORE_RUN,
                     FLAG_AFTER_RUN,
-                    FLAG_LOG_FILE,
+                    FLAG_LOGGER_FILE,
                     FLAG_CREP,
                     FLAG_FLOTTO,
                     0};

@@ -22,7 +22,7 @@ qlotto_symbol_add(uint64_t addr, uint64_t size, char *func_name)
     elf_symbol_t *cur = symbols_head;
     while (cur->next != NULL) {
         if (cur->next->addr == addr) { // symbol entry exists already
-            // log_infof( "Symbol already exists 0x%lx\n", addr);
+            // logger_infof( "Symbol already exists 0x%lx\n", addr);
             return;
         }
         cur = cur->next;
@@ -36,7 +36,7 @@ qlotto_symbol_add(uint64_t addr, uint64_t size, char *func_name)
     cur->func_name = (char *)rl_malloc(rl_strlen(func_name) + 1);
     rl_memcpy(cur->func_name, func_name, rl_strlen(func_name));
     cur->func_name[rl_strlen(func_name)] = '\0';
-    // log_infof( "Symbol added 0x%lx %s\n", addr, func_name);
+    // logger_infof( "Symbol added 0x%lx %s\n", addr, func_name);
 }
 
 void
@@ -66,7 +66,7 @@ qlotto_symbol_del(uint64_t addr)
         rl_free(cur->func_name);
         cur->func_name = NULL;
         rl_free(cur);
-        // log_infof( "BP deleted 0x%lx\n", b_pc);
+        // logger_infof( "BP deleted 0x%lx\n", b_pc);
     }
 }
 
@@ -98,7 +98,7 @@ qlotto_symbol_get_by_addr(uint64_t addr)
 void
 gdb_get_symbols(const char *filename)
 {
-    log_infof("Got string: %s\n", filename);
+    logger_infof("Got string: %s\n", filename);
     int fd  = 0;
     Elf *e  = NULL;
     char *k = NULL;
@@ -111,15 +111,15 @@ gdb_get_symbols(const char *filename)
     uint64_t idx = 0;
 
     if (elf_version(EV_CURRENT) == EV_NONE) {
-        log_errorf(" ELF library initialization failed : %s ", elf_errmsg(-1));
+        logger_errorf(" ELF library initialization failed : %s ", elf_errmsg(-1));
     }
 
     if ((fd = rl_open(filename, O_RDONLY, 0)) < 0) {
-        log_errorf("open \"%s\" failed\n", filename);
+        logger_errorf("open \"%s\" failed\n", filename);
     }
 
     if ((e = elf_begin(fd, ELF_C_READ, NULL)) == NULL) {
-        log_errorf(" elf_begin() failed : %s.\n", elf_errmsg(-1));
+        logger_errorf(" elf_begin() failed : %s.\n", elf_errmsg(-1));
     }
 
     ek = elf_kind(e);
@@ -138,8 +138,8 @@ gdb_get_symbols(const char *filename)
     }
 
     if (ek != ELF_K_ELF) {
-        log_errorf("%s of type %s\n", filename, k);
-        log_errorf("Only specify ELF files for symbol lookup.\n");
+        logger_errorf("%s of type %s\n", filename, k);
+        logger_errorf("Only specify ELF files for symbol lookup.\n");
     }
 
     // got elf file, look for symbol table
@@ -181,7 +181,7 @@ gdb_get_symbols(const char *filename)
     elf_end(e);
     rl_close(fd);
 
-    log_infof("Done with %s\n", filename);
+    logger_infof("Done with %s\n", filename);
 }
 
 void

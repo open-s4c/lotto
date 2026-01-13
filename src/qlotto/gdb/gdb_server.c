@@ -48,7 +48,7 @@ gdb_server_start(void)
     vatomic32_init(&server_thread_created, INIT);
 
     if (pthread_create(&thid_gdb_server, 0, gdb_server_thread, NULL) != 0) {
-        log_fatalf("pthread_create() error on gdb_server_thread\n");
+        logger_fatalf("pthread_create() error on gdb_server_thread\n");
         exit(1);
     }
     while (vatomic32_read(&server_thread_created) == 0) {

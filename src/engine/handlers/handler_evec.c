@@ -1,8 +1,8 @@
 /*
  */
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/map.h>
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/pubsub_interface.h>
@@ -84,7 +84,7 @@ _evec_deinit(struct evec *evec)
 static void
 _posthandle_prepare(task_id id, uint64_t eid)
 {
-    log_debugf("[%lu] evec prepare 0x%lx\n", id, eid);
+    logger_debugf("[%lu] evec prepare 0x%lx\n", id, eid);
     ASSERT(!tidset_has(&_state.waiters, id));
 
     struct evec *evec = _evec_init(eid);
@@ -94,7 +94,7 @@ _posthandle_prepare(task_id id, uint64_t eid)
 static void
 _posthandle_cancel(task_id id, uint64_t eid)
 {
-    log_debugf("[%lu] evec cancel 0x%lx\n", id, eid);
+    logger_debugf("[%lu] evec cancel 0x%lx\n", id, eid);
 
     struct evec *evec = _evec_find(eid);
     if (evec == NULL)
@@ -112,7 +112,7 @@ _posthandle_cancel(task_id id, uint64_t eid)
 static bool
 _handle_wait(task_id id, uint64_t eid)
 {
-    log_debugf("[%lu] evec wait 0x%lx\n", id, eid);
+    logger_debugf("[%lu] evec wait 0x%lx\n", id, eid);
 
     struct evec *evec = _evec_find(eid);
     if (evec == NULL)
@@ -132,7 +132,7 @@ _handle_timed_wait(task_id id, uint64_t eid,
                    const struct timespec *restrict abstime,
                    enum lotto_timed_wait_status *ret)
 {
-    log_debugf("[%lu] evec timed wait 0x%lx\n", id, eid);
+    logger_debugf("[%lu] evec timed wait 0x%lx\n", id, eid);
 
     struct evec *evec = _evec_find(eid);
     if (evec == NULL)
@@ -164,7 +164,7 @@ _handle_timed_wait(task_id id, uint64_t eid,
 static void
 _posthandle_wake(task_id id, uint64_t eid, uint32_t cnt)
 {
-    log_debugf("[%lu] evec wake %u waiters 0x%lx \n", id, cnt, eid);
+    logger_debugf("[%lu] evec wake %u waiters 0x%lx \n", id, cnt, eid);
 
     struct evec *evec = _evec_find(eid);
     if (evec == NULL)
@@ -193,7 +193,7 @@ _posthandle_wake(task_id id, uint64_t eid, uint32_t cnt)
 static void
 _posthandle_move(task_id id, uint64_t src, uint64_t dst)
 {
-    log_debugf("[%lu] evec move waiters from 0x%lx to 0x%lx \n", id, src, dst);
+    logger_debugf("[%lu] evec move waiters from 0x%lx to 0x%lx \n", id, src, dst);
 
     ASSERT(!tidset_has(&_state.waiters, id));
 

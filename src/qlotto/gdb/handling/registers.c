@@ -63,7 +63,7 @@ gdb_srv_send_registers(int fd)
     msg_len                = msg_idx;
     msg_registers[msg_len] = '\0';
 
-    // log_infof("sending register values:\n%s\n", msg_registers);
+    // logger_infof("sending register values:\n%s\n", msg_registers);
 
     gdb_send_ack(fd);
     gdb_send_msg(fd, (uint8_t *)msg_registers, msg_len);
@@ -93,7 +93,7 @@ gdb_srv_handle_g(int fd, uint8_t *msg, uint64_t msg_len)
         return 0;
     }
 
-    log_infof("Cannot handle g message:\n%s\n", msg);
+    logger_infof("Cannot handle g message:\n%s\n", msg);
     ASSERT(0 && "Unsupported g message");
 
     return 0;
@@ -144,7 +144,7 @@ gdb_srv_handle_p(int fd, uint8_t *msg, uint64_t msg_len)
         gdb_send_ack(fd);
         gdb_send_msg(fd, msg_answer, msg_answer_len);
     } else {
-        log_infof("Unknown register %lu\n", reg_num);
+        logger_infof("Unknown register %lu\n", reg_num);
         ASSERT(0 && "Unknown register number.");
     }
 

@@ -8,7 +8,7 @@
  *
  * Use assertions to check assumptions about program. Assertions are only
  * checked if `ASSERT_DISABLE` is not set. To check for error conditions, use if
- * statement and `log_fatalf`.
+ * statement and `logger_fatalf`.
  */
 #include <lotto/sys/abort.h>
 #include <lotto/util/macros.h>

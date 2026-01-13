@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/memory.h>
@@ -63,7 +63,7 @@ _bucketize(size_t size)
     for (; i < NSTACKS && size > _sizes[i]; i++)
         ;
     if (i >= NSTACKS) {
-        log_errorf(
+        logger_errorf(
             "Could not allocate size %lu. Max bucket size %lu. i=%u "
             "NSTACKS=%lu\n",
             size, _sizes[NSTACKS - 1], i, NSTACKS);
@@ -109,12 +109,12 @@ mempool_fini(mempool_t *mp)
 {
     ASSERT(mp);
     if (mp->free == NULL) {
-        log_infof(
+        logger_infof(
             "mempool not provided with free() to deallocate memory: %lu\n",
             mp->allocated);
         return;
     }
-    log_infof("mempool allocated memory on fini: %lu\n", mp->allocated);
+    logger_infof("mempool allocated memory on fini: %lu\n", mp->allocated);
     if (mp->pool.memory)
         mp->free(mp->pool.memory);
     mp->free(mp);

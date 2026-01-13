@@ -262,8 +262,8 @@ pub static FLAG_AFTER_RUN: FlagKey = FlagKey::new(
     None,
 );
 
-pub static FLAG_LOG_FILE: FlagKey = FlagKey::new(
-    c"FLAG_LOG_FILE",
+pub static FLAG_LOGGER_FILE: FlagKey = FlagKey::new(
+    c"FLAG_LOGGER_FILE",
     c"",
     c"log",
     c"FILE",
@@ -415,6 +415,6 @@ pub fn init() {
     let _ = FLAG_LOGGER_BLOCK.get();
     let _ = FLAG_BEFORE_RUN.get();
     let _ = FLAG_AFTER_RUN.get();
-    let _ = FLAG_LOG_FILE.get();
+    let _ = FLAG_LOGGER_FILE.get();
     let _ = FLAG_ROUNDS.get();
 }

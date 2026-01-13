@@ -2,8 +2,8 @@
 #include <pthread.h>
 #include <stdio.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/callrec.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/real.h>

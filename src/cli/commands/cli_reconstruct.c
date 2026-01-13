@@ -34,7 +34,7 @@ DECLARE_FLAG_ROUNDS;
 DECLARE_FLAG_NO_PRELOAD;
 DECLARE_FLAG_LOGGER_BLOCK;
 DECLARE_FLAG_CREP;
-DECLARE_FLAG_LOG_FILE;
+DECLARE_FLAG_LOGGER_FILE;
 DECLARE_COMMAND_FLAG(RECONSTRUCT_LOG, "", "reconstruct-log", "FILE",
                      "reconstruction log FILE", flag_sval("reconstruct.log"))
 DECLARE_COMMAND_FLAG(RECONSTRUCT_STRATEGY, "", "reconstruct-strategy", "STRAT",
@@ -113,7 +113,7 @@ _config_init()
     envvar_t vars[] = {
         {"LOTTO_REPLAY", .sval = temp_input_trace},
         {"LOTTO_RECORD", .sval = temp_output_trace},
-        {"LOTTO_LOG_FILE", .sval = flags_get_sval(flags, FLAG_LOG_FILE)},
+        {"LOTTO_LOGGER_FILE", .sval = flags_get_sval(flags, FLAG_LOGGER_FILE)},
         {"LOTTO_LOGGER_BLOCK",
          .sval = flags_get_sval(flags, FLAG_LOGGER_BLOCK)},
         NULL};
@@ -541,7 +541,7 @@ _init()
                     FLAG_RECONSTRUCT_NO_VIOLATION_SEARCH,
                     FLAG_RECONSTUCT_NONATOMIC,
                     FLAG_CREP,
-                    FLAG_LOG_FILE,
+                    FLAG_LOGGER_FILE,
                     0};
     subcmd_register(reconstruct, "reconstruct", "[--] <command line>",
                     "Reconstruct execution trace of a program", true, sel,

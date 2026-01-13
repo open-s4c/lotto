@@ -1,7 +1,7 @@
 /*
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <state.h>
 
 #include <lotto/brokers/statemgr.h>
@@ -9,7 +9,7 @@
 
 static anystall_config_t _config;
 REGISTER_CONFIG(_config, {
-    log_infof("enabled = %s\n", _config.enabled ? "on" : "off");
+    logger_infof("enabled = %s\n", _config.enabled ? "on" : "off");
 })
 
 anystall_config_t *

@@ -166,7 +166,7 @@ _save_to(const trace_t *t, stream_t *stream)
         // dump record
         size_t r = stream_write(stream, (const char *)record, size);
         if (r == 0)
-            log_fatalf("failed to dump record");
+            logger_fatalf("failed to dump record");
     }
 }
 

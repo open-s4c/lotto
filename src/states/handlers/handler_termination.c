@@ -1,15 +1,15 @@
 /*
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/brokers/statemgr.h>
 #include <lotto/states/handlers/termination.h>
 #include <lotto/util/macros.h>
 
 termination_config_t _config;
 REGISTER_CONFIG(_config, {
-    log_infof("mode  = %s\n", termination_mode_str(_config.mode));
-    log_infof("limit = %lu\n", _config.limit);
+    logger_infof("mode  = %s\n", termination_mode_str(_config.mode));
+    logger_infof("limit = %lu\n", _config.limit);
 })
 
 termination_config_t *

@@ -1,7 +1,7 @@
 /*
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/brokers/statemgr.h>
 #include <lotto/cli/exec_info.h>
 #include <lotto/sys/logger_block.h>
@@ -199,15 +199,15 @@ _print(const marshable_t *m)
 {
     ASSERT(m);
     exec_info_t *ei = (exec_info_t *)m;
-    log_infof("hash = 0x%08lx\n", ei->hash_replayed);
-    log_infof("args =");
+    logger_infof("hash = 0x%08lx\n", ei->hash_replayed);
+    logger_infof("args =");
     args_t *args = &ei->args;
     for (int i = 0; i < args->argc; i++) {
-        log_printf(" %s", args->argv[i]);
+        logger_printf(" %s", args->argv[i]);
     }
-    log_println();
-    log_infof("envvars:\n");
+    logger_println();
+    logger_infof("envvars:\n");
     for (size_t i = 0; i < REPLAYED_ENVVARS; i++) {
-        log_infof("  %s=%s\n", _envvars[i], ei->envvars[i]);
+        logger_infof("  %s=%s\n", _envvars[i], ei->envvars[i]);
     }
 }

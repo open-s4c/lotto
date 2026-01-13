@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <crep.h>
 
 #include <lotto/base/callrec.h>
@@ -140,7 +140,7 @@ _crep_init()
         bounded_mpmc_init(&pt_threads_queue, (void **)pt_threads, MAX_THREADS);
     } else {
         if (QUEUE_BOUNDED_OK != bounded_mpmc_enq(&pt_threads_queue, c)) {
-            log_fatalf("unexpected enqueue error");
+            logger_fatalf("unexpected enqueue error");
         }
     }
 }
@@ -178,12 +178,12 @@ crep_warn_call(const char *func)
     struct crep *c = crep_get();
 
     _crep_init();
-    log_warnf("[%lu] warn call '%s'\n", c->id, func);
+    logger_warnf("[%lu] warn call '%s'\n", c->id, func);
 
     /* search for the real function and return its pointer */
     void *foo = real_func(func, NULL);
     if (foo == NULL)
-        log_fatalf("could not find function '%s'\n", func);
+        logger_fatalf("could not find function '%s'\n", func);
     return foo;
 }
 
@@ -193,7 +193,7 @@ crep_abort_call(const char *func)
     struct crep *c = crep_get();
 
     _crep_init();
-    log_fatalf("[%lu] abort on call '%s'\n", c->id, func);
+    logger_fatalf("[%lu] abort on call '%s'\n", c->id, func);
 
     return NULL;
 }

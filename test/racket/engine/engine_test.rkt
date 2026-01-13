@@ -11,7 +11,7 @@
 ;; support functions
 ;; -----------------------------------------------------------------------------
 
-;;(call logger_set_level 'LOG_DEBUG)
+;;(call logger_set_level 'LOGGER_DEBUG)
 
 (void (capture-signal! 'SIGABRT))
 (define (aborted?)

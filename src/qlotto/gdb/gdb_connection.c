@@ -109,7 +109,7 @@ gdb_srv_listen(struct pollfd *fds, int *nfds)
     }
 
     if (!success_bind) {
-        log_infof("Error binding socket for gdb_server\n");
+        logger_infof("Error binding socket for gdb_server\n");
         exit(1);
     }
 
@@ -118,7 +118,7 @@ gdb_srv_listen(struct pollfd *fds, int *nfds)
         exit(1);
     }
 
-    log_infof("Successfully started up gdb_server to port %u\n", addr.sin_port);
+    logger_infof("Successfully started up gdb_server to port %u\n", addr.sin_port);
 
     fds->events = POLLIN;
     (*nfds)++;
@@ -143,7 +143,7 @@ gdb_srv_accept(struct pollfd *fds, int *nfds)
         fds[*nfds].fd = tmp_fd;
 
         fds[*nfds].events = POLLIN;
-        // log_infof( "Accepted client connection.\n");
+        // logger_infof( "Accepted client connection.\n");
 
         // Enable TCP keep alive process
         optval = 1;
@@ -209,7 +209,7 @@ gdb_srv_recv_pkt(struct pollfd *fds, int *nfds)
 
     rc         = recv(fds->fd, buffer, sizeof(buffer), 0);
     buffer[rc] = '\0';
-    // log_infof( "Received pkt from gdb client:\n%s\n", buffer);
+    // logger_infof( "Received pkt from gdb client:\n%s\n", buffer);
 
     // connection closed
     if (rc == 0) {
@@ -244,7 +244,7 @@ gdb_srv_recv_pkt(struct pollfd *fds, int *nfds)
                 pkt_idx += actual_pkt_len;
             } break;
             default:
-                log_infof(
+                logger_infof(
                     "unexpected char %c (hex %x) at idx %lu in pkt (len: "
                     "%lu):\n%s\n",
                     buffer[pkt_idx], buffer[pkt_idx], pkt_idx, pkt_len, buffer);
@@ -261,7 +261,7 @@ gdb_srv_poll_fds()
 {
     int64_t rc = 0;
 
-    // log_infof( "Polling %d fds.\n", nfds);
+    // logger_infof( "Polling %d fds.\n", nfds);
     rc = rl_poll(_state.fds, _state.nfds, 100);
 
     for (int i = 0; i < _state.nfds; i++) {

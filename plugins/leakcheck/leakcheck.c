@@ -125,18 +125,18 @@ memmgr_fini()
     caslock_acquire(&_lc.lock);
 
     if (_lc.list.next)
-        log_printf("\n\n");
+        logger_printf("\n\n");
 
     while ((n = _lc.list.next) != NULL) {
         _lc.list.next = n->next;
 
-        log_printf("Memory leak: addr=%p size=%lu\n", n->data, n->size);
+        logger_printf("Memory leak: addr=%p size=%lu\n", n->data, n->size);
 #ifndef DISABLE_EXECINFO
         char **strs = backtrace_symbols(n->btrace, n->btsize);
         for (int i = 0; i < n->btsize; i++) {
-            log_printf("  %s\n", strs[i]);
+            logger_printf("  %s\n", strs[i]);
         }
-        log_printf("\n");
+        logger_printf("\n");
         free(strs);
 #endif
         FORWARD(memmgr_free, n);

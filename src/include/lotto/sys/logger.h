@@ -6,70 +6,70 @@
 #include <stdio.h>
 #include <string.h> // strrchr
 
-#if !defined(LOG_IMPL) && defined(LOG_DISABLE)
-    #ifdef LOG_PREFIX
-        #undef LOG_PREFIX
-        #define LOG_PREFIX ""
+#if !defined(LOGGER_IMPL) && defined(LOGGER_DISABLE)
+    #ifdef LOGGER_PREFIX
+        #undef LOGGER_PREFIX
+        #define LOGGER_PREFIX ""
     #endif
 #endif
 
-enum log_level {
-    LOG_ERROR,
-    LOG_WARN,
-    LOG_INFO,
-    LOG_DEBUG,
+enum logger_level {
+    LOGGER_ERROR,
+    LOGGER_WARN,
+    LOGGER_INFO,
+    LOGGER_DEBUG,
 };
 
-void logger_set_level(enum log_level l);
+void logger_set_level(enum logger_level l);
 FILE *logger_fp(void);
-void logger(enum log_level l, FILE *fp);
+void logger(enum logger_level l, FILE *fp);
 
 #define PRINTFLIKE __attribute__((format(printf, 1, 2)))
 
-void log_fatalf(const char *fmt, ...) PRINTFLIKE;
-void log_errorf(const char *fmt, ...) PRINTFLIKE;
-void log_warnf(const char *fmt, ...) PRINTFLIKE;
-void log_infof(const char *fmt, ...) PRINTFLIKE;
-void log_debugf(const char *fmt, ...) PRINTFLIKE;
-void log_printf(const char *fmt, ...) PRINTFLIKE;
+void logger_fatalf(const char *fmt, ...) PRINTFLIKE;
+void logger_errorf(const char *fmt, ...) PRINTFLIKE;
+void logger_warnf(const char *fmt, ...) PRINTFLIKE;
+void logger_infof(const char *fmt, ...) PRINTFLIKE;
+void logger_debugf(const char *fmt, ...) PRINTFLIKE;
+void logger_printf(const char *fmt, ...) PRINTFLIKE;
 
 #undef PRINTFLIKE
 
-#ifndef LOG_IMPL
-    #define log_debugln(fmt, ...) log_debugf(fmt "\n", ##__VA_ARGS__)
-    #define log_infoln(fmt, ...)  log_infof(fmt "\n", ##__VA_ARGS__)
-    #define log_println(fmt, ...) log_printf(fmt "\n", ##__VA_ARGS__)
+#ifndef LOGGER_IMPL
+    #define logger_debugln(fmt, ...) logger_debugf(fmt "\n", ##__VA_ARGS__)
+    #define logger_infoln(fmt, ...)  logger_infof(fmt "\n", ##__VA_ARGS__)
+    #define logger_println(fmt, ...) logger_printf(fmt "\n", ##__VA_ARGS__)
 
-    #define LOG_CUR_FILE                                                       \
+    #define LOGGER_CUR_FILE                                                    \
         (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-    #ifdef LOG_PREFIX
-        #define log_fatalf(fmt, ...)                                           \
-            log_fatalf("[%21s] " fmt, LOG_PREFIX, ##__VA_ARGS__)
+    #ifdef LOGGER_PREFIX
+        #define logger_fatalf(fmt, ...)                                        \
+            logger_fatalf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__)
 
-        #define log_errorf(fmt, ...)                                           \
-            log_errorf("[%21s] " fmt, LOG_PREFIX, ##__VA_ARGS__)
+        #define logger_errorf(fmt, ...)                                        \
+            logger_errorf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__)
 
-        #define log_warnf(fmt, ...)                                            \
-            log_warnf("[%21s] " fmt, LOG_PREFIX, ##__VA_ARGS__)
+        #define logger_warnf(fmt, ...)                                         \
+            logger_warnf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__)
 
-        #define log_infof(fmt, ...)                                            \
-            log_infof("[%21s] " fmt, LOG_PREFIX, ##__VA_ARGS__)
+        #define logger_infof(fmt, ...)                                         \
+            logger_infof("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__)
 
-        #define log_debugf(fmt, ...)                                           \
-            log_debugf("[%21s] " fmt, LOG_PREFIX, ##__VA_ARGS__)
+        #define logger_debugf(fmt, ...)                                        \
+            logger_debugf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__)
 
-    #endif /* LOG_PREFIX */
+    #endif /* LOGGER_PREFIX */
 
-    #ifdef LOG_DISABLE
+    #ifdef LOGGER_DISABLE
         #include <lotto/util/unused.h>
 
-        #undef log_infof
-        #define log_infof(...) LOTTO_UNUSED(__VA_ARGS__)
-        #undef log_debugf
-        #define log_debugf(...) LOTTO_UNUSED(__VA_ARGS__)
-        #undef log_printf
-        #define log_printf(...) LOTTO_UNUSED(__VA_ARGS__)
+        #undef logger_infof
+        #define logger_infof(...) LOTTO_UNUSED(__VA_ARGS__)
+        #undef logger_debugf
+        #define logger_debugf(...) LOTTO_UNUSED(__VA_ARGS__)
+        #undef logger_printf
+        #define logger_printf(...) LOTTO_UNUSED(__VA_ARGS__)
     #endif
 #endif
 

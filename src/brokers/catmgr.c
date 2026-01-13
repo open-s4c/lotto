@@ -1,7 +1,7 @@
 /*
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/marshable.h>
 #include <lotto/brokers/catmgr.h>
 #include <lotto/brokers/statemgr.h>
@@ -63,20 +63,20 @@ _catmgr_unmarshal(marshable_t *m, const void *buf)
             b += sys_strlen(_categories[i]) + 1;
             continue;
         }
-        log_errorf("registered category mismatch!\n");
-        log_errorf("actual: [%u, %s]\n", i + INIT_NEXT, _categories[i]);
-        log_errorf("record: [%u, %s]\n", i + INIT_NEXT, (const char *)b);
+        logger_errorf("registered category mismatch!\n");
+        logger_errorf("actual: [%u, %s]\n", i + INIT_NEXT, _categories[i]);
+        logger_errorf("record: [%u, %s]\n", i + INIT_NEXT, (const char *)b);
         _catmgr_print(&_m);
-        log_fatalf();
+        logger_fatalf();
     }
     return b + 1;
 }
 STATIC void
 _catmgr_print(const marshable_t *m)
 {
-    log_infof("registered categories:\n");
+    logger_infof("registered categories:\n");
     for (category_t i = 0; i < _next - INIT_NEXT; i++) {
-        log_infof("  %u: %s\n", i + INIT_NEXT, _categories[i]);
+        logger_infof("  %u: %s\n", i + INIT_NEXT, _categories[i]);
     }
 }
 

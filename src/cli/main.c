@@ -147,7 +147,7 @@ _load_plugin(plugin_t *plugin, void *arg)
         return 0;
     void *handle = dlopen(plugin->path, RTLD_NOW | RTLD_GLOBAL);
     if (!handle) {
-        log_errorf("error loading plugin '%s': %s\n", plugin->path, dlerror());
+        logger_errorf("error loading plugin '%s': %s\n", plugin->path, dlerror());
         plugin->disabled = true;
     }
     return 0;

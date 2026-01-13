@@ -43,7 +43,7 @@ gdb_dequeue_pkt()
 
     ASSERT(NULL != dequeued_pkt);
 
-    // log_infof( "Sending packet:\n%s\n", dequeued_pkt->pkt);
+    // logger_infof( "Sending packet:\n%s\n", dequeued_pkt->pkt);
 
     rc = write(dequeued_pkt->fd, dequeued_pkt->pkt, dequeued_pkt->pkt_len);
 
@@ -192,7 +192,7 @@ int64_t
 gdb_srv_resend_last_pkt(int fd)
 {
     ASSERT(_state.srv_last_send_pkt_len > 0);
-    // log_infof("resend last packet:\n%s\n", srv_last_send_pkt);
+    // logger_infof("resend last packet:\n%s\n", srv_last_send_pkt);
     gdb_send_pkt(fd, _state.srv_last_send_pkt, _state.srv_last_send_pkt_len);
     return 0;
 }

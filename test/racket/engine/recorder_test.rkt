@@ -48,7 +48,7 @@
   (not (not (sync/timeout (lambda () #f) next-signal-evt))))
 
 ;; disable verbose logging
-;;(call logger_set_level 'LOG_ERROR)
+;;(call logger_set_level 'LOGGER_ERROR)
 
 ;; -----------------------------------------------------------------------------
 ;; Generator

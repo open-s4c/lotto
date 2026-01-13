@@ -26,7 +26,7 @@ use rinflex::error::Error;
         FLAG_AFTER_RUN.get(),
         // FLAG_INFLEX_MIN.get(),
         // FLAG_INFLEX_METHOD.get(),
-        FLAG_LOG_FILE.get()
+        FLAG_LOGGER_FILE.get()
     ],
     group=raw::subcmd_group::SUBCMD_GROUP_TRACE,
     defaults=|flags: &mut Flags| {
@@ -34,7 +34,7 @@ use rinflex::error::Error;
     },
 )]
 fn inflex(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
-    envvar_set!("LOTTO_LOG_FILE" => flags.get_sval(&FLAG_LOG_FILE));
+    envvar_set!("LOTTO_LOGGER_FILE" => flags.get_sval(&FLAG_LOGGER_FILE));
 
     let input = flags.get_sval(&FLAG_INPUT).to_string();
     let output = flags.get_sval(&FLAG_INPUT).to_string();

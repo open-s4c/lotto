@@ -94,12 +94,12 @@ __perf_print_results(void)
                 (double)(perf_state.__perf_time_lotto[i][sl]) /
                 (double)total_tid_lotto_time * 100.0;
 
-            log_infof("   [%lu] Time spent in %12s: %14lu\n", i,
+            logger_infof("   [%lu] Time spent in %12s: %14lu\n", i,
                       state_l_str(sl), perf_state.__perf_time_lotto[i][sl]);
-            log_infof("   [%lu] Time spent in %12s: %6.3f%%\n", i,
+            logger_infof("   [%lu] Time spent in %12s: %6.3f%%\n", i,
                       state_l_str(sl), perf_percent);
         }
-        log_infof("\n");
+        logger_infof("\n");
     }
 
     for (uint64_t i = 1; i <= get_task_count(); i++) {
@@ -111,11 +111,11 @@ __perf_print_results(void)
             double perf_percent = (double)(perf_state.__perf_time_qemu[i][sq]) /
                                   (double)total_tid_lotto_time * 100.0;
 
-            log_infof("   [%lu] Time spent in %12s: %14lu\n", i,
+            logger_infof("   [%lu] Time spent in %12s: %14lu\n", i,
                       state_q_str(sq), perf_state.__perf_time_qemu[i][sq]);
-            log_infof("   [%lu] Time spent in %12s: %6.3f%%\n", i,
+            logger_infof("   [%lu] Time spent in %12s: %6.3f%%\n", i,
                       state_q_str(sq), perf_percent);
         }
-        log_infof("\n");
+        logger_infof("\n");
     }
 }

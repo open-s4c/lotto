@@ -322,8 +322,8 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
 
     /* preload libraries */
 
-    const char *log_level = verbose ? "debug" : "error";
-    envvar_t vars[]       = {{"LOTTO_LOG_LEVEL", log_level},
+    const char *logger_level = verbose ? "debug" : "error";
+    envvar_t vars[]       = {{"LOTTO_LOGGER_LEVEL", logger_level},
                              {"LOTTO_TEMP_DIR", dir},
                              {NULL}};
     envvar_set(vars, true);

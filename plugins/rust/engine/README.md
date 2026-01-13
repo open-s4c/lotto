@@ -61,7 +61,7 @@ Log messages are redirected to the Lotto logging system as
 expected.
 
 You can control the verbosity with standard Lotto CLI flags and
-environment variable `LOTTO_LOG_LEVEL`.
+environment variable `LOTTO_LOGGER_LEVEL`.
 
 One particular case is `trace!`, which is not part of the Lotto
 logging system, and its behavior is controlled by `LOTTO_RUST_TRACE`.

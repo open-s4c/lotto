@@ -107,7 +107,7 @@ impl Inflex {
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
 
         // If it's unlikely to hit the bug, the probablistical
         // algorithm will just return 0. Use a slower but perhaps
@@ -146,7 +146,7 @@ impl Inflex {
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
 
         binary_search(self.min, self.last_clk, |clk| {
             let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
@@ -189,7 +189,7 @@ impl Inflex {
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
 
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
         while confidence <= self.rounds && ip < self.last_clk {

@@ -1,7 +1,7 @@
 /*
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/states/handlers/region_preemption.h>
@@ -79,27 +79,27 @@ _region_preemption_warning(task_id tid)
         return;
     }
     _warned = true;
-    log_errorf("atomicity violated by task %lu\n", tid);
-    log_errorf("atomic task(s):");
+    logger_errorf("atomicity violated by task %lu\n", tid);
+    logger_errorf("atomic task(s):");
     bool first = true;
     for (const tiditem_t *cur = tidmap_iterate(&_state); cur;
          cur                  = tidmap_next(cur)) {
         if (!first) {
-            log_printf(",");
+            logger_printf(",");
         }
         first = false;
-        log_printf(" %lu", cur->key);
+        logger_printf(" %lu", cur->key);
     }
-    log_printf("\n");
-    log_errorf("this error indicates either of:\n");
-    log_errorf(
+    logger_printf("\n");
+    logger_errorf("this error indicates either of:\n");
+    logger_errorf(
         "- region misuse (creating new tasks or blocking inside the region)\n");
-    log_errorf(
+    logger_errorf(
         "- Lotto misconfiguration (the region handler being executed too "
         "late)\n");
-    log_errorf("- unhandled concurrency\n");
-    log_errorf("- internal bug\n");
-    log_errorf("to debug set a breakpoint on %s\n", __FUNCTION__);
+    logger_errorf("- unhandled concurrency\n");
+    logger_errorf("- internal bug\n");
+    logger_errorf("to debug set a breakpoint on %s\n", __FUNCTION__);
 }
 
 static void
@@ -175,6 +175,6 @@ REGISTER_HANDLER(SLOT_REGION_PREEMPTION, _region_preemption_handle)
 STATIC void
 _region_preemption_print(const marshable_t *m)
 {
-    log_infof("nondefault tasks = ");
+    logger_infof("nondefault tasks = ");
     tidset_print(m);
 }

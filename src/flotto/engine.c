@@ -11,8 +11,8 @@
 #include <vsync/atomic/dispatch.h>
 #include <vsync/spinlock/caslock.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/reason.h>
 #include <lotto/base/trace.h>
 #include <lotto/brokers/catmgr.h>
@@ -23,7 +23,7 @@
 #include <lotto/util/once.h>
 
 #define log(ctx, fmt, ...)                                                     \
-    log_debugf("[t:%lu, " CONTRACT(" clk:%lu,") "pc:0x%lx] " fmt "\n",         \
+    logger_debugf("[t:%lu, " CONTRACT(" clk:%lu,") "pc:0x%lx] " fmt "\n",         \
                ctx->id, CONTRACT(_ghost.clk, ) ctx->pc & 0xfff, ##__VA_ARGS__)
 
 CONTRACT(enum state{
@@ -81,14 +81,14 @@ CONTRACT(static void _check_plan(const context_t *ctx, plan_t p) {
             break;
         default:
             plan_print(p);
-            log_fatalf("(cat: %s) plan mismatch\n", category_str(ctx->cat));
+            logger_fatalf("(cat: %s) plan mismatch\n", category_str(ctx->cat));
     }
 })
 
 void
 engine_init(trace_t *input, trace_t *output)
 {
-    log_debugf("starting...\n");
+    logger_debugf("starting...\n");
 }
 
 int
@@ -106,7 +106,7 @@ engine_fini(const context_t *ctx, reason_t reason)
     } else if (IS_REASON_ABORT(reason)) {
         success = false;
     } else {
-        log_errorf("Unknown termination reason\n");
+        logger_errorf("Unknown termination reason\n");
         success = false;
     }
     if (getenv("LOTTO_MODIFY_RETURN_CODE") != NULL &&

@@ -90,7 +90,7 @@ lotto_plugin_scan(const char *build_dir, const char *install_dir,
     if (build_dir)
         _scandir(build_dir);
     if (plugin_dir && plugin_dir[0] != '\0') {
-        log_infof("Using external plugins directory: %s\n", plugin_dir);
+        logger_infof("Using external plugins directory: %s\n", plugin_dir);
         _scandir(plugin_dir);
     }
     qsort(_plugins, _next, sizeof(plugin_t), _compar);
@@ -150,16 +150,16 @@ _plugin_print_names_unique()
         num_plugins_unique++;
     }
 
-    log_infof("Found %u plugin names: ", num_plugins_unique);
+    logger_infof("Found %u plugin names: ", num_plugins_unique);
     for (size_t i = 0; i < _next; ++i) {
         if (i > 0 && strcmp(_plugins[i].name, _plugins[i - 1].name) == 0)
             continue;
-        log_infof("%s", _plugins[i].name);
+        logger_infof("%s", _plugins[i].name);
         cur_num_plugins_unique++;
         if (cur_num_plugins_unique < num_plugins_unique)
-            log_infof(",");
+            logger_infof(",");
         else
-            log_infof("\n");
+            logger_infof("\n");
     }
 }
 
@@ -199,9 +199,9 @@ lotto_plugin_enable_only(const char *plugin_list)
             plugin_found = true;
         if (!plugin_found) {
             closest_plugin_name = _plugin_find_name_closest(cur_plugin_name);
-            log_infof("Could not find plugin %s\n", cur_plugin_name);
+            logger_infof("Could not find plugin %s\n", cur_plugin_name);
             if (NULL != closest_plugin_name) {
-                log_infof("Did you mean: %s ?\n", closest_plugin_name);
+                logger_infof("Did you mean: %s ?\n", closest_plugin_name);
             }
             _plugin_print_names_unique();
             return 1;
@@ -272,7 +272,7 @@ _plugin_kind_str(plugin_kind_t kind)
         case PLUGIN_KIND_RUNTIME:
             return "RUNTIME";
         default:
-            log_fatalf("Unknown plugin kind value %u\n", kind);
+            logger_fatalf("Unknown plugin kind value %u\n", kind);
             return "";
     }
 }
@@ -280,9 +280,9 @@ _plugin_kind_str(plugin_kind_t kind)
 void
 lotto_plugin_print()
 {
-    log_infof("Found %lu plugins\n", _next);
+    logger_infof("Found %lu plugins\n", _next);
     for (size_t i = 0; i < _next; ++i) {
-        log_infof(
+        logger_infof(
             "Plugin '%s' %s found at '%s', shadowed = %s, disabled = %s\n",
             _plugins[i].name, _plugin_kind_str(_plugins[i].kind),
             _plugins[i].path, _plugins[i].shadowed ? "yes" : "no",
@@ -338,7 +338,7 @@ _scandir(const char *scan_dir)
             kind |= PLUGIN_KIND_MEMMGR;
         }
         if (kind == PLUGIN_KIND_NONE) {
-            log_fatalf("unknown kind of plugin %s\n", entry->d_name);
+            logger_fatalf("unknown kind of plugin %s\n", entry->d_name);
         }
         for (size_t i = 0; i < _next; ++i) {
             if (!strcmp(name, _plugins[i].name) && kind == _plugins[i].kind) {
@@ -352,7 +352,7 @@ _scandir(const char *scan_dir)
                            .kind     = kind,
                            .shadowed = false,
                            .disabled = false};
-        log_debugf("Found new plugin '%s'\n", plugin.path);
+        logger_debugf("Found new plugin '%s'\n", plugin.path);
         _plugins[_next++] = plugin;
     }
     closedir(dir);

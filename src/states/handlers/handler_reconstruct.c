@@ -11,10 +11,10 @@
 static reconstruct_config_t _config;
 
 REGISTER_CONFIG(_config, {
-    log_infoln("enabled: %s", bool_str(_config.enabled));
-    log_infoln("tid:     %lu", _config.tid);
-    log_infoln("id:      %lu", _config.id);
-    log_infoln("data:    0x%lx", _config.data);
+    logger_infoln("enabled: %s", bool_str(_config.enabled));
+    logger_infoln("tid:     %lu", _config.tid);
+    logger_infoln("id:      %lu", _config.id);
+    logger_infoln("data:    0x%lx", _config.data);
 })
 
 static log_t _log;
@@ -23,7 +23,7 @@ _reconstruct_print(const marshable_t *m)
 {
     log_t *l = (log_t *)m;
     if (l->tid == NO_TASK) {
-        log_infof("entry: none\n");
+        logger_infof("entry: none\n");
         return;
     }
     log_print(m);

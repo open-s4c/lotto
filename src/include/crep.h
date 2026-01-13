@@ -162,7 +162,7 @@ clk_t sequencer_get_clk() __attribute__((weak));
     {                                                                             \
         REAL_CREP(RET_TYPE(S), FUNC_##S, ARGS_TYPEVARS(S));                       \
         if (!CREP_RECORD_ENABLED) {                                               \
-            /* log_fatalf("crep is recording when it must not\n"); */             \
+            /* logger_fatalf("crep is recording when it must not\n"); */             \
             return REAL(FUNC(S), ARGS_VARS(S));                                   \
         }                                                                         \
         RET_TYPE(S) ret;                                                          \

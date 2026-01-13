@@ -375,15 +375,15 @@ record_print(const record_t *r, int i)
 {
     char clk_str[256] = {0};
     sys_sprintf(clk_str, "%lu", r->clk);
-    log_println("====================");
-    log_println("RECORD %d", i);
-    log_println("  clock:    %s", clk_str);
-    log_println("  task:     %lu", r->id);
-    log_println("  category: %s", category_str(r->cat));
-    log_println("  reason:   %s", reason_str(r->reason));
-    log_println("  kind:     %s", kind_str(r->kind));
-    log_println("  pc:       %" PRIxPTR, r->pc);
-    log_println("  ------------------\n");
+    logger_println("====================");
+    logger_println("RECORD %d", i);
+    logger_println("  clock:    %s", clk_str);
+    logger_println("  task:     %lu", r->id);
+    logger_println("  category: %s", category_str(r->cat));
+    logger_println("  reason:   %s", reason_str(r->reason));
+    logger_println("  kind:     %s", kind_str(r->kind));
+    logger_println("  pc:       %" PRIxPTR, r->pc);
+    logger_println("  ------------------\n");
     switch (r->kind) {
         case RECORD_SCHED:
             if (r->size > 0) {

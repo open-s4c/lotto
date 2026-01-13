@@ -180,7 +180,7 @@ gdb_has_breakpoint_in_range(tb_info_t *tb_info)
     for (; bp_cur; bp_cur = (event_bp_t *)map_next((mapitem_t *)bp_cur)) {
         if (bp_cur->ti.key >= tb_pc_start &&
             bp_cur->ti.key <= tb_pc_end) { // found breakpoint
-            log_infof("BP 0x%lx in range [0x%lx,0x%lx]!\n", bp_cur->ti.key,
+            logger_infof("BP 0x%lx in range [0x%lx,0x%lx]!\n", bp_cur->ti.key,
                       tb_pc_start, tb_pc_end);
             return true;
         }
@@ -256,7 +256,7 @@ gdb_srv_handle_z(int fd, uint8_t *msg, uint64_t msg_len)
 
         uint64_t b_pc = rsp_str_to_hex((char *)msg + msg_idx, addr_len);
 
-        // log_infof("Got request to delete breakpoint at pc 0x%lx\n", b_pc);
+        // logger_infof("Got request to delete breakpoint at pc 0x%lx\n", b_pc);
         gdb_del_breakpoint(b_pc);
         gdb_send_ack(fd);
         gdb_send_ok(fd);
@@ -322,7 +322,7 @@ gdb_srv_handle_Z(int fd, uint8_t *msg, uint64_t msg_len)
 
         uint64_t b_pc = rsp_str_to_hex((char *)msg + msg_idx, addr_len);
 
-        // log_printf("Got request to add breakpoint at addr 0x%lx\n", b_pc);
+        // logger_printf("Got request to add breakpoint at addr 0x%lx\n", b_pc);
         gdb_add_breakpoint(b_pc);
         gdb_send_ack(fd);
         gdb_send_ok(fd);

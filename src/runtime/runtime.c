@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include "interceptor_internal.h"
 #include <lotto/base/clk.h>
 #include <lotto/base/trace_file.h>
@@ -45,7 +45,7 @@ _runtime_init()
     _start = now();
     /* prepare engine configuration and initilize engine */
     if ((var = getenv("LOTTO_RECORD")) && var[0]) {
-        log_debugf("record: %s\n", var);
+        logger_debugf("record: %s\n", var);
         stream_t *st = stream_file_alloc();
         stream_file_out(st, var);
         _recorder = trace_file_create(st);
@@ -58,7 +58,7 @@ _runtime_init()
     }
 
     if ((var = getenv("LOTTO_REPLAY")) && var[0]) {
-        log_debugf("replay: %s\n", var);
+        logger_debugf("replay: %s\n", var);
         stream_t *st = stream_file_alloc();
         stream_file_in(st, var);
         _replayer = trace_file_create(st);
@@ -73,26 +73,26 @@ _runtime_init()
 }
 
 static void LOTTO_CONSTRUCTOR
-_log_init()
+_logger_init()
 {
-    const char *var = getenv("LOTTO_LOG_LEVEL");
+    const char *var = getenv("LOTTO_LOGGER_LEVEL");
 
-    enum log_level level = LOG_ERROR;
+    enum logger_level level = LOGGER_ERROR;
     FILE *null           = sys_fopen("/dev/null", "a+");
     if (var) {
         if (strcmp(var, "debug") == 0)
-            level = LOG_DEBUG;
+            level = LOGGER_DEBUG;
         else if (strcmp(var, "info") == 0)
-            level = LOG_INFO;
+            level = LOGGER_INFO;
         else if (strcmp(var, "warn") == 0)
-            level = LOG_WARN;
+            level = LOGGER_WARN;
         else if (strcmp(var, "silent") == 0) {
             logger(level, null);
             return;
         }
     }
 
-    var = getenv("LOTTO_LOG_FILE");
+    var = getenv("LOTTO_LOGGER_FILE");
     if (var) {
         if (strcmp(var, "stdout") == 0)
             logger(level, stdout);
@@ -144,7 +144,7 @@ _fini_cb(void *arg)
         logger_block_fini();
         sys_memory_fini();
         nanosec_t elapsed = now() - _start;
-        log_debugf("Elapsed time = %.2fs\n", in_sec(elapsed));
+        logger_debugf("Elapsed time = %.2fs\n", in_sec(elapsed));
         _exit(err);
     }
     REAL_DECL(void, pthread_exit, void *arg);
@@ -165,7 +165,7 @@ lotto_exit(context_t *ctx, reason_t reason)
         .reason = reason,
     };
     _fini_cb(&dat);
-    log_fatalf("should never reach here");
+    logger_fatalf("should never reach here");
     sys_abort();
 }
 

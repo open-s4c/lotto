@@ -8,8 +8,8 @@
  * @brief Dynamically convert instructions into change points.
  ******************************************************************************/
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/brokers/pubsub.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/handlers/ichpt.h>
@@ -93,7 +93,7 @@ _ichpt_handle(const context_t *ctx, event_t *e)
 
     if (is_ichpt(ctx->pc)) {
         it_is_ichpt();
-        log_infof("[%lx] instruction change point at pc %p\n", tid,
+        logger_infof("[%lx] instruction change point at pc %p\n", tid,
                   (void *)ctx->pc);
         e->is_chpt = true;
     }

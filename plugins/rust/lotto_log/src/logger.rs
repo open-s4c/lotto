@@ -27,11 +27,11 @@ fn init_full(level: LevelFilter, redirect: Redirect) {
 
 /// Default initialization of the Lotto logging system.
 ///
-/// The log level is controlled by envvar `LOTTO_LOG_LEVEL`.
+/// The log level is controlled by envvar `LOTTO_LOGGER_LEVEL`.
 ///
 /// The behavior of `trace!` is controlled by `LOTTO_RUST_TRACE`.
 pub fn init() {
-    let level = std::env::var("LOTTO_LOG_LEVEL");
+    let level = std::env::var("LOTTO_LOGGER_LEVEL");
     let filter = match level.ok().as_deref() {
         Some("") | Some("silent") => LevelFilter::Off,
         Some("error") => LevelFilter::Error,
@@ -210,16 +210,16 @@ impl log::Log for LottoLogger {
         // thread-safe.
         match record.level() {
             log::Level::Error => unsafe {
-                raw::log_errorf(format_message_escape_cstr(record).as_ptr());
+                raw::logger_errorf(format_message_escape_cstr(record).as_ptr());
             },
             log::Level::Warn => unsafe {
-                raw::log_warnf(format_message_escape_cstr(record).as_ptr());
+                raw::logger_warnf(format_message_escape_cstr(record).as_ptr());
             },
             log::Level::Info => unsafe {
-                raw::log_infof(format_message_escape_cstr(record).as_ptr());
+                raw::logger_infof(format_message_escape_cstr(record).as_ptr());
             },
             log::Level::Debug => unsafe {
-                raw::log_debugf(format_message_escape_cstr(record).as_ptr());
+                raw::logger_debugf(format_message_escape_cstr(record).as_ptr());
             },
             log::Level::Trace => {
                 TRACE_REDIRECT

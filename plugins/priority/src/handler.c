@@ -9,8 +9,8 @@
  * - If the event is mutable, the handler filters out all tasks whose priority
  * is not maximum
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <category.h>
 #include <state.h>
 
@@ -49,17 +49,17 @@ STATIC void
 _priority_print(const marshable_t *m)
 {
     const state_t *s = (const state_t *)m;
-    log_infof("prio   = [");
+    logger_infof("prio   = [");
     const tiditem_t *cur = tidmap_iterate(&s->map);
     bool first           = true;
     for (; cur; cur = tidmap_next(cur)) {
         if (!first)
-            log_printf(", ");
+            logger_printf(", ");
         first     = false;
         task_t *t = (task_t *)cur;
-        log_printf("%lu:%ld", cur->key, t->priority);
+        logger_printf("%lu:%ld", cur->key, t->priority);
     }
-    log_println("]");
+    logger_println("]");
 }
 
 static int64_t _max_priority;

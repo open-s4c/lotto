@@ -1,7 +1,7 @@
 /*
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/brokers/statemgr.h>
 #include <lotto/states/handlers/pct.h>
 #include <lotto/sys/logger_block.h>
@@ -13,7 +13,7 @@
  ******************************************************************************/
 static pct_config_t _config;
 REGISTER_CONFIG(_config, {
-    log_infof("params = [k: %lu, d: %lu, on:%s]\n", _config.k, _config.d,
+    logger_infof("params = [k: %lu, d: %lu, on:%s]\n", _config.k, _config.d,
               _config.enabled ? "on" : "off");
 })
 
@@ -95,6 +95,6 @@ STATIC void
 _pct_print(const marshable_t *m)
 {
     const pct_state_t *s = (const pct_state_t *)m;
-    log_infof("counts = [kmax: %lu, nmax: %lu, chpts: %lu]\n", s->counts.kmax,
+    logger_infof("counts = [kmax: %lu, nmax: %lu, chpts: %lu]\n", s->counts.kmax,
               s->counts.nmax, s->counts.chpts);
 }

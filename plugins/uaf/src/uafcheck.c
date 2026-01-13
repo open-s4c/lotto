@@ -96,7 +96,7 @@ _uafc_drop(uafc_t *uc)
     int ret = mprotect(ptr + METADATA_SIZE, _pagesize,
                        PROT_READ | PROT_EXEC | PROT_WRITE);
     if (ret != 0)
-        log_fatalf("could not mprotect page\n");
+        logger_fatalf("could not mprotect page\n");
 
     alloc_t *a = (alloc_t *)ptr;
     a->canary  = ~UAFC_CANARY;
@@ -129,7 +129,7 @@ uafc_free(uafc_t *uc, void *p)
     // protect page and save
     int ret = mprotect(p, _pagesize, PROT_NONE);
     if (ret != 0)
-        log_fatalf("could not protect page\n");
+        logger_fatalf("could not protect page\n");
 
     ASSERT(a->canary == UAFC_CANARY);
 

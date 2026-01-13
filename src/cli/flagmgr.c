@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
+#define LOGGER_PREFIX LOGGER_CUR_FILE
 
 #include <lotto/base/flag.h>
 #include <lotto/base/record_granularity.h>
@@ -491,13 +491,13 @@ flags_print(const flags_t *f)
         if (!_options[i].long_opt) {
             continue;
         }
-        log_infof("%-50s", _options[i].long_opt);
+        logger_infof("%-50s", _options[i].long_opt);
         const struct flag_val *flag_val = &f->values[i];
         const struct value *val         = &flag_val->_val;
         enum value_type type            = val->_type;
         switch (type) {
             case VALUE_TYPE_BOOL:
-                log_printf("%s",
+                logger_printf("%s",
                            STR_CONVERTER_IS_PRESENT(_options[i].str_converter) ?
                                enabled_str(is_on(*val)) :
                            is_on(*val) ? "on" :
@@ -507,17 +507,17 @@ flags_print(const flags_t *f)
                 if (STR_CONVERTER_IS_PRESENT(_options[i].str_converter)) {
                     char temp[BUFFER_LEN];
                     _bits_str(&_options[i].str_converter, as_uval(*val), temp);
-                    log_printf("'%s'", temp);
+                    logger_printf("'%s'", temp);
                 } else {
-                    log_printf("%lu", val->_uval);
+                    logger_printf("%lu", val->_uval);
                 }
                 break;
             case VALUE_TYPE_STRING:
-                log_printf("'%s'", val->_sval);
+                logger_printf("'%s'", val->_sval);
                 break;
             default:
                 ASSERT(0 && "unsupported value type");
         }
-        log_printf(" (%s)\n", flag_val->is_default ? "default" : "set");
+        logger_printf(" (%s)\n", flag_val->is_default ? "default" : "set");
     }
 }

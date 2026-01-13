@@ -203,8 +203,8 @@ flags_t *flags_default();
     DECLARE_COMMAND_FLAG(REPLAY_GOAL, "g", "goal", "INT", "replay goal",       \
                          flag_uval(MAX_ROUNDS))
 
-#define DECLARE_FLAG_LOG_FILE                                                  \
-    DECLARE_COMMAND_FLAG(LOG_FILE, "", "log", "FILE", "output log FILE",       \
+#define DECLARE_FLAG_LOGGER_FILE                                                  \
+    DECLARE_COMMAND_FLAG(LOGGER_FILE, "", "log", "FILE", "output log FILE",       \
                          flag_sval("stderr"))
 
 #define DECLARE_FLAG_TEMPORARY_DIRECTORY                                       \

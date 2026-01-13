@@ -6,8 +6,8 @@
 #include <signal.h>
 #include <time.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/callrec.h>
 #include <lotto/base/record.h>
 #include <lotto/base/topic.h>
@@ -36,7 +36,7 @@ sched_yield(void)
 int
 sched_setaffinity(__pid_t pid, size_t s, const cpu_set_t *cset)
 {
-    log_debugf("warning: ignoring sched_setaffinity call\n");
+    logger_debugf("warning: ignoring sched_setaffinity call\n");
     return 0;
 }
 

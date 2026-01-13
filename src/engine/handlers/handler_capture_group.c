@@ -4,8 +4,8 @@
 #include <limits.h>
 #include <string.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/address_bdd.h>
 #include <lotto/base/stable_address.h>
 #include <lotto/base/string_hash_table.h>
@@ -233,7 +233,7 @@ _reset_group(event_t *e)
 {
     if (capture_group_config()->atomic && capture_group_config()->check &&
         tidmap_size(&_state.map)) {
-        log_println("[lotto] atomic capture group broken, terminating");
+        logger_println("[lotto] atomic capture group broken, terminating");
         e->reason = REASON_IGNORE;
         return;
     }
@@ -500,25 +500,25 @@ STATIC void
 _capture_group_print(const marshable_t *m)
 {
     state_t *s = (state_t *)m;
-    log_infoln("target functions                 = [%s]",
+    logger_infoln("target functions                 = [%s]",
                delayed_functions_backup);
-    log_infoln("accumulated group size           = %lu", tidmap_size(&s->map));
-    log_infoln("executing group                  = %s",
+    logger_infoln("accumulated group size           = %lu", tidmap_size(&s->map));
+    logger_infoln("executing group                  = %s",
                s->in_group ? "yes" : "no");
     if (s->in_group) {
-        log_infoln("current task in group          = %lu", s->current_task);
+        logger_infoln("current task in group          = %lu", s->current_task);
     }
-    log_infof("tasks in group with call depth = [");
+    logger_infof("tasks in group with call depth = [");
     const tiditem_t *cur = tidmap_iterate(&s->map);
     bool first           = true;
     for (; cur; cur = tidmap_next(cur)) {
         if (!first)
-            log_printf(", ");
+            logger_printf(", ");
         first     = false;
         task_t *t = (task_t *)cur;
-        log_printf("%lu:%lu", cur->key, t->call_depth);
+        logger_printf("%lu:%lu", cur->key, t->call_depth);
     }
-    log_println("]");
+    logger_println("]");
 }
 
 /*******************************************************************************
@@ -619,20 +619,20 @@ _ao_print(const marshable_t *m)
 {
     ASSERT(m);
     atomic_outcome_t *ao = (atomic_outcome_t *)m;
-    log_printf("total order: ");
+    logger_printf("total order: ");
     tidset_print(&ao->total_order.m);
-    log_printf("returns: [");
+    logger_printf("returns: [");
     const tiditem_t *cur = tidmap_iterate(&ao->return_map);
     bool first           = true;
     for (; cur; cur = tidmap_next(cur)) {
         if (!first)
-            log_printf(", ");
+            logger_printf(", ");
         first       = false;
         return_t *r = (return_t *)cur;
-        log_printf("%lu:%lu", cur->key, r->value);
+        logger_printf("%lu:%lu", cur->key, r->value);
     }
-    log_printf("]\n");
-    log_printf("memory_map: [");
+    logger_printf("]\n");
+    logger_printf("memory_map: [");
     cur = tidmap_iterate(&ao->read_map);
     for (; cur; cur = tidmap_next(cur)) {
         memory_value_t *mv = (memory_value_t *)cur;
@@ -644,9 +644,9 @@ _ao_print(const marshable_t *m)
 
         if (stable_address_sprint(&mv->pc, pc) >= STABLE_ADDRESS_MAX_STR_LEN)
             ASSERT(0 && "unexpected sprint error");
-        log_printf("\n%s -> %02x @ %s", addr, mv->value, pc);
+        logger_printf("\n%s -> %02x @ %s", addr, mv->value, pc);
     }
-    log_printf("\n]\n");
+    logger_printf("\n]\n");
 }
 
 /*******************************************************************************
@@ -698,9 +698,9 @@ _atomic_outcome_data_satisfied(atomic_outcome_t *atomic_outcome)
 static void
 _atomic_outcome_diff_print(atomic_outcome_t *atomic_outcome)
 {
-    log_printf("total order: ");
+    logger_printf("total order: ");
     tidset_print(&atomic_outcome->total_order.m);
-    log_println("return map:");
+    logger_println("return map:");
     for (const tiditem_t *cur = tidmap_iterate(&atomic_outcome->return_map);
          cur; cur             = tidmap_next(cur)) {
         for (const tiditem_t *wcur =
@@ -711,16 +711,16 @@ _atomic_outcome_diff_print(atomic_outcome_t *atomic_outcome)
             }
             return_t *r  = (return_t *)cur;
             return_t *wr = (return_t *)wcur;
-            log_printf("%lu -> %lu", cur->key, r->value);
+            logger_printf("%lu -> %lu", cur->key, r->value);
             if (r->value != wr->value) {
-                log_println(" != %lu", wr->value);
+                logger_println(" != %lu", wr->value);
             } else {
-                log_println();
+                logger_println();
             }
             break;
         }
     }
-    log_println("memory_map:");
+    logger_println("memory_map:");
     for (const tiditem_t *cur = tidmap_iterate(&atomic_outcome->read_map); cur;
          cur                  = tidmap_next(cur)) {
         memory_value_t *v = (memory_value_t *)cur;
@@ -738,11 +738,11 @@ _atomic_outcome_diff_print(atomic_outcome_t *atomic_outcome)
                 ASSERT(0);
             if (stable_address_sprint(&v->pc, pc) >= STABLE_ADDRESS_MAX_STR_LEN)
                 ASSERT(0);
-            log_printf("%s @ %s -> 0x%02x", addr, pc, v->value);
+            logger_printf("%s @ %s -> 0x%02x", addr, pc, v->value);
             if (v->value != wv->value) {
-                log_println(" != 0x%02x", wv->value);
+                logger_println(" != 0x%02x", wv->value);
             } else {
-                log_println();
+                logger_println();
             }
             break;
         }
@@ -761,7 +761,7 @@ _lib_destroy()
     }
     if (capture_group_config()->atomic) {
         if (_state.first_group) {
-            log_println("[lotto] no capture group detected");
+            logger_println("[lotto] no capture group detected");
             return;
         }
         tidset_copy(&_state.atomic_outcome.total_order, &_state.finished_tasks);
@@ -771,7 +771,7 @@ _lib_destroy()
         stream_t *stream = stream_file_alloc();
         stream_file_out(stream, capture_group_config()->path);
         if (stream_write(stream, buf, size) != size)
-            log_fatalf("could not write to stream");
+            logger_fatalf("could not write to stream");
         sys_free(buf);
         stream_close(stream);
         sys_free(stream);
@@ -820,11 +820,11 @@ _lib_destroy()
         }
     }
     if (!order_found) {
-        log_println(
+        logger_println(
             "[lotto] no atomic execution satisfies the nonatomic partial "
             "order, try more --sc-exploration-rounds");
     } else {
-        log_println("State diffs:");
+        logger_println("State diffs:");
         rewinddir(dp);
         for (struct dirent *file; (file = readdir(dp));) {
             if (!strcmp(file->d_name, ".") || !strcmp(file->d_name, ".."))

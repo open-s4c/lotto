@@ -83,7 +83,7 @@ gdb_srv_handle_v(int fd, uint8_t *msg, uint64_t msg_len)
                     return 0;
                 }
                 // check tid and pid for -1, which means continue all
-                // log_infof("vCont continue on pid %ld, tid %ld\n", pid,
+                // logger_infof("vCont continue on pid %ld, tid %ld\n", pid,
                 // tid);
                 gdb_send_ack(fd);
                 gdb_srv_set_current_core_id(0);
@@ -99,7 +99,7 @@ gdb_srv_handle_v(int fd, uint8_t *msg, uint64_t msg_len)
                 rsp_extract_thread_id((char *)msg + msg_idx, msg_len - msg_idx,
                                       &pid, &tid);
 
-                // log_infof("vCont continue on pid %ld, tid %ld\n", pid,
+                // logger_infof("vCont continue on pid %ld, tid %ld\n", pid,
                 // tid);
                 gdb_send_ack(fd);
                 gdb_srv_set_current_core_id(0);
@@ -190,7 +190,7 @@ gdb_srv_handle_v(int fd, uint8_t *msg, uint64_t msg_len)
                     cpu_index =
                         CAST_TYPE(int32_t, gdb_srv_gdb_tid_to_vcpu(tid));
                 }
-                // log_printf("Got request to add breakpoint at addr 0x%lx\n",
+                // logger_printf("Got request to add breakpoint at addr 0x%lx\n",
                 // b_pc);
                 gdb_add_breakpoint_range_exclude(b_pc_1, size, cpu_index);
                 gdb_send_ack(fd);
@@ -200,7 +200,7 @@ gdb_srv_handle_v(int fd, uint8_t *msg, uint64_t msg_len)
                 return 0;
                 break;
             default:
-                log_infof("Cannot handle vCont; request:\n%s\n", msg);
+                logger_infof("Cannot handle vCont; request:\n%s\n", msg);
                 ASSERT(0 && "Unsupported vCont; request");
                 break;
         }
@@ -208,7 +208,7 @@ gdb_srv_handle_v(int fd, uint8_t *msg, uint64_t msg_len)
 
     // vCont; request
 
-    log_infof("Cannot handle v message:\n%s\n", msg);
+    logger_infof("Cannot handle v message:\n%s\n", msg);
     ASSERT(0 && "Unsupported v message");
 
     return 0;
@@ -233,7 +233,7 @@ gdb_srv_handle_H(int fd, uint8_t *msg, uint64_t msg_len)
 
         rsp_extract_thread_id((char *)msg + msg_idx, msg_len - msg_idx, &pid,
                               &tid);
-        // log_infof("Asked to switch to pid %d, tid %d\n", pid, tid);
+        // logger_infof("Asked to switch to pid %d, tid %d\n", pid, tid);
 
         if (tid > 0)
             gdb_srv_set_current_core_id(tid);
@@ -269,11 +269,11 @@ gdb_srv_handle_H(int fd, uint8_t *msg, uint64_t msg_len)
             return 0;
         }
 
-        log_infof("Cannot handle H continue/step message:\n%s\n", msg);
+        logger_infof("Cannot handle H continue/step message:\n%s\n", msg);
         ASSERT(0 && "Unsupported H continue/step message");
     }
 
-    log_infof("Cannot handle H message:\n%s\n", msg);
+    logger_infof("Cannot handle H message:\n%s\n", msg);
     ASSERT(0 && "Unsupported H message");
 
     return 0;
@@ -300,7 +300,7 @@ gdb_srv_handle_c(int fd, uint8_t *msg, uint64_t msg_len)
         return 0;
     }
 
-    log_infof("Cannot handle c message with specific address:\n%s\n", msg);
+    logger_infof("Cannot handle c message with specific address:\n%s\n", msg);
     ASSERT(0 && "Unsupported c address message");
     return 0;
 }
@@ -308,7 +308,7 @@ gdb_srv_handle_c(int fd, uint8_t *msg, uint64_t msg_len)
 int64_t
 gdb_srv_handle_ctrl_c(int fd)
 {
-    // log_infof("Handle Ctrl+c\n");
+    // logger_infof("Handle Ctrl+c\n");
     // stop the system
     gdb_set_stop_signal(2);
     gdb_set_stop_reason(STOP_REASON_NONE, 0);
@@ -325,7 +325,7 @@ gdb_srv_handle_D(int fd, uint8_t *msg, uint64_t msg_len)
     ASSERT(msg[1] == ';');
     ASSERT(msg[2] == '1');
 
-    // log_infof("GDB client disconnected\n");
+    // logger_infof("GDB client disconnected\n");
 
     gdb_send_ack(fd);
     gdb_send_ok(fd);
@@ -358,7 +358,7 @@ gdb_srv_handle_s(int fd, uint8_t *msg, uint64_t msg_len)
         return 0;
     }
 
-    log_infof("Cannot handle c message with specific address:\n%s\n", msg);
+    logger_infof("Cannot handle c message with specific address:\n%s\n", msg);
     ASSERT(0 && "Unsupported c address message");
     return 0;
 }

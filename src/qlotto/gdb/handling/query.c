@@ -26,7 +26,7 @@ gdb_srv_handle_xfer(int fd, uint8_t *xfer, uint64_t msg_len)
 
     char *read_file;
 
-    // log_infof("Got Xfer request: %s\n", xfer);
+    // logger_infof("Got Xfer request: %s\n", xfer);
 
     // feature request
     if (rl_strncmp((char *)xfer,
@@ -66,22 +66,22 @@ gdb_srv_handle_xfer(int fd, uint8_t *xfer, uint64_t msg_len)
         read_length = rsp_str_to_hex(length, length_len);
 
         if (strcmp(annex, "target.xml") == 0) {
-            // log_infof("  target.xml\n");
+            // logger_infof("  target.xml\n");
             read_file = (char *)target_xml;
         }
 
         if (strcmp(annex, "aarch64-core.xml") == 0) {
-            // log_infof("  aarch64-core.xml\n");
+            // logger_infof("  aarch64-core.xml\n");
             read_file = (char *)aarch64_core_xml;
         }
 
         if (strcmp(annex, "aarch64-fpu.xml") == 0) {
-            // log_infof("  aarch64-fpu.xml\n");
+            // logger_infof("  aarch64-fpu.xml\n");
             read_file = (char *)aarch64_fpu_xml;
         }
 
         if (strcmp(annex, "system-registers.xml") == 0) {
-            // log_infof("  system-registers.xml\n");
+            // logger_infof("  system-registers.xml\n");
             read_file = (char *)system_registers_xml;
         }
 
@@ -105,12 +105,12 @@ gdb_srv_handle_xfer(int fd, uint8_t *xfer, uint64_t msg_len)
         uint64_t msg_answer_len = 1 + MIN(read_file_len, read_length);
         msg_answer[1 + MIN(read_file_len, read_length)] = '\0';
 
-        // log_infof("\nsending msg answer:\n%s\n", msg_answer);
+        // logger_infof("\nsending msg answer:\n%s\n", msg_answer);
 
         return gdb_send_msg(fd, (uint8_t *)msg_answer, msg_answer_len);
     }
 
-    log_infof("Client message: %s\n", (char *)xfer);
+    logger_infof("Client message: %s\n", (char *)xfer);
     ASSERT(0 && "Unsupported Xfer request");
     return -1;
 }
@@ -128,11 +128,11 @@ gdb_srv_handle_supported(int fd, uint8_t *supported, uint64_t msg_len)
     uint8_t support_packet[GDB_MAX_PACKET_LENGTH];
     uint64_t pkt_len = 0;
 
-    // log_infof("Got Supported info:\n");
+    // logger_infof("Got Supported info:\n");
 
     ptok = strtok((char *)supported, ";");
     while (ptok != NULL) {
-        // log_infof("  %s\n", ptok);
+        // logger_infof("  %s\n", ptok);
         ptok = strtok(NULL, ";");
     }
 
@@ -269,7 +269,7 @@ gdb_srv_send_currend_thread_id(int fd)
 
     msg_len = msg_idx;
 
-    // log_infof("sending QC tid message:\n%s\n", msg_tid);
+    // logger_infof("sending QC tid message:\n%s\n", msg_tid);
 
     gdb_send_ack(fd);
     gdb_send_msg(fd, (uint8_t *)msg_tid, msg_len);
@@ -354,7 +354,7 @@ gdb_srv_handle_q(int fd, uint8_t *msg, uint64_t msg_len)
         return gdb_srv_handle_Rcmd(fd, msg + msg_idx, msg_len - msg_idx);
     }
 
-    log_infof("Cannot handle q message:\n%s\n", msg);
+    logger_infof("Cannot handle q message:\n%s\n", msg);
     ASSERT(0 && "Unsupported q message");
 
     return 0;

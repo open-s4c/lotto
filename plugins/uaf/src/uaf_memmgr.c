@@ -6,8 +6,8 @@
 #include <vsync/atomic/core.h>
 #include <vsync/spinlock/caslock.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <uafcheck.h>
 
 #include <lotto/sys/assert.h>
@@ -60,7 +60,7 @@ uaf_fini()
 {
     while (!_uaf_lock())
         ;
-    log_debugf("Finalize user memory\n");
+    logger_debugf("Finalize user memory\n");
     uafc_fini(_uc);
     _uaf_unlock();
 }

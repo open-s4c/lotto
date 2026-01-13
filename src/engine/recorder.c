@@ -7,8 +7,8 @@
  *record commands from the caller (sequencer)
  **/
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
 #include <lotto/base/context.h>
 #include <lotto/base/envvar.h>
@@ -26,13 +26,13 @@
 
 void __attribute__((noinline)) recorder_end_trace()
 {
-    log_debugf("trace fully loaded\n");
+    logger_debugf("trace fully loaded\n");
     // nothing happends here
 }
 
 void __attribute__((noinline)) recorder_end_replay()
 {
-    log_debugf("end of replay\n");
+    logger_debugf("end of replay\n");
     PS_PUBLISH_INTERFACE(TOPIC_REPLAY_END, nil);
 }
 
@@ -45,7 +45,7 @@ static struct {
 void
 recorder_init(trace_t *input, trace_t *output)
 {
-    log_debugf("recorder_init called\n");
+    logger_debugf("recorder_init called\n");
     _recorder.input  = input;
     _recorder.output = output;
 }
@@ -128,7 +128,7 @@ _recorder_replay_next(clk_t clk)
             break;
         }
 
-        log_debugf("replaying record [clk: %lu kind: %s]\n", r->clk,
+        logger_debugf("replaying record [clk: %lu kind: %s]\n", r->clk,
                    kind_str(r->kind));
         /* we match the record, let's load it. */
         statemgr_record_unmarshal(r);
@@ -152,7 +152,7 @@ _recorder_replay_next(clk_t clk)
             case RECORD_OPAQUE:
                 break;
             case RECORD_EXIT:
-                log_warnf("ignoring EXIT record (clk: %lu)\n", clk);
+                logger_warnf("ignoring EXIT record (clk: %lu)\n", clk);
                 recorder_end_trace();
                 break;
 
@@ -164,7 +164,7 @@ _recorder_replay_next(clk_t clk)
                 _recorder_out_clone(r);
                 break;
             default:
-                log_fatalf("unexpected %s record (clk: %lu)\n",
+                logger_fatalf("unexpected %s record (clk: %lu)\n",
                            kind_str(r->kind), clk);
         }
         trace_advance(_recorder.input);
@@ -181,7 +181,7 @@ recorder_replay(clk_t clk)
                "clock contiguous and starting from 1");
     })
 
-    log_debugf("recorder_replay called (clk: %lu)\n", clk);
+    logger_debugf("recorder_replay called (clk: %lu)\n", clk);
     replay_t ry = {.status = REPLAY_DONE, .id = NO_TASK};
     if (!_recorder.input) {
         return ry;
@@ -202,7 +202,7 @@ recorder_record(const context_t *ctx, clk_t clk)
         ASSERT(clk >= _ghost.replay_clk && "record clk >= to replay");
     })
 
-    log_debugf("recorder_record called (clk: %lu id: %lu)\n", clk, ctx->id);
+    logger_debugf("recorder_record called (clk: %lu id: %lu)\n", clk, ctx->id);
 
     if (!_recorder.output)
         return;
@@ -242,7 +242,7 @@ recorder_fini(clk_t clk, task_id id, reason_t reason)
         return;
 
     if (!_recorder.finalr) {
-        log_warnf("no record preallocated, cannot create trace\n");
+        logger_warnf("no record preallocated, cannot create trace\n");
         return;
     }
 

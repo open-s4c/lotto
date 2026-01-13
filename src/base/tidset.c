@@ -373,13 +373,13 @@ tidset_print(const marshable_t *m)
 {
     ASSERT(m);
     const tidset_t *tset = (const tidset_t *)m;
-    log_printf("[");
+    logger_printf("[");
     for (size_t i = 0; i < tset->size; i++) {
         if (i != 0)
-            log_printf(", ");
-        log_printf("%lu", tset->tasks[i]);
+            logger_printf(", ");
+        logger_printf("%lu", tset->tasks[i]);
     }
-    log_printf("]\n");
+    logger_printf("]\n");
 }
 
 

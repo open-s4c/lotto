@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
+#define LOGGER_PREFIX LOGGER_CUR_FILE
 #include "sighandler.h"
 #include <lotto/base/context.h>
 #include <lotto/brokers/catmgr.h>
@@ -74,7 +74,7 @@ get_mediator(bool new_task)
         return m;
     }
     m->registration_status = MEDIATOR_REGISTRATION_EXEC;
-    log_debugf("[%lu] register new task\n", m->id);
+    logger_debugf("[%lu] register new task\n", m->id);
     context_t *ctx           = ctx(.func = __FUNCTION__, .cat = CAT_NONE);
     mediator_status_t status = mediator_resume(m, ctx);
     ASSERT((status == MEDIATOR_OK) && "mediator_init failed");
@@ -92,7 +92,7 @@ get_mediator(bool new_task)
 static void
 _intercept_resume(mediator_t *m, context_t *ctx)
 {
-    log_debugf("[%lu] prepare to resume %s\n", m->id, category_str(ctx->cat));
+    logger_debugf("[%lu] prepare to resume %s\n", m->id, category_str(ctx->cat));
 
     switch (mediator_resume(m, ctx)) {
         case MEDIATOR_OK:
@@ -106,7 +106,7 @@ _intercept_resume(mediator_t *m, context_t *ctx)
             sys_abort();
             break;
         default:
-            log_fatalf("unexpected mediator resume output");
+            logger_fatalf("unexpected mediator resume output");
             break;
     };
 }
@@ -116,7 +116,7 @@ _intercept_return_resume(mediator_t *m, context_t *ctx)
 {
     ASSERT(lotto_intercept_initialized());
 
-    log_debugf("[%lu] return from '%s'\n", m->id, ctx->func);
+    logger_debugf("[%lu] return from '%s'\n", m->id, ctx->func);
     mediator_return(m, ctx);
     _intercept_resume(m, ctx);
 }
@@ -144,12 +144,12 @@ mediator_t *
 intercept_before_call(context_t *ctx)
 {
     if (!lotto_intercept_initialized()) {
-        log_debugf("[???] before call '%s' (interceptor not initialized yet)\n",
+        logger_debugf("[???] before call '%s' (interceptor not initialized yet)\n",
                    ctx->func);
         return NULL;
     }
     mediator_t *m = get_mediator(false);
-    log_debugf("[%lu] before call '%s'\n", m->id, ctx->func);
+    logger_debugf("[%lu] before call '%s'\n", m->id, ctx->func);
     ENSURE(mediator_capture(m, ctx));
     return m;
 }
@@ -158,13 +158,13 @@ void
 intercept_after_call(const char *func)
 {
     if (!lotto_intercept_initialized()) {
-        log_debugf("[?] after call '%s' (interceptor not initialized yet)\n",
+        logger_debugf("[?] after call '%s' (interceptor not initialized yet)\n",
                    func);
         return;
     }
     mediator_t *m = get_mediator(false);
 
-    log_debugf("[%lu] after call  '%s'\n", m->id, func);
+    logger_debugf("[%lu] after call  '%s'\n", m->id, func);
     /* after the external call is done, call "return". Adapt the
      * category in case we created a new task. */
     category_t cat = _is_task_create(func, true) ? CAT_TASK_CREATE : CAT_CALL;
@@ -185,11 +185,11 @@ intercept_lookup_call(const char *func)
     context_t *ctx = ctx(.func = func, .cat = CAT_CALL);
     (void)intercept_before_call(ctx);
 
-    log_debugf("[%lu] lookup call '%s'\n", ctx->id, func);
+    logger_debugf("[%lu] lookup call '%s'\n", ctx->id, func);
     /* search for the crep or real function and return its pointer */
     if (foo == NULL)
-        log_fatalf("could not find function '%s'\n", func);
-    log_debugf("[%lu] found function '%s'\n", ctx->id, func);
+        logger_fatalf("could not find function '%s'\n", func);
+    logger_debugf("[%lu] found function '%s'\n", ctx->id, func);
     return foo;
 }
 
@@ -202,9 +202,9 @@ intercept_warn_call(const char *func)
         return foo;
     }
 
-    log_warnf("warn call '%s'\n", func);
+    logger_warnf("warn call '%s'\n", func);
     if (foo == NULL)
-        log_fatalf("could not find function '%s'\n", func);
+        logger_fatalf("could not find function '%s'\n", func);
     return foo;
 }
 

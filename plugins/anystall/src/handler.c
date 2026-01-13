@@ -9,8 +9,8 @@
  * - If the event is mutable, the handler filters out all tasks whose priority
  * is not maximum
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <state.h>
 
 #include <lotto/base/tidmap.h>
@@ -46,7 +46,7 @@ _anystall_handle(const context_t *ctx, event_t *e)
     _state.anytask_count++;
 
     if (_state.anytask_count > anystall_config()->anytask_limit) {
-        log_fatalf(
+        logger_fatalf(
             "Scheduled ANY_TASK %lu times in a row. Possible deadlock?\n",
             _state.anytask_count);
     }

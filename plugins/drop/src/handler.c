@@ -2,8 +2,8 @@
  */
 #include "lotto/base/reason.h"
 #include "lotto/base/slot.h"
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <category.h>
 #include <state.h>
 

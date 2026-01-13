@@ -2,8 +2,8 @@
  */
 #include <stdlib.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
 #include <mempool.h>
 
@@ -32,7 +32,7 @@ typedef struct mempool_size_s {
 static mempool_size_t _mempool_size;
 
 REGISTER_PRINTABLE_STATE(START, _mempool_size, {
-    log_infof(FLAG_OPT " = %lu\n", _mempool_size.size);
+    logger_infof(FLAG_OPT " = %lu\n", _mempool_size.size);
 })
 
 NEW_CALLBACK_FLAG(MEMPOOL_SIZE, "", FLAG_OPT, "INT", FLAG_DESCR,

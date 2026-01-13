@@ -263,7 +263,7 @@ _address_bdd_print(address_bdd_t *bdd, uintptr_t value)
     const uintptr_t current_bit        = _leading_one();
     if (_address_bdd_range_print(node_ptr, current_start, current_end,
                                  current_bit, value, false)) {
-        log_infof("0x%016lx\n", ~(uintptr_t)0);
+        logger_infof("0x%016lx\n", ~(uintptr_t)0);
     }
 }
 
@@ -275,12 +275,12 @@ _address_bdd_range_print(address_bdd_node_t *node_ptr, uintptr_t current_start,
     if (_node_is_terminal(node_ptr)) {
         if (node_ptr != (void *)value) {
             if (interval_open) {
-                log_infof("0x%016lx\n", current_start - 1);
+                logger_infof("0x%016lx\n", current_start - 1);
             }
             return false;
         }
         if (!interval_open) {
-            log_infof("0x%016lx-", current_start);
+            logger_infof("0x%016lx-", current_start);
         }
         return true;
     }

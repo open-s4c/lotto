@@ -1,8 +1,8 @@
 /*
  */
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <limits.h>
 #include <signal.h>
 #include <time.h>
@@ -33,7 +33,7 @@ static void
 _expired(union sigval timer_data)
 {
     struct event_data *data = timer_data.sival_ptr;
-    log_println("Task [%lu] has no capture point received after %lu seconds",
+    logger_println("Task [%lu] has no capture point received after %lu seconds",
                 data->id, data->alarm);
     _reset_alarm(timer);
     data->alarm += inactivity_timeout_config()->alarm;

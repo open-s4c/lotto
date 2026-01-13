@@ -29,7 +29,7 @@
 #include <lotto/unsafe/disable.h>
 #include <lotto/unsafe/rogue.h>
 
-#define LOG_FILE     "qemu_inst_measure.log"
+#define LOGGER_FILE     "qemu_inst_measure.log"
 #define MAX_MEASURES 10000000ULL
 
 #define USEC_IN_SEC      1000000ULL
@@ -45,7 +45,7 @@ typedef struct measure_state_s {
     uint64_t datapoints[MAX_MEASURES];
     uint64_t timestamps[MAX_MEASURES];
     uint64_t num_samples;
-    FILE *log_file;
+    FILE *logger_file;
     struct timeval tv_start;
     icounter_t inst_count;
     timer_t timerid_measure;
@@ -102,7 +102,7 @@ handler_measure(void)
 static void
 handler_report(void)
 {
-    if (!_state.log_file)
+    if (!_state.logger_file)
         return;
     if (_state.num_samples == 0)
         return;
@@ -125,7 +125,7 @@ handler_report(void)
 
     uint64_t inst_per_second = inst_diff * USEC_IN_SEC / time_diff;
 
-    rl_fprintf(_state.log_file, "[%10lu ms] %10lu inst/s\n",
+    rl_fprintf(_state.logger_file, "[%10lu ms] %10lu inst/s\n",
                (last_timestamp / 1000), inst_per_second);
 }
 
@@ -175,14 +175,14 @@ plugin_exit(qemu_plugin_id_t id, void *p)
     uint64_t inst_count  = _state.datapoints[last_idx];
     uint64_t mean        = inst_count * USEC_IN_SEC / runtime;
 
-    fprintf(_state.log_file, "######### SUMMARY #########\n");
-    fprintf(_state.log_file, "# Runtime:           %15lu usec\n", runtime);
-    fprintf(_state.log_file, "# Instruction count: %15lu\n", inst_count);
-    fprintf(_state.log_file, "# Average Instr./s:  %15lu\n", mean);
-    fprintf(_state.log_file, "#########   END   #########\n");
+    fprintf(_state.logger_file, "######### SUMMARY #########\n");
+    fprintf(_state.logger_file, "# Runtime:           %15lu usec\n", runtime);
+    fprintf(_state.logger_file, "# Instruction count: %15lu\n", inst_count);
+    fprintf(_state.logger_file, "# Average Instr./s:  %15lu\n", mean);
+    fprintf(_state.logger_file, "#########   END   #########\n");
 
-    if (_state.log_file)
-        fclose(_state.log_file);
+    if (_state.logger_file)
+        fclose(_state.logger_file);
 
     icounter_free(&_state.inst_count);
 }
@@ -218,14 +218,14 @@ qemu_plugin_install(qemu_plugin_id_t id, const qemu_info_t *info, int argc,
     qemu_plugin_register_atexit_cb(id, plugin_exit, NULL);
     icounter_init(&_state.inst_count);
 
-    _state.log_file    = NULL;
+    _state.logger_file    = NULL;
     _state.num_samples = 0;
 
     rl_gettimeofday(&_state.tv_start, NULL);
-    _state.log_file = fopen(LOG_FILE, "a");
-    if (!_state.log_file) {
+    _state.logger_file = fopen(LOGGER_FILE, "a");
+    if (!_state.logger_file) {
         rl_fprintf(stderr, "Could not open log file for writing! (%s)",
-                   LOG_FILE);
+                   LOGGER_FILE);
         exit(1);
     }
 
@@ -235,9 +235,9 @@ qemu_plugin_install(qemu_plugin_id_t id, const qemu_info_t *info, int argc,
         char s[64];
         size_t ret = strftime(s, sizeof(s), "%c", tm);
         assert(ret);
-        rl_fprintf(_state.log_file, "[%s] Starting QEmu time measurements\n",
+        rl_fprintf(_state.logger_file, "[%s] Starting QEmu time measurements\n",
                    s);
-        fflush(_state.log_file);
+        fflush(_state.logger_file);
     }
 
     rl_printf("Starting measurements on qemu.\n");

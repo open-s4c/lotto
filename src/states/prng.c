@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/marshable.h>
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/statemgr.h>
@@ -19,13 +19,13 @@
 #define PRNG_MASK 0xFFFFFFFF
 
 static prng_t _prng;
-REGISTER_CONFIG(_prng, { log_infof("seed = %u\n", _prng.seed); })
+REGISTER_CONFIG(_prng, { logger_infof("seed = %u\n", _prng.seed); })
 PS_SUBSCRIBE_INTERFACE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
-    log_debugf("seed = %u\n", _prng.seed);
+    logger_debugf("seed = %u\n", _prng.seed);
     const char *var = getenv("LOTTO_SEED");
     if (var) {
         _prng.seed = atoi(var);
-        log_debugf("Seed from envvar: %u\n", _prng.seed);
+        logger_debugf("Seed from envvar: %u\n", _prng.seed);
     }
 })
 

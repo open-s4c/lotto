@@ -1,7 +1,7 @@
 /*
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/memmgr_runtime.h>
 #include <lotto/sys/string.h>
@@ -9,7 +9,7 @@
 void
 sys_memory_fini(void)
 {
-    log_debugf("Finalize sys_memory\n");
+    logger_debugf("Finalize sys_memory\n");
     memmgr_runtime_fini();
 }
 

@@ -88,7 +88,7 @@ _mediator_dtor(void *arg)
                     lotto_exit(ctx, REASON_SHUTDOWN);
                     break;
                 default:
-                    log_fatalf("unexpected mediator resume output\n");
+                    logger_fatalf("unexpected mediator resume output\n");
                     break;
             };
         }
@@ -291,7 +291,7 @@ mediator_capture(mediator_t *m, context_t *ctx)
                 return false;
 
             default:
-                log_fatalf("unexpected action: %s\n",
+                logger_fatalf("unexpected action: %s\n",
                            action_str(plan_next(m->plan)));
         }
     while (!plan_done(&m->plan));
@@ -344,7 +344,7 @@ mediator_resume(mediator_t *m, context_t *ctx)
                 break;
 
             default:
-                log_fatalf("unexpected action: %s\n",
+                logger_fatalf("unexpected action: %s\n",
                            action_str(plan_next(m->plan)));
         }
     while (!plan_done(&m->plan));

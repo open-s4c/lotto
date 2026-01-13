@@ -9,8 +9,8 @@
 #include <signal.h>
 
 #include <sys/epoll.h>
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/sys/logger_block.h>
 
 #if 0

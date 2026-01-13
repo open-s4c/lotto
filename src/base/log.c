@@ -5,6 +5,7 @@
 #include <lotto/base/log.h>
 #include <lotto/base/task_id.h>
 #include <lotto/sys/assert.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/memory.h>
 
 void
@@ -26,5 +27,5 @@ void
 log_print(const marshable_t *m)
 {
     log_t *l = (log_t *)m;
-    log_infof("[%lu, %lu, 0x%lx]\n", l->tid, l->id, l->data);
+    logger_infof("[%lu, %lu, 0x%lx]\n", l->tid, l->id, l->data);
 }

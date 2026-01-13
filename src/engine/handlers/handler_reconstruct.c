@@ -35,14 +35,14 @@ _check_log_after(const context_t *ctx, event_t *e)
         ASSERT(e->next == NO_TASK);
         e->next = ctx->id;
         if (reconstruct_config()->tid != NO_TASK) {
-            log_infof("\n[reconstruct handler] clk: %lu\n", e->clk);
-            log_infof("Looking for: [%lu, %lu, 0x%lx]\n",
-                      reconstruct_config()->tid, reconstruct_config()->id,
-                      reconstruct_config()->data);
-            log_infof("Found:       [%lu, %lu, 0x%lx]\n",
-                      reconstruct_get_log()->tid, reconstruct_get_log()->id,
-                      reconstruct_get_log()->data);
-            log_infof("\n");
+            logger_infof("\n[reconstruct handler] clk: %lu\n", e->clk);
+            logger_infof("Looking for: [%lu, %lu, 0x%lx]\n",
+                         reconstruct_config()->tid, reconstruct_config()->id,
+                         reconstruct_config()->data);
+            logger_infof("Found:       [%lu, %lu, 0x%lx]\n",
+                         reconstruct_get_log()->tid, reconstruct_get_log()->id,
+                         reconstruct_get_log()->data);
+            logger_infof("\n");
         }
     }
 }

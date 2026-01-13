@@ -53,7 +53,7 @@ gdb_srv_handle_m(int fd, uint8_t *msg, uint64_t msg_len)
     mem_size = rsp_str_to_hex((char *)msg + msg_idx, msg_len - msg_idx);
     // ASSERT(mem_size % 4 == 0);
     ASSERT(mem_size <= 8192);
-    // log_infof("Reading %d bytes from 0x%lx\n", mem_size, mem_addr);
+    // logger_infof("Reading %d bytes from 0x%lx\n", mem_size, mem_addr);
 
     if (mem_addr == 0 || mem_addr > 0xfffffffff0000000) {
         gdb_send_ack(fd);

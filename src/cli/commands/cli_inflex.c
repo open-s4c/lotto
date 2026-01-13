@@ -48,7 +48,7 @@ DECLARE_FLAG_LOGGER_BLOCK;
 DECLARE_FLAG_BEFORE_RUN;
 DECLARE_FLAG_AFTER_RUN;
 DECLARE_FLAG_CREP;
-DECLARE_FLAG_LOG_FILE;
+DECLARE_FLAG_LOGGER_FILE;
 DECLARE_COMMAND_FLAG(INFLEX_MIN, "", "inflex-min", "UINT",
                      "minimum clock for the inflection point", flag_uval(0))
 DECLARE_COMMAND_FLAG(INFLEX_METHOD, "", "inflex-method", "METHOD",
@@ -88,7 +88,7 @@ static bool _always_fails_at_clk_explore(args_t *args, flags_t *flags,
 int
 inflex(args_t *args, flags_t *flags)
 {
-    setenv("LOTTO_LOG_FILE", flags_get_sval(flags, FLAG_LOG_FILE), true);
+    setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, FLAG_LOGGER_FILE), true);
 
     sys_fprintf(stdout, "input trace: %s\n", flags_get_sval(flags, FLAG_INPUT));
     sys_fprintf(stdout, "output trace: %s\n",
@@ -161,7 +161,7 @@ _binary_probablistic(args_t *args, flags_t *flags, uint64_t last_clk)
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, FLAG_OUTPUT)},
         {"LOTTO_LOGGER_BLOCK",
          .sval = flags_get_sval(flags, FLAG_LOGGER_BLOCK)},
-        {"LOTTO_LOG_LEVEL", .sval = "silent"},
+        {"LOTTO_LOGGER_LEVEL", .sval = "silent"},
         {NULL}};
     envvar_set(vars, true);
 
@@ -214,7 +214,7 @@ _binary_explore(args_t *args, flags_t *flags, uint64_t last_clk)
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, FLAG_OUTPUT)},
         {"LOTTO_LOGGER_BLOCK",
          .sval = flags_get_sval(flags, FLAG_LOGGER_BLOCK)},
-        {"LOTTO_LOG_LEVEL", .sval = "silent"},
+        {"LOTTO_LOGGER_LEVEL", .sval = "silent"},
         {NULL}};
     envvar_set(vars, true);
 
@@ -268,7 +268,7 @@ _linear_inflex(args_t *args, flags_t *flags, uint64_t last_clk,
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, FLAG_OUTPUT)},
         {"LOTTO_LOGGER_BLOCK",
          .sval = flags_get_sval(flags, FLAG_LOGGER_BLOCK)},
-        {"LOTTO_LOG_LEVEL", .sval = "silent"},
+        {"LOTTO_LOGGER_LEVEL", .sval = "silent"},
         {NULL}};
     envvar_set(vars, true);
 
@@ -487,7 +487,7 @@ init()
                     FLAG_AFTER_RUN,
                     FLAG_INFLEX_MIN,
                     FLAG_INFLEX_METHOD,
-                    FLAG_LOG_FILE,
+                    FLAG_LOGGER_FILE,
                     FLAG_CREP,
                     0};
     subcmd_register(inflex, "inflex", "", "Find an inflection point of a trace",

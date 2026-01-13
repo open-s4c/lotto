@@ -1,7 +1,7 @@
 /*
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/tidmap.h>
 #include <lotto/base/tidset.h>
 #include <lotto/brokers/statemgr.h>
@@ -70,7 +70,7 @@ _creation_handle(const context_t *ctx, event_t *e)
             break;
 
         case CAT_TASK_INIT:
-            log_debugf("Register tid %lu (parent: %lu)\n", ctx->id,
+            logger_debugf("Register tid %lu (parent: %lu)\n", ctx->id,
                        _state.last_parent);
             ENSURE(tidset_insert(&_state.registered, ctx->id) &&
                    "a task is reregistered");
@@ -87,7 +87,7 @@ _creation_handle(const context_t *ctx, event_t *e)
         default:
             if (!tidset_insert(&_state.registered, ctx->id))
                 break;
-            log_debugf("Registering task %lu\n", ctx->id);
+            logger_debugf("Registering task %lu\n", ctx->id);
             break;
     }
 

@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_CLI_LOG_UTILS_H
 #define LOTTO_CLI_LOG_UTILS_H
 

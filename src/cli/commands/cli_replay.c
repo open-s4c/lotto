@@ -33,12 +33,12 @@ DECLARE_FLAG_NO_PRELOAD;
 DECLARE_FLAG_LOGGER_BLOCK;
 DECLARE_FLAG_BEFORE_RUN;
 DECLARE_FLAG_AFTER_RUN;
-DECLARE_FLAG_LOG_FILE;
+DECLARE_FLAG_LOGGER_FILE;
 
 int
 replay(args_t *args, flags_t *flags)
 {
-    setenv("LOTTO_LOG_FILE", flags_get_sval(flags, FLAG_LOG_FILE), true);
+    setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, FLAG_LOGGER_FILE), true);
 
     sys_fprintf(stdout, "trace file: %s\n", flags_get_sval(flags, FLAG_INPUT));
 
@@ -116,7 +116,7 @@ init()
                     FLAG_BEFORE_RUN,
                     FLAG_AFTER_RUN,
                     FLAG_CREP,
-                    FLAG_LOG_FILE,
+                    FLAG_LOGGER_FILE,
                     0};
     subcmd_register(replay, "replay", "", "Replay a trace", true, sel,
                     _default_flags, SUBCMD_GROUP_TRACE);

@@ -1,7 +1,7 @@
 /*
  */
-#define LOG_PREFIX LOG_CUR_FILE
-#define LOG_BLOCK  LOG_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/marshable.h>
 #include <lotto/base/string.h>
 #include <lotto/brokers/catmgr.h>
@@ -18,8 +18,8 @@ static enforce_config_t _config;
 REGISTER_CONFIG(_config, {
     char str[ENFORCE_MODES_MAX_LEN];
     enforce_modes_str(_config.modes, str);
-    log_infof("modes           = %s\n", str);
-    log_infof("compare_address = %s\n", _config.compare_address ? "on" : "off");
+    logger_infof("modes           = %s\n", str);
+    logger_infof("compare_address = %s\n", _config.compare_address ? "on" : "off");
 })
 
 enforce_config_t *
@@ -36,10 +36,10 @@ static enforce_state_t _state;
 static void
 _printm(const marshable_t *m)
 {
-    log_infof("id:   %lu\n", _state.ctx.id);
-    log_infof("cat:  %s\n", category_str(_state.ctx.cat));
-    log_infof("pc:   %p\n", (void *)_state.ctx.pc);
-    log_infof("seed: %lu\n", _state.seed);
+    logger_infof("id:   %lu\n", _state.ctx.id);
+    logger_infof("cat:  %s\n", category_str(_state.ctx.cat));
+    logger_infof("pc:   %p\n", (void *)_state.ctx.pc);
+    logger_infof("seed: %lu\n", _state.seed);
 }
 REGISTER_STATE(PERSISTENT, _state, {
     _state.m       = MARSHABLE_STATIC(sizeof(_state));

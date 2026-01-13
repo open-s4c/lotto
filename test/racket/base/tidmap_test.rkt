@@ -14,7 +14,7 @@
 ;; helper procedures
 ;; -----------------------------------------------------------------------------
 
-;;(call logger_set_level 'LOG_DEBUG)
+;;(call logger_set_level 'LOGGER_DEBUG)
 
 (define (many f v)
   (define (many-iter v)

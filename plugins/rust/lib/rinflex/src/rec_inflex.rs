@@ -76,7 +76,7 @@ impl RecInflex {
         let with_oc = self.attach_constraints_to_trace(&self.trace_fail, 0, &self.constraints)?;
         let _replay = EnvScope::new("LOTTO_REPLAY", &with_oc);
         let _record = EnvScope::new("LOTTO_RECORD", &self.trace_temp);
-        let _silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let mut flags = self.flags.clone();
         flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(0));
         let mut bar = ProgressBar::new(self.report_progress, "HALT", self.rounds);
@@ -209,7 +209,7 @@ impl RecInflex {
         let mut flags = self.flags.to_owned();
         let _replay = EnvScope::new("LOTTO_REPLAY", &check_trace);
         let _record = EnvScope::new("LOTTO_RECORD", &self.trace_temp);
-        let _silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let mut bar = ProgressBar::new(self.report_progress, "correct?", self.rounds);
         always(self.rounds, || {
             let mut invalid_cnt = 0;
@@ -250,7 +250,7 @@ impl RecInflex {
         let out = out?;
         let _replay = EnvScope::new("LOTTO_REPLAY", &out);
         let _record = EnvScope::new("LOTTO_RECORD", &self.trace_temp);
-        let _silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let mut flags = self.flags.to_owned();
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
         let always_succeed = always(self.rounds, || {
@@ -285,7 +285,7 @@ impl RecInflex {
             self.set_constraints_in_first_config_record(input, &self.constraints)?;
         let _replay = EnvScope::new("LOTTO_REPLAY", &input);
         let _record = EnvScope::new("LOTTO_RECORD", &output);
-        let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let mut flags = self.flags.clone();
         let mut cnt = 0;
         let mut replay_goal = last_valid_clk;
@@ -334,7 +334,7 @@ impl RecInflex {
         let input = self.attach_constraints_to_trace(input, replay_goal, &self.constraints)?;
         let _replay = EnvScope::new("LOTTO_REPLAY", &input);
         let _record = EnvScope::new("LOTTO_RECORD", &output);
-        let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let mut flags = self.flags.clone();
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds * 10);
         loop {
@@ -359,7 +359,7 @@ impl RecInflex {
     }
 
     fn event_at_clock(&self, flags: &Flags, trace: &Path, clock: Clock) -> Result<Event, Error> {
-        let _silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let event = trace::get_event_at_clk(flags, trace, clock)?;
 
         // Not CAS.

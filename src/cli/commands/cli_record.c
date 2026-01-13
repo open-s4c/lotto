@@ -27,7 +27,7 @@ init()
                     FLAG_LOGGER_BLOCK,
                     FLAG_BEFORE_RUN,
                     FLAG_AFTER_RUN,
-                    FLAG_LOG_FILE,
+                    FLAG_LOGGER_FILE,
                     FLAG_CREP,
                     0};
     subcmd_register(record, "record", "[--] <command line>",

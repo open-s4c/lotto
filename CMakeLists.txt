@@ -19,10 +19,21 @@ add_compile_options("-fPIC" "-Werror")
 set(LOTTO_FRONTEND_LIST POSIX QEMU)
 include(cmake/stable_options.cmake)
 
+# ------------------------------------------------------------------------------
+# Dice
+# ------------------------------------------------------------------------------
+set(DICE_LOG_LEVEL
+    "INFO"
+    CACHE STRING "" FORCE)
+
+set(DICE_DISPATCH_CHAINS
+    "1,4,7,2,3,5,6,0"
+    CACHE STRING "" FORCE)
+
 # ##############################################################################
 # Dependencies
 # ##############################################################################
-#include(cmake/submodule.cmake)
+# include(cmake/submodule.cmake)
 include(cmake/utils.cmake)
 add_subdirectory(deps)
 
@@ -33,9 +44,8 @@ add_library(vsync ALIAS libvsync::vsync)
 # ##############################################################################
 # Generic project configuration
 # ##############################################################################
-#pkgtools_add_clang_format_targets()
-#pkgtools_add_cmake_format_targets()
-#pkgtools_set_version_from_tag()
+# pkgtools_add_clang_format_targets() pkgtools_add_cmake_format_targets()
+# pkgtools_set_version_from_tag()
 
 # ##############################################################################
 # Experimental options

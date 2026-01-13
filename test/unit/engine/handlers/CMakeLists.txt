@@ -8,10 +8,11 @@ foreach(SRC ${SRCS})
         engine_${SRC_LIB}.o
         states_${SRC_LIB}.o
         sys_testing.o
-        brokers_pubsub_testing.o
+        # brokers_pubsub_testing.o
         base_testing.o
         states_sequencer_testing.o
         memmgr_runtime.o
-        memmgr_user.o)
+        memmgr_user.o
+        dice)
     add_test(NAME ${TARGET} COMMAND ${TARGET})
 endforeach()

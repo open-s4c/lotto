@@ -119,6 +119,9 @@ target_link_libraries(
 if("${LOTTO_DRUM}")
     target_link_libraries(lotto-cli PRIVATE curses)
 endif()
+target_sources(lotto-cli PRIVATE $<TARGET_OBJECTS:dice.o>
+                                 $<TARGET_OBJECTS:dice-self.o>)
+
 target_compile_options(lotto-cli PRIVATE -g)
 set_target_properties(lotto-cli PROPERTIES ENABLE_EXPORTS ON)
 file(COPY python DESTINATION ${CMAKE_BINARY_DIR})

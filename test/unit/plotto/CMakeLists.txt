@@ -23,6 +23,7 @@ foreach(SRC ${SRCS})
         interceptor_testing.o
         posix_interceptors.o
         memmgr_runtime.o
-        memmgr_user.o)
+        memmgr_user.o
+        dice)
     # add_test(NAME ${TEST} COMMAND ${TEST})
 endforeach()

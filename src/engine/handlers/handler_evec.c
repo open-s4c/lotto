@@ -47,7 +47,7 @@ REGISTER_STATE(EPHEMERAL, _state, {
 static void _check_timeouts(bool should_publish);
 PS_SUBSCRIBE_INTERFACE(TOPIC_TRIGGER_TIMEOUT, {
     if (_state.received_timeout || !tidset_has(&_state.waiters, as_uval(v))) {
-        return;
+        return PS_OK;
     }
     _state.received_timeout = true;
     clock_time(&_state.now);
@@ -193,7 +193,8 @@ _posthandle_wake(task_id id, uint64_t eid, uint32_t cnt)
 static void
 _posthandle_move(task_id id, uint64_t src, uint64_t dst)
 {
-    logger_debugf("[%lu] evec move waiters from 0x%lx to 0x%lx \n", id, src, dst);
+    logger_debugf("[%lu] evec move waiters from 0x%lx to 0x%lx \n", id, src,
+                  dst);
 
     ASSERT(!tidset_has(&_state.waiters, id));
 

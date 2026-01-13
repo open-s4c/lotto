@@ -15,6 +15,7 @@ foreach(SRC ${SRCS})
         flags_prng_testing.o
         flags_sequencer_testing.o
         memmgr_runtime.o
-        memmgr_user.o)
+        memmgr_user.o
+        dice)
     add_test(NAME ${TEST} COMMAND ${TEST})
 endforeach()

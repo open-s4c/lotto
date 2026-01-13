@@ -19,6 +19,12 @@ add_compile_options("-fPIC" "-Werror")
 set(LOTTO_FRONTEND_LIST POSIX QEMU)
 include(cmake/stable_options.cmake)
 
+# ##############################################################################
+# Dependencies
+# ##############################################################################
+# include(cmake/submodule.cmake)
+include(cmake/utils.cmake)
+
 # ------------------------------------------------------------------------------
 # Dice
 # ------------------------------------------------------------------------------
@@ -30,12 +36,8 @@ set(DICE_DISPATCH_CHAINS
     "1,4,7,2,3,5,6,0"
     CACHE STRING "" FORCE)
 
-# ##############################################################################
-# Dependencies
-# ##############################################################################
-# include(cmake/submodule.cmake)
-include(cmake/utils.cmake)
 add_subdirectory(deps)
+link_libraries(dice.h)
 
 find_package(libvsync 4.2 CONFIG REQUIRED)
 link_libraries(libvsync::vsync)

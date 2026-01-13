@@ -44,7 +44,7 @@ PS_SUBSCRIBE_INTERFACE(TOPIC_TRIGGER_TIMEOUT, {
     task_id id   = as_uval(v);
     poll_t *poll = (poll_t *)tidmap_find(&_state.polls, id);
     if (poll == NULL) {
-        return;
+        return PS_OK;
     }
     _cleanup_poll(poll);
     tidmap_deregister(&_state.polls, id);

@@ -1,10 +1,14 @@
-/*
- */
 #ifndef LOTTO_PUBSUB_INTERFACE_H
 #define LOTTO_PUBSUB_INTERFACE_H
 
 #ifndef LOTTO_PUBSUB_H
     #error "lotto/brokers/pubsub.h" should be included, which includes this header
+#endif
+
+#include <dice/module.h>
+
+#ifndef CHAIN_LOTTO
+    #define CHAIN_LOTTO 7
 #endif
 
 #ifdef LOTTO_PUBSUB_INTERFACE
@@ -78,9 +82,14 @@
 #else
     // PS interface not generated, fall back to normal pub sub
     #define PS_SUBSCRIBE_INTERFACE(topic, CALLBACK)                            \
-        PS_SUBSCRIBE(topic, CALLBACK)
+        PS_SUBSCRIBE(CHAIN_LOTTO, topic, {                                     \
+            struct value v = *(struct value *)event;                           \
+            (void)v;                                                           \
+            CALLBACK                                                           \
+        })
 
-    #define PS_PUBLISH_INTERFACE(topic, val) ps_publish(topic, val);
+    #define PS_PUBLISH_INTERFACE(topic, val)                                   \
+        PS_PUBLISH(CHAIN_LOTTO, topic, (void *)&(val), 0);
 #endif
 
 #endif

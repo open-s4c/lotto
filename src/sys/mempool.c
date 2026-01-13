@@ -13,8 +13,8 @@
 #include <lotto/sys/string.h>
 #include <lotto/util/contract.h>
 
-#define MEMPOOL_ALIGNMENT       8
-#define MEMPOOL_CANARY          0xBEEFFEED
+#define LOTTO_MEMPOOL_ALIGNMENT       8
+#define LOTTO_MEMPOOL_CANARY          0xBEEFFEED
 #define GET_ENTRY_PTR_STRUCT(p) ((entryptr_t *)(p)-1)
 #define GET_CANARY(p)           GET_ENTRY_PTR_STRUCT(p)->canary
 #define GET_ENTRY_PTR(p)        GET_ENTRY_PTR_STRUCT(p)->entry
@@ -71,57 +71,60 @@ _bucketize(size_t size)
     return i;
 }
 
-mempool_t *
-mempool_init(void *(*alloc)(size_t), void (*free)(void *), size_t cap)
+lotto_mempool_t *
+lotto_mempool_init(void *(*alloc)(size_t), void (*free)(void *), size_t cap)
 {
-    mempool_t *mp = alloc(sizeof(mempool_t));
+    lotto_mempool_t *mp = alloc(sizeof(lotto_mempool_t));
     ASSERT(mp);
     mp->free      = free;
     mp->allocated = 0;
     sys_memset(&mp->stack, 0, sizeof(entry_t *) * NSTACKS);
 
-    cap += MEMPOOL_ALIGNMENT - 1;
+    cap += LOTTO_MEMPOOL_ALIGNMENT - 1;
     mp->pool.memory = alloc(cap);
     mp->pool.memory -=
-        ((uintptr_t)mp->pool.memory - METADATA_SIZE) % MEMPOOL_ALIGNMENT;
+        ((uintptr_t)mp->pool.memory - METADATA_SIZE) % LOTTO_MEMPOOL_ALIGNMENT;
     ASSERT(mp->pool.memory);
 
     sys_memset(mp->pool.memory, 0, cap);
     mp->pool.capacity = cap;
     mp->pool.next =
-        ((uintptr_t)mp->pool.memory - METADATA_SIZE) % MEMPOOL_ALIGNMENT;
+        ((uintptr_t)mp->pool.memory - METADATA_SIZE) % LOTTO_MEMPOOL_ALIGNMENT;
     caslock_init(&mp->lock);
     return mp;
 }
 
 void
-mempool_init_static(mempool_t *mempool, void *pool, size_t cap)
+lotto_mempool_init_static(lotto_mempool_t *lotto_mempool, void *pool,
+                          size_t cap)
 {
-    ASSERT(mempool);
-    *mempool = (mempool_t){
+    ASSERT(lotto_mempool);
+    *lotto_mempool = (lotto_mempool_t){
         .pool = (struct alloc){.memory = pool, .capacity = cap, .next = 0}};
     ASSERT(pool);
-    caslock_init(&mempool->lock);
+    caslock_init(&lotto_mempool->lock);
 }
 
 void
-mempool_fini(mempool_t *mp)
+lotto_mempool_fini(lotto_mempool_t *mp)
 {
     ASSERT(mp);
     if (mp->free == NULL) {
         logger_infof(
-            "mempool not provided with free() to deallocate memory: %lu\n",
+            "lotto_mempool not provided with free() to deallocate memory: "
+            "%lu\n",
             mp->allocated);
         return;
     }
-    logger_infof("mempool allocated memory on fini: %lu\n", mp->allocated);
+    logger_infof("lotto_mempool allocated memory on fini: %lu\n",
+                 mp->allocated);
     if (mp->pool.memory)
         mp->free(mp->pool.memory);
     mp->free(mp);
 }
 
 void *
-mempool_alloc(mempool_t *mp, size_t n)
+lotto_mempool_alloc(lotto_mempool_t *mp, size_t n)
 {
     ASSERT(mp);
     entry_t *e      = NULL;
@@ -143,7 +146,8 @@ mempool_alloc(mempool_t *mp, size_t n)
 
 
     if (e == NULL) {
-        ASSERT(mp->pool.capacity >= mp->pool.next + size && "mempool overflow");
+        ASSERT(mp->pool.capacity >= mp->pool.next + size &&
+               "lotto_mempool overflow");
         e       = (entry_t *)(mp->pool.memory + mp->pool.next);
         e->next = NULL;
         e->size = size;
@@ -159,61 +163,61 @@ mempool_alloc(mempool_t *mp, size_t n)
 
     void *ret          = GET_RETURN_PTR(e);
     GET_ENTRY_PTR(ret) = e;
-    GET_CANARY(ret)    = MEMPOOL_CANARY;
+    GET_CANARY(ret)    = LOTTO_MEMPOOL_CANARY;
     return GET_RETURN_PTR(e);
 }
 
 void *
-mempool_aligned_alloc(mempool_t *mp, size_t alignment, size_t size)
+lotto_mempool_aligned_alloc(lotto_mempool_t *mp, size_t alignment, size_t size)
 {
-    void *chunk  = mempool_alloc(mp, size + alignment - 1);
+    void *chunk  = lotto_mempool_alloc(mp, size + alignment - 1);
     uint64_t mod = (uintptr_t)chunk % alignment;
     if (mod == 0) {
         return chunk;
     }
-    ASSERT(alignment > MEMPOOL_ALIGNMENT);
+    ASSERT(alignment > LOTTO_MEMPOOL_ALIGNMENT);
     entry_t *e         = GET_ENTRY_PTR(chunk);
     void *ret          = chunk + alignment - mod;
     GET_ENTRY_PTR(ret) = e;
-    GET_CANARY(ret)    = MEMPOOL_CANARY;
+    GET_CANARY(ret)    = LOTTO_MEMPOOL_CANARY;
     return ret;
 }
 
 void *
-mempool_realloc(mempool_t *mp, void *p, size_t n)
+lotto_mempool_realloc(lotto_mempool_t *mp, void *p, size_t n)
 {
     ASSERT(mp);
     if (p == NULL) {
-        return mempool_alloc(mp, n);
+        return lotto_mempool_alloc(mp, n);
     }
-    ASSERT(GET_CANARY(p) == MEMPOOL_CANARY);
+    ASSERT(GET_CANARY(p) == LOTTO_MEMPOOL_CANARY);
     ASSERT(IN_POOL(mp, p));
     entry_t *e = GET_ENTRY_PTR(p);
     if (e->size >= (char *)p - (char *)e + n) {
         return p;
     }
-    void *ptr = mempool_alloc(mp, n);
+    void *ptr = lotto_mempool_alloc(mp, n);
     if (ptr == NULL) {
-        mempool_free(mp, p);
+        lotto_mempool_free(mp, p);
         return ptr;
     }
     ASSERT(IN_POOL(mp, p));
-    ASSERT(GET_CANARY(p) == MEMPOOL_CANARY);
+    ASSERT(GET_CANARY(p) == LOTTO_MEMPOOL_CANARY);
     n = e->size - METADATA_SIZE < n + METADATA_SIZE ? e->size - METADATA_SIZE :
                                                       n;
     sys_memcpy(ptr, p, n);
-    mempool_free(mp, p);
+    lotto_mempool_free(mp, p);
     return ptr;
 }
 
 void
-mempool_free(mempool_t *mp, void *p)
+lotto_mempool_free(lotto_mempool_t *mp, void *p)
 {
     if (p == NULL) {
         return;
     }
 
-    ASSERT(GET_CANARY(p) == MEMPOOL_CANARY);
+    ASSERT(GET_CANARY(p) == LOTTO_MEMPOOL_CANARY);
     ASSERT(mp);
     ASSERT(IN_POOL(mp, p));
     entry_t *e      = GET_ENTRY_PTR(p);

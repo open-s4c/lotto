@@ -115,12 +115,11 @@ target_link_libraries(
             crep_no_record.o
             cli.o
             memmgr_runtime.o
-            memmgr_user.o)
+            memmgr_user.o
+            dice)
 if("${LOTTO_DRUM}")
     target_link_libraries(lotto-cli PRIVATE curses)
 endif()
-target_sources(lotto-cli PRIVATE $<TARGET_OBJECTS:dice.o>
-                                 $<TARGET_OBJECTS:dice-self.o>)
 
 target_compile_options(lotto-cli PRIVATE -g)
 set_target_properties(lotto-cli PROPERTIES ENABLE_EXPORTS ON)

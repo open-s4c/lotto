@@ -36,6 +36,10 @@ set(DICE_DISPATCH_CHAINS
     "1,4,7,2,3,5,6,0"
     CACHE STRING "" FORCE)
 
+set(DICE_DISABLE_LOADER
+    on
+    CACHE BOOL "" FORCE)
+
 add_subdirectory(deps)
 link_libraries(dice.h)
 

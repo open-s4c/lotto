@@ -603,12 +603,13 @@ impl Outcome {
     }
 }
 
-#[allow(dead_code)]
 /// For debugging.
-fn pause(prompt: &str) {
+#[allow(dead_code)]
+fn pause(prompt: &str) -> String {
     use std::io::Write;
     print!("{}", prompt);
     std::io::stdout().flush().unwrap();
     let mut s = String::new();
     std::io::stdin().read_line(&mut s).unwrap();
+    s
 }

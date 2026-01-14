@@ -148,11 +148,20 @@ macro_rules! wrap {
             }
 
             /// Convert a raw pointer into a reference to the wrapper.
+            ///
+            /// # Safety
+            ///
+            /// The pointer must be valid.
             pub unsafe fn wrap<'a>(ptr: *const $source) -> &'a $wrapper {
                 unsafe { &*(ptr as *const $wrapper) }
             }
 
             /// Convert a raw pointer into a reference to the wrapper.
+            ///
+            /// # Safety
+            ///
+            /// The pointer must be valid, mutable, and there must be
+            /// only one mutable reference.
             pub unsafe fn wrap_mut<'a>(ptr: *mut $source) -> &'a mut $wrapper {
                 unsafe { &mut *(ptr as *mut $wrapper) }
             }

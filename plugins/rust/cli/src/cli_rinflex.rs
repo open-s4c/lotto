@@ -97,14 +97,6 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
             virt: false,
             positive: true,
         });
-
-        info!("updateing constraints in the trace file");
-        let updated_trace_fail = rinflex.unsafely_set_constraints_in_first_config_record(
-            &rinflex.trace_fail,
-            &rinflex.constraints,
-        )?;
-        std::fs::copy(&updated_trace_fail, &rinflex.trace_fail)?;
-        info!("done");
     }
 
     let mut num_ocs = 0;

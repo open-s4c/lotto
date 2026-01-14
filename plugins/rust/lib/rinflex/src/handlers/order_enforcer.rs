@@ -410,11 +410,6 @@ pub fn cli_reset() {
     fin.constraints.clear();
 }
 
-pub fn get_final() -> ConstraintSet {
-    let fin = unsafe { HANDLER.final_mut() };
-    fin.constraints.clone()
-}
-
 pub fn should_discard() -> bool {
     HANDLER.fin.constraints.len() > 0 && HANDLER.fin.should_discard
 }

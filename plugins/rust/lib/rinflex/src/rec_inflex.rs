@@ -26,6 +26,7 @@ pub struct RecInflex {
     pub rounds: u64,
     pub report_progress: bool,
     pub use_linear_backoff: bool,
+    pub next_id: usize,
 
     //
     // Execution parameters
@@ -71,6 +72,7 @@ impl RecInflex {
             trace_fail_alt,
             trace_success,
             trace_temp,
+            next_id: 0,
         }
     }
 
@@ -147,14 +149,10 @@ impl RecInflex {
     ///
     /// That is, check if OC \/ {pair} guarantees a failure of the prefix trace_fail[:ip - 1].
     fn sibling_check(&mut self, ip: Clock, pair: &PrimitiveConstraint) -> Result<bool, Error> {
-        self.constraints.push(Constraint {
-            c: pair.clone(),
-            positive: true,
-            virt: true,
-        });
+        self.push_virtual_constraint(pair.clone(), true);
         let check_trace =
             self.attach_constraints_to_trace(&self.trace_fail, ip - 1, &self.constraints);
-        self.constraints.pop();
+        self.pop_constraint();
         info!("Checking if the pair is a bug for the current set of executions...");
         let check_trace = check_trace?;
         let mut flags = self.flags.to_owned();
@@ -183,11 +181,7 @@ impl RecInflex {
         ip: Clock,
         pair: &PrimitiveConstraint,
     ) -> Result<Option<PathBuf>, Error> {
-        self.constraints.push(Constraint {
-            c: pair.flipped(),
-            positive: false,
-            virt: true,
-        });
+        self.push_virtual_constraint(pair.flipped(), false);
         let result = self.get_trace(
             Outcome::Fail,
             ip - 1,
@@ -196,7 +190,7 @@ impl RecInflex {
             false,
             false,
         );
-        self.constraints.pop();
+        self.pop_constraint();
         match result {
             Ok(()) => Ok(Some(self.trace_fail_alt.to_owned())),
             Err(Error::ExecutionNotFound) => Ok(None),
@@ -292,11 +286,7 @@ impl RecInflex {
                 );
                 panic!();
             }
-            self.constraints.push(Constraint {
-                c: virt_pair,
-                positive: true,
-                virt: true,
-            });
+            self.push_virtual_constraint(virt_pair, true);
             num_added_virt_ocs += 1;
         }
         info!(
@@ -585,6 +575,38 @@ impl RecInflex {
             }
         }
         false
+    }
+
+    pub fn push_real_constraint(&mut self, c: PrimitiveConstraint) {
+        let id = self.get_id();
+        let constraint = Constraint {
+            c,
+            virt: false,
+            positive: false,
+            id,
+        };
+        self.constraints.push(constraint);
+    }
+
+    fn push_virtual_constraint(&mut self, c: PrimitiveConstraint, positive: bool) {
+        let id = self.get_id();
+        let constraint = Constraint {
+            c,
+            virt: true,
+            positive,
+            id,
+        };
+        self.constraints.push(constraint);
+    }
+
+    fn pop_constraint(&mut self) -> Option<Constraint> {
+        self.constraints.pop()
+    }
+
+    fn get_id(&mut self) -> usize {
+        let id = self.next_id;
+        self.next_id += 1;
+        id
     }
 }
 

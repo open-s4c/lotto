@@ -92,11 +92,7 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
             }
         };
 
-        rinflex.constraints.push(Constraint {
-            c: pair,
-            virt: false,
-            positive: true,
-        });
+        rinflex.push_real_constraint(pair);
     }
 
     let mut num_ocs = 0;

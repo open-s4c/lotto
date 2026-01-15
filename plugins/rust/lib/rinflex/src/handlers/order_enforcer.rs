@@ -204,18 +204,7 @@ impl StateTopicSubscriber for OrderEnforcer {
         // See also [`cli_clear_constraints`]. Lotto will append a
         // config record at replay_goal, which can cause duplicate
         // constraints. Here, only add those unseen before.
-        let already_has = |c: &Constraint| {
-            self.fin
-                .constraints
-                .iter()
-                .any(|old| old.c.source.equals(&c.c.source) && old.c.target.equals(&c.c.target))
-        };
-        let seen: Vec<_> = self
-            .cfg
-            .new_constraints
-            .iter()
-            .filter(|new| already_has(new))
-            .collect();
+        let already_has = |c: &Constraint| self.fin.constraints.iter().any(|old| old.id == c.id);
         let unseen: Vec<_> = self
             .cfg
             .new_constraints
@@ -224,27 +213,6 @@ impl StateTopicSubscriber for OrderEnforcer {
             .collect();
         debug!("Adding {} new constraints: {:#?}", unseen.len(), unseen);
         self.fin.constraints.extend(unseen.into_iter().cloned());
-
-        // However, if there are loops involved, there might be legit
-        // constraints that consist of exactly the same
-        // transitions. This can happen during essentiality check:
-        //   { A1 -> B2, !!(A1 -> B1) }
-        // To deal with this, we try to pick the smallest counter.
-        for cur in self.fin.constraints.iter_mut() {
-            for new in seen.iter() {
-                if cur.c.equals(&new.c) {
-                    let oldcnt = cur.c.target.cnt;
-                    let newcnt = oldcnt.min(new.c.target.cnt);
-                    cur.c.target.cnt = newcnt;
-                    if newcnt < oldcnt {
-                        debug!(
-                            "Updating constraint {} target to a smaller counter (from {} to {})",
-                            cur.c, oldcnt, newcnt
-                        );
-                    }
-                }
-            }
-        }
 
         // Do not clear new_constraints so that lotto show can display them.
     }

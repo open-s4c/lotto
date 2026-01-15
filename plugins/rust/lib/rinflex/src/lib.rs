@@ -347,6 +347,9 @@ pub struct Constraint {
     /// The constraint, !(A => B), is represented as
     /// `{ B=>A, positive:false }`.
     pub positive: bool,
+
+    /// An identifier for this constraint. It should be globally unique.
+    pub id: usize,
 }
 
 impl std::fmt::Display for Constraint {

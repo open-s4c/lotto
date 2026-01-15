@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %stress -- %b 2>&1) | %check %s
 // CHECK: [{{.*}}] Deadlock detected! (impasse)
 // clang-format on
 #include <pthread.h>

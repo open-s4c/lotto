@@ -2,7 +2,7 @@
 // ALLOW_RETRIES: 100
 // RUN: %lotto %stress -r 1 --enforcement-mode DATA --record-granularity CAPTURE -- %b
 // RUN: sleep 1
-// RUN: (! %lotto %replay 3>&2 2>&1 1>&3) | filecheck %s
+// RUN: (! %lotto %replay 3>&2 2>&1 1>&3) | %check %s
 // CHECK: MISMATCH [field: val
 // clang-format on
 

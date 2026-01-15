@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress -r 1 --preemptions-off -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %stress -r 1 --preemptions-off -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/order_no_preemptions.c:{{[0-9]+}}: !(val == 0 && data == 1)
 // clang-format on
 

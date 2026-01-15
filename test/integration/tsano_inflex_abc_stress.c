@@ -1,6 +1,6 @@
 // clang-format off
 // UNSUPPORTED: aarch64
-// RUN: while %b ; do :; done 2>&1 | filecheck %s --check-prefix=BUG
+// RUN: while %b ; do :; done 2>&1 | %check %s --check-prefix=BUG
 // BUG: tsano_inflex_abc_stress: {{.*}}/tsano_inflex_abc_stress.c:{{[0-9]+}}: {{.*}} Assertion `recv_from[i] == true' failed.
 // clang-format on
 #include <assert.h>

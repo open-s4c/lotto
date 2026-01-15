@@ -1,9 +1,9 @@
 // clang-format off
 // UNSUPPORTED: aarch64, clang
 // ALLOW_RETRIES: 100
-// RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | filecheck %s --check-prefix=BUG
+// RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | %check %s --check-prefix=BUG
 // RUN: %lotto %inflex -r 30 --inflex-method=lp &>/dev/null
-// RUN: %lotto %debug <<< $'\n'run-replay-lotto | filecheck %s --check-prefix=LOC
+// RUN: %lotto %debug <<< $'\n'run-replay-lotto | %check %s --check-prefix=LOC
 // BUG: assert failed {{.*}}/inflex_method_{{.*}}.c:{{[0-9]+}}: x != 0b11
 // LOC: x++;
 // clang-format on

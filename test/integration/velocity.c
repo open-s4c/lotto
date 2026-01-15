@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress -s random -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %stress -s random -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/velocity.c:{{[0-9]+}}: atomic_load(&x) == 1
 // clang-format on
 

@@ -1,7 +1,7 @@
 // clang-format off
 // XFAIL: *
 // RUN: exit 1
-// RUN: (! %lotto %stress -r 10 -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %stress -r 10 -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/queue_mpmc.c:{{[0-9]+}}: d->content != 2
 // clang-format on
 

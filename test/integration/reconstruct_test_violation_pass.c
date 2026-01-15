@@ -2,10 +2,10 @@
 // UNSUPPORTED: aarch64
 // XFAIL: *
 // RUN: exit 1
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_perfect.log --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_backtrack.log --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_perfect.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_backtrack.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_perfect.log --reconstruct-rounds 5 -- %b 2>&1) | %check %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_backtrack.log --reconstruct-rounds 5 -- %b 2>&1) | %check %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_perfect.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | %check %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_backtrack.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | %check %s
 // CHECK: [3] assert failed {{.*}}/reconstruct_test_violation_pass.c:{{[0-9]+}}: a != 2
 // CHECK: [lotto] Trace reconstructed successfully!
 // clang-format on

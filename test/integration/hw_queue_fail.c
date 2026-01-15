@@ -1,7 +1,7 @@
 // clang-format off
 // XFAIL: *
 // RUN: exit 1
-// RUN: (! %lotto %sc --delayed-functions enqueue:0:0,dequeue:1:0 --delayed-calls 3 --sc-exploration-rounds 100 -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %sc --delayed-functions enqueue:0:0,dequeue:1:0 --delayed-calls 3 --sc-exploration-rounds 100 -- %b 2>&1) | %check %s
 // CHECK-NOT: [lotto] no atomic execution satisfies the nonatomic partial order, try more --sc-exploration-rounds
 // CHECK: hw_queue_fail: {{.*}}/handler_capture_group.c:{{[0-9]+}}: _lib_destroy: Assertion `0 && "could not find a corresponding sequential state"' failed
 // clang-format on

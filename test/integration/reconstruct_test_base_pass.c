@@ -1,10 +1,10 @@
 // clang-format off
 // XFAIL: *
 // RUN: exit 1
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_base_perfect.log --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_base_backtrack.log --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_base_perfect.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_base_backtrack.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_base_perfect.log --reconstruct-rounds 5 -- %b 2>&1) | %check %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_base_backtrack.log --reconstruct-rounds 5 -- %b 2>&1) | %check %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_base_perfect.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | %check %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_base_backtrack.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | %check %s
 // CHECK: [1] assert failed {{.*}}/reconstruct_test_base_pass.c:{{[0-9]+}}: a != 4
 // CHECK: [lotto] Trace reconstructed successfully!
 // clang-format on

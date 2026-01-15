@@ -1,6 +1,6 @@
 // clang-format off
 // UNSUPPORTED: aarch64
-// RUN: (! %lotto %run -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %run -- %b 2>&1) | %check %s
 // CHECK: [{{[[:digit:]]+}}](estimated) SIGABRT
 // clang-format on
 #include <assert.h>

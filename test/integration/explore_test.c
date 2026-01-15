@@ -1,6 +1,6 @@
 // clang-format off
 // RUN: %lotto %stress --record-granularity CHPT -r 1 -- %b || true
-// RUN: (! %lotto %explore 3>&2 2>&1 1>&3) | tail | filecheck %s
+// RUN: (! %lotto %explore 3>&2 2>&1 1>&3) | tail | %check %s
 // CHECK: assert failed {{.*}}/explore_test.c:{{[0-9]+}}: x != 0b11
 // clang-format on
 

@@ -1,8 +1,8 @@
 // clang-format off
 // UNSUPPORTED: aarch64
-// RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | filecheck %s --check-prefix=BUG
+// RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | %check %s --check-prefix=BUG
 // RUN: %lotto %inflex -r 50 &>/dev/null
-// RUN: %lotto %debug --file-filter="libvsync" <<< $'\n'run-replay-lotto | filecheck %s --check-prefix=LOC
+// RUN: %lotto %debug --file-filter="libvsync" <<< $'\n'run-replay-lotto | %check %s --check-prefix=LOC
 // BUG: assert failed {{.*}}/debug-replay-end.c:{{[0-9]+}}: data == 1
 // LOC: assert(data == 1);
 // clang-format on

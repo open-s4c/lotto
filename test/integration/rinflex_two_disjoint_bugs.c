@@ -4,7 +4,7 @@
 // RUN: (! %lotto %stress -s random --stable-address-method MAP --handler-address enable --handler-cas enable --handler-stacktrace enable --handler-event enable -- %b)
 // RUN: %lotto %rinflex -r 30 2>&1 | iconv -f utf-8 -t utf-8 -c > %s.out
 
-// RUN: ( filecheck %s --check-prefix=FIRST < %s.out ) || ( filecheck %s --check-prefix=SECOND < %s.out )
+// RUN: ( %check %s --check-prefix=FIRST < %s.out ) || ( %check %s --check-prefix=SECOND < %s.out )
 
 // FIRST: ------ . ------ . ------ . ------ . ------
 // FIRST: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}

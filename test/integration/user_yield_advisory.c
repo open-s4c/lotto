@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress --advisory-yield -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %stress --advisory-yield -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/user_yield_advisory.c:{{[0-9]+}}: val == 0
 // clang-format on
 

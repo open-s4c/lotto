@@ -1,13 +1,13 @@
 // clang-format off
 // UNSUPPORTED: aarch64, clang
 // RUN: %lotto %stress --handler-race disable -r 1 -- %b
-// RUN: %lotto %show | filecheck %s --check-prefix=MINIMAL
+// RUN: %lotto %show | %check %s --check-prefix=MINIMAL
 // RUN: %lotto %stress --handler-race disable -r 1 --record-granularity CHPT -- %b
-// RUN: %lotto %show | filecheck %s --check-prefix=CHPT
+// RUN: %lotto %show | %check %s --check-prefix=CHPT
 // RUN: %lotto %stress --handler-race disable -r 1 --record-granularity SWITCH -- %b
-// RUN: %lotto %show | filecheck %s --check-prefix=SWITCH
+// RUN: %lotto %show | %check %s --check-prefix=SWITCH
 // RUN: %lotto %stress --handler-race disable -r 1 --record-granularity CAPTURE -- %b
-// RUN: %lotto %show | filecheck %s --check-prefix=CAPTURE
+// RUN: %lotto %show | %check %s --check-prefix=CAPTURE
 //
 // MINIMAL: RECORD 2
 // MINIMAL-NOT: RECORD 5

@@ -1,6 +1,6 @@
 // clang-format off
-// RUN: (! %lotto %stress -- %b)
-// RUN: %lotto %show | filecheck %s
+// RUN: (! %lotto %stress -- %b 2>&1)
+// RUN: %lotto %show | %check %s
 // CHECK: RECORD 2
 // CHECK: reason:   SEGFAULT
 // clang-format on

@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress -r 1 -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %stress -r 1 -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/order_performance.c:{{[0-9]+}}: x != 0b11111
 // clang-format on
 

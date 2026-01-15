@@ -1,7 +1,7 @@
 // clang-format off
 // RUN: (! %lotto %stress -r 1 -- %b)
 // RUN: %lotto %inflex -r 1 -s random
-// RUN: %lotto %show 2>&1 | filecheck %s
+// RUN: %lotto %show 2>&1 | %check %s
 // CHECK: clock:{{ *0}}
 // CHECK-NOT: clock:{{ *[^ 0]}}
 // clang-format on

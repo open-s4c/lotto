@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress --delayed-functions foo:0:0 --delayed-calls 2 -s random -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %stress --delayed-functions foo:0:0 --delayed-calls 2 -s random -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}delay_nonatomic.c:{{[0-9]+}}: x == 2
 // clang-format on
 

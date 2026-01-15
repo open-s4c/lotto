@@ -1,7 +1,7 @@
 // clang-format off
 // XFAIL: *
 // RUN: exit 1
-// RUN: (! %lotto %sc --delayed-functions foo:0:1 --delayed-calls 2 --sc-exploration-rounds 50 --stable-address-method MAP -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %sc --delayed-functions foo:0:1 --delayed-calls 2 --sc-exploration-rounds 50 --stable-address-method MAP -- %b 2>&1) | %check %s
 // CHECK: delay_sc: {{.*}}/handler_capture_group.c:{{[0-9]+}}: _lib_destroy: Assertion `0 && "could not find a corresponding sequential state"' failed
 // clang-format on
 

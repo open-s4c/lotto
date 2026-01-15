@@ -1,9 +1,9 @@
 // clang-format off
 // UNSUPPORTED: aarch64
-// RUN: %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_perfect.log --reconstruct-no-violation-search --reconstruct-rounds 5 -- %b 2>&1 | filecheck %s
-// RUN: %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_backtrack.log --reconstruct-no-violation-search --reconstruct-rounds 5 -- %b 2>&1 | filecheck %s
-// RUN: %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_perfect.log --reconstruct-strategy random --reconstruct-no-violation-search --reconstruct-rounds 5 -- %b 2>&1 | filecheck %s
-// RUN: %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_backtrack.log --reconstruct-strategy random --reconstruct-no-violation-search --reconstruct-rounds 5 -- %b 2>&1 | filecheck %s
+// RUN: %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_perfect.log --reconstruct-no-violation-search --reconstruct-rounds 5 -- %b 2>&1 | %check %s
+// RUN: %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_backtrack.log --reconstruct-no-violation-search --reconstruct-rounds 5 -- %b 2>&1 | %check %s
+// RUN: %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_perfect.log --reconstruct-strategy random --reconstruct-no-violation-search --reconstruct-rounds 5 -- %b 2>&1 | %check %s
+// RUN: %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_violation_backtrack.log --reconstruct-strategy random --reconstruct-no-violation-search --reconstruct-rounds 5 -- %b 2>&1 | %check %s
 // CHECK: [lotto] Trace reconstructed successfully!
 // clang-format on
 

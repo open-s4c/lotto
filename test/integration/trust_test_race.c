@@ -1,6 +1,6 @@
 // clang-format off
 // REQUIRES: RUST_HANDLERS_AVAILABLE
-// RUN: (! %lotto %stress --handler-trust enable --handler-race-strict -r 20 -- %b 2>&1)| filecheck %s --check-prefix=HANDLER
+// RUN: (! %lotto %stress --handler-trust enable --handler-race-strict -r 20 -- %b 2>&1)| %check %s --check-prefix=HANDLER
 // HANDLER: {{\[.*handler_race.c\]}} Data race detected at addr: {{.*}}
 // clang-format on
 #include <assert.h>

@@ -1,7 +1,7 @@
 // clang-format off
 // ALLOW_RETRIES: 100
 // RUN: (! %lotto %stress -v -s random --check-deadlock -- %b)
-// RUN: (! %lotto %replay -v -s random 2>&1) | filecheck %s
+// RUN: (! %lotto %replay -v -s random 2>&1) | %check %s
 // CHECK: [{{.*}}] Deadlock detected!
 // clang-format on
 #include <assert.h>

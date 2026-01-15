@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/atomic_return.c:{{[0-9]+}}: x == old_x
 // clang-format on
 

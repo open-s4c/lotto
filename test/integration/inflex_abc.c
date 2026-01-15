@@ -1,16 +1,14 @@
 // clang-format off
 // UNSUPPORTED: aarch64
-// RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | filecheck %s --check-prefix=BUG
+// RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | %check %s --check-prefix=BUG
 // RUN: %lotto %inflex -r 10 &>/dev/null
-// RUN: %lotto %debug --file-filter="libvsync" <<< $'\n'run-replay-lotto | filecheck %s --check-prefix=LOC
+// RUN: %lotto %debug --file-filter="libvsync" <<< $'\n'run-replay-lotto | %check %s --check-prefix=LOC
 // BUG: assert failed {{.*}}/inflex_abc.c:{{[0-9]+}}: recv_from[i] == true
 // LOC: uint32_t id = vatomic32_read(&next_id);
 // clang-format on
 #include <assert.h>
 #include <pthread.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include <vsync/queue/bounded_mpmc.h>
 
@@ -43,7 +41,7 @@ producer(void *_)
     (void)_;
 
     int *data = (int *)_; // malloc(sizeof(int));
-    *data     = get_unique_id();
+    *data     = (int)get_unique_id();
     while (1) {
         int r = bounded_mpmc_enq(&q, data);
         if (r == QUEUE_BOUNDED_OK)

@@ -1,7 +1,7 @@
 // clang-format off
 // UNSUPPORTED: aarch64, clang
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/safe_stack.log -- %b 2>&1) | filecheck %s
-// CHECK: [{{[0-9]+}}] assert failed {{.*}}/safe_stack.c:{{[0-9]+}}: array[elem].value == idx
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/safe_stack_sparse.log -- %b 2>&1) | %check %s
+// CHECK: [{{[0-9]+}}] assert failed {{.*}}/safe_stack_sparse.c:{{[0-9]+}}: array[elem].value == idx
 // CHECK: [lotto] Trace reconstructed successfully!
 // clang-format on
 
@@ -9,7 +9,7 @@
 #include <pthread.h>
 #include <stdint.h>
 
-#include "safe_stack.h"
+#include "safe_stack_sparse.h"
 
 void *
 worker(void *arg)
@@ -18,24 +18,18 @@ worker(void *arg)
     int elem;
 
     if ((elem = pop()) >= 0) {
-        lotto_log_data(22, elem);
+        lotto_log_data(7, elem);
         array[elem].value = idx;
-        lotto_log(23);
-
-        lotto_log(24);
+        lotto_log(8);
         assert(array[elem].value == idx);
-        lotto_log(25);
 
         push(elem);
 
         if ((elem = pop()) >= 0) {
-            lotto_log_data(26, elem);
+            lotto_log_data(7, elem);
             array[elem].value = idx;
-            lotto_log(27);
-
-            lotto_log(28);
+            lotto_log(8);
             assert(array[elem].value == idx);
-            lotto_log(29);
 
             push(elem);
         }

@@ -1,7 +1,7 @@
 // clang-format off
 // XFAIL: *
 // RUN: exit 1
-// RUN: (! %lotto %stress --flotto -- %b 2>&1) | filecheck %s --check-prefix=BUG
+// RUN: (! %lotto %stress --flotto -- %b 2>&1) | %check %s --check-prefix=BUG
 // BUG: assert failed {{.*}}/flotto_inflex_abc.c:{{[0-9]+}}: recv_from[i] == true
 // clang-format on
 #include <assert.h>

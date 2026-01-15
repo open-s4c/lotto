@@ -17,6 +17,7 @@ config.substitutions.append(('%lotto', rf'timeout -s 9 {int(config.maxIndividual
 config.substitutions.append(('%b', rf'''{emulator} %S/../$(basename %s | grep -Po '.*(?=\.)')'''))
 config.substitutions.append(('%demo', rf'''@CMAKE_SOURCE_DIR@/demos/$(basename %s | sed 's/_demo.*//')/bug'''))
 
+config.substitutions.append(('%check', rf'filecheck'))
 config.substitutions.append(('%output', rf'-o %s.replay.trace'))
 config.substitutions.append(('%input', rf'-i %s.replay.trace'))
 config.substitutions.append(('%{tempdir}', rf'--temporary-directory %t'))

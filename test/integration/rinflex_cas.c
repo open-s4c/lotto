@@ -3,7 +3,7 @@
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress -s random --stable-address-method MAP --handler-address enable --handler-cas enable --handler-stacktrace enable --handler-event enable -- %b)
 // RUN: %lotto %rinflex -r 30 2>&1 | iconv -f utf-8 -t utf-8 -c > %s.out
-// RUN: ( filecheck %s --check-prefix=CAS_FIRST < %s.out ) || ( filecheck %s --check-prefix=CAS_SECOND < %s.out )
+// RUN: ( %check %s --check-prefix=CAS_FIRST < %s.out ) || ( %check %s --check-prefix=CAS_SECOND < %s.out )
 
 // CAS_FIRST: ------ . ------ . ------ . ------ . ------
 // CAS_FIRST-NEXT: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}

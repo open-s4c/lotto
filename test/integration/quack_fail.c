@@ -2,7 +2,7 @@
 // XFAIL: *
 // RUN: exit 1
 // RUN: echo Disable ASLR and remove lines 2-4 to make this test pass
-// RUN: (! %lotto %sc --delayed-functions quack_push:1:1,quack_pop:1:1 --delayed-calls 4 --sc-exploration-rounds 100 -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %sc --delayed-functions quack_push:1:1,quack_pop:1:1 --delayed-calls 4 --sc-exploration-rounds 100 -- %b 2>&1) | %check %s
 // CHECK-NOT: [lotto] no atomic execution satisfies the nonatomic partial order, try more --sc-exploration-rounds
 // CHECK: assert failed {{.*}}/handler_capture_group.c:{{[0-9]+}}: 0 && "could not find a corresponding sequential state"
 // clang-format on

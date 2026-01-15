@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %stress -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/drop.c:{{[0-9]+}}: x != 6
 // clang-format on
 

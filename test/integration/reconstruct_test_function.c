@@ -2,10 +2,10 @@
 // UNSUPPORTED: aarch64
 // XFAIL: *
 // RUN: exit 1
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_function_perfect.log --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_function_backtrack.log --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_function_perfect.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
-// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_function_backtrack.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_function_perfect.log --reconstruct-rounds 5 -- %b 2>&1) | %check %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_function_backtrack.log --reconstruct-rounds 5 -- %b 2>&1) | %check %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_function_perfect.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | %check %s
+// RUN: (! %lotto %reconstruct --reconstruct-log %S/log/reconstruct_test_function_backtrack.log --reconstruct-strategy random --reconstruct-rounds 5 -- %b 2>&1) | %check %s
 // CHECK: [1] assert failed {{.*}}/reconstruct_test_function.c:{{[0-9]+}}: x != 3
 // CHECK: [lotto] Trace reconstructed successfully!
 // clang-format on

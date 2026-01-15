@@ -1,6 +1,6 @@
 // clang-format off
 // REQUIRES: RUST_HANDLERS_AVAILABLE
-// RUN: (! %lotto %stress --handler-trust enable -- %b 2>&1) | filecheck %s
+// RUN: (! %lotto %stress --handler-trust enable -- %b 2>&1) | %check %s
 // CHECK: Total number of execution graphs: 89
 // clang-format on
 #include <assert.h>

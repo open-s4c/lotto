@@ -1,30 +1,91 @@
-cmake_minimum_required(VERSION 3.20)
-project(lotto-test-integration LANGUAGES C CXX)
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-    set(LOTTO_FRONTEND_LIST POSIX QEMU)
-
-    set(PARENT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../..)
-    include(${PARENT_SOURCE_DIR}/cmake/stable_options.cmake)
-    include_directories(${PARENT_SOURCE_DIR}/include)
-    add_subdirectory(${PARENT_SOURCE_DIR}/deps/libvsync libvsync)
-
-    file(GLOB SRCS *.c *.cpp)
-    foreach(SRC ${SRCS})
-        get_filename_component(TEST ${SRC} NAME_WLE)
-        add_executable(${TEST} ${SRC})
-        target_link_libraries(${TEST} PRIVATE vsync pthread)
-    endforeach()
-    return()
-endif()
+enable_language(CXX)
 # disable clang tidy for this folder
 unset(CMAKE_C_CLANG_TIDY)
 
-# trace-pc does not work with aarch64 integration tests in the current lit
-# testing setup
-if(off)
-    set(LIB_TRACE_PC "trace_pc")
-    set(COMPILE_OPTION_TRACE_PC "-fsanitize-coverage=trace-pc")
-endif()
+# ------------------------------------------------------------------------------
+# tikl setup
+# ------------------------------------------------------------------------------
+message(STATUS "TIKL_PROGRAM: ${TIKL_PROGRAM}")
+
+set(TIKL_TIMEOUT
+    300
+    CACHE STRING "tikl timeout")
+
+set(TIKL_WORKERS
+    1
+    CACHE STRING "Number of tikl workers")
+
+set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
+configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
+
+# TODO: some sources are still failing
+set(FAILING_SRCS
+    deadlock_inflex.c
+    rinflex.c
+    rinflex_3oc.c
+    rinflex_cas.c
+    rinflex_flaky_events.c
+    rinflex_loop.c
+    rinflex_symmetry.c
+    rinflex_two_disjoint_bugs.c
+    trust_test_big.c
+    trust_test_cas.c
+    trust_test_init_values.c
+    trust_test_multiple_cas.c
+    trust_test_race.c
+    trust_test_rmw.c
+    trust_test_small.c
+    reconstruct_safe_stack.c
+    reconstruct_safe_stack_sparse.c
+    reconstruct_test_base_fail.c
+    reconstruct_test_base_pass.c
+    reconstruct_test_function.c
+    reconstruct_test_violation_fail.c
+    reconstruct_test_violation_pass.c
+    reconstruct_test_violation_skip.c
+    record_granularity_test_arm64.c
+    reconstruct_test_base_error.c)
+
+file(GLOB ALL_SRCS *.c)
+set(SRCS)
+foreach(SRC ${ALL_SRCS})
+    get_filename_component(SRC ${SRC} NAME)
+    if(NOT "${SRC}" IN_LIST FAILING_SRCS)
+        set(SRCS ${SRCS} ${SRC})
+    endif()
+endforeach()
+
+add_custom_target(
+    tikl-test
+    COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRCS}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_dependencies(tikl-test tikl-build lotto-cli)
+
+foreach(SRC ${SRCS})
+    get_filename_component(TEST ${SRC} NAME_WLE)
+    set(TARGET bin-${TEST})
+
+    add_executable(${TARGET} ${SRC})
+    set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TEST})
+    add_dependencies(tikl-test ${TARGET})
+
+    if("${LOTTO_TESTS_WITH_TSAN}")
+        set(SANITIZE -fsanitize=thread)
+    else()
+        unset(SANITIZE)
+    endif()
+    target_compile_options(${TARGET} PUBLIC -O0 -g -DVATOMIC_BUILTINS)
+    target_link_options(${TARGET} PUBLIC -rdynamic)
+    target_link_libraries(${TARGET} PRIVATE vsync pthread)
+
+    # This tikl target triggers only this specific test only. Use tikl-test to
+    # run all tests.
+    add_custom_target(
+        tikl-${TEST}
+        COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRC}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    add_dependencies(tikl-${TEST} ${TARGET} tikl-build lotto-cli)
+endforeach()
 
 # ##############################################################################
 # Lit setup

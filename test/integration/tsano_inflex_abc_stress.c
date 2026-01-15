@@ -6,8 +6,6 @@
 #include <assert.h>
 #include <pthread.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include <vsync/queue/bounded_mpmc.h>
 
@@ -41,7 +39,7 @@ producer(void *_)
     (void)_;
 
     int *data = (int *)_; // malloc(sizeof(int));
-    *data     = get_unique_id();
+    *data     = (int)get_unique_id();
     while (1) {
         int r = bounded_mpmc_enq(&q, data);
         if (r == QUEUE_BOUNDED_OK)

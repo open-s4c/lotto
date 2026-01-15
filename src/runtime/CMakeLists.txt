@@ -28,7 +28,7 @@ target_link_libraries(runtime PRIVATE mediator.o interceptor.o switcher.o
 target_sources(
     runtime
     PRIVATE $<TARGET_OBJECTS:dice.o>
-            $<TARGET_OBJECTS:dice-self.o>
+            # $<TARGET_OBJECTS:dice-self.o>
             # $<TARGET_OBJECTS:dice-pthread_create.o>
             # $<TARGET_OBJECTS:dice-pthread_mutex.o>
             # $<TARGET_OBJECTS:dice-pthread_cond.o>

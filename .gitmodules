@@ -11,3 +11,6 @@
 	path = deps/capstone
 	url = https://github.com/capstone-engine/capstone.git
 	branch = v5
+[submodule "deps/tikl"]
+	path = deps/tikl
+	url = https://github.com/db7/tikl.git

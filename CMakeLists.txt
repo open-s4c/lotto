@@ -22,12 +22,7 @@ include(cmake/stable_options.cmake)
 # ##############################################################################
 # Dependencies
 # ##############################################################################
-# include(cmake/submodule.cmake)
-include(cmake/utils.cmake)
 
-# ------------------------------------------------------------------------------
-# Dice
-# ------------------------------------------------------------------------------
 set(DICE_LOG_LEVEL
     "INFO"
     CACHE STRING "" FORCE)
@@ -47,6 +42,13 @@ find_package(libvsync 4.2 CONFIG REQUIRED)
 link_libraries(libvsync::vsync)
 add_library(vsync ALIAS libvsync::vsync)
 
+# ------------------------------------------------------------------------------
+# CMake libs
+# ------------------------------------------------------------------------------
+# include(cmake/submodule.cmake)
+
+include(cmake/utils.cmake)
+
 # ##############################################################################
 # Generic project configuration
 # ##############################################################################
@@ -60,7 +62,7 @@ if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
     set(LOTTO_STABLE_ADDRESS_MAP_DEFAULT OFF)
     set(LOTTO_QEMU_YIELD_DEFAULT OFF)
 else()
-    set(LOTTO_STABLE_ADDRESS_MAP_DEFAULT ON)
+    set(LOTTO_STABLE_ADDRESS_MAP_DEFAULT OFF)
     set(LOTTO_QEMU_YIELD_DEFAULT OFF)
 endif()
 

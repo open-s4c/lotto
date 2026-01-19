@@ -15,7 +15,7 @@ use lotto::sys::Stream;
 
 use crate::error::Error;
 use crate::handlers;
-use crate::inflex::{always, checked_execute, postexec};
+use crate::inflex::{always, checked_execute, postexec, Outcome};
 use crate::progress::ProgressBar;
 use crate::{inflex, trace, Constraint, ConstraintSet, Event, PrimitiveConstraint};
 

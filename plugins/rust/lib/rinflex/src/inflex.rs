@@ -382,13 +382,6 @@ pub enum Outcome {
 }
 
 impl Outcome {
-    fn matches(self, code: i32) -> bool {
-        match self {
-            Outcome::Success => code == 0,
-            Outcome::Fail => code != 0,
-        }
-    }
-
     pub fn is_fail(self) -> bool {
         matches!(self, Outcome::Fail)
     }

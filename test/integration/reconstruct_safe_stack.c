@@ -1,7 +1,7 @@
 // clang-format off
 // UNSUPPORTED: aarch64, clang
 // RUN: (! %lotto %reconstruct --reconstruct-log %S/log/safe_stack.log -- %b 2>&1) | %check %s
-// CHECK: [{{[0-9]+}}] assert failed {{.*}}/safe_stack.c:{{[0-9]+}}: array[elem].value == idx
+// CHECK: [{{[0-9]+}}] assert failed {{.*}}/reconstruct_safe_stack.c:{{[0-9]+}}: array[elem].value == idx
 // CHECK: [lotto] Trace reconstructed successfully!
 // clang-format on
 

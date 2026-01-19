@@ -19,32 +19,7 @@ set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 
 # TODO: some sources are still failing
-set(FAILING_SRCS
-    deadlock_inflex.c
-    rinflex.c
-    rinflex_3oc.c
-    rinflex_cas.c
-    rinflex_flaky_events.c
-    rinflex_loop.c
-    rinflex_symmetry.c
-    rinflex_two_disjoint_bugs.c
-    trust_test_big.c
-    trust_test_cas.c
-    trust_test_init_values.c
-    trust_test_multiple_cas.c
-    trust_test_race.c
-    trust_test_rmw.c
-    trust_test_small.c
-    reconstruct_safe_stack.c
-    reconstruct_safe_stack_sparse.c
-    reconstruct_test_base_fail.c
-    reconstruct_test_base_pass.c
-    reconstruct_test_function.c
-    reconstruct_test_violation_fail.c
-    reconstruct_test_violation_pass.c
-    reconstruct_test_violation_skip.c
-    record_granularity_test_arm64.c
-    reconstruct_test_base_error.c)
+set(FAILING_SRCS)
 
 file(GLOB ALL_SRCS *.c)
 set(SRCS)

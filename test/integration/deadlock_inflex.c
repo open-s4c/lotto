@@ -1,8 +1,5 @@
 // clang-format off
 // UNSUPPORTED: aarch64
-// XFAIL: *
-// RUN: exit 1
-// ALLOW_RETRIES: 100
 // RUN: (! %lotto %stress -v -s random --check-deadlock -- %b)
 // RUN: %lotto %inflex -s random --handler-lock enable -r 100
 // clang-format on

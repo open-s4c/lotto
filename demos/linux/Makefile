@@ -20,12 +20,9 @@ SCX_PATHS = $(patsubst %, $(ROOTFS)/lib/%, $(SCX_LIBS))
 
 INCLUDES = \
 	-I src/include \
-    -I ../../build/include \
+	-I ../../build/include \
 	-I ../../include \
-	-I ../../deps/libvsync/datastruct/queue/bounded/include \
-	-I ../../deps/libvsync/vatomic/include \
-	-I ../../deps/libvsync/include \
-	-I ../../deps/libvsync/thread/include \
+	-I ../../deps/dice/deps/libvsync/include \
 
 help:
 	@echo "Help:"

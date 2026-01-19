@@ -60,7 +60,7 @@ fn main() {
         clang_build_gen_include_arg
     );
 
-    let libvsync_include_dir = get_lotto_dir().join("deps").join("libvsync").join("include");
+    let libvsync_include_dir = get_lotto_dir().join("deps").join("dice").join("deps").join("libvsync").join("include");
     assert!(
         libvsync_include_dir.exists(),
         "Could not find libsync include dir at {:?}",
@@ -70,18 +70,6 @@ fn main() {
     println!(
         "Libsync include dir is {}",
         libvsync_include_arg
-    );
-
-    let vatomic_include_dir = get_lotto_dir().join("deps").join("libvsync").join("vatomic").join("include");
-    assert!(
-        vatomic_include_dir.exists(),
-        "Could not find vatomic include dir at {:?}",
-        vatomic_include_dir
-    );
-    let vatomic_include_arg = format!("-I{}", vatomic_include_dir.display());
-    println!(
-        "Libsync include dir is {}",
-        vatomic_include_arg
     );
 
     #[allow(unused_mut)]
@@ -107,7 +95,6 @@ fn main() {
         .clang_arg(clang_build_include_arg)
         .clang_arg(clang_build_gen_include_arg)
         .clang_arg(libvsync_include_arg)
-        .clang_arg(vatomic_include_arg)
         .clang_arg("-D_GNU_SOURCE");
 
     #[cfg(feature = "stable_address_map")]

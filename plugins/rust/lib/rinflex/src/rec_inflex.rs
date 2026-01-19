@@ -230,7 +230,7 @@ impl RecInflex {
         )?;
 
         // Find IIP.
-        let Some((iip, target)) = self.find_inverse_inflex(ip - 1)? else {
+        let Some((iip, target)) = self.find_inverse_inflex(ip)? else {
             return Ok(None);
         };
 
@@ -245,7 +245,7 @@ impl RecInflex {
         let same_thread = pair.source.t.id == pair.target.t.id;
 
         // Sibling check
-        let correct = repeated || (!same_thread && self.sibling_check(ip, &pair)?);
+        let correct = !same_thread && (repeated || self.sibling_check(ip, &pair)?);
         if !correct {
             info!("Incorrect");
             self.get_trace(

@@ -14,9 +14,10 @@ jobs:
           cc: gcc
           cxx: g++
           opts: -DLOTTO_RUST=OFF
-        #- build: x86-clang
-        #  cc: clang
-        #  cxx: clang++
+        - build: x86-clang
+          cc: clang
+          cxx: clang++
+          opts: -DLOTTO_RUST=OFF
         #  opts: -DLOTTO_RUST=ON -DLOTTO_RACKET_TESTS=ON
     steps:
       - name: Checkout repository
@@ -31,7 +32,9 @@ jobs:
         run: cmake -Bbuild -DCMAKE_C_COMPILER=${{ matrix.cfg.cc }}
                            -DCMAKE_CXX_COMPILER=${{ matrix.cfg.cxx }}
                            ${{ matrix.cfg.opts }}
-      - name: Build project
+      - name: Build Dice library
+        run: cmake --build build --target dice -j
+      - name: Build Lotto
         run: cmake --build build -j
       - name: Prepare tarball
         run: tar cvf lotto.tar .
@@ -44,9 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/open-s4c/lotto/core-ci:latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        build: [x86-gcc] #, x86-clang]
+        build: [x86-gcc, x86-clang]
         target: [test] #, tikl-test] #lit-crep, lit-daily, lit-pattern-fast] #, rust-test]
     needs: build
     steps:

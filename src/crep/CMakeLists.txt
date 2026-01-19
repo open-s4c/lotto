@@ -9,14 +9,10 @@ add_library(crep SHARED ${SRCS} warn_list.S)
 target_link_libraries(crep PRIVATE base.o sys.o)
 target_compile_definitions(crep PRIVATE -DCREP_STANDALONE
                                         -DCREP_RECORD_ENABLED=1)
+set_target_properties(crep PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                      ${CMAKE_BINARY_DIR})
 
 set(TARGET libcrep.so)
-add_custom_target(
-    libcrep ALL
-    BYPRODUCTS ${CMAKE_BINARY_DIR}/libcrep.so
-    COMMAND ${CMAKE_COMMAND} -E copy libcrep.so ${CMAKE_BINARY_DIR}/libcrep.so
-    DEPENDS crep)
-
 make_blob(blob-crep libcrep.so crep)
 
 add_library(crep_no_record.o OBJECT ${SRCS})

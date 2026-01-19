@@ -38,16 +38,11 @@ target_link_libraries(
             brokers.o
             memmgr_runtime.o
             memmgr_user.o)
+set_target_properties(engine PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                        ${CMAKE_BINARY_DIR})
 
 set(LIBTARGET "libengine.so")
 install(TARGETS engine DESTINATION lib)
-make_blob(blob-engine ${LIBTARGET} "")
-
-add_custom_command(
-    POST_BUILD
-    OUTPUT ${CMAKE_BINARY_DIR}/libengine.so
-    COMMAND ${CMAKE_COMMAND} -E copy ${LIBTARGET}
-            ${CMAKE_BINARY_DIR}/${LIBTARGET}
-    DEPENDS engine)
+make_blob(blob-engine ${LIBTARGET} engine)
 
 make_units(engine "")

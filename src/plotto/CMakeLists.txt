@@ -46,6 +46,8 @@ target_compile_definitions(posix_interceptors_testing.o PUBLIC LOTTO_TEST)
 
 macro(add_libplotto TARGET)
     add_library(${TARGET} SHARED plotto.c)
+    set_target_properties(${TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                               ${CMAKE_BINARY_DIR})
 
     target_link_libraries(${TARGET} PRIVATE posix_interceptors.o pthread
                                             runtime)
@@ -60,13 +62,6 @@ macro(add_libplotto TARGET)
     set(LIBTARGET lib${TARGET}.so)
     make_blob(blob-${TARGET} ${LIBTARGET} ${TARGET})
 
-    add_custom_command(
-        # TARGET ${LIBTARGET}
-        POST_BUILD
-        OUTPUT ${CMAKE_BINARY_DIR}/${LIBTARGET}
-        COMMAND ${CMAKE_COMMAND} -E copy ${LIBTARGET}
-                ${CMAKE_BINARY_DIR}/${LIBTARGET}
-        DEPENDS ${TARGET})
 endmacro()
 
 add_libplotto(plotto)

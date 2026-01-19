@@ -15,7 +15,7 @@ use lotto::sys::Stream;
 
 use crate::error::Error;
 use crate::handlers;
-use crate::inflex::{always, checked_execute, should_discard_execution};
+use crate::inflex::{always, checked_execute, postexec};
 use crate::progress::ProgressBar;
 use crate::{inflex, trace, Constraint, ConstraintSet, Event, PrimitiveConstraint};
 
@@ -86,17 +86,17 @@ impl RecInflex {
         flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(0));
         let mut bar = ProgressBar::new(self.report_progress, "HALT", self.rounds);
         crate::inflex::always(self.rounds, || {
-            let exitcode = loop {
+            let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(now()));
                 let exitcode = checked_execute(&with_oc, &flags, true)?;
-                if should_discard_execution(&self.trace_temp)? {
+                if let Some(outcome) = postexec(&self.trace_temp, exitcode)? {
+                    break outcome;
+                } else {
                     bar.tick_invalid();
-                    continue;
                 }
-                break exitcode;
             };
             bar.tick_valid();
-            Ok(exitcode != 0)
+            Ok(outcome.is_fail())
         })
     }
 
@@ -161,17 +161,17 @@ impl RecInflex {
         let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let mut bar = ProgressBar::new(self.report_progress, "correct?", self.rounds);
         always(self.rounds, || {
-            let exitcode = loop {
+            let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(now()));
                 let exitcode = checked_execute(&check_trace, &flags, true)?;
-                if should_discard_execution(&self.trace_temp)? {
+                if let Some(outcome) = postexec(&self.trace_temp, exitcode)? {
+                    break outcome;
+                } else {
                     bar.tick_invalid();
-                    continue;
                 }
-                break exitcode;
             };
             bar.tick_valid();
-            Ok(exitcode != 0)
+            Ok(outcome.is_fail())
         })
     }
 
@@ -297,9 +297,16 @@ impl RecInflex {
         Ok(Some(pair))
     }
 
+    /// Obtain a new random trace with the expected outcome.
+    ///
+    /// The execution will obey the currently known ordering
+    /// constraints.
+    ///
+    /// All records from clock 0 to `replay_goal` (inclusive) in
+    /// `input` will be replayed exactly.
     pub fn get_trace(
         &self,
-        outcome: Outcome,
+        expected_outcome: Outcome,
         replay_goal: Clock,
         input: &Path,
         output: &Path,
@@ -339,13 +346,14 @@ impl RecInflex {
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(replay_goal));
             flags.set_by_opt(&flag_seed(), Value::U64(now()));
             let exitcode = checked_execute(&input, &flags, true)?;
-            if should_discard_execution(&output)? {
+            if let Some(actual_outcome) = postexec(&output, exitcode)? {
+                bar.tick_valid();
+                if expected_outcome == actual_outcome {
+                    return Ok(());
+                }
+            } else {
                 bar.tick_invalid();
                 continue;
-            }
-            bar.tick_valid();
-            if outcome.matches(exitcode) {
-                return Ok(());
             }
         }
     }
@@ -528,14 +536,16 @@ impl RecInflex {
         Ok(out)
     }
 
+    /// Update `constraints_to_update` using records from clock 0 to
+    /// clock `goal` (inclusive).
     pub fn update_constraints(
         &self,
         input: &Path,
         goal: Clock,
-        constraints: &ConstraintSet,
+        constraints_to_update: &ConstraintSet,
     ) -> Result<ConstraintSet, Error> {
         trace::expand(&self.flags, input, &self.trace_temp, Some(goal));
-        let mut constraints = constraints.clone();
+        let mut constraints = constraints_to_update.clone();
         let mut rec = Trace::load_file(&self.trace_temp);
         while let Some(r) = {
             rec.advance();
@@ -549,7 +559,7 @@ impl RecInflex {
                 continue;
             };
             // `cnt` is meta. It counts the number of occurrences of (event-except-cnt).
-            for constraint in &mut constraints {
+            for constraint in constraints.iter_mut() {
                 if constraint.c.target.equals(&event) {
                     constraint.c.target.cnt = constraint.c.target.cnt.saturating_sub(1);
                     if constraint.c.target.cnt == 0 && constraint.c.source.cnt != 0 {
@@ -607,21 +617,6 @@ impl RecInflex {
         let id = self.next_id;
         self.next_id += 1;
         id
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Outcome {
-    Success,
-    Fail,
-}
-
-impl Outcome {
-    fn matches(self, code: i32) -> bool {
-        match self {
-            Outcome::Success => code == 0,
-            Outcome::Fail => code != 0,
-        }
     }
 }
 

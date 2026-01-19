@@ -110,12 +110,16 @@ impl Inflex {
             let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
             bar.set_prefix_string(format!("IIP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
-            let success_forever = always(self.rounds, || loop {
-                flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                let exitcode = checked_execute(&self.input, &flags, true)?;
-                if should_discard_execution(&self.temp_output)? {
-                    bar.tick_invalid();
-                    continue;
+            let success_forever = always(self.rounds, || {
+                loop {
+                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                    let exitcode = checked_execute(&self.input, &flags, true)?;
+                    if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                        bar.tick_valid();
+                        return Ok(outcome.is_success());
+                    } else {
+                        bar.tick_invalid();
+                    }
                 }
                 bar.tick_valid();
                 return Ok(exitcode == 0);
@@ -145,12 +149,12 @@ impl Inflex {
                 flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                    let return_code = checked_execute(&self.input, &flags, true)?;
-                    if should_discard_execution(&self.temp_output)? {
+                    let exitcode = checked_execute(&self.input, &flags, true)?;
+                    if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                        return Ok(outcome.is_success());
+                    } else {
                         bar.tick_invalid();
-                        continue;
                     }
-                    return Ok(return_code == 0);
                 }
             })?;
 
@@ -186,12 +190,16 @@ impl Inflex {
             let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
             bar.set_prefix_string(format!("IP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
-            let fail_forever = always(self.rounds, || loop {
-                flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                let exitcode = checked_execute(&self.input, &flags, true)?;
-                if should_discard_execution(&self.temp_output)? {
-                    bar.tick_invalid();
-                    continue;
+            let fail_forever = always(self.rounds, || {
+                loop {
+                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                    let exitcode = checked_execute(&self.input, &flags, true)?;
+                    if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                        bar.tick_valid();
+                        return Ok(outcome.is_fail());
+                    } else {
+                        bar.tick_invalid();
+                    }
                 }
                 bar.tick_valid();
                 return Ok(exitcode != 0);
@@ -222,12 +230,12 @@ impl Inflex {
                 flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                    let return_code = checked_execute(&self.input, &flags, true)?;
-                    if should_discard_execution(&self.temp_output)? {
+                    let exitcode = checked_execute(&self.input, &flags, true)?;
+                    if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                        return Ok(outcome.is_fail());
+                    } else {
                         bar.tick_invalid();
-                        continue;
                     }
-                    return Ok(return_code != 0);
                 }
             })?;
 
@@ -308,8 +316,10 @@ pub fn checked_execute(trace: &Path, flags: &Flags, config: bool) -> Result<i32,
     return Ok(exitcode);
 }
 
-/// Check if this execution should be discarded.
-pub fn should_discard_execution(output: &Path) -> Result<bool, Error> {
+/// Additionally check the outcome.
+///
+/// Returns None if the execution should be discarded.
+pub fn postexec(output: &Path, exitcode: i32) -> Result<Option<Outcome>, Error> {
     let mut rec = Trace::load_file(output);
     let last = rec.last().expect("no last record");
 
@@ -321,7 +331,7 @@ pub fn should_discard_execution(output: &Path) -> Result<bool, Error> {
     // Should ignore? Probably from handler_drop.
     if last.reason == raw::reason::REASON_IGNORE {
         STATS.tick_discarded_run();
-        return Ok(true);
+        return Ok(None);
     }
 
     // Check the FINAL record and check whether order_enforcer wants
@@ -337,12 +347,22 @@ pub fn should_discard_execution(output: &Path) -> Result<bool, Error> {
         }
         if handlers::order_enforcer::should_discard() {
             STATS.tick_discarded_run();
-            return Ok(true);
+            return Ok(None);
         }
     }
 
+    // Check if some handler aborts the execution, which is considered
+    // a failure, but exitcode may be 0.
+    if last.reason.is_abort() {
+        return Ok(Some(Outcome::Fail));
+    }
+
     // All tests passed.
-    Ok(false)
+    if exitcode == 0 {
+        Ok(Some(Outcome::Success))
+    } else {
+        Ok(Some(Outcome::Fail))
+    }
 }
 
 pub fn preload(flags: &Flags) {
@@ -353,4 +373,27 @@ pub fn preload(flags: &Flags) {
         flags.get_sval(&flag_memmgr_runtime()),
         flags.get_sval(&flag_memmgr_user()),
     );
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Outcome {
+    Success,
+    Fail,
+}
+
+impl Outcome {
+    fn matches(self, code: i32) -> bool {
+        match self {
+            Outcome::Success => code == 0,
+            Outcome::Fail => code != 0,
+        }
+    }
+
+    pub fn is_fail(self) -> bool {
+        matches!(self, Outcome::Fail)
+    }
+
+    pub fn is_success(self) -> bool {
+        matches!(self, Outcome::Success)
+    }
 }

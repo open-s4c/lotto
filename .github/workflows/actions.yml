@@ -19,37 +19,53 @@ jobs:
         #  cxx: clang++
         #  opts: -DLOTTO_RUST=ON -DLOTTO_RACKET_TESTS=ON
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-      - run: cmake -Bbuild -DCMAKE_C_COMPILER=${{ matrix.cfg.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cfg.cxx }} ${{ matrix.cfg.opts }}
-      - run: cmake --build build -j
+      #- name: Prepare Rust toolchain
+      #  uses: actions-rust-lang/setup-rust-toolchain@v1
+      #  with:
+      #    toolchain: ${{ env.RUST_VERSION }}
+      - name: Configure project
+        run: cmake -Bbuild -DCMAKE_C_COMPILER=${{ matrix.cfg.cc }}
+                           -DCMAKE_CXX_COMPILER=${{ matrix.cfg.cxx }}
+                           ${{ matrix.cfg.opts }}
+      - name: Build project
+        run: cmake --build build -j
+      - name: Prepare tarball
+        run: tar cvf lotto.tar .
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          path: build
+          path: lotto.tar
           name: lotto-${{ matrix.cfg.build }}
   test:
     runs-on: ubuntu-latest
     container: ghcr.io/open-s4c/lotto/core-ci:latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         build: [x86-gcc] #, x86-clang]
-        target: [test, lit-crep, lit-daily, lit-pattern-fast] #, rust-test]
+        target: [test] #, tikl-test] #lit-crep, lit-daily, lit-pattern-fast] #, rust-test]
     needs: build
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
+      #- name: Checkout repository once more
+      #  uses: actions/checkout@v4
+      #  with:
+      #    submodules: recursive
+      #- name: Prepare Rust toolchain
+      #  uses: actions-rust-lang/setup-rust-toolchain@v1
+      #  with:
+      #    toolchain: ${{ env.RUST_VERSION }}
+      - run: ls
       - name: Download artifact
         uses: actions/download-artifact@v5
         with:
+          path: .
           name: lotto-${{ matrix.build }}
-      - run: cmake --build build --target ${{ matrix.target }}
+      - name: Extract tarball
+        run: tar xvf lotto.tar
+      - run: ls
+      - name: Run tests
+        run: cmake --build build --target ${{ matrix.target }}

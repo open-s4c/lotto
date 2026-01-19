@@ -23,6 +23,7 @@ function(add_mockoto)
                 -I ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES} #
                 -I ${PROJECT_SOURCE_DIR}/include #
                 -I ${PROJECT_SOURCE_DIR}/src/include #
+                -I ${PROJECT_SOURCE_DIR}/deps/dice/include #
                 -I ${PROJECT_SOURCE_DIR}/deps/dice/deps/libvsync/include #
                 ${__FLAGS} #
                 > ${CMAKE_CURRENT_SOURCE_DIR}/${__TARGET}
@@ -37,6 +38,7 @@ function(add_mockoto)
                 -I ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES} #
                 -I ${PROJECT_SOURCE_DIR}/include #
                 -I ${PROJECT_SOURCE_DIR}/src/include #
+                -I ${PROJECT_SOURCE_DIR}/deps/dice/include #
                 -I ${PROJECT_SOURCE_DIR}/deps/dice/deps/libvsync/include #
                 ${__FLAGS} #
                 > ${CMAKE_CURRENT_SOURCE_DIR}/${__TARGET}
@@ -46,6 +48,7 @@ function(add_mockoto)
                 -I ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES} #
                 -I ${PROJECT_SOURCE_DIR}/include #
                 -I ${PROJECT_SOURCE_DIR}/src/include #
+                -I ${PROJECT_SOURCE_DIR}/deps/dice/include #
                 -I ${PROJECT_SOURCE_DIR}/deps/dice/deps/libvsync/include #
                 ${__FLAGS} #
                 > ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER}

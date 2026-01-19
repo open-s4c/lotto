@@ -30,6 +30,8 @@
 ;; -----------------------------------------------------------------------------
 ;; ffi helpers
 ;; -----------------------------------------------------------------------------
+(define CHAIN_LOTTO 7)
+(define DICE_SLOT 9999)
 (define NULL (cast 0 _uint64 _pointer))
 
 (define (make-arg width value)
@@ -81,9 +83,9 @@
 (define cust (make-custodian))
 (load-lib "libdeadlock_component" #:custodian cust)
 
-(define _ps_subscribe (_fun _topic_t _pointer _pointer -> _void))
+(define _ps_subscribe (_fun _uint16 _topic_t _pointer _int -> _void))
 ;; The first argument is actualy a structure passed by value, temporaritly specify a pointer type here
-(define _ps_subscribe_f (_fun _pointer _pointer -> _void))
+(define _ps_subscribe_f (_fun _uint16 _topic_t _pointer _pointer -> _uint32))
 
 (define-syntax-rule (capture cat id args ...)
   (begin
@@ -100,10 +102,12 @@
 
 (define deadlock-detected #f)
 
-(define (deadlock-cb u1 u2)
-  (set! deadlock-detected #t))
+(define (deadlock-cb chain topic event md)
+  (set! deadlock-detected #t)
+  0)
 
-(call ps_subscribe 'TOPIC_DEADLOCK_DETECTED (cast deadlock-cb _ps_subscribe_f _pointer) NULL)
+(call ps_subscribe CHAIN_LOTTO 'TOPIC_DEADLOCK_DETECTED
+     (cast deadlock-cb _ps_subscribe_f _pointer) DICE_SLOT)
 
 (void (call engine_init NULL NULL))
 

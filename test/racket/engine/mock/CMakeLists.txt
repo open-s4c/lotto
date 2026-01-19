@@ -86,7 +86,8 @@ target_link_libraries(
     engine_handler_blocking_testing.o
     states_handler_blocking_testing.o
     memmgr_runtime.o
-    memmgr_user.o)
+    memmgr_user.o
+    dice.o)
 
 add_library(deadlock_component SHARED)
 target_link_libraries(
@@ -105,4 +106,6 @@ target_link_libraries(
     engine_handler_deadlock_testing.o
     states_handler_deadlock_testing.o
     memmgr_runtime.o
-    memmgr_user.o)
+    memmgr_user.o
+    dice.o
+    dice-self.o)

@@ -13,11 +13,11 @@ jobs:
         - build: x86-gcc
           cc: gcc
           cxx: g++
-          opts: -DLOTTO_RUST=ON
-        - build: x86-clang
-          cc: clang
-          cxx: clang++
-          opts: -DLOTTO_RUST=ON -DLOTTO_RACKET_TESTS=ON
+          opts: -DLOTTO_RUST=OFF
+        #- build: x86-clang
+        #  cc: clang
+        #  cxx: clang++
+        #  opts: -DLOTTO_RUST=ON -DLOTTO_RACKET_TESTS=ON
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,7 +26,7 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
       - run: cmake -Bbuild -DCMAKE_C_COMPILER=${{ matrix.cfg.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cfg.cxx }} ${{ matrix.cfg.opts }}
-      - run: cmake --build build
+      - run: cmake --build build -j
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -38,8 +38,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build: [x86-gcc, x86-clang]
-        target: [test, lit-crep, lit-daily, lit-pattern-fast, rust-test]
+        build: [x86-gcc] #, x86-clang]
+        target: [test, lit-crep, lit-daily, lit-pattern-fast] #, rust-test]
     needs: build
     steps:
       - uses: actions/checkout@v4

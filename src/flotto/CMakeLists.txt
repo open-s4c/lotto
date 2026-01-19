@@ -9,14 +9,9 @@ target_compile_options(flotto_engine.o PUBLIC -g)
 
 add_library(flotto SHARED)
 target_link_libraries(flotto PRIVATE sys.o base.o flotto_engine.o brokers.o)
+set_target_properties(flotto PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                        ${CMAKE_BINARY_DIR})
 
 set(LIBTARGET "libflotto.so")
 install(TARGETS engine DESTINATION lib)
-make_blob(blob-flotto ${LIBTARGET} "")
-
-add_custom_command(
-    POST_BUILD
-    OUTPUT ${CMAKE_BINARY_DIR}/libflotto.so
-    COMMAND ${CMAKE_COMMAND} -E copy ${LIBTARGET}
-            ${CMAKE_BINARY_DIR}/${LIBTARGET}
-    DEPENDS flotto)
+make_blob(blob-flotto ${LIBTARGET} flotto)

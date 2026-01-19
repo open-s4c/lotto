@@ -25,6 +25,9 @@ set(LIBTARGET "libruntime.so")
 add_library(runtime SHARED ${SRCS})
 target_link_libraries(runtime PRIVATE mediator.o interceptor.o switcher.o
                                       engine m)
+set_target_properties(runtime PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                         ${CMAKE_BINARY_DIR})
+
 target_sources(
     runtime
     PRIVATE $<TARGET_OBJECTS:dice.o>
@@ -36,11 +39,4 @@ target_sources(
 )
 
 install(TARGETS runtime DESTINATION lib)
-make_blob(blob-runtime ${LIBTARGET} "")
-
-add_custom_command(
-    POST_BUILD
-    OUTPUT ${CMAKE_BINARY_DIR}/libruntime.so
-    COMMAND ${CMAKE_COMMAND} -E copy ${LIBTARGET}
-            ${CMAKE_BINARY_DIR}/${LIBTARGET}
-    DEPENDS runtime)
+make_blob(blob-runtime ${LIBTARGET} runtime)

@@ -4,6 +4,8 @@ env:
   RUST_VERSION: 1.82
 jobs:
   build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/open-s4c/lotto/core-ci:latest
     strategy:
       fail-fast: false
       matrix:
@@ -16,8 +18,6 @@ jobs:
           cc: clang
           cxx: clang++
           opts: -DLOTTO_RUST=ON -DLOTTO_RACKET_TESTS=ON
-    runs-on: arc-runner-set
-    container: ghcr.io/open-s4c/lotto/core-ci:latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,55 +27,29 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
       - run: cmake -Bbuild -DCMAKE_C_COMPILER=${{ matrix.cfg.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cfg.cxx }} ${{ matrix.cfg.opts }}
       - run: cmake --build build
-      - name: Install AnimMouse dependencies
-        run: |
-          apt-get update
-          apt-get install -y gh wget unzip
-      - name: Setup Rclone
-        uses: AnimMouse/setup-rclone@v1
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          rclone_config: |
-            [tebi]
-            type = s3
-            provider = Other
-            access_key_id = ${{ secrets.TEBI_ACCESS_KEY }}
-            secret_access_key = ${{ secrets.TEBI_SECRET_KEY }}
-            endpoint = ${{ secrets.TEBI_ENDPOINT }}
-          disable_base64: true
-      - name: Upload artifact to Tebi
-        run: |
-          tar -cf lotto.tar *
-          rclone copyto lotto.tar tebi:${{ secrets.TEBI_BUCKET }}/artifacts/lotto-${{ matrix.cfg.build }}-${{ github.run_id }}.tar
+          path: build
+          name: lotto-${{ matrix.cfg.build }}
   test:
+    runs-on: ubuntu-latest
+    container: ghcr.io/open-s4c/lotto/core-ci:latest
     strategy:
       fail-fast: false
       matrix:
         build: [x86-gcc, x86-clang]
         target: [test, lit-crep, lit-daily, lit-pattern-fast, rust-test]
     needs: build
-    runs-on: arc-runner-set
-    container: ghcr.io/open-s4c/lotto/core-ci:latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
-      - name: Install AnimMouse dependencies
-        run: |
-          apt-get update
-          apt-get install -y gh wget unzip
-      - name: Setup Rclone
-        uses: AnimMouse/setup-rclone@v1
+      - name: Download artifact
+        uses: actions/download-artifact@v5
         with:
-          rclone_config: |
-            [tebi]
-            type = s3
-            provider = Other
-            access_key_id = ${{ secrets.TEBI_ACCESS_KEY }}
-            secret_access_key = ${{ secrets.TEBI_SECRET_KEY }}
-            endpoint = ${{ secrets.TEBI_ENDPOINT }}
-          disable_base64: true
-      - name: Download artifact from Tebi
-        run: |
-          rclone copyto tebi:${{ secrets.TEBI_BUCKET }}/artifacts/lotto-${{ matrix.build }}-${{ github.run_id }}.tar lotto.tar
-          tar -xf lotto.tar && rm lotto.tar
+          name: lotto-${{ matrix.build }}
       - run: cmake --build build --target ${{ matrix.target }}

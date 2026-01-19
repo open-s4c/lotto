@@ -19,7 +19,7 @@ worker(void *arg)
 
     if ((elem = pop()) >= 0) {
         lotto_log_data(7, elem);
-        array[elem].value = idx;
+        array[elem].value = (int)idx;
         lotto_log(8);
         assert(array[elem].value == idx);
 
@@ -27,7 +27,7 @@ worker(void *arg)
 
         if ((elem = pop()) >= 0) {
             lotto_log_data(7, elem);
-            array[elem].value = idx;
+            array[elem].value = (int)idx;
             lotto_log(8);
             assert(array[elem].value == idx);
 

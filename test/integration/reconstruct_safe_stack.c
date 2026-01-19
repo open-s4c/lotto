@@ -19,7 +19,7 @@ worker(void *arg)
 
     if ((elem = pop()) >= 0) {
         lotto_log_data(22, elem);
-        array[elem].value = idx;
+        array[elem].value = (int)idx;
         lotto_log(23);
 
         lotto_log(24);
@@ -30,7 +30,7 @@ worker(void *arg)
 
         if ((elem = pop()) >= 0) {
             lotto_log_data(26, elem);
-            array[elem].value = idx;
+            array[elem].value = (int)idx;
             lotto_log(27);
 
             lotto_log(28);

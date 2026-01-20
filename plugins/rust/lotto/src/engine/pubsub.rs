@@ -349,11 +349,7 @@ pub fn init() {
     {
         // Subscribes to call from the sequencer_resume with the task-id to run.
         use raw::ps_subscribe;
-
-        let args = std::ptr::null_mut::<::std::os::raw::c_void>();
-
-        // Safety: We assume that the pubsub will not modify the args in any way
-        // or try to read from it.
+        
         unsafe {
             ps_subscribe(
                 lotto_sys::CHAIN_LOTTO as u16,

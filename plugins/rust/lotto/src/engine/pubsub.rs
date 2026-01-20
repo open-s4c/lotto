@@ -9,7 +9,6 @@ use crate::engine::handler::{ContextInfo, EventResult, Reason};
 use log::warn;
 use log::{debug, trace};
 
-use crate::base::Value;
 use crate::collections::FxHashMap;
 use crate::engine::handler::{
     ArrivalOrExecuteHandler, DynArrivalOrExecuteHandler, DynExecuteHandler,
@@ -18,11 +17,10 @@ use crate::raw::reason::REASON_DETERMINISTIC;
 use crate::raw::reason::*;
 use crate::raw::selector_SELECTOR_FIRST;
 use crate::raw::{
-    base_category, context_t, dispatcher_register, event_t, task_id, tidset_remove, tidset_t, value,
+    base_category, context_t, dispatcher_register, event_t, task_id, tidset_remove, tidset_t,
 };
 use lotto_sys as raw;
 use std::mem::align_of;
-use std::os::raw::c_void;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub type CustomCatTable =
@@ -291,8 +289,13 @@ where
 /// a c_void pointer. The user must ensure that it is a valid,
 /// aligned and non-null pointer
 ///
-pub unsafe extern "C" fn publish_execute(v: value, _args: *mut c_void) {
-    let ctx = get_context_from_publisher(&v);
+pub unsafe extern "C" fn publish_execute(
+    _chain: raw::chain_id,
+    _type_: raw::type_id,
+    event: *mut ::std::os::raw::c_void,
+    _md: *mut raw::metadata,
+) -> raw::ps_err {
+    let ctx = get_context_from_publisher(&event);
     let util_data = &mut crate::engine::handler::ENGINE_DATA
         .try_lock()
         .expect("single threaded");
@@ -332,6 +335,7 @@ pub unsafe extern "C" fn publish_execute(v: value, _args: *mut c_void) {
             }
         }
     }
+    raw::ps_err_PS_OK
 }
 
 /// Register the capture point handler and subscribe to `TOPIC_NEXT_TASK`.
@@ -345,14 +349,18 @@ pub fn init() {
     {
         // Subscribes to call from the sequencer_resume with the task-id to run.
         use raw::ps_subscribe;
-        use raw::topic::TOPIC_NEXT_TASK;
 
         let args = std::ptr::null_mut::<::std::os::raw::c_void>();
 
         // Safety: We assume that the pubsub will not modify the args in any way
         // or try to read from it.
         unsafe {
-            ps_subscribe(TOPIC_NEXT_TASK, Some(publish_execute), args);
+            ps_subscribe(
+                lotto_sys::CHAIN_LOTTO as u16,
+                lotto_sys::TOPIC_NEXT_TASK as u16,
+                Some(publish_execute),
+                lotto_sys::DICE_MODULE_SLOT as i32,
+            );
         }
     }
 }
@@ -426,26 +434,17 @@ unsafe fn move_tid_to_beggining_of_tset(tset: *mut tidset_t, tid: TaskId) {
 /// The user must ensure that the pointer is alligned, not null and
 /// contains a valid context_t.
 ///
-unsafe fn get_context_from_publisher(v: &value) -> &context_t {
-    let v = Value::from(*v);
-    if let Value::ANY(c_void_ctx) = v {
-        let ctx_ptr: *const context_t = c_void_ctx as *const context_t; // type cast to custom struct pointer
-
-        assert_eq!(
-            (ctx_ptr as usize) % align_of::<context_t>(),
-            0,
-            "Invalid alignment"
-        );
-        // SAFETY: We checked that the pointer is alligned and we expected the
-        // user to send us a non-null, valid pointer
-        let ctx: &context_t = unsafe { ctx_ptr.as_ref() }.expect("Unexpected null pointer");
-        ctx
-    } else {
-        panic!(
-            "unexpected value passed throught the publisher. Expected a ANY but found {:?}",
-            v
-        );
-    }
+unsafe fn get_context_from_publisher(v: &*mut ::std::os::raw::c_void) -> &context_t {
+    let ctx_ptr: *const context_t = *v as *const context_t; // type cast to custom struct pointer
+    assert_eq!(
+        (ctx_ptr as usize) % align_of::<context_t>(),
+        0,
+        "Invalid alignment"
+    );
+    // SAFETY: We checked that the pointer is alligned and we expected the
+    // user to send us a non-null, valid pointer
+    let ctx: &context_t = unsafe { ctx_ptr.as_ref() }.expect("Unexpected null pointer");
+    ctx
 }
 
 /// Guard against incorrect use of states.

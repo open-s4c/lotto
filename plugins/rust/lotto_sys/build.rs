@@ -1,5 +1,6 @@
-use std::env;
-use std::path::PathBuf;
+use anyhow::{Result, Context};
+use cmake_package::find_package;
+use std::{env, path::PathBuf};
 
 fn get_lotto_dir() -> PathBuf {
     let pkg_dir = PathBuf::from(
@@ -13,7 +14,7 @@ fn get_lotto_dir() -> PathBuf {
     lotto_root_dir.canonicalize().unwrap()
 }
 
-fn main() {
+fn main() -> Result<()> {
     let lotto_dir = get_lotto_dir();
     println!("Lotto dir is {}", lotto_dir.display());
 
@@ -60,16 +61,28 @@ fn main() {
         clang_build_gen_include_arg
     );
 
-    let libvsync_include_dir = get_lotto_dir().join("deps").join("dice").join("deps").join("libvsync").join("include");
-    assert!(
-        libvsync_include_dir.exists(),
-        "Could not find libsync include dir at {:?}",
-        libvsync_include_dir
-    );
-    let libvsync_include_arg = format!("-I{}", libvsync_include_dir.display());
+    let libvsync_package = find_package("libvsync")
+        .prefix_paths(vec!(get_lotto_dir().join("deps").join("dice").join("deps").join("libvsync")))
+        .find()
+        .context("could not find libvsync package")?;
+    let vsync_target = libvsync_package.target("libvsync::vsync")
+        .ok_or_else(|| anyhow::anyhow!("Could not find target 'libvsync::vsync'"))?;
+    let libvsync_include_paths = vsync_target.include_directories;
     println!(
-        "Libsync include dir is {}",
-        libvsync_include_arg
+        "Libsync include dirs are {:?}",
+        libvsync_include_paths
+    );
+
+    let dice_include_dir = get_lotto_dir().join("deps").join("dice").join("include");
+    assert!(
+        dice_include_dir.exists(),
+        "Could not find Dice include dir at {:?}",
+        dice_include_dir
+    );
+    let dice_include_arg = format!("-I{}", dice_include_dir.display());
+    println!(
+        "Dice include dir is {}",
+        dice_include_arg
     );
 
     #[allow(unused_mut)]
@@ -94,8 +107,11 @@ fn main() {
         .clang_arg(clang_include_arg)
         .clang_arg(clang_build_include_arg)
         .clang_arg(clang_build_gen_include_arg)
-        .clang_arg(libvsync_include_arg)
+        .clang_arg(dice_include_arg)
         .clang_arg("-D_GNU_SOURCE");
+    builder = libvsync_include_paths.into_iter()
+        .map(|include_dir| format!("-I{}", include_dir))
+        .fold(builder, |builder, include_arg| builder.clang_arg(include_arg));
 
     #[cfg(feature = "stable_address_map")]
     {
@@ -113,4 +129,6 @@ fn main() {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+
+    Ok(())
 }

@@ -22,8 +22,11 @@ members = [
     "cli"]
 resolver = "2"
 
+[workspace.package]
+edition = "2021"
+
 [workspace.dependencies]
-bincode = "2.0.0-rc"
+bincode = "=2.0.0-rc.3"
 loccolator = { path = "loccolator" }
 log = "0.4.22"
 

@@ -1,7 +1,7 @@
 [package]
 name = "execution_graph"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 description = "Graph utilities in rust; used in the genMC handler"
 
 [dependencies]

@@ -54,34 +54,40 @@ pub fn init() {
     FINAL.register();
     unsafe {
         raw::ps_subscribe(
-            lotto_sys::topic::TOPIC_AFTER_UNMARSHAL_CONFIG,
+            lotto_sys::CHAIN_LOTTO as u16,
+            lotto_sys::TOPIC_AFTER_UNMARSHAL_CONFIG as u16,
             Some(_rust_statemgr_after_unmarshal_config),
-            ptr::null_mut(),
+            lotto_sys::DICE_MODULE_SLOT as i32,
         );
         raw::ps_subscribe(
-            lotto_sys::topic::TOPIC_AFTER_UNMARSHAL_FINAL,
+            lotto_sys::CHAIN_LOTTO as u16,
+            lotto_sys::TOPIC_AFTER_UNMARSHAL_FINAL as u16,
             Some(_rust_statemgr_after_unmarshal_final),
-            ptr::null_mut(),
+            lotto_sys::DICE_MODULE_SLOT as i32,
         );
         raw::ps_subscribe(
-            lotto_sys::topic::TOPIC_AFTER_UNMARSHAL_PERSISTENT,
+            lotto_sys::CHAIN_LOTTO as u16,
+            lotto_sys::TOPIC_AFTER_UNMARSHAL_PERSISTENT as u16,
             Some(_rust_statemgr_after_unmarshal_persistent),
-            ptr::null_mut(),
+            lotto_sys::DICE_MODULE_SLOT as i32,
         );
         raw::ps_subscribe(
-            lotto_sys::topic::TOPIC_BEFORE_MARSHAL_CONFIG,
+            lotto_sys::CHAIN_LOTTO as u16,
+            lotto_sys::TOPIC_BEFORE_MARSHAL_CONFIG as u16,
             Some(_rust_statemgr_before_marshal_config),
-            ptr::null_mut(),
+            lotto_sys::DICE_MODULE_SLOT as i32,
         );
         raw::ps_subscribe(
-            lotto_sys::topic::TOPIC_BEFORE_MARSHAL_FINAL,
+            lotto_sys::CHAIN_LOTTO as u16,
+            lotto_sys::TOPIC_BEFORE_MARSHAL_FINAL as u16,
             Some(_rust_statemgr_before_marshal_final),
-            ptr::null_mut(),
+            lotto_sys::DICE_MODULE_SLOT as i32,
         );
         raw::ps_subscribe(
-            lotto_sys::topic::TOPIC_BEFORE_MARSHAL_PERSISTENT,
+            lotto_sys::CHAIN_LOTTO as u16,
+            lotto_sys::TOPIC_BEFORE_MARSHAL_PERSISTENT as u16,
             Some(_rust_statemgr_before_marshal_persistent),
-            ptr::null_mut(),
+            lotto_sys::DICE_MODULE_SLOT as i32,
         );
     }
     INITIALIZED.store(true, Ordering::SeqCst);
@@ -394,67 +400,85 @@ pub fn subscribe_to_statemgr_topics<StateOwner: StateTopicSubscriber>(
 }
 
 unsafe extern "C" fn _rust_statemgr_after_unmarshal_config(
-    _v: raw::value,
-    _arg: *mut core::ffi::c_void,
-) {
+    _chain: raw::chain_id,
+    _type_: raw::type_id,
+    _event: *mut ::std::os::raw::c_void,
+    _md: *mut raw::metadata,
+) -> raw::ps_err {
     let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.after_unmarshal_config();
     }
+    raw::ps_err_PS_OK
 }
 
 unsafe extern "C" fn _rust_statemgr_after_unmarshal_persistent(
-    _v: raw::value,
-    _arg: *mut core::ffi::c_void,
-) {
+    _chain: raw::chain_id,
+    _type_: raw::type_id,
+    _event: *mut ::std::os::raw::c_void,
+    _md: *mut raw::metadata,
+) -> raw::ps_err {
     let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.after_unmarshal_persistent();
     }
+    raw::ps_err_PS_OK
 }
 
 unsafe extern "C" fn _rust_statemgr_after_unmarshal_final(
-    _v: raw::value,
-    _arg: *mut core::ffi::c_void,
-) {
+    _chain: raw::chain_id,
+    _type_: raw::type_id,
+    _event: *mut ::std::os::raw::c_void,
+    _md: *mut raw::metadata,
+) -> raw::ps_err {
     let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.after_unmarshal_final();
     }
+    raw::ps_err_PS_OK
 }
 
 unsafe extern "C" fn _rust_statemgr_before_marshal_config(
-    _v: raw::value,
-    _arg: *mut core::ffi::c_void,
-) {
+    _chain: raw::chain_id,
+    _type_: raw::type_id,
+    _event: *mut ::std::os::raw::c_void,
+    _md: *mut raw::metadata,
+) -> raw::ps_err {
     let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.before_marshal_config();
     }
+    raw::ps_err_PS_OK
 }
 
 unsafe extern "C" fn _rust_statemgr_before_marshal_persistent(
-    _v: raw::value,
-    _arg: *mut core::ffi::c_void,
-) {
+    _chain: raw::chain_id,
+    _type_: raw::type_id,
+    _event: *mut ::std::os::raw::c_void,
+    _md: *mut raw::metadata,
+) -> raw::ps_err {
     let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.before_marshal_persistent();
     }
+    raw::ps_err_PS_OK
 }
 
 unsafe extern "C" fn _rust_statemgr_before_marshal_final(
-    _v: raw::value,
-    _arg: *mut core::ffi::c_void,
-) {
+    _chain: raw::chain_id,
+    _type_: raw::type_id,
+    _event: *mut ::std::os::raw::c_void,
+    _md: *mut raw::metadata,
+) -> raw::ps_err {
     let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.before_marshal_final();
     }
+    raw::ps_err_PS_OK
 }

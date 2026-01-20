@@ -52,12 +52,12 @@ impl handler::Handler for EventHandler {
         let id = TaskId::new(ctx.id);
         let stacktrace = stacktrace::get_task_stacktrace(id).unwrap_or_default();
         let ma = cas::get_rt_memory_access(id);
-        // let stid = self.st_map.put(&stacktrace);
+        let stid = self.st_map.put(&stacktrace);
         let transition = Transition::new(ctx);
         let ecore = GenericEventCore {
             t: transition.clone(),
             _phantom: PhantomData,
-            // stacktrace: stid,
+            stacktrace: stid,
             // addr: ma.as_ref().map(|ma| ma.addr().to_owned()),
             // rval: ma.as_ref().map(MemoryAccess::loaded_value).flatten(),
         };

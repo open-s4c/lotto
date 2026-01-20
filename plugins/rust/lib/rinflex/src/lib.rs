@@ -134,7 +134,7 @@ pub struct Event {
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct GenericEventCore<StackTraceType> {
     pub t: Transition,
-    // pub stacktrace: StackTraceType,
+    pub stacktrace: StackTraceType,
     // pub addr: Option<vaddr::VAddr>,
     // pub rval: Option<u64>,
     pub _phantom: PhantomData<StackTraceType>,
@@ -143,7 +143,7 @@ pub struct GenericEventCore<StackTraceType> {
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct GenericEventCoreRef<'a, StackTraceType> {
     pub t: &'a Transition,
-    // pub stacktrace: &'a StackTraceType,
+    pub stacktrace: &'a StackTraceType,
     // pub addr: Option<&'a vaddr::VAddr>,
     // pub rval: Option<u64>,
     pub _phantom: PhantomData<&'a StackTraceType>,
@@ -157,7 +157,7 @@ impl From<Event> for EventCore {
         EventCore {
             t: value.t,
             _phantom: PhantomData,
-            // stacktrace: value.stacktrace,
+            stacktrace: value.stacktrace,
             // addr: value.m.as_ref().map(|m| m.addr().to_owned()),
             // rval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
         }
@@ -169,7 +169,7 @@ impl<'a> From<&'a Event> for EventCoreRef<'a> {
         EventCoreRef {
             t: &value.t,
             _phantom: PhantomData,
-            // stacktrace: &value.stacktrace,
+            stacktrace: &value.stacktrace,
             // addr: value.m.as_ref().map(MemoryAccess::addr),
             // rval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
         }
@@ -180,7 +180,7 @@ impl<'a, T: std::fmt::Display> std::fmt::Display for GenericEventCoreRef<'a, T> 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{{\n")?;
         write!(f, "  t: {},\n", self.t)?;
-        // write!(f, "  st: {},\n", self.stacktrace)?;
+        write!(f, "  st: {},\n", self.stacktrace)?;
         // write!(f, "  loc: {:?},\n", self.addr)?;
         // write!(f, "  rval: {:?},\n", self.rval)?;
         write!(f, "}}")?;

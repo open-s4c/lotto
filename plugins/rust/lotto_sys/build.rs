@@ -89,6 +89,7 @@ fn main() -> Result<()> {
     let mut builder = bindgen::Builder::default()
         .header("wrapper.h")
         .allowlist_file(".*lotto/.*")
+        .allowlist_file(".*dice/.*")
         .allowlist_file(".*/crep.h")
         .newtype_enum("base_category")
         .rustified_enum("reason")

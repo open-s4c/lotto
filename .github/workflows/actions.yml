@@ -13,12 +13,11 @@ jobs:
         - build: x86-gcc
           cc: gcc
           cxx: g++
-          opts: -DLOTTO_RUST=OFF
+          opts: -DLOTTO_RUST=ON
         - build: x86-clang
           cc: clang
           cxx: clang++
-          opts: -DLOTTO_RUST=OFF -DLOTTO_RACKET_TESTS=ON
-        #  opts: -DLOTTO_RUST=ON
+          opts: -DLOTTO_RUST=ON -DLOTTO_RACKET_TESTS=ON
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

@@ -4,7 +4,6 @@ use lotto::log::*;
 pub use handler_await_address;
 pub use handler_perf;
 pub use handler_spin_loop;
-pub use handler_trust;
 
 #[cfg(feature = "stable_address_map")]
 pub use handler_rinflex;
@@ -20,15 +19,9 @@ pub fn register() {
     // Rinflex handlers
     #[cfg(feature = "stable_address_map")]
     handler_rinflex::register();
-
-    // The TruSt handler comes after the handlers
-    // that can block threads.
-    handler_trust::register();
 }
 
 pub fn register_flags() {
-    handler_trust::register_flags();
-
     #[cfg(feature = "stable_address_map")]
     handler_rinflex::register_flags();
 }

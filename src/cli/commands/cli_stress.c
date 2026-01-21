@@ -44,19 +44,6 @@ crep_cleanup(void)
     }
 }
 
-void
-trust_cleanup(flags_t *flags)
-{
-    const char *dir  = flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY);
-    const char *file = "/trust_file.mmap";
-    {
-        char full_file_path[PATH_MAX];
-        strcpy(full_file_path, dir);
-        strcat(full_file_path, file);
-        remove(full_file_path);
-    }
-}
-
 /**
  * stress test
  */
@@ -71,8 +58,6 @@ stress(args_t *args, flags_t *flags)
             flags_is_on(flags, FLAG_FLOTTO),
             flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
-
-    trust_cleanup(flags);
 
     envvar_t vars[] = {
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, FLAG_OUTPUT)},

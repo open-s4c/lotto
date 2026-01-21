@@ -9,8 +9,6 @@ members = [
     "lotto_link",
 
     # Supporting crates
-    "lib/trust/",
-    "lib/graph_util/*/",
     "lib/rinflex",
 
     # Handler definitions

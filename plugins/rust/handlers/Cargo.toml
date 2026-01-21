@@ -13,7 +13,6 @@ lotto.workspace = true
 handler_await_address = { path = "await_address" }
 handler_spin_loop = { path = "verification_spin_loop" }
 handler_perf = { path = "perf" }
-handler_trust = { path = "trust" }
 
 # rinflex
 handler_rinflex = { path = "rinflex", optional = true }

@@ -316,19 +316,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "handler_trust"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "event_utils",
- "log",
- "lotto",
- "memmap",
- "rustc-hash 1.1.0",
- "trust_algorithm",
-]
-
-[[package]]
 name = "home"
 version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -710,7 +697,6 @@ dependencies = [
  "handler_perf",
  "handler_rinflex",
  "handler_spin_loop",
- "handler_trust",
  "lotto",
 ]
 
@@ -835,19 +821,6 @@ dependencies = [
  "rand",
  "rustc-hash 1.1.0",
  "string-builder",
-]
-
-[[package]]
-name = "trust_algorithm"
-version = "0.1.0"
-dependencies = [
- "event_utils",
- "execution_graph",
- "lotto",
- "rustc-hash 1.1.0",
- "serde",
- "serde_derive",
- "serde_json",
 ]
 
 [[package]]

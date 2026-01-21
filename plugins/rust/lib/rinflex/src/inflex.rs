@@ -110,19 +110,15 @@ impl Inflex {
             let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
             bar.set_prefix_string(format!("IIP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
-            let success_forever = always(self.rounds, || {
-                loop {
-                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                    let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
-                        bar.tick_valid();
-                        return Ok(outcome.is_success());
-                    } else {
-                        bar.tick_invalid();
-                    }
+            let success_forever = always(self.rounds, || loop {
+                flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                let exitcode = checked_execute(&self.input, &flags, true)?;
+                if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                    bar.tick_valid();
+                    return Ok(outcome.is_success());
+                } else {
+                    bar.tick_invalid();
                 }
-                bar.tick_valid();
-                return Ok(exitcode == 0);
             })?;
             Ok(success_forever)
         })
@@ -141,7 +137,7 @@ impl Inflex {
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
 
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
         while confidence <= self.rounds && iip < self.last_clk {
@@ -190,19 +186,15 @@ impl Inflex {
             let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
             bar.set_prefix_string(format!("IP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
-            let fail_forever = always(self.rounds, || {
-                loop {
-                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                    let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
-                        bar.tick_valid();
-                        return Ok(outcome.is_fail());
-                    } else {
-                        bar.tick_invalid();
-                    }
+            let fail_forever = always(self.rounds, || loop {
+                flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                let exitcode = checked_execute(&self.input, &flags, true)?;
+                if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                    bar.tick_valid();
+                    return Ok(outcome.is_fail());
+                } else {
+                    bar.tick_invalid();
                 }
-                bar.tick_valid();
-                return Ok(exitcode != 0);
             })?;
             Ok(fail_forever)
         })

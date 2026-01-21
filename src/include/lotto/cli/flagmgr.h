@@ -196,15 +196,12 @@ flags_t *flags_default();
 #define DECLARE_FLAG_VERBOSE                                                   \
     DECLARE_COMMAND_FLAG(VERBOSE, "v", "verbose", "", "verbose", flag_off())
 
-#define DECLARE_FLAG_CREP                                                      \
-    DECLARE_COMMAND_FLAG(CREP, "", "crep", "", "enable crep", flag_off())
-
 #define DECLARE_FLAG_REPLAY_GOAL                                               \
     DECLARE_COMMAND_FLAG(REPLAY_GOAL, "g", "goal", "INT", "replay goal",       \
                          flag_uval(MAX_ROUNDS))
 
-#define DECLARE_FLAG_LOGGER_FILE                                                  \
-    DECLARE_COMMAND_FLAG(LOGGER_FILE, "", "log", "FILE", "output log FILE",       \
+#define DECLARE_FLAG_LOGGER_FILE                                               \
+    DECLARE_COMMAND_FLAG(LOGGER_FILE, "", "log", "FILE", "output log FILE",    \
                          flag_sval("stderr"))
 
 #define DECLARE_FLAG_TEMPORARY_DIRECTORY                                       \

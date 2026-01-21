@@ -29,7 +29,6 @@ DECLARE_FLAG_TEMPORARY_DIRECTORY;
 DECLARE_FLAG_NO_PRELOAD;
 DECLARE_FLAG_LOGGER_BLOCK;
 DECLARE_FLAG_REPLAY_GOAL;
-DECLARE_FLAG_CREP;
 
 /**
  * generate initial trace
@@ -39,8 +38,8 @@ trace(args_t *args, flags_t *flags)
 {
     preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
             flags_is_on(flags, FLAG_VERBOSE),
-            !flags_is_on(flags, FLAG_NO_PRELOAD), flags_is_on(flags, FLAG_CREP),
-            false, flags_get_sval(flags, flag_memmgr_runtime()),
+            !flags_is_on(flags, FLAG_NO_PRELOAD), false,
+            flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
 
     envvar_t vars[] = {
@@ -85,15 +84,10 @@ _default_flags()
 static void LOTTO_CONSTRUCTOR
 init()
 {
-    flag_t sel[] = {FLAG_INPUT,
-                    FLAG_OUTPUT,
-                    FLAG_VERBOSE,
-                    FLAG_TEMPORARY_DIRECTORY,
-                    FLAG_NO_PRELOAD,
-                    FLAG_LOGGER_BLOCK,
-                    FLAG_REPLAY_GOAL,
-                    FLAG_CREP,
-                    0};
+    flag_t sel[] = {FLAG_INPUT,       FLAG_OUTPUT,
+                    FLAG_VERBOSE,     FLAG_TEMPORARY_DIRECTORY,
+                    FLAG_NO_PRELOAD,  FLAG_LOGGER_BLOCK,
+                    FLAG_REPLAY_GOAL, 0};
     subcmd_register(trace, "trace", "[--] <command line>",
                     "Create an initial trace for running Lotto without CLI",
                     true, sel, _default_flags, SUBCMD_GROUP_RUN);

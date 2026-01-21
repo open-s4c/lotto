@@ -146,23 +146,6 @@ enum DefaultValue {
     DeferRaw(fn() -> raw::value),
 }
 
-#[cfg(feature = "qlotto")]
-const CREP_DEFAULT: bool = true;
-
-#[cfg(not(feature = "qlotto"))]
-const CREP_DEFAULT: bool = false;
-
-pub static FLAG_CREP: FlagKey = FlagKey::new(
-    c"FLAG_CREP",
-    c"",
-    c"crep",
-    c"",
-    c"enable crep",
-    Value::Bool(CREP_DEFAULT),
-    &StrConverter::None,
-    None,
-);
-
 pub static FLAG_VERBOSE: FlagKey = FlagKey::new(
     c"FLAG_VERBOSE",
     c"v",
@@ -405,7 +388,6 @@ impl AsFlag for FlagKey {
 }
 
 pub fn init() {
-    let _ = FLAG_CREP.get();
     let _ = FLAG_VERBOSE.get();
     let _ = FLAG_INPUT.get();
     let _ = FLAG_OUTPUT.get();

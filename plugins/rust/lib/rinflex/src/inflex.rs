@@ -39,7 +39,6 @@ pub struct Inflex {
     //
     // other parameters
     //
-    pub crep: bool,
     pub report_progress: bool,
 }
 
@@ -68,7 +67,6 @@ impl Inflex {
         let temp_output = tempdir.join("inflex.temp.trace");
 
         let rounds = flags.get_uval(&FLAG_ROUNDS);
-        let crep = flags.is_on(&FLAG_CREP);
 
         Inflex {
             input: input.to_owned(),
@@ -78,7 +76,6 @@ impl Inflex {
             candidate,
             temp_output,
             report_progress: true,
-            crep,
             rounds,
             min: 0,
         }
@@ -101,10 +98,6 @@ impl Inflex {
     pub fn run_inverse(&self) -> Result<Clock, Error> {
         let mut flags = self.flags.clone();
 
-        if self.crep {
-            lotto::crep::backup_make();
-        }
-
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
         let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
@@ -117,9 +110,6 @@ impl Inflex {
             bar.set_prefix_string(format!("IIP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
             let success_forever = always(self.rounds, || {
-                if self.crep {
-                    lotto::crep::backup_restore();
-                }
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
                     let exitcode = checked_execute(&self.input, &flags, true)?;
@@ -140,10 +130,6 @@ impl Inflex {
     pub fn run(&self) -> Result<Clock, Error> {
         let mut flags = self.flags.clone();
 
-        if self.crep {
-            lotto::crep::backup_make();
-        }
-
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
         let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
@@ -153,9 +139,6 @@ impl Inflex {
             bar.set_prefix_string(format!("IP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
             let fail_forever = always(self.rounds, || {
-                if self.crep {
-                    lotto::crep::backup_restore();
-                }
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
                     let exitcode = checked_execute(&self.input, &flags, true)?;
@@ -175,10 +158,6 @@ impl Inflex {
     pub fn run_fast(&self) -> Result<Clock, Error> {
         let mut flags = self.flags.clone();
 
-        if self.crep {
-            lotto::crep::backup_make();
-        }
-
         let mut ip = self.min;
         let mut last_ip = 0;
         let mut confidence = 0;
@@ -197,9 +176,6 @@ impl Inflex {
                 flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                    if self.crep {
-                        lotto::crep::backup_restore();
-                    }
                     let return_code = checked_execute(&self.input, &flags, true)?;
                     if should_discard_execution(&self.temp_output)? {
                         bar.tick_invalid();
@@ -315,7 +291,6 @@ pub fn preload(flags: &Flags) {
         flags.get_sval(&FLAG_TEMPORARY_DIRECTORY),
         flags.is_on(&FLAG_VERBOSE),
         !flags.is_on(&FLAG_NO_PRELOAD),
-        flags.is_on(&FLAG_CREP),
         false,
         flags.get_sval(&flag_memmgr_runtime()),
         flags.get_sval(&flag_memmgr_user()),

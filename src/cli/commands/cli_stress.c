@@ -28,22 +28,6 @@
 
 void round_print(flags_t *flags, uint64_t round);
 
-void
-crep_cleanup(void)
-{
-    DIR *d;
-    struct dirent *dir;
-    d = opendir(".");
-    if (d) {
-        while ((dir = readdir(d)) != NULL) {
-            if (NULL != strstr(dir->d_name, "task-") &&
-                NULL != strstr(dir->d_name, ".crep"))
-                remove(dir->d_name);
-        }
-        closedir(d);
-    }
-}
-
 /**
  * stress test
  */
@@ -54,7 +38,7 @@ stress(args_t *args, flags_t *flags)
 
     preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
             flags_is_on(flags, FLAG_VERBOSE),
-            !flags_is_on(flags, FLAG_NO_PRELOAD), flags_is_on(flags, FLAG_CREP),
+            !flags_is_on(flags, FLAG_NO_PRELOAD),
             flags_is_on(flags, FLAG_FLOTTO),
             flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
@@ -88,7 +72,6 @@ stress(args_t *args, flags_t *flags)
     for (uint64_t i = 0; i < rounds; i++) {
         round_print(flags, i);
 
-        crep_cleanup();
         if ((err = execute(args, flags, false)))
             return err;
 
@@ -123,7 +106,6 @@ init()
                     FLAG_BEFORE_RUN,
                     FLAG_AFTER_RUN,
                     FLAG_LOGGER_FILE,
-                    FLAG_CREP,
                     FLAG_FLOTTO,
                     0};
     subcmd_register(stress, "stress", "[--] <command line>",

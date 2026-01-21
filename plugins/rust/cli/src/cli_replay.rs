@@ -76,7 +76,6 @@ fn replay(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
         flags.get_sval(&FLAG_TEMPORARY_DIRECTORY),
         flags.is_on(&FLAG_VERBOSE),
         !flags.is_on(&FLAG_NO_PRELOAD),
-        flags.is_on(&FLAG_CREP),
         false,
         flags.get_sval(&flag_memmgr_runtime()),
         flags.get_sval(&flag_memmgr_user()),

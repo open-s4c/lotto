@@ -133,17 +133,6 @@ mediator_attach(mediator_t *m)
 }
 
 bool
-mediator_guard_crep(mediator_t *m)
-{
-    return true;
-}
-bool
-mediator_forgo_crep(mediator_t *m)
-{
-    return true;
-}
-
-bool
 mediator_detached(const mediator_t *m)
 {
     return false;

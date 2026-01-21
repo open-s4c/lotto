@@ -59,11 +59,6 @@ termination_mode_all_str(char *dst)
 {
 }
 
-void
-crep_truncate(clk_t clk)
-{
-}
-
 flags_t *
 with_flags(struct flag_value_pair flags[])
 {

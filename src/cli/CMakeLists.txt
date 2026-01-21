@@ -34,7 +34,6 @@ macro(add_cli_dependencies TARGET)
         blob-plotto
         blob-plotto-verbose
         blob-tsano
-        blob-crep
         blob-util
         blob-debug
         blob-command
@@ -87,7 +86,6 @@ target_link_libraries(
             brokers.o
             base.o
             sys.o
-            crep_no_record.o
             cli.o
             memmgr_runtime.o
             memmgr_user.o

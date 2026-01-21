@@ -10,9 +10,8 @@ Lotto can be seen as consisting of three top-level components:
 
 - CLI
 - frond-ends
-- crep
 
-The CLI provides the user interface for configuring and running the system under test (SUT). Front-ends connect to SUT and are responsible for passing necessary information to the engine and executing its plan. Crep is an external tool for data replay. The top-level components share some modules of Lotto as shown below.
+The CLI provides the user interface for configuring and running the system under test (SUT). Front-ends connect to SUT and are responsible for passing necessary information to the engine and executing its plan. ?? is an external tool for data replay. The top-level components share some modules of Lotto as shown below.
 
 ```
 +---------+
@@ -28,7 +27,7 @@ The CLI provides the user interface for configuring and running the system under
 +---------+-----+   +--------- syscall record/replay
 |    states     |   V
 +---------------+------+
-|    brokers    | crep |
+|    brokers    |  ??  |
 +---------------+------+
 |         base         |
 +----------------------+
@@ -36,7 +35,7 @@ The CLI provides the user interface for configuring and running the system under
 +----------------------+
 ```
 
-Sys and base provide a library for other components. Crep uses just these two modules. Brokers and states are specific to Lotto engine. They are still used by the CLI for setting up the run. The engine sees SUT on the abstract level through the runtime. The runtime provides a unified interface for all domain-specific front-ends. The simplest frontend is PLotto. It contains basic interceptors for pthread and TSAN allowing most basic user-space applications compiled with TSAN to be run with Lotto. QLotto is a specific case of PLotto applied to a modified version of Qemu enriched with Lotto-aware plugins. This front-end allows testing deterministic replay of kernel-space applications run inside Qemu images. QLotto differs from plain PLotto run with vanilla Qemu by guest-aware interceptors. As a proof of concept, this sequence continues with DLotto. This frontend consists of QLotto running Alpine Linux with Docker inside. Theoretically, it allows running any uninstrumented application with Lotto.
+Sys and base provide a library for other components. ?? uses just these two modules. Brokers and states are specific to Lotto engine. They are still used by the CLI for setting up the run. The engine sees SUT on the abstract level through the runtime. The runtime provides a unified interface for all domain-specific front-ends. The simplest frontend is PLotto. It contains basic interceptors for pthread and TSAN allowing most basic user-space applications compiled with TSAN to be run with Lotto. QLotto is a specific case of PLotto applied to a modified version of Qemu enriched with Lotto-aware plugins. This front-end allows testing deterministic replay of kernel-space applications run inside Qemu images. QLotto differs from plain PLotto run with vanilla Qemu by guest-aware interceptors. As a proof of concept, this sequence continues with DLotto. This frontend consists of QLotto running Alpine Linux with Docker inside. Theoretically, it allows running any uninstrumented application with Lotto.
 
 # Components
 
@@ -325,20 +324,6 @@ The mandatory components are long or short option and the default value. The opt
 
 ### `flags`
 This component mirrors `states` and includes all engine flags which are part of the core code base. These flags define callbacks which set a corresponding state.
-
-## `crep`
-Libcrep is a library for replaying arbitrary sys- or external calls. It decouples schedule replay done by Lotto from data replay by operating independently on each task and recording the call content. One can see crep as a standalone replay tool for applications which do not exhibit nondeterminism in presence of concurrency. It creates an additional layer between Lotto and the OS:
-
-```
-     |      Lotto     |       crep       |     OS
-     |                |                  |
-f() -+-> interceptor -+-> record/replay -+-> real f()
-     |                |                  |
-```
-
-A replayed call may be captured first by Lotto, then crep, and at last be forwarded to the real implementation. Note, that all three steps are optional, i.e., the call can skip any interception step or be mocked by it. Thus, one can separate the concerns of replaying the schedule and data between Lotto and crep.
-
-> TODO: forward calls on replay as an alternative to mocking
 
 # System under test (SUT)
 

@@ -7,6 +7,7 @@
 #include <lotto/base/context.h>
 #include <lotto/base/trace_flat.h>
 #include <lotto/brokers/pubsub.h>
+#include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
@@ -81,15 +82,18 @@ expect_processed()
 }
 
 size_t
-statemgr_size()
+statemgr_size(state_type_t type)
 {
+    (void)type;
     return 0;
 }
 
-void
-statemgr_marshal(void *buf)
+void *
+statemgr_marshal(void *buf, state_type_t type)
 {
+    (void)type;
     mock.marshaled = true;
+    return buf;
 }
 bool
 expect_marshaled()
@@ -164,8 +168,10 @@ config_init()
 }
 
 void
-statemgr_register(slot_t slot, marshable_t *m, const char *name)
+statemgr_register(marshable_t *m, state_type_t type)
 {
+    (void)type;
+    (void)m;
 }
 
 void

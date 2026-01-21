@@ -42,10 +42,6 @@ _lotto()
             COMPREPLY=( $( compgen -W "pct pos random" -- "$cur" ) )
             return
             ;;
-        --reconstruct-strategy)
-            COMPREPLY=( $( compgen -W "random random_recursive" -- "$cur" ) )
-            return
-            ;;
     esac
 
     if [[ $cur == -* && "${LOTTO_CHOSEN_CMD}" != "" ]]; then

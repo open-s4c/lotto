@@ -11,7 +11,6 @@
 | [lotto/drop.h](drop.h.md)|The drop interface. |
 | [lotto/evec.h](evec.h.md)|Event counters for low level synchronization. |
 | [lotto/fork.h](fork.h.md)|The fork interface. |
-| [lotto/log.h](log.h.md)|The trace reconstruction interface. |
 | [lotto/mutex.h](mutex.h.md)|Lotto-based mutex implementation. |
 | [lotto/order.h](order.h.md)|The ordering points interface. |
 | [lotto/priority.h](priority.h.md)|The priority interface. |

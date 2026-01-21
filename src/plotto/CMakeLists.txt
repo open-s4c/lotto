@@ -8,7 +8,6 @@ add_library(
     intercept_disable.c
     intercept_evec.c
     intercept_list.S
-    intercept_log.c
     intercept_malloc.c
     intercept_mutex.c
     intercept_order.c
@@ -26,7 +25,6 @@ add_library(
     intercept_disable.c
     intercept_evec.c
     intercept_list.S
-    intercept_log.c
     intercept_malloc.c
     intercept_mutex.c
     intercept_order.c

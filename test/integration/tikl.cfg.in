@@ -11,7 +11,6 @@ filter      = src/runtime|src/plotto|libvsync
 debug       = debug %tmpdir %input --file-filter="%filter"
 explore     = explore %tmpdir %input %output
 inflex      = inflex %tmpdir %input %output
-reconstruct = reconstruct %tmpdir %output
 record      = record %tmpdir %output
 replay      = replay %tmpdir %input
 rinflex     = rinflex %tmpdir %input

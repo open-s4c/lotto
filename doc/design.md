@@ -25,7 +25,7 @@ The CLI provides the user interface for configuring and running the system under
 | runtime |  V
 +---------+-----+
 | engine  | cli |
-+---------+-----+   +--------- syscall record/replay 
++---------+-----+   +--------- syscall record/replay
 |    states     |   V
 +---------------+------+
 |    brokers    | crep |
@@ -302,7 +302,6 @@ These commands are sufficient for simple debug scenarios. On top of them, Lotto 
 
 - explore - exhaustive search for a bug in all schedules
 - inflex - trim the trace to the inflection point
-- reconstruct - use logs to reproduce a run which generated them
 
 To implement a new command, one needs to register it. Optionally, a command can define its own flags. Many commonly used flags are provided by the flag manager as macros. Then the command can set the environment variables, access the state, execute SUT, and inspect its exit code.
 

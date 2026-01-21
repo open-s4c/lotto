@@ -1,3 +1,9 @@
+link_libraries(dice.h)
+if(${LOTTO_LTO})
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    add_compile_options(-fno-strict-aliasing -Wall)
+endif()
+
 # already executed by /src/CMakeLists.txt execute_process(COMMAND bash
 # ${CMAKE_SOURCE_DIR}/scripts/gen_ps_topics.sh ${CMAKE_BINARY_DIR}
 # OUTPUT_VARIABLE PS_INTERFACE_TOPICS)

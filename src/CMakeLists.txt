@@ -1,3 +1,8 @@
+link_libraries(dice.h)
+if(${LOTTO_LTO})
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    add_compile_options(-fno-strict-aliasing -Wall)
+endif()
 add_subdirectory(include)
 
 # make the inclusion of ensure.h an error. add_compile_options(-DENSURE_DISABLE)

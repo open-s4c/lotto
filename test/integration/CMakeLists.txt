@@ -29,17 +29,18 @@ set(FAILING_SRCS
     #
     # The following tests are flaky on the pipeline
     #
-    inflex_test.c
-    rinflex.c
-    record_granularity_test_x86.c
+    atomic_return.c
+    await_while_round_robin.c
+    enforce_cat.c
+    filter_config.c
+    inflex_abc_nocli.c
     inflex_method_be.c
     inflex_method_le.c
     inflex_method_lp.c
-    await_while_round_robin.c
-    inflex_abc_nocli.c
-    enforce_cat.c
-    tsano_inflex_abc.c
-    filter_config.c)
+    inflex_test.c
+    record_granularity_test_x86.c
+    rinflex.c
+    tsano_inflex_abc.c)
 
 file(GLOB ALL_SRCS *.c)
 set(SRCS)

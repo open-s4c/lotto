@@ -39,7 +39,6 @@ stress(args_t *args, flags_t *flags)
     preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
             flags_is_on(flags, FLAG_VERBOSE),
             !flags_is_on(flags, FLAG_NO_PRELOAD),
-            flags_is_on(flags, FLAG_FLOTTO),
             flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
 
@@ -106,7 +105,6 @@ init()
                     FLAG_BEFORE_RUN,
                     FLAG_AFTER_RUN,
                     FLAG_LOGGER_FILE,
-                    FLAG_FLOTTO,
                     0};
     subcmd_register(stress, "stress", "[--] <command line>",
                     "Stress test a program until a desired execution is found",

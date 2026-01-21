@@ -14,7 +14,7 @@
 #define GDB            "debug.gdb"
 #define GDB_PYTHON_DIR "pylotto"
 
-void preload(const char *path, bool verbose, bool plotto, bool flotto,
+void preload(const char *path, bool verbose, bool plotto,
              const char *memmgr_chain_runtime, const char *memmgr_chain_user);
 void debug_preload(const char *dir, const char *file_filter,
                    const char *function_filter, const char *addr2line,

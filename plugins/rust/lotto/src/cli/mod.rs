@@ -14,7 +14,6 @@ pub fn preload<P: AsRef<Path>>(
     tempdir: P,
     verbose: bool,
     plotto: bool,
-    flotto: bool,
     memmgr_chain_runtime: &str,
     memmgr_chain_user: &str,
 ) {
@@ -27,7 +26,6 @@ pub fn preload<P: AsRef<Path>>(
             tempdir_cstr.as_ptr(),
             verbose,
             plotto,
-            flotto,
             memmgr_chain_runtime_cstr.as_ptr(),
             memmgr_chain_user_cstr.as_ptr(),
         )

@@ -57,7 +57,6 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
         flags.get_sval(&FLAG_TEMPORARY_DIRECTORY),
         flags.is_on(&FLAG_VERBOSE),
         !flags.is_on(&FLAG_NO_PRELOAD),
-        false,
         flags.get_sval(&flag_memmgr_runtime()),
         flags.get_sval(&flag_memmgr_user()),
     );

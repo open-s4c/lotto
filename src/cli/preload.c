@@ -20,7 +20,6 @@
 #include <sys/types.h>
 
 #if !defined(LOTTO_EMBED_LIB) || LOTTO_EMBED_LIB == 1
-    #include <blob-flotto.h>
     #include <blob-plotto-verbose.h>
     #include <blob-plotto.h>
 #endif
@@ -264,7 +263,7 @@ _preload_memmgr_plugins(const char *chain, bool runtime)
 }
 
 void
-preload(const char *dir, bool verbose, bool do_preload_plotto, bool flotto,
+preload(const char *dir, bool verbose, bool do_preload_plotto,
         const char *memmgr_chain_runtime, const char *memmgr_chain_user)
 {
     /* make libraries available */
@@ -276,13 +275,9 @@ preload(const char *dir, bool verbose, bool do_preload_plotto, bool flotto,
         {.path    = LIBTSANO,
          .content = libtsano_so,
          .len     = libtsano_so_len},
-        flotto ?
-        (blob_t){.path    = LIBENGINE,
-                 .content = libflotto_so,
-                 .len     = libflotto_so_len} :
-        (blob_t){.path    = LIBENGINE,
-                 .content = libengine_so,
-                 .len     = libengine_so_len},
+        {.path    = LIBENGINE,
+         .content = libengine_so,
+         .len     = libengine_so_len},
 #if !defined(LOTTO_EMBED_LIB) || LOTTO_EMBED_LIB == 1
         false ?
         (blob_t){.path    = LIBLOTTO,
@@ -318,7 +313,7 @@ preload(const char *dir, bool verbose, bool do_preload_plotto, bool flotto,
     /* Load three dirs in order. */
     _preload_memmgr_plugins(memmgr_chain_runtime, true);
     _preload_memmgr_plugins(memmgr_chain_user, false);
-    if (do_preload_plotto && !flotto) {
+    if (do_preload_plotto) {
         lotto_plugin_foreach_reverse(
             _preload_plugin,
             &(preload_plugin_arg_t){.plugin_predicate =

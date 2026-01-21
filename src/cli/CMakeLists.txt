@@ -44,7 +44,6 @@ macro(add_cli_dependencies TARGET)
         blob-handler
         blob-runtime
         blob-engine
-        blob-flotto
         ${ARGN})
 endmacro()
 

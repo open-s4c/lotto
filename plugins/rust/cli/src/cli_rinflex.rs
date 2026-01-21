@@ -6,9 +6,10 @@ use lotto::engine::flags::*;
 use lotto::log::*;
 use lotto::*;
 
-use rec_inflex::{Outcome, RecInflex};
+use rec_inflex::RecInflex;
 use rinflex::error::Error;
 use rinflex::handlers::flags::*;
+use rinflex::stats::STATS;
 use rinflex::*;
 
 #[lotto::subcmd(
@@ -75,67 +76,44 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
             println!("{}", c.c.display().unwrap());
         }
 
-        if rinflex.should_terminate()? {
-            println!("The current constraint set is sufficient to reproduce the bug, stopping");
-            break;
-        } else {
-            println!("We still need more constraints...");
-        }
         let pair = match rinflex.find_next_pair() {
-            Ok(pair) => pair,
+            Ok(Some(pair)) => pair,
+            Ok(None) => {
+                println!("The current constraint set is sufficient to reproduce the bug, stopping");
+                break;
+            }
             Err(Error::ExecutionNotFound) => {
                 println!("Cannot find an execution that satisfied the given constraints. This is likely due to circular constraints or control dependence.");
                 break;
             }
-            Err(e) => return Err(e),
-        };
-
-        info!("Checking if the constraint is essential...");
-        let essential = rinflex.check_if_essential(&pair)?;
-        let constraint = if essential {
-            println!("needed");
-            Constraint {
-                c: pair,
-                virt: false,
-                positive: true,
-            }
-        } else {
-            println!("not needed");
-            Constraint {
-                c: pair.flipped(),
-                virt: true,
-                positive: false,
-            }
-        };
-        rinflex.constraints.push(constraint);
-
-        // [v] even though we conceptually want to find an
-        // unrestricted failing execution from clock 0, we actually
-        // start from pair.clock_lower_bound. This is under the
-        // assumption that the more we replay the prefix, the closer
-        // we get to the bug.
-        match rinflex.get_trace_from_zero(
-            Outcome::Fail,
-            &rinflex.trace_success,
-            &rinflex.trace_fail,
-        ) {
-            Ok(_) => {}
-            Err(Error::ExecutionNotFound) => {
-                println!("Cannot find an execution that satisfied the given constraints. This is likely due to circular constraints or control dependence.");
+            Err(e) => {
+                println!("Unhandled error: {}", e);
                 break;
             }
-            e @ Err(_) => return e,
-        }
-        println!("OK, found another failing trace!");
+        };
+
+        rinflex.push_real_constraint(pair);
     }
 
+    let mut num_ocs = 0;
+    let mut num_virt_ocs = 0;
+    println!("");
     for c in &rinflex.constraints {
         println!(
             "------ . ------ . ------ . ------ . ------ {}",
             if c.virt { "[virtual]" } else { "" }
         );
         println!("{}", c.c.display().unwrap());
+        num_ocs += 1;
+        if c.virt {
+            num_virt_ocs += 1;
+        }
     }
+
+    println!("");
+    println!("#total OCs = {}", num_ocs);
+    println!("#virtual OCs = {}", num_virt_ocs);
+    STATS.report();
 
     Ok(())
 }

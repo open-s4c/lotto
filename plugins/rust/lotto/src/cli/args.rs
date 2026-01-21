@@ -50,7 +50,7 @@ impl Args {
         self.cstrs().map(|cstr| cstr.to_str().ok())
     }
 
-    pub fn strs(&self) -> impl Iterator<Item = Cow<str>> {
+    pub fn strs(&self) -> impl Iterator<Item = Cow<'_, str>> {
         self.cstrs().map(|cstr| cstr.to_string_lossy())
     }
 }

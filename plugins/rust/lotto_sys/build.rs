@@ -1,4 +1,4 @@
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use cmake_package::find_package;
 use std::{env, path::PathBuf};
 
@@ -62,16 +62,18 @@ fn main() -> Result<()> {
     );
 
     let libvsync_package = find_package("libvsync")
-        .prefix_paths(vec!(get_lotto_dir().join("deps").join("dice").join("deps").join("libvsync")))
+        .prefix_paths(vec![get_lotto_dir()
+            .join("deps")
+            .join("dice")
+            .join("deps")
+            .join("libvsync")])
         .find()
         .context("could not find libvsync package")?;
-    let vsync_target = libvsync_package.target("libvsync::vsync")
+    let vsync_target = libvsync_package
+        .target("libvsync::vsync")
         .ok_or_else(|| anyhow::anyhow!("Could not find target 'libvsync::vsync'"))?;
     let libvsync_include_paths = vsync_target.include_directories;
-    println!(
-        "Libsync include dirs are {:?}",
-        libvsync_include_paths
-    );
+    println!("Libsync include dirs are {:?}", libvsync_include_paths);
 
     let dice_include_dir = get_lotto_dir().join("deps").join("dice").join("include");
     assert!(
@@ -80,10 +82,7 @@ fn main() -> Result<()> {
         dice_include_dir
     );
     let dice_include_arg = format!("-I{}", dice_include_dir.display());
-    println!(
-        "Dice include dir is {}",
-        dice_include_arg
-    );
+    println!("Dice include dir is {}", dice_include_arg);
 
     #[allow(unused_mut)]
     let mut builder = bindgen::Builder::default()
@@ -109,9 +108,12 @@ fn main() -> Result<()> {
         .clang_arg(clang_build_gen_include_arg)
         .clang_arg(dice_include_arg)
         .clang_arg("-D_GNU_SOURCE");
-    builder = libvsync_include_paths.into_iter()
+    builder = libvsync_include_paths
+        .into_iter()
         .map(|include_dir| format!("-I{}", include_dir))
-        .fold(builder, |builder, include_arg| builder.clang_arg(include_arg));
+        .fold(builder, |builder, include_arg| {
+            builder.clang_arg(include_arg)
+        });
 
     #[cfg(feature = "stable_address_map")]
     {

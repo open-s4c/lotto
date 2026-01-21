@@ -67,12 +67,13 @@ impl handler::Handler for StackTraceHandler {
                 };
                 self.tasks
                     .entry(id)
-                    .and_modify(|trace| trace.push(frame_id.clone()))
-                    .or_insert(vec![frame_id]);
+                    .and_modify(|trace| trace.0.push(frame_id.clone()))
+                    .or_insert(StackTrace(vec![frame_id]));
             }
             raw::base_category::CAT_FUNC_EXIT => {
                 if let Some(stacktrace) = self.tasks.get_mut(&id) {
                     stacktrace
+                        .0
                         .pop()
                         .expect("How can you exit a function before entering any?");
                 }

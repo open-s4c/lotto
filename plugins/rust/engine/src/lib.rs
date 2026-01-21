@@ -1,4 +1,3 @@
-
 #[global_allocator]
 static GLOBAL: loccolator::LottoAllocator = loccolator::LottoAllocator;
 

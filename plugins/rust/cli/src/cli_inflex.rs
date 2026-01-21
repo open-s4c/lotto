@@ -47,7 +47,6 @@ fn inflex(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
         &tempdir,
         flags.is_on(&FLAG_VERBOSE),
         !flags.is_on(&FLAG_NO_PRELOAD),
-        false,
         flags.get_sval(&flag_memmgr_runtime()),
         flags.get_sval(&flag_memmgr_user()),
     );

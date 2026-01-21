@@ -85,7 +85,7 @@ pub fn get_event_at_clk(flags: &Flags, file: &Path, clk: Clock) -> Result<Event,
     }
     let cur = match cur {
         Some(r) if r.clk == clk => r,
-        _ => return Err(Error::ClockNotFound(full_trace_path.clone(), clk)),
+        _ => return Err(Error::ClockNotFound(file.to_path_buf(), clk)),
     };
     cur.unmarshal();
     match handlers::event::get_event(TaskId::new(cur.id)) {
@@ -98,6 +98,6 @@ pub fn get_event_at_clk(flags: &Flags, file: &Path, clk: Clock) -> Result<Event,
             e.clk = clk;
             Ok(e)
         }
-        None => return Err(Error::EventNotFound(full_trace_path.clone(), clk)),
+        None => return Err(Error::EventNotFound(file.to_path_buf(), clk)),
     }
 }

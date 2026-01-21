@@ -78,7 +78,8 @@ int
 pthread_mutex_lock(pthread_mutex_t *mutex)
 {
     if (mutex_config()->enabled) {
-        _lotto_mutex_acquire_named(__FUNCTION__, mutex);
+        intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_MUTEX_ACQUIRE,
+                              .args = {arg_ptr(mutex)}));
         return 0;
     }
     int ret = 0;
@@ -99,7 +100,8 @@ pthread_mutex_timedlock(pthread_mutex_t *mutex,
                         const struct timespec *abs_timeout)
 {
     if (mutex_config()->enabled) {
-        _lotto_mutex_acquire_named(__FUNCTION__, mutex);
+        intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_MUTEX_ACQUIRE,
+                              .args = {arg_ptr(mutex)}));
         return 0;
     }
     int ret = 0;
@@ -119,7 +121,10 @@ int
 pthread_mutex_trylock(pthread_mutex_t *mutex)
 {
     if (mutex_config()->enabled) {
-        return _lotto_mutex_tryacquire_named(__FUNCTION__, mutex);
+        context_t *ctx = ctx(.func = __FUNCTION__, .cat = CAT_MUTEX_TRYACQUIRE,
+                             .args = {arg_ptr(mutex)});
+        intercept_capture(ctx);
+        return ctx->args[1].value.u8;
     }
     int ret = 0;
     REAL_INIT(int, pthread_mutex_trylock, pthread_mutex_t *mutex);
@@ -134,7 +139,8 @@ int
 pthread_mutex_unlock(pthread_mutex_t *mutex)
 {
     if (mutex_config()->enabled) {
-        _lotto_mutex_release_named(__FUNCTION__, mutex);
+        intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_MUTEX_RELEASE,
+                              .args = {arg_ptr(mutex)}));
         return 0;
     }
     int ret = 0;

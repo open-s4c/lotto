@@ -15,7 +15,7 @@ use lotto::sys::Stream;
 
 use crate::error::Error;
 use crate::handlers;
-use crate::inflex::{always, checked_execute, should_discard_execution};
+use crate::inflex::{always, checked_execute, postexec, Outcome};
 use crate::progress::ProgressBar;
 use crate::{inflex, trace, Constraint, ConstraintSet, Event, PrimitiveConstraint};
 
@@ -26,6 +26,7 @@ pub struct RecInflex {
     pub rounds: u64,
     pub report_progress: bool,
     pub use_linear_backoff: bool,
+    pub next_id: usize,
 
     //
     // Execution parameters
@@ -42,6 +43,7 @@ pub struct RecInflex {
     //
     pub tempdir: PathBuf,
     pub trace_fail: PathBuf,
+    pub trace_fail_alt: PathBuf,
     pub trace_success: PathBuf,
     pub trace_temp: PathBuf,
 }
@@ -52,6 +54,7 @@ impl RecInflex {
         let output = flags.get_path_buf(&FLAG_OUTPUT);
         let tempdir = flags.get_path_buf(&FLAG_TEMPORARY_DIRECTORY);
         let trace_fail = tempdir.join("rinflex.fail.trace");
+        let trace_fail_alt = tempdir.join("rinflex.fail_alt.trace");
         let trace_success = tempdir.join("rinflex.success.trace");
         let trace_temp = tempdir.join("rinflex.temp.trace");
         let trace = Trace::load_file(&input);
@@ -66,8 +69,10 @@ impl RecInflex {
             constraints: Vec::new(),
             tempdir,
             trace_fail,
+            trace_fail_alt,
             trace_success,
             trace_temp,
+            next_id: 0,
         }
     }
 
@@ -81,130 +86,74 @@ impl RecInflex {
         flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(0));
         let mut bar = ProgressBar::new(self.report_progress, "HALT", self.rounds);
         crate::inflex::always(self.rounds, || {
-            let exitcode = loop {
+            let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(now()));
                 let exitcode = checked_execute(&with_oc, &flags, true)?;
-                if should_discard_execution(&self.trace_temp)? {
+                if let Some(outcome) = postexec(&self.trace_temp, exitcode)? {
+                    break outcome;
+                } else {
                     bar.tick_invalid();
-                    continue;
                 }
-                break exitcode;
             };
             bar.tick_valid();
-            Ok(exitcode != 0)
+            Ok(outcome.is_fail())
         })
     }
 
     /// Do one iteration of the Recursive Inflex main loop.
-    pub fn find_next_pair(&mut self) -> Result<PrimitiveConstraint, Error> {
+    ///
+    /// It returns [None] when the analysis should terminate.
+    pub fn find_next_pair(&mut self) -> Result<Option<PrimitiveConstraint>, Error> {
         let mut symm_set = Vec::new();
         self.inflex_pair(0, 0, &mut symm_set)
     }
 
-    /// Do one iteration of the Recursive Inflex main loop.
-    fn inflex_pair(
-        &mut self,
-        inflex_min: Clock,
-        depth: usize,
-        symm_set: &mut Vec<PrimitiveConstraint>,
-    ) -> Result<PrimitiveConstraint, Error> {
-        // find IP
-        info!(
-            "Find next inflex pair, depth={}, inflex_min={}",
-            depth, inflex_min
-        );
+    /// Runs inflex on the current trace_fail.
+    fn find_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Event)>, Error> {
         info!("Finding IP...");
-        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &self.trace_fail);
+        let updated = self
+            .unsafely_set_constraints_in_first_config_record(&self.trace_fail, &self.constraints)?;
+        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &updated);
         inflex.output = self.trace_temp.clone();
-        inflex.min = inflex_min;
+        inflex.min = min;
         inflex.report_progress = self.report_progress;
         let ip = inflex.run_fast()?;
         info!("IP is {}", ip);
         if ip == 0 {
-            panic!("IP shouldn't be 0");
+            return Ok(None);
         }
-        let source = self.event_at_clock(&self.flags, &self.trace_fail, ip)?;
-        info!("Source event is\n{}", source.display()?);
-
-        // Find a successful run by replaying trace_fail up to IP-1
-        info!("Finding a successful trace up to IP-1...");
-        self.get_trace(
-            Outcome::Success,
-            ip.checked_sub(1).expect("IP cannot be 0"),
-            &self.trace_fail,
-            &self.trace_success,
-        )?;
-
-        // find IIP
-        info!("Finding IIP...");
-        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &self.trace_success);
-        inflex.output = self.trace_temp.clone();
-        inflex.report_progress = self.report_progress;
-        inflex.min = ip - 1;
-        let iip = inflex.run_inverse()?;
-        info!("IIP is {}", iip);
-        let target = self.event_at_clock(&self.flags, &self.trace_success, iip)?;
-        info!("Target event is\n{}", target.display()?);
-
-        // This is the IP-IIP pair.
-        let pair = PrimitiveConstraint { source, target };
-
-        // Quick path: IIP must be IP's sibling, if IIP = IP and they
-        // are derived from the same prefix.
-        // if iip == ip {
-        //     info!("Correct (quick path)");
-        //     return Ok(pair);
-        // }
-
-        // Check for symmetric ordering constraints.
-        //
-        // It is possible that following a prefix, there are IP, IIP1,
-        // and IIP2. Both IP->IIP1 and IP->IIP2 should be included.
-        //
-        // But in the following Multiple Bug Handling algorithm, it
-        // will be incorrectly labeled as incorrect and dropped.
-        // Here, check if the OC is repeatedly found. If it is
-        // repeated, it means the OC is actually correct.
-        for s in symm_set.iter() {
-            if s.equals(&pair) {
-                info!("Repeated OC considered correct");
-                return Ok(pair);
-            }
-        }
-
-        // multiple bug handling.
-        if self.pair_can_reproduce_bug(&pair, ip)? {
-            info!("Correct");
-            Ok(pair)
-        } else {
-            info!("Incorrect");
-            self.get_trace(
-                Outcome::Fail,
-                iip - 1,
-                &self.trace_success,
-                &self.trace_fail,
-            )?;
-            symm_set.push(pair);
-            self.inflex_pair(iip - 1, depth + 1, symm_set)
-        }
+        let event = self.event_at_clock(&self.flags, &self.trace_fail, ip)?;
+        info!("Source event is\n{}", event.display()?);
+        Ok(Some((ip, event)))
     }
 
-    /// Replaying on the failing trace up to ip-1 while enforcing
-    /// pair, checks whether it will fail.
-    fn pair_can_reproduce_bug(
-        &mut self,
-        pair: &PrimitiveConstraint,
-        ip: u64,
-    ) -> Result<bool, Error> {
-        self.push(Constraint {
-            virt: true,
-            positive: true,
-            c: pair.clone(),
-        });
+    /// Runs inverseinflex on the current trace_success.
+    fn find_inverse_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Event)>, Error> {
+        info!("Finding IIP...");
+        let updated = self.unsafely_set_constraints_in_first_config_record(
+            &self.trace_success,
+            &self.constraints,
+        )?;
+        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &updated);
+        inflex.output = self.trace_temp.clone();
+        inflex.report_progress = self.report_progress;
+        inflex.min = min;
+        let iip = inflex.run_inverse_fast()?;
+        info!("IIP is {}", iip);
+        let event = self.event_at_clock(&self.flags, &self.trace_success, iip)?;
+        info!("Target event is\n{}", event.display()?);
+        Ok(Some((iip, event)))
+    }
+
+    /// Check if current set of OCs \/ {pair} is a bug for the prefix trace_fail[:ip-1].
+    ///
+    /// That is, check if OC \/ {pair} guarantees a failure of the prefix trace_fail[:ip - 1].
+    fn sibling_check(&mut self, ip: Clock, pair: &PrimitiveConstraint) -> Result<bool, Error> {
+        self.push_virtual_constraint(pair.clone(), true);
         let check_trace =
             self.attach_constraints_to_trace(&self.trace_fail, ip - 1, &self.constraints);
-        self.pop();
-        info!("Checking if the pair will lead to the bug when enforced");
+        self.pop_constraint();
+        info!("Checking if the pair is a bug for the current set of executions...");
         let check_trace = check_trace?;
         let mut flags = self.flags.to_owned();
         let _replay = EnvScope::new("LOTTO_REPLAY", &check_trace);
@@ -212,134 +161,184 @@ impl RecInflex {
         let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let mut bar = ProgressBar::new(self.report_progress, "correct?", self.rounds);
         always(self.rounds, || {
-            let mut invalid_cnt = 0;
-            let exitcode = loop {
-                // We tried for 100r times, yet no single valid run found.
-                // Use a separate invalid_cnt because bar.invalid_ticks is shared.
-                if bar.valid_ticks == 0 && invalid_cnt > 100 * self.rounds {
-                    warn!("Cannot find a valid execution");
-                    return Err(Error::ExecutionNotFound);
-                }
+            let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(now()));
                 let exitcode = checked_execute(&check_trace, &flags, true)?;
-                if should_discard_execution(&self.trace_temp)? {
+                if let Some(outcome) = postexec(&self.trace_temp, exitcode)? {
+                    break outcome;
+                } else {
                     bar.tick_invalid();
-                    invalid_cnt += 1;
-                    continue;
                 }
-                break exitcode;
             };
             bar.tick_valid();
-            Ok(exitcode != 0)
+            Ok(outcome.is_fail())
         })
     }
 
-    /// Check if `pair` is essential to the reproduction of the bug.
-    ///
-    /// It's essential if all runs (from clock 0) dissatisfying `pair`
-    /// are successful.
-    pub fn check_if_essential(&mut self, pair: &PrimitiveConstraint) -> Result<bool, Error> {
-        let oc = Constraint {
-            c: pair.flipped(), /* dissatisfy pair */
-            virt: true,
-            positive: false,
-        };
-        self.push(oc);
-        let out = self.attach_constraints_to_trace(&self.input, 0, &self.constraints);
-        self.pop();
-        let out = out?;
-        let _replay = EnvScope::new("LOTTO_REPLAY", &out);
-        let _record = EnvScope::new("LOTTO_RECORD", &self.trace_temp);
-        let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
-        let mut flags = self.flags.to_owned();
-        let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
-        let always_succeed = always(self.rounds, || {
-            let exitcode = loop {
-                flags.set_by_opt(&flag_seed(), Value::U64(now()));
-                let exitcode = checked_execute(&out, &flags, true)?;
-                if should_discard_execution(&self.trace_temp)? {
-                    bar.tick_invalid();
-                    continue;
-                }
-                break exitcode;
-            };
-            bar.tick_valid();
-            Ok(exitcode == 0)
-        })?;
-        bar.done();
-        Ok(always_succeed)
-    }
-
-    /// Similar to [`get_trace`], but it tries to search backwards
-    /// from `upper_bound`.
-    ///
-    /// This is under an assumption that the more you replay, the more
-    /// likely you hit the bug.
-    pub fn get_trace_from_zero(
-        &self,
-        outcome: Outcome,
-        input: &Path,
-        output: &Path,
-    ) -> Result<(), Error> {
-        let (input, last_valid_clk) =
-            self.set_constraints_in_first_config_record(input, &self.constraints)?;
-        let _replay = EnvScope::new("LOTTO_REPLAY", &input);
-        let _record = EnvScope::new("LOTTO_RECORD", &output);
-        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
-        let mut flags = self.flags.clone();
-        let mut cnt = 0;
-        let mut replay_goal = last_valid_clk;
-        let mut backoff = 1u64;
-        let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
-        bar.set_prefix_string(format!("goal={}", replay_goal));
-        loop {
-            cnt += 1;
-            if cnt > self.rounds {
-                if replay_goal == 0 {
-                    warn!("Cannot find satisfying execution at clock 0 in get_trace_from_zero");
-                    return Err(Error::ExecutionNotFound);
-                }
-                cnt = 0;
-                if self.use_linear_backoff {
-                    backoff = (last_valid_clk / 20).max(1);
-                } else {
-                    backoff = (backoff * 3 + 1) / 2;
-                }
-                replay_goal = replay_goal.saturating_sub(backoff);
-                bar.set_prefix_string(format!("goal={}", replay_goal));
-                bar.reset();
-                continue;
-            }
-            flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(replay_goal));
-            flags.set_by_opt(&flag_seed(), Value::U64(now()));
-            let exitcode = checked_execute(&input, &flags, true)?;
-            if should_discard_execution(&output)? {
-                bar.tick_invalid();
-                continue;
-            }
-            bar.tick_valid();
-            if outcome.matches(exitcode) {
-                return Ok(());
-            }
+    /// To discover other IPs, add IIP->IP and find other failures.
+    fn essentiality_witness(
+        &mut self,
+        ip: Clock,
+        pair: &PrimitiveConstraint,
+    ) -> Result<Option<PathBuf>, Error> {
+        self.push_virtual_constraint(pair.flipped(), false);
+        let result = self.get_trace(
+            Outcome::Fail,
+            ip - 1,
+            &self.trace_fail,
+            &self.trace_fail_alt,
+            false,
+            false,
+        );
+        self.pop_constraint();
+        match result {
+            Ok(()) => Ok(Some(self.trace_fail_alt.to_owned())),
+            Err(Error::ExecutionNotFound) => Ok(None),
+            Err(e) => Err(e),
         }
     }
 
+    fn inflex_pair(
+        &mut self,
+        inflex_min: Clock,
+        depth: usize,
+        symm_set: &mut Vec<PrimitiveConstraint>,
+    ) -> Result<Option<PrimitiveConstraint>, Error> {
+        info!(
+            "Find next inflex pair, depth={}, inflex_min={}",
+            depth, inflex_min
+        );
+
+        // Find IP.
+        let Some((ip, source)) = self.find_inflex(inflex_min)? else {
+            return Ok(None);
+        };
+
+        // Find Ts.
+        info!(
+            "Finding a successful trace up to IP-1={}... #constrs = {}",
+            ip - 1,
+            self.constraints.len()
+        );
+        self.get_trace(
+            Outcome::Success,
+            ip.checked_sub(1).expect("IP cannot be 0"),
+            &self.trace_fail,
+            &self.trace_success,
+            true,
+            true,
+        )?;
+
+        // Find IIP.
+        let Some((iip, target)) = self.find_inverse_inflex(ip)? else {
+            return Ok(None);
+        };
+
+        // OC candidate
+        let pair = PrimitiveConstraint {
+            source: source.clone(),
+            target: target.clone(),
+        };
+
+        // Primitive checking
+        let repeated = symm_set.contains(&pair);
+        let same_thread = pair.source.t.id == pair.target.t.id;
+
+        // Sibling check
+        let correct = !same_thread && (repeated || self.sibling_check(ip, &pair)?);
+        if !correct {
+            info!("Incorrect");
+            self.get_trace(
+                Outcome::Fail,
+                iip - 1,
+                &self.trace_success,
+                &self.trace_fail,
+                true,
+                true,
+            )?;
+            symm_set.push(pair);
+            return self.inflex_pair(iip - 1, depth + 1, symm_set);
+        }
+
+        // Essentiality check
+        info!("Essentiality check");
+        let mut num_added_virt_ocs = 0;
+        while let Some(trace_fail_alt) = self.essentiality_witness(ip, &pair)? {
+            let alt_event = self.event_at_clock(&self.flags, &trace_fail_alt, ip)?;
+            let virt_pair = PrimitiveConstraint {
+                source: source.clone(),
+                target: alt_event,
+            };
+            info!("Found an essentiality witness\n{}", virt_pair);
+            if virt_pair.source.t.id == virt_pair.target.t.id {
+                println!("invalid essentiality pair!");
+                println!("current failing trace: {}", self.trace_fail.display());
+                println!(
+                    "alt fail trace (output of EC): {}",
+                    trace_fail_alt.display()
+                );
+                println!("virt_pair is {}", virt_pair);
+                println!(
+                    "ip = {}, iip = {} (EC replayed up to IP-1={})",
+                    ip,
+                    iip,
+                    ip - 1
+                );
+                panic!();
+            }
+            self.push_virtual_constraint(virt_pair, true);
+            num_added_virt_ocs += 1;
+        }
+        info!(
+            "Essentiality check done; found {} virtual constraints",
+            num_added_virt_ocs
+        );
+
+        Ok(Some(pair))
+    }
+
+    /// Obtain a new random trace with the expected outcome.
+    ///
+    /// The execution will obey the currently known ordering
+    /// constraints.
+    ///
+    /// All records from clock 0 to `replay_goal` (inclusive) in
+    /// `input` will be replayed exactly.
     pub fn get_trace(
         &self,
-        outcome: Outcome,
+        expected_outcome: Outcome,
         replay_goal: Clock,
         input: &Path,
         output: &Path,
+        unlimited: bool,
+        try_hard: bool,
     ) -> Result<(), Error> {
+        info!(
+            "get_trace: attaching constraints, #constraints={}",
+            self.constraints.len()
+        );
         let input = self.attach_constraints_to_trace(input, replay_goal, &self.constraints)?;
+        info!(
+            "get_trace: input={}, output={}, replay_goal={}",
+            input.display(),
+            output.display(),
+            replay_goal
+        );
         let _replay = EnvScope::new("LOTTO_REPLAY", &input);
         let _record = EnvScope::new("LOTTO_RECORD", &output);
-        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+        let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let max_rounds = self.rounds * 10;
+        let valid_rounds = if try_hard {
+            self.rounds * 10
+        } else {
+            self.rounds
+        };
         let mut flags = self.flags.clone();
-        let mut bar = ProgressBar::new(self.report_progress, "", self.rounds * 10);
+        let mut bar = ProgressBar::new(self.report_progress, "", valid_rounds);
         loop {
-            if bar.valid_ticks > self.rounds * 10
-                || bar.valid_ticks == 0 && bar.invalid_ticks > self.rounds * 10
+            if !unlimited
+                && (bar.valid_ticks > valid_rounds
+                    || bar.valid_ticks == 0 && bar.invalid_ticks > max_rounds)
             {
                 warn!("Cannot find satisfying execution in get_trace");
                 return Err(Error::ExecutionNotFound);
@@ -347,13 +346,14 @@ impl RecInflex {
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(replay_goal));
             flags.set_by_opt(&flag_seed(), Value::U64(now()));
             let exitcode = checked_execute(&input, &flags, true)?;
-            if should_discard_execution(&output)? {
+            if let Some(actual_outcome) = postexec(&output, exitcode)? {
+                bar.tick_valid();
+                if expected_outcome == actual_outcome {
+                    return Ok(());
+                }
+            } else {
                 bar.tick_invalid();
                 continue;
-            }
-            bar.tick_valid();
-            if outcome.matches(exitcode) {
-                return Ok(());
             }
         }
     }
@@ -407,6 +407,38 @@ impl RecInflex {
         } else {
             return Ok(event);
         }
+    }
+
+    /// Returns the output trace file, as well as the last clock of
+    /// the output trace. The clock corresponds to the last event
+    /// which is not affected by the constraints.
+    ///
+    /// This is the unsafe version. That is, it doesn't try to
+    /// identify whether or not the suffix respects the ordering
+    /// constraints. Rather, it just modifies the config.
+    pub fn unsafely_set_constraints_in_first_config_record(
+        &self,
+        input: &Path,
+        constraints: &ConstraintSet,
+    ) -> Result<PathBuf, Error> {
+        let input_filename = input.file_name().expect("must be a file").to_str().unwrap();
+        let output_path = self.tempdir.join(format!("{}+oc", input_filename));
+        let mut input = Trace::load_file(input);
+        let mut st = Stream::new_file_out(&output_path);
+        let mut output = Trace::new_file(&mut st);
+        while let Some(r) = input.next_any() {
+            if r.kind == raw::record::RECORD_CONFIG && r.clk == 0 {
+                r.unmarshal();
+                handlers::order_enforcer::cli_set_constraints(constraints.clone());
+                let r = Record::new_config(r.clk);
+                output.append(r).expect("append updated config");
+                handlers::order_enforcer::cli_clear_constraints();
+            } else {
+                output.append(r.to_owned()).expect("append old record");
+            }
+            input.advance();
+        }
+        Ok(output_path)
     }
 
     /// Returns the output trace file, as well as the last clock of
@@ -471,6 +503,9 @@ impl RecInflex {
     ///
     /// If goal is non-zero, it will update the constraints to the
     /// specified clock automatically by using `update_constraints`.
+    ///
+    /// The constraints are attached at the clock goal, and any events
+    /// following goal+1 will respect the constraints.
     pub fn attach_constraints_to_trace(
         &self,
         input: &Path,
@@ -501,14 +536,16 @@ impl RecInflex {
         Ok(out)
     }
 
+    /// Update `constraints_to_update` using records from clock 0 to
+    /// clock `goal` (inclusive).
     pub fn update_constraints(
         &self,
         input: &Path,
         goal: Clock,
-        constraints: &ConstraintSet,
+        constraints_to_update: &ConstraintSet,
     ) -> Result<ConstraintSet, Error> {
         trace::expand(&self.flags, input, &self.trace_temp, Some(goal));
-        let mut constraints = constraints.clone();
+        let mut constraints = constraints_to_update.clone();
         let mut rec = Trace::load_file(&self.trace_temp);
         while let Some(r) = {
             rec.advance();
@@ -521,12 +558,9 @@ impl RecInflex {
             let Some(event) = handlers::event::get_event(TaskId(r.id)) else {
                 continue;
             };
-            let transition = event.t;
-            let stacktrace = event.stacktrace;
-            for constraint in &mut constraints {
-                if constraint.c.target.t == transition
-                    && constraint.c.target.stacktrace == stacktrace
-                {
+            // `cnt` is meta. It counts the number of occurrences of (event-except-cnt).
+            for constraint in constraints.iter_mut() {
+                if constraint.c.target.equals(&event) {
                     constraint.c.target.cnt = constraint.c.target.cnt.saturating_sub(1);
                     if constraint.c.target.cnt == 0 && constraint.c.source.cnt != 0 {
                         panic!(
@@ -535,9 +569,7 @@ impl RecInflex {
                         );
                     }
                 }
-                if constraint.c.source.t == transition
-                    && constraint.c.source.stacktrace == stacktrace
-                {
+                if constraint.c.source.equals(&event) {
                     constraint.c.source.cnt = constraint.c.source.cnt.saturating_sub(1);
                 }
             }
@@ -555,38 +587,46 @@ impl RecInflex {
         false
     }
 
-    #[inline(always)]
-    fn push(&mut self, c: Constraint) {
-        self.constraints.push(c)
+    pub fn push_real_constraint(&mut self, c: PrimitiveConstraint) {
+        let id = self.get_id();
+        let constraint = Constraint {
+            c,
+            virt: false,
+            positive: false,
+            id,
+        };
+        self.constraints.push(constraint);
     }
 
-    #[inline(always)]
-    fn pop(&mut self) {
-        let _c = self.constraints.pop().expect("pop must match a push");
+    fn push_virtual_constraint(&mut self, c: PrimitiveConstraint, positive: bool) {
+        let id = self.get_id();
+        let constraint = Constraint {
+            c,
+            virt: true,
+            positive,
+            id,
+        };
+        self.constraints.push(constraint);
+    }
+
+    fn pop_constraint(&mut self) -> Option<Constraint> {
+        self.constraints.pop()
+    }
+
+    fn get_id(&mut self) -> usize {
+        let id = self.next_id;
+        self.next_id += 1;
+        id
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Outcome {
-    Success,
-    Fail,
-}
-
-impl Outcome {
-    fn matches(self, code: i32) -> bool {
-        match self {
-            Outcome::Success => code == 0,
-            Outcome::Fail => code != 0,
-        }
-    }
-}
-
-#[allow(dead_code)]
 /// For debugging.
-fn pause(prompt: &str) {
+#[allow(dead_code)]
+fn pause(prompt: &str) -> String {
     use std::io::Write;
     print!("{}", prompt);
     std::io::stdout().flush().unwrap();
     let mut s = String::new();
     std::io::stdin().read_line(&mut s).unwrap();
+    s
 }

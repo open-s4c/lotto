@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use lotto::base::{Clock, Flags, Trace};
+use lotto::base::{Clock, Flags, Prng, Trace};
 use lotto::base::{EnvScope, Value};
 use lotto::cli::execute;
 use lotto::cli::flags::*;
@@ -12,6 +12,7 @@ use lotto::raw;
 use crate::error::Error;
 use crate::handlers;
 use crate::progress::ProgressBar;
+use crate::stats::STATS;
 
 pub struct Inflex {
     input: PathBuf,
@@ -109,20 +110,67 @@ impl Inflex {
             let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
             bar.set_prefix_string(format!("IIP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
-            let success_forever = always(self.rounds, || {
-                loop {
-                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                    let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if should_discard_execution(&self.temp_output)? {
-                        bar.tick_invalid();
-                        continue;
-                    }
+            let success_forever = always(self.rounds, || loop {
+                flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                let exitcode = checked_execute(&self.input, &flags, true)?;
+                if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
                     bar.tick_valid();
-                    return Ok(exitcode == 0);
+                    return Ok(outcome.is_success());
+                } else {
+                    bar.tick_invalid();
                 }
             })?;
             Ok(success_forever)
         })
+    }
+
+    pub fn run_inverse_fast(&self) -> Result<Clock, Error> {
+        let mut flags = self.flags.clone();
+
+        let mut iip = self.min;
+        let mut last_iip = 0;
+        let mut confidence = 0;
+
+        if self.report_progress {
+            info!("inverse inflex input = {}", self.input.display());
+        }
+
+        let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
+        let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
+        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+
+        let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
+        while confidence <= self.rounds && iip < self.last_clk {
+            iip = binary_search(iip, self.last_clk, |clk| {
+                flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
+                loop {
+                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                    let exitcode = checked_execute(&self.input, &flags, true)?;
+                    if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                        return Ok(outcome.is_success());
+                    } else {
+                        bar.tick_invalid();
+                    }
+                }
+            })?;
+
+            if iip == last_iip {
+                confidence += 1;
+                bar.tick_valid();
+            } else {
+                last_iip = iip;
+                confidence = 1;
+                let mut rec = Trace::load_file(&self.input);
+                rec.truncate(&self.candidate, iip);
+
+                // Start a new progress bar.  The idea is to keep a
+                // trace of attempted clocks on the terminal.
+                bar = ProgressBar::new(self.report_progress, "", self.rounds);
+                bar.set_prefix_string(format!("IIP={}", iip));
+            }
+        }
+
+        Ok(iip)
     }
 
     /// Find the (normal) inflection point using probablistic binary
@@ -138,16 +186,14 @@ impl Inflex {
             let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
             bar.set_prefix_string(format!("IP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
-            let fail_forever = always(self.rounds, || {
-                loop {
-                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                    let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if should_discard_execution(&self.temp_output)? {
-                        bar.tick_invalid();
-                        continue;
-                    }
+            let fail_forever = always(self.rounds, || loop {
+                flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                let exitcode = checked_execute(&self.input, &flags, true)?;
+                if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
                     bar.tick_valid();
-                    return Ok(exitcode != 0);
+                    return Ok(outcome.is_fail());
+                } else {
+                    bar.tick_invalid();
                 }
             })?;
             Ok(fail_forever)
@@ -176,12 +222,12 @@ impl Inflex {
                 flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
-                    let return_code = checked_execute(&self.input, &flags, true)?;
-                    if should_discard_execution(&self.temp_output)? {
+                    let exitcode = checked_execute(&self.input, &flags, true)?;
+                    if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                        return Ok(outcome.is_fail());
+                    } else {
                         bar.tick_invalid();
-                        continue;
                     }
-                    return Ok(return_code != 0);
                 }
             })?;
 
@@ -244,17 +290,30 @@ pub fn checked_execute(trace: &Path, flags: &Flags, config: bool) -> Result<i32,
     unsafe {
         raw::exec_info_replay_envvars();
     }
-    let exitcode = execute(args, flags, config);
+    // Make sure `execute` uses the seed from `flags`, as it might
+    // append another config record which uses the current engine's
+    // seed.
+    let seed = flags.get_value(&flag_seed()).as_u64();
+    Prng::current_mut().seed = seed as u32;
+    let exitcode = {
+        let exec_start_instant = std::time::Instant::now();
+        let exitcode = execute(args, flags, config);
+        STATS.tick_run();
+        STATS.count_run_time(exec_start_instant);
+        exitcode
+    };
     if exitcode == 130 {
         return Err(Error::Interrupted);
     }
     return Ok(exitcode);
 }
 
-/// Check if this execution should be discarded.
-pub fn should_discard_execution(output: &Path) -> Result<bool, Error> {
+/// Additionally check the outcome.
+///
+/// Returns None if the execution should be discarded.
+pub fn postexec(output: &Path, exitcode: i32) -> Result<Option<Outcome>, Error> {
     let mut rec = Trace::load_file(output);
-    let last = rec.last().expect("last record");
+    let last = rec.last().expect("no last record");
 
     // Lotto crashed?
     if last.reason.is_runtime() {
@@ -263,7 +322,8 @@ pub fn should_discard_execution(output: &Path) -> Result<bool, Error> {
 
     // Should ignore? Probably from handler_drop.
     if last.reason == raw::reason::REASON_IGNORE {
-        return Ok(true);
+        STATS.tick_discarded_run();
+        return Ok(None);
     }
 
     // Check the FINAL record and check whether order_enforcer wants
@@ -278,12 +338,23 @@ pub fn should_discard_execution(output: &Path) -> Result<bool, Error> {
             );
         }
         if handlers::order_enforcer::should_discard() {
-            return Ok(true);
+            STATS.tick_discarded_run();
+            return Ok(None);
         }
     }
 
+    // Check if some handler aborts the execution, which is considered
+    // a failure, but exitcode may be 0.
+    if last.reason.is_abort() {
+        return Ok(Some(Outcome::Fail));
+    }
+
     // All tests passed.
-    Ok(false)
+    if exitcode == 0 {
+        Ok(Some(Outcome::Success))
+    } else {
+        Ok(Some(Outcome::Fail))
+    }
 }
 
 pub fn preload(flags: &Flags) {
@@ -294,4 +365,20 @@ pub fn preload(flags: &Flags) {
         flags.get_sval(&flag_memmgr_runtime()),
         flags.get_sval(&flag_memmgr_user()),
     );
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Outcome {
+    Success,
+    Fail,
+}
+
+impl Outcome {
+    pub fn is_fail(self) -> bool {
+        matches!(self, Outcome::Fail)
+    }
+
+    pub fn is_success(self) -> bool {
+        matches!(self, Outcome::Success)
+    }
 }

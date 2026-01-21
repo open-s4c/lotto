@@ -100,3 +100,15 @@ impl std::fmt::Display for record {
         Ok(())
     }
 }
+
+impl Ord for base_category {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+
+impl PartialOrd for base_category {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}

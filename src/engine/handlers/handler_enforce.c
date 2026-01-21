@@ -133,7 +133,7 @@ _report(const context_t *ctx)
                        enforce_state()->val.value.u64, a.value.u64);
         }
     }
-    if (!EQUAL_PC)
+    if (MODE(PC) && !EQUAL_PC)
         REPORT_CTX("%p", (void *), pc);
 
     if (ctx->cat == CAT_ENFORCE && !EQUAL_DATA) {

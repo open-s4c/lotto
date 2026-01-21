@@ -25,6 +25,30 @@ impl Hash for StableAddress {
 
 impl Eq for StableAddress {}
 
+impl PartialOrd for StableAddress {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for StableAddress {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        assert!(
+            self.inner.type_ == other.inner.type_,
+            "Incompatible stable_address_method"
+        );
+        if self.inner.type_ == raw::stable_address_stable_address_type_ADDRESS_PTR {
+            unsafe { self.inner.value.ptr.cmp(&other.inner.value.ptr) }
+        } else if self.inner.type_ == raw::stable_address_stable_address_type_ADDRESS_MAP {
+            let this = unsafe { MapAddress::wrap(&self.inner.value.map) };
+            let that = unsafe { MapAddress::wrap(&other.inner.value.map) };
+            (&this.name, this.offset).cmp(&(&that.name, that.offset))
+        } else {
+            unreachable!("Unknown stable_address_method");
+        }
+    }
+}
+
 impl StableAddress {
     /// Obtain a stable address for `addr` using the global sequencer
     /// config.

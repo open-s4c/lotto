@@ -69,10 +69,11 @@ _blocking_handle(const context_t *ctx, event_t *e)
         } else {
             tidset_copy(returned_tasks(), &e->unblocked);
         }
-        e->should_record |= tidset_size(returned_tasks()) > 0 &&
-                            !(tidset_size(returned_tasks()) == 1 &&
-                              tidset_has(returned_tasks(), ctx->id));
     }
+
+    e->should_record |= tidset_size(returned_tasks()) > 0 &&
+                        !(tidset_size(returned_tasks()) == 1 &&
+                          tidset_has(returned_tasks(), ctx->id));
 
     /* When blocking, the current task should not be selectable. */
     if (ctx->cat == CAT_CALL || ctx->cat == CAT_TASK_BLOCK) {

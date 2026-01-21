@@ -80,7 +80,6 @@ if(${LOTTO_BUSYLOOP_FUTEX})
 endif()
 
 if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
-    set(_H "${_H};capture_group")
     set(_H "${_H};inactivity_timeout")
     set(_H "${_H};region_preemption")
     set(_H "${_H};pct")

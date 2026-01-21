@@ -23,7 +23,6 @@
 #include "lotto/cli/exec.h"
 #include "lotto/cli/exec_info.h"
 #include "lotto/cli/flagmgr.h"
-#include "lotto/cli/flags/handlers/capture_group.h"
 #include "lotto/cli/flags/handlers/termination.h"
 #include "lotto/cli/flags/memmgr.h"
 #include "lotto/cli/flags/prng.h"

@@ -23,7 +23,6 @@
 #include <lotto/cli/utils.h>
 #include <lotto/sys/stdio.h>
 
-DECLARE_FLAG_CREP;
 DECLARE_FLAG_INPUT;
 DECLARE_FLAG_OUTPUT;
 DECLARE_FLAG_VERBOSE;
@@ -60,8 +59,8 @@ replay(args_t *args, flags_t *flags)
 
     preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
             flags_is_on(flags, FLAG_VERBOSE),
-            !flags_is_on(flags, FLAG_NO_PRELOAD), flags_is_on(flags, FLAG_CREP),
-            false, flags_get_sval(flags, flag_memmgr_runtime()),
+            !flags_is_on(flags, FLAG_NO_PRELOAD), false,
+            flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
 
     trace_advance(rec);
@@ -115,7 +114,6 @@ init()
                     FLAG_LOGGER_BLOCK,
                     FLAG_BEFORE_RUN,
                     FLAG_AFTER_RUN,
-                    FLAG_CREP,
                     FLAG_LOGGER_FILE,
                     0};
     subcmd_register(replay, "replay", "", "Replay a trace", true, sel,

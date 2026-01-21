@@ -4,7 +4,6 @@
 #ifndef _GNU_SOURCE
     #define _GNU_SOURCE /* See feature_test_macros(7) */
 #endif
-#include <crep.h>
 #include <errno.h>
 #include <spawn.h>
 
@@ -63,12 +62,6 @@ _handle_sigkill(int sig, siginfo_t *si, void *arg)
         sys_exit(130);
     }
     sys_exit(1);
-}
-
-WEAK void
-crep_truncate(clk_t clk)
-{
-    (void)clk;
 }
 
 #define BUFFER_SIZE 1024
@@ -207,9 +200,6 @@ execute(const args_t *args, const flags_t *flags, bool config)
     struct flag_val fgoal = flags_get(flags, FLAG_REPLAY_GOAL);
     cli_trace_init(sys_getenv("LOTTO_RECORD"), args, sys_getenv("LOTTO_REPLAY"),
                    fgoal, config, flags);
-    if (!fgoal.is_default) {
-        crep_truncate(as_uval(fgoal._val));
-    }
 
     struct sigaction int_action, int_old;
     sys_memset(&int_action, 0, sizeof(struct sigaction));

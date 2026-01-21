@@ -9,7 +9,6 @@
  *
  ******************************************************************************/
 #include <assert.h>
-#include <crep.h>
 #include <limits.h>
 #include <sched.h>
 #include <stddef.h>
@@ -47,7 +46,6 @@ DECLARE_FLAG_NO_PRELOAD;
 DECLARE_FLAG_LOGGER_BLOCK;
 DECLARE_FLAG_BEFORE_RUN;
 DECLARE_FLAG_AFTER_RUN;
-DECLARE_FLAG_CREP;
 DECLARE_FLAG_LOGGER_FILE;
 DECLARE_COMMAND_FLAG(INFLEX_MIN, "", "inflex-min", "UINT",
                      "minimum clock for the inflection point", flag_uval(0))
@@ -112,11 +110,9 @@ inflex(args_t *args, flags_t *flags)
 
     preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
             flags_is_on(flags, FLAG_VERBOSE),
-            !flags_is_on(flags, FLAG_NO_PRELOAD), flags_is_on(flags, FLAG_CREP),
-            false, flags_get_sval(flags, flag_memmgr_runtime()),
+            !flags_is_on(flags, FLAG_NO_PRELOAD), false,
+            flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
-
-    crep_backup_make();
 
     const char *method = flags_get_sval(flags, FLAG_INFLEX_METHOD);
     bool use_linear    = strchr(method, 'l') != NULL;
@@ -340,7 +336,6 @@ _fails(const args_t *args, flags_t *flags)
     struct value val = uval(now());
     flags_set_by_opt(flags, flag_seed(), val);
 
-    crep_backup_restore();
     int return_code = execute(args, flags, true);
     if (return_code == 130) {
         /* exit on CTRL-C */
@@ -383,7 +378,6 @@ _always_fails_at_clk_prob(args_t *args, flags_t *flags, clk_t clk)
 static bool
 _always_fails_at_clk_explore(args_t *args, flags_t *flags, clk_t clk)
 {
-    crep_backup_restore();
     flags_set_by_opt(flags, FLAG_EXPLORE_EXPECT_FAILURE, on());
     flags_set_by_opt(flags, FLAG_EXPLORE_MIN, uval(clk + 1));
     int err = explore(args, flags);
@@ -488,7 +482,6 @@ init()
                     FLAG_INFLEX_MIN,
                     FLAG_INFLEX_METHOD,
                     FLAG_LOGGER_FILE,
-                    FLAG_CREP,
                     0};
     subcmd_register(inflex, "inflex", "", "Find an inflection point of a trace",
                     true, sel, _default_flags, SUBCMD_GROUP_TRACE);

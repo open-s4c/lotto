@@ -121,14 +121,13 @@ run()
 {
     const char *value = "alice";
 
-    /* If libcrep is not being used, this should print nothing in record and 4
+    /* This should print nothing in record and 4
        key-values in replay key = alice | value = val_alice key = bob | value =
        val_bob key = oi | value = alice key = test | value = val_test
     */
     iterate_db();
 
-    // If libcrep is not being used, this should return NULL in record and
-    // non-NULL in replay
+    // This should return NULL in record and non-NULL in replay
     read_leveldb("oi");
     write_leveldb("oi", value);
     read_leveldb("oi");

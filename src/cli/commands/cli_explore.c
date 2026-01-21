@@ -28,7 +28,6 @@ DECLARE_FLAG_VERBOSE;
 DECLARE_FLAG_TEMPORARY_DIRECTORY;
 DECLARE_FLAG_NO_PRELOAD;
 DECLARE_FLAG_LOGGER_BLOCK;
-DECLARE_FLAG_CREP;
 DECLARE_FLAG_LOGGER_FILE;
 
 static uint64_t round_index;
@@ -111,8 +110,8 @@ explore(args_t *args, flags_t *flags)
 {
     preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
             flags_is_on(flags, FLAG_VERBOSE),
-            !flags_is_on(flags, FLAG_NO_PRELOAD), flags_is_on(flags, FLAG_CREP),
-            false, flags_get_sval(flags, flag_memmgr_runtime()),
+            !flags_is_on(flags, FLAG_NO_PRELOAD), false,
+            flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
 
     envvar_t vars[] = {
@@ -164,7 +163,6 @@ init()
                     FLAG_LOGGER_BLOCK,
                     FLAG_EXPLORE_EXPECT_FAILURE,
                     FLAG_EXPLORE_MIN,
-                    FLAG_CREP,
                     FLAG_LOGGER_FILE,
                     0};
     subcmd_register(explore, "explore", "", "Exhaustively explore a trace",

@@ -5,7 +5,6 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
-#include <crep.h>
 #include <state.h>
 
 #include <lotto/base/tidmap.h>
@@ -28,12 +27,10 @@ lotto_fork_execve(const char *pathname, char *const argv[], char *const envp[])
     pid_t ret = -1;
 
     intercept_before_call(ctx(.func = __FUNCTION__, .cat = CAT_CALL));
-    crep_disable();
 
     ret = sys_fork();
 
     if (ret != 0) {
-        crep_enable();
         intercept_after_call(__FUNCTION__);
     } else {
         ASSERT(sys_execve(pathname, argv, envp) == 0 &&

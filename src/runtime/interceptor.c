@@ -1,6 +1,5 @@
 /*
  */
-#include <crep.h>
 #include <pthread.h>
 #include <stdbool.h>
 
@@ -92,7 +91,8 @@ get_mediator(bool new_task)
 static void
 _intercept_resume(mediator_t *m, context_t *ctx)
 {
-    logger_debugf("[%lu] prepare to resume %s\n", m->id, category_str(ctx->cat));
+    logger_debugf("[%lu] prepare to resume %s\n", m->id,
+                  category_str(ctx->cat));
 
     switch (mediator_resume(m, ctx)) {
         case MEDIATOR_OK:
@@ -144,8 +144,9 @@ mediator_t *
 intercept_before_call(context_t *ctx)
 {
     if (!lotto_intercept_initialized()) {
-        logger_debugf("[???] before call '%s' (interceptor not initialized yet)\n",
-                   ctx->func);
+        logger_debugf(
+            "[???] before call '%s' (interceptor not initialized yet)\n",
+            ctx->func);
         return NULL;
     }
     mediator_t *m = get_mediator(false);
@@ -159,7 +160,7 @@ intercept_after_call(const char *func)
 {
     if (!lotto_intercept_initialized()) {
         logger_debugf("[?] after call '%s' (interceptor not initialized yet)\n",
-                   func);
+                      func);
         return;
     }
     mediator_t *m = get_mediator(false);
@@ -186,7 +187,7 @@ intercept_lookup_call(const char *func)
     (void)intercept_before_call(ctx);
 
     logger_debugf("[%lu] lookup call '%s'\n", ctx->id, func);
-    /* search for the crep or real function and return its pointer */
+    /* search for real function and return its pointer */
     if (foo == NULL)
         logger_fatalf("could not find function '%s'\n", func);
     logger_debugf("[%lu] found function '%s'\n", ctx->id, func);

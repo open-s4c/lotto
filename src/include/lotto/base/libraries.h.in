@@ -2,7 +2,6 @@
 #define LOTTO_LIBRARIES_H
 
 #define LIBLOTTO   "libplotto.so"
-#define LIBCREP    "libcrep.so"
 #define LIBVDSO    "linux-vdso.so"
 #define LIBACHK    "libachk.so"
 #define LIBRUNTIME "libruntime.so"

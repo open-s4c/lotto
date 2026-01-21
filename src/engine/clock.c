@@ -7,7 +7,6 @@
  * - implement FLAGS for start_time (base == start_time?)
  * - migrate code from engine
  * - consolidate _seq.clk with _clock.ticks
- * - fallback to crep
  * - define clock sources/types ? (capture, wall-clock..)
  * - define user-fine-tune of clock (base and drift is sufficient?)
  * - refactor whole thing with new clock definition

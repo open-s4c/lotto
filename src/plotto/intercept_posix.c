@@ -1,7 +1,6 @@
 /*
  */
 #include <alloca.h>
-#include <crep.h>
 #include <poll.h>
 #include <signal.h>
 #include <time.h>
@@ -154,7 +153,7 @@ nanosleep(const struct timespec *req, struct timespec *rem)
 
     ctx.cat    = CAT_SYS_YIELD;
     ctx.icount = 0;
-    ctx.func   = "crep:nanosleep";
+    ctx.func   = "nanosleep";
 
     while (cur_ns < ns_end) {
         intercept_capture(&ctx);
@@ -174,7 +173,7 @@ usleep(useconds_t usec)
 
     ctx.cat    = CAT_SYS_YIELD;
     ctx.icount = 0;
-    ctx.func   = "crep:usleep";
+    ctx.func   = "usleep";
 
     while (cur_ns < ns_end) {
         intercept_capture(&ctx);
@@ -194,7 +193,7 @@ sleep(unsigned int seconds)
 
     ctx.cat    = CAT_SYS_YIELD;
     ctx.icount = 0;
-    ctx.func   = "crep:sleep";
+    ctx.func   = "sleep";
 
     while (cur_ns < ns_end) {
         intercept_capture(&ctx);

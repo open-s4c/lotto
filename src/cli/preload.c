@@ -1,5 +1,4 @@
 #include <blob-command.h>
-#include <blob-crep.h>
 #include <blob-debug.h>
 #include <blob-decorator.h>
 #include <blob-engine.h>
@@ -265,9 +264,8 @@ _preload_memmgr_plugins(const char *chain, bool runtime)
 }
 
 void
-preload(const char *dir, bool verbose, bool do_preload_plotto,
-        bool do_preload_crep, bool flotto, const char *memmgr_chain_runtime,
-        const char *memmgr_chain_user)
+preload(const char *dir, bool verbose, bool do_preload_plotto, bool flotto,
+        const char *memmgr_chain_runtime, const char *memmgr_chain_user)
 {
     /* make libraries available */
     // clang-format off
@@ -331,7 +329,6 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
                            {LIBLOTTO, do_preload_plotto},
                            {LIBRUNTIME, do_preload_plotto},
                            {LIBENGINE, do_preload_plotto},
-                           {LIBCREP, do_preload_crep},
                            {NULL},
                        });
     exec_info_store_envvars();

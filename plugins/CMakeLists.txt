@@ -6,7 +6,6 @@ gen_pubsub_headers("${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}")
 include_directories(${CMAKE_BINARY_DIR}/generated)
 add_compile_definitions(_GNU_SOURCE)
 
-add_subdirectory(anystall)
 add_subdirectory(leakcheck)
 add_subdirectory(fork_execve)
 add_subdirectory(mempool)

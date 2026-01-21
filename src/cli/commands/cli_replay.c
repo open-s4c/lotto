@@ -59,7 +59,7 @@ replay(args_t *args, flags_t *flags)
 
     preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
             flags_is_on(flags, FLAG_VERBOSE),
-            !flags_is_on(flags, FLAG_NO_PRELOAD), false,
+            !flags_is_on(flags, FLAG_NO_PRELOAD),
             flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
 

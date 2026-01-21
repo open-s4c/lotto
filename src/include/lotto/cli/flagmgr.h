@@ -237,10 +237,6 @@ flags_t *flags_default();
     DECLARE_COMMAND_FLAG(HELP, "h", "help", "", "help message for flags",      \
                          flag_off())
 
-#define DECLARE_FLAG_FLOTTO                                                    \
-    DECLARE_COMMAND_FLAG(FLOTTO, "f", "flotto", "",                            \
-                         "fuzzer without replay possibility", flag_off())
-
 /**
  * CLI parsing and printing
  */

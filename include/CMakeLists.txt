@@ -11,7 +11,7 @@ install(
     EXCLUDE_FROM_ALL)
 
 add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/lotto/unsafe/sys.h
+    OUTPUT ${CMAKE_BINARY_DIR}/include/lotto/unsafe/sys.h
     COMMAND ${CMAKE_COMMAND} -E make_directory
             ${CMAKE_BINARY_DIR}/include/lotto/unsafe
     COMMAND
@@ -24,4 +24,4 @@ add_custom_command(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/lotto/unsafe/_sys.h)
 
 add_custom_target(lotto_unsafe_sys ALL
-                  DEPENDS ${CMAKE_BINARY_DIR}/lotto/unsafe/sys.h)
+                  DEPENDS ${CMAKE_BINARY_DIR}/include/lotto/unsafe/sys.h)

@@ -41,7 +41,9 @@ foreach(SRC ${SRCS})
     set(TARGET bin-${TEST})
 
     add_executable(${TARGET} ${SRC})
-    set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TEST})
+    set_target_properties(
+        ${TARGET} PROPERTIES OUTPUT_NAME ${TEST} RUNTIME_OUTPUT_DIRECTORY
+                                                 "${CMAKE_BINARY_DIR}/tikl")
     add_dependencies(tikl-test ${TARGET})
 
     if("${LOTTO_TESTS_WITH_TSAN}")

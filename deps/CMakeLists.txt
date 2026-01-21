@@ -44,6 +44,11 @@ endif()
 # ------------------------------------------------------------------------------
 # tikl
 # ------------------------------------------------------------------------------
+find_program(MAKE make gmake)
+if(NOT MAKE)
+    message(FATAL "Cannot find make")
+endif()
+
 set(TIKL_SRC ${CMAKE_CURRENT_SOURCE_DIR}/tikl)
 set(PREFIX ${CMAKE_BINARY_DIR})
 ExternalProject_Add(
@@ -51,8 +56,8 @@ ExternalProject_Add(
     SOURCE_DIR ${TIKL_SRC}
     BINARY_DIR ""
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND ${CMAKE_MAKE_PROGRAM} -C ${TIKL_SRC} CC=cc all
-    INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} -C ${TIKL_SRC} PREFIX=${PREFIX}
+    BUILD_COMMAND ${MAKE} -C ${TIKL_SRC} CC=cc all
+    INSTALL_COMMAND ${MAKE} -C ${TIKL_SRC} PREFIX=${PREFIX}
                     install
     BUILD_BYPRODUCTS ${PREFIX}/bin/tikl
     DEPENDS "")

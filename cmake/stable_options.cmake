@@ -23,8 +23,6 @@ endif()
 
 option(LOTTO_DRUM "Enable Lotto drum" ON)
 
-option(LOTTO_CHIBI "Enable Chibi-Scheme" ON)
-
 # ##############################################################################
 # Frontend selection
 # ##############################################################################

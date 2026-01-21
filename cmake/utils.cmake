@@ -1,6 +1,5 @@
 macro(make_blob TARGET FILE FILE_TARGET)
-    set(EXCL "chibi-scheme" "")
-    if("${FILE_TARGET}" IN_LIST EXCL)
+    if("${FILE_TARGET}" STREQUAL "")
         set(TARGET_DEPS ${FILE})
         get_filename_component(DIR ${FILE} DIRECTORY)
         get_filename_component(NAME ${FILE} NAME)

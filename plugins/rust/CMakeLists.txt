@@ -9,13 +9,8 @@ endif()
 include(FetchContent)
 
 FetchContent_Declare(
-    Corrosion
-    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
-)
-execute_process(
-    COMMAND rustup which rustc
-    OUTPUT_VARIABLE Rust_COMPILER
-)
+    Corrosion GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git)
+execute_process(COMMAND rustup which rustc OUTPUT_VARIABLE Rust_COMPILER)
 string(STRIP ${Rust_COMPILER} Rust_COMPILER)
 FetchContent_MakeAvailable(Corrosion)
 
@@ -100,7 +95,7 @@ target_link_libraries(
     PRIVATE sys_testing.o
             base_testing.o
             engine_testing.o
-            cli_noscheme.o
+            cli_testing.o
             brokers_testing.o
             states.o
             flags_prng_testing.o

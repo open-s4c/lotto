@@ -1,5 +1,3 @@
-/*
- */
 #include <blob-command.h>
 #include <blob-crep.h>
 #include <blob-debug.h>
@@ -21,13 +19,6 @@
 #include <lotto/cmake_variables.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#ifdef LOTTO_CHIBI
-    #include <blob-init-7.h>
-    #include <blob-meta-7.h>
-
-    #include "scheme.h"
-#endif
 
 #if !defined(LOTTO_EMBED_LIB) || LOTTO_EMBED_LIB == 1
     #include <blob-flotto.h>
@@ -303,29 +294,17 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
                  .content = libplotto_so,
                  .len     = libplotto_so_len},
 #endif
-#ifdef LOTTO_CHIBI
-        {.path    = "init-7.scm",
-         .content = init_7_scm,
-         .len     = init_7_scm_len},
-        {.path    = "meta-7.scm",
-         .content = meta_7_scm,
-         .len     = meta_7_scm_len},
-#endif
         {NULL}});
     // clang-format on
 
     _symlink_lib(dir, LIBTSANO,
                  (const char *[]){LIBTSAN0, LIBTSAN2, LIBCLANG_RT_TSAN, NULL});
-#ifdef LOTTO_CHIBI
-    lotto_scheme_register_library_path(dir);
-#endif
-
     /* preload libraries */
 
     const char *logger_level = verbose ? "debug" : "error";
-    envvar_t vars[]       = {{"LOTTO_LOGGER_LEVEL", logger_level},
-                             {"LOTTO_TEMP_DIR", dir},
-                             {NULL}};
+    envvar_t vars[]          = {{"LOTTO_LOGGER_LEVEL", logger_level},
+                                {"LOTTO_TEMP_DIR", dir},
+                                {NULL}};
     envvar_set(vars, true);
 
     _set_libpath_env(dir);

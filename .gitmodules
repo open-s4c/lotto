@@ -1,9 +1,6 @@
 [submodule "deps/libvsync"]
 	path = deps/libvsync
 	url = https://github.com/open-s4c/libvsync.git
-[submodule "deps/chibi-scheme"]
-	path = deps/chibi-scheme
-	url = https://github.com/ashinn/chibi-scheme.git
 [submodule "deps/dice"]
 	path = deps/dice
 	url = https://github.com/open-s4c/dice.git

@@ -14,12 +14,6 @@
 #include <lotto/sys/string.h>
 #include <sys/types.h>
 
-#ifdef LOTTO_CHIBI
-    #include "scheme.h"
-DECLARE_COMMAND_FLAG(EVALFILE, "", "evalfile", "FILE",
-                     "scheme script FILE to evaluate", flag_sval(""))
-#endif
-
 #ifndef LOTTO_VERSION
     #error "Lotto version undefined"
 #endif
@@ -125,18 +119,6 @@ lotto(args_t *args, flags_t *flags)
         return 0;
     }
 
-#ifdef LOTTO_CHIBI
-    const char *fname = flags_get_sval(flags, FLAG_EVALFILE);
-
-    if (sys_strlen(fname) != 0) {
-        preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY), false, false,
-                false, false, NULL,
-                flags_get_sval(flags, flag_memmgr_runtime()),
-                flags_get_sval(flags, flag_memmgr_user()));
-
-        return lotto_scheme_eval_file(fname);
-    }
-#endif
     describe_usage(stdout);
 
     return 0;
@@ -145,15 +127,9 @@ lotto(args_t *args, flags_t *flags)
 static void LOTTO_CONSTRUCTOR
 init()
 {
-    flag_t sel[] = {FLAG_VERSION,
-                    FLAG_TEMPORARY_DIRECTORY,
-                    FLAG_LIST_COMMANDS,
-                    FLAG_PLUGIN_DIRECTORY,
-                    FLAG_PLUGIN_LIST,
-#ifdef LOTTO_CHIBI
-                    FLAG_EVALFILE,
-#endif
-                    0};
+    flag_t sel[] = {FLAG_VERSION,       FLAG_TEMPORARY_DIRECTORY,
+                    FLAG_LIST_COMMANDS, FLAG_PLUGIN_DIRECTORY,
+                    FLAG_PLUGIN_LIST,   0};
     subcmd_register(lotto, "-", "", "Show details of lotto itself", false, sel,
                     flags_default, SUBCMD_GROUP_OTHER);
 }

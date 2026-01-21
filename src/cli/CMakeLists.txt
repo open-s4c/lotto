@@ -28,12 +28,6 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
     set_source_files_properties(preload.c PROPERTIES SKIP_LINTING ON)
 endif()
 
-add_library(cli_noscheme.o OBJECT ${CLI_UTILS_SRCS})
-target_compile_definitions(cli_noscheme.o PRIVATE -D_GNU_SOURCE)
-target_compile_options(cli_noscheme.o PRIVATE -g)
-target_include_directories(cli_noscheme.o PUBLIC ${CMAKE_BINARY_DIR}/include)
-target_include_directories(cli_noscheme.o
-                           PUBLIC ${PROJECT_BINARY_DIR}/generated)
 macro(add_cli_dependencies TARGET)
     add_dependencies(
         "${TARGET}"
@@ -54,34 +48,19 @@ macro(add_cli_dependencies TARGET)
         blob-flotto
         ${ARGN})
 endmacro()
-add_cli_dependencies(cli_noscheme.o)
-
-if("${LOTTO_CHIBI}")
-    set(CHIBI_FLAGS "-DLOTTO_CHIBI")
-    set(CHIBI_LIBS chibi-scheme m)
-    set(CHIBI_DEPS blob-init-7 blob-meta-7)
-    list(APPEND CLI_UTILS_SRCS scheme.c)
-    make_blob(blob-init-7
-              ${PROJECT_SOURCE_DIR}/deps/chibi-scheme/lib/init-7.scm
-              chibi-scheme)
-    make_blob(blob-meta-7
-              ${PROJECT_SOURCE_DIR}/deps/chibi-scheme/lib/meta-7.scm
-              chibi-scheme)
-endif()
 
 add_library(cli.o OBJECT ${CLI_UTILS_SRCS})
-target_compile_definitions(cli.o PRIVATE "${CHIBI_FLAGS}")
 target_compile_options(cli.o PRIVATE -g)
-target_link_libraries(cli.o PUBLIC ${CHIBI_LIBS})
 target_include_directories(cli.o PUBLIC ${CMAKE_BINARY_DIR}/include)
-add_cli_dependencies(cli.o ${CHIBI_DEPS})
+target_link_libraries(cli.o PUBLIC m)
+add_cli_dependencies(cli.o)
 
 add_library(cli_testing.o OBJECT ${CLI_UTILS_SRCS})
-target_compile_definitions(cli_testing.o PRIVATE -DLOTTO_TEST "${CHIBI_FLAGS}")
+target_compile_definitions(cli_testing.o PRIVATE -DLOTTO_TEST)
 target_compile_options(cli_testing.o PRIVATE -g)
-target_link_libraries(cli_testing.o PUBLIC ${CHIBI_LIBS})
 target_include_directories(cli_testing.o PUBLIC ${CMAKE_BINARY_DIR}/include)
-add_cli_dependencies(cli_testing.o ${CHIBI_DEPS})
+target_link_libraries(cli_testing.o PUBLIC m)
+add_cli_dependencies(cli_testing.o)
 
 # ##############################################################################
 # CLI lotto command
@@ -91,10 +70,6 @@ file(GLOB CLI_SRCS "commands/*.c")
 
 if(NOT "${LOTTO_DRUM}")
     list(REMOVE_ITEM CLI_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/commands/cli_drum.c)
-endif()
-
-if(NOT "${LOTTO_CHIBI}")
-    list(REMOVE_ITEM CLI_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/commands/scheme.c)
 endif()
 
 foreach(HANDLER ${LOTTO_DISABLE_HANDLERS})

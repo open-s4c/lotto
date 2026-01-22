@@ -94,11 +94,6 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
         return None;
     }
 
-    // Only select XCHG for now.
-    if !ctx.cat.is_xchg() {
-        return None;
-    }
-
     let raw_addr = get_addr(ctx.args[0]);
     let addr = VAddr::get(ctx, raw_addr);
     let size = get_val(ctx.args[1]);
@@ -142,16 +137,14 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
     // NOTE: We need to get the value early for the order enforcer to
     // detect whether the event should be blocked.
     let read_value = if ctx.cat.is_read() {
-        let value = unsafe { crate::sized_read(raw_addr as u64, size as usize) };
-        Some(value)
-        // if ctx.cat.is_before() {
-        //     let value = unsafe { crate::sized_read(raw_addr as u64, size as usize) };
-        //     Some(value)
-        // } else {
-        //     // BEFORE should be *immediately* followed by AFTER in the
-        //     // said thread.  Use the old, recorded value.
-        //     get_memory_access_value(TaskId(ctx.id))
-        // }
+        // 1. Currently, only consider XCHG events.
+        // 2. An AFTER event is understood as the same operation as the BEFORE event, so they use the same value.
+        if ctx.cat.is_before() && ctx.cat.is_xchg() {
+            let value = unsafe { crate::sized_read(raw_addr as u64, size as usize) };
+            Some(value)
+        } else {
+            get_memory_access_value(TaskId(ctx.id))
+        }
     } else {
         None
     };

@@ -326,7 +326,7 @@ impl RecInflex {
         );
         let _replay = EnvScope::new("LOTTO_REPLAY", &input);
         let _record = EnvScope::new("LOTTO_RECORD", &output);
-        let _env_silent = EnvScope::new("LOTTO_LOG_LEVEL", "silent");
+        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let max_rounds = self.rounds * 10;
         let valid_rounds = if try_hard {
             self.rounds * 10

@@ -552,8 +552,9 @@ impl MemoryOperationExt for Category {
                 | Category::CAT_AFTER_RMW
                 | Category::CAT_BEFORE_CMPXCHG
                 | Category::CAT_AFTER_CMPXCHG_S
-                | Category::CAT_AFTER_CMPXCHG_F // | Category::CAT_BEFORE_XCHG
-                                                // | Category::CAT_AFTER_XCHG
+                | Category::CAT_AFTER_CMPXCHG_F
+                | Category::CAT_BEFORE_XCHG
+                | Category::CAT_AFTER_XCHG
         )
     }
 

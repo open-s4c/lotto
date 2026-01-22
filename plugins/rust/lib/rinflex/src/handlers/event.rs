@@ -1,10 +1,10 @@
-use lotto::collections::FxHashMap;
 use lotto::raw;
 use lotto::Stateful;
 use lotto::{
-    base::Value,
+    base::{Category, Value},
     brokers::statemgr::*,
     cli::flags::{FlagKey, STR_CONVERTER_BOOL},
+    collections::FxHashMap,
     engine::handler::{self, TaskId},
     log::*,
 };
@@ -15,7 +15,7 @@ use std::sync::LazyLock;
 use crate::handlers::cas;
 use crate::handlers::stacktrace;
 use crate::idmap::IdMap;
-use crate::{Event, GenericEventCore, StackTrace, Transition};
+use crate::{Event, GenericEventCore, MemoryAccess, StackTrace, Transition};
 
 pub static HANDLER: LazyLock<EventHandler> = LazyLock::new(|| EventHandler {
     cfg: Config {
@@ -54,10 +54,19 @@ impl handler::Handler for EventHandler {
         let ma = cas::get_rt_memory_access(id);
         let stid = self.st_map.put(&stacktrace);
         let transition = Transition::new(ctx);
+
+        // During capture, we are going to check whether this event
+        // should be blocked, if the operation were to read this
+        // value. That is, the really executed event might not read
+        // this value, and we must update the real value after it
+        // really happens. See posthandle.
+        let eval = ma.as_ref().map(MemoryAccess::loaded_value).flatten();
+
         let ecore = GenericEventCore {
             t: transition.clone(),
             _phantom: PhantomData,
             stacktrace: stid,
+            eval,
             // addr: ma.as_ref().map(|ma| ma.addr().to_owned()),
             // rval: ma.as_ref().map(MemoryAccess::loaded_value).flatten(),
         };
@@ -77,19 +86,19 @@ impl handler::Handler for EventHandler {
         self.pers.tasks.insert(id, event);
     }
 
-    // fn posthandle(&mut self, ctx: &raw::context_t) {
-    //     if ctx.cat == Category::CAT_NONE || !self.cfg.enabled.load(Ordering::Relaxed) {
-    //         return;
-    //     }
-    //     let entry = self
-    //         .pers
-    //         .tasks
-    //         .get_mut(&TaskId(ctx.id))
-    //         .expect("handler_event's posthandle expects event data from capture");
-    //     // Task i just executed a memory operation, and we should
-    //     // update the value to reflect the "real" value.
-    //     entry.m = cas::get_rt_memory_access(TaskId(ctx.id));
-    // }
+    fn posthandle(&mut self, ctx: &raw::context_t) {
+        if ctx.cat == Category::CAT_NONE || !self.cfg.enabled.load(Ordering::Relaxed) {
+            return;
+        }
+        let entry = self
+            .pers
+            .tasks
+            .get_mut(&TaskId(ctx.id))
+            .expect("handler_event's posthandle expects event data from capture");
+        // Task i just executed a memory operation, and we should
+        // update the value to reflect the "real" value.
+        entry.m = cas::get_rt_memory_access(TaskId(ctx.id));
+    }
 }
 
 //

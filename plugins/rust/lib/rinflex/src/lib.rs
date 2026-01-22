@@ -136,7 +136,9 @@ pub struct GenericEventCore<StackTraceType> {
     pub t: Transition,
     pub stacktrace: StackTraceType,
     // pub addr: Option<vaddr::VAddr>,
-    // pub rval: Option<u64>,
+    /// Effect value: only recorded for XCHG.
+    pub eval: Option<u64>,
+
     pub _phantom: PhantomData<StackTraceType>,
 }
 
@@ -145,7 +147,7 @@ pub struct GenericEventCoreRef<'a, StackTraceType> {
     pub t: &'a Transition,
     pub stacktrace: &'a StackTraceType,
     // pub addr: Option<&'a vaddr::VAddr>,
-    // pub rval: Option<u64>,
+    pub eval: Option<u64>,
     pub _phantom: PhantomData<&'a StackTraceType>,
 }
 
@@ -158,6 +160,7 @@ impl From<Event> for EventCore {
             t: value.t,
             _phantom: PhantomData,
             stacktrace: value.stacktrace,
+            eval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
             // addr: value.m.as_ref().map(|m| m.addr().to_owned()),
             // rval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
         }
@@ -170,6 +173,7 @@ impl<'a> From<&'a Event> for EventCoreRef<'a> {
             t: &value.t,
             _phantom: PhantomData,
             stacktrace: &value.stacktrace,
+            eval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
             // addr: value.m.as_ref().map(MemoryAccess::addr),
             // rval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
         }
@@ -182,7 +186,7 @@ impl<'a, T: std::fmt::Display> std::fmt::Display for GenericEventCoreRef<'a, T> 
         write!(f, "  t: {},\n", self.t)?;
         write!(f, "  st: {},\n", self.stacktrace)?;
         // write!(f, "  loc: {:?},\n", self.addr)?;
-        // write!(f, "  rval: {:?},\n", self.rval)?;
+        write!(f, "  eval: {:?},\n", self.eval)?;
         write!(f, "}}")?;
         Ok(())
     }
@@ -227,13 +231,13 @@ impl Event {
     /// Display this event.
     pub fn display(&self) -> Result<String, error::Error> {
         let mut result = format!(
-            "event - tid: {}, clk: {}, {} x pc: {}, cat: {}\n[{}]\n{}",
+            "event - tid: {}, clk: {}, {} x pc: {}, cat: {}, eval: {:?}\n[{}]\n{}",
             self.t.id,
             self.clk,
             self.cnt,
             self.t.pc,
             self.t.cat,
-            // self.m.as_ref().map(MemoryAccess::loaded_value).flatten(),
+            self.m.as_ref().map(MemoryAccess::loaded_value).flatten(),
             self.stacktrace
                 .0
                 .iter()

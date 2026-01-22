@@ -1,5 +1,3 @@
-/*
- */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -25,8 +23,9 @@
 #include <lotto/util/once.h>
 
 #define log(ctx, fmt, ...)                                                     \
-    logger_debugf("[t:%lu, " CONTRACT(" clk:%lu,") "pc:0x%lx] " fmt "\n",         \
-               ctx->id, CONTRACT(_ghost.clk, ) ctx->pc & 0xfff, ##__VA_ARGS__)
+    logger_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx] " fmt "\n",      \
+                  ctx->id, CONTRACT(_ghost.clk, ) ctx->pc & 0xfff,             \
+                  ##__VA_ARGS__)
 
 CONTRACT(enum state{
     INIT     = 0,
@@ -211,7 +210,8 @@ engine_return(const context_t *ctx)
     CONTRACT({
         ASSERT(ctx->id != NO_TASK);
         if (vatomic_read(&_ghost.state) == FINISHED) {
-            logger_warnf("ignoring engine_return after fini (t: %lu)\n", ctx->id);
+            logger_warnf("ignoring engine_return after fini (t: %lu)\n",
+                         ctx->id);
             return;
         }
         ASSERT(vatomic_get_dec(&_ghost.pending_calls) > 0);

@@ -1,7 +1,7 @@
 // clang-format off
 // REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
 // UNSUPPORTED: aarch64
-// RUN: (! %lotto %stress -s random --stable-address-method MAP --handler-address enable --handler-cas enable --handler-stacktrace enable --handler-event enable -- %b)
+// RUN: (! %lotto %rinflex-stress -- %b)
 // RUN: %lotto %rinflex -r 30 2>&1 | iconv -t utf-8 -f utf-8 -c | filecheck %s
 
 // CHECK: ------ . ------ . ------ . ------ . ------

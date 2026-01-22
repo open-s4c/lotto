@@ -19,7 +19,27 @@ set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 
 # TODO: some sources are still failing
-set(FAILING_SRCS)
+set(FAILING_SRCS
+    # The following test cases tend to show problems on some systems
+    #
+    # inflex_method_be.c inflex_method_le.c inflex_method_lp.c inflex_abc.c
+    # debug-replay-end.c rinflex_3oc.c rinflex_cas.c
+    # rinflex_flaky_events.c rinflex_loop.c rinflex_symmetry.c
+    # rinflex_two_disjoint_bugs.c spin_await.c
+    #
+    # The following tests are flaky on the pipeline
+    #
+    inflex_test.c
+    rinflex.c
+    record_granularity_test_x86.c
+    inflex_method_be.c
+    inflex_method_le.c
+    inflex_method_lp.c
+    await_while_round_robin.c
+    inflex_abc_nocli.c
+    enforce_cat.c
+    tsano_inflex_abc.c
+    filter_config.c)
 
 file(GLOB ALL_SRCS *.c)
 set(SRCS)

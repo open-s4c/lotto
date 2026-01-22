@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: !( timeout 5 %lotto %stress -r 1 )
+// RUN: !( timeout 5 %lotto %stress -r 1 -- %b)
 // clang-format on
 
 #include <lotto/order.h>

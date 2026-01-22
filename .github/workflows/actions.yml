@@ -49,7 +49,7 @@ jobs:
       fail-fast: false
       matrix:
         build: [x86-gcc, x86-clang]
-        target: [test] #, tikl-test] #lit-crep, lit-daily, lit-pattern-fast] #, rust-test]
+        target: [test, tikl-test] #, rust-test]
     needs: build
     steps:
       #- name: Checkout repository once more

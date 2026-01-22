@@ -23,7 +23,8 @@ trace       = trace %tmpdir %output
 # tikl flags
 -q
 -vv
--j @TIKL_WORKERS@
+-j 1
+# -j @TIKL_WORKERS@
 -t @TIKL_TIMEOUT@
 -s @CMAKE_CURRENT_SOURCE_DIR@
 -b @CMAKE_CURRENT_BINARY_DIR@

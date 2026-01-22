@@ -10,11 +10,12 @@ use lotto::base::Value;
 use lotto::brokers::statemgr::*;
 use lotto::cli::flags::STR_CONVERTER_NONE;
 use lotto::cli::FlagKey;
-use lotto::collections::FxHashMap;
 use lotto::engine::handler::*;
 use lotto::log::*;
 use lotto::raw;
 use lotto::Stateful;
+
+use std::collections::BTreeMap;
 use std::sync::LazyLock;
 
 use crate::handlers::event;
@@ -24,7 +25,7 @@ use crate::*;
 pub static HANDLER: LazyLock<OrderEnforcer> = LazyLock::new(|| OrderEnforcer {
     cfg: Config::default(),
     fin: Final::default(),
-    block: FxHashMap::default(),
+    block: BTreeMap::new(),
     shutdown: false,
     max_clock: get_max_clock(),
 });
@@ -47,11 +48,12 @@ pub struct OrderEnforcer {
     pub fin: Final,
 
     /// Constraint bookkeeping.
-    pub block: FxHashMap<TaskId, u64>,
+    pub block: BTreeMap<TaskId, u64>,
 
     /// Handler stopped. Do not respond to `TOPIC_NEXT` anymore.
     pub shutdown: bool,
 
+    /// The maximal clock that this execution is allowed to reach.
     pub max_clock: U64OrInf,
 }
 
@@ -84,6 +86,10 @@ impl Handler for OrderEnforcer {
         // Check if we should block the current thread.
         let constraints = &mut self.fin.constraints;
 
+        if constraints.len() == 0 {
+            return;
+        }
+
         let tset = unsafe { TidSet::wrap(&cappt.tset) };
         for id in tset.iter() {
             if self.block.get(&id).is_some() {
@@ -92,10 +98,7 @@ impl Handler for OrderEnforcer {
             // It is possible that a Read event now reads a different
             // value, because another Write event happened before its
             // resumption. Update the read value to the current value.
-
-            // NOTE: disabled for now.
-            // event::update_event(id);
-
+            event::update_event(id);
             let e = match event::get_rt_event(id) {
                 None => {
                     panic!(

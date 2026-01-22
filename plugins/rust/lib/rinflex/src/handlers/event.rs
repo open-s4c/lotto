@@ -8,6 +8,8 @@ use lotto::{
     engine::handler::{self, TaskId},
     log::*,
 };
+
+use std::collections::BTreeMap;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::LazyLock;
@@ -22,7 +24,7 @@ pub static HANDLER: LazyLock<EventHandler> = LazyLock::new(|| EventHandler {
         enabled: AtomicBool::new(false),
     },
     pers: Persistent {
-        tasks: FxHashMap::default(),
+        tasks: BTreeMap::new(),
     },
     pc_cnt: FxHashMap::default(),
     st_map: IdMap::default(),
@@ -148,7 +150,7 @@ impl Marshable for Config {
 
 #[derive(Encode, Decode, Debug)]
 pub struct Persistent {
-    pub tasks: FxHashMap<TaskId, Event>,
+    pub tasks: BTreeMap<TaskId, Event>,
 }
 
 impl Marshable for Persistent {

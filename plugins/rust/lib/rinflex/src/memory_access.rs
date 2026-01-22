@@ -244,10 +244,7 @@ impl Modify {
         self.read_value
     }
 
-    #[allow(unreachable_code)]
     pub unsafe fn reload_value(&self) -> Option<u64> {
-        panic!("should not call it");
-
         if self.has_invalid_real_addr() {
             return self.loaded_value();
         }

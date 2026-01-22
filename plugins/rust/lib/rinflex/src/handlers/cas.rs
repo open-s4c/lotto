@@ -4,7 +4,7 @@
 //! CAS operation can succeed or not, but now it is extended to record
 //! all memory operations.
 
-use lotto::collections::FxHashMap;
+use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::LazyLock;
 use std::sync::Mutex;
@@ -25,9 +25,9 @@ static HANDLER: LazyLock<CasPredictor> = LazyLock::new(|| CasPredictor {
         enabled: AtomicBool::new(false),
     },
     pers: Persistent {
-        tasks: FxHashMap::default(),
+        tasks: BTreeMap::new(),
     },
-    rt_map: Mutex::new(FxHashMap::default()),
+    rt_map: Mutex::new(BTreeMap::new()),
 });
 
 #[derive(Stateful)]
@@ -38,7 +38,7 @@ struct CasPredictor {
     pers: Persistent,
 
     // Real-time values from the current execution.
-    rt_map: Mutex<FxHashMap<TaskId, MemoryAccess>>,
+    rt_map: Mutex<BTreeMap<TaskId, MemoryAccess>>,
 }
 
 impl CasPredictor {
@@ -219,7 +219,7 @@ impl Marshable for Config {
 
 #[derive(Encode, Decode, Debug)]
 struct Persistent {
-    tasks: FxHashMap<TaskId, MemoryAccess>,
+    tasks: BTreeMap<TaskId, MemoryAccess>,
 }
 
 impl Marshable for Persistent {

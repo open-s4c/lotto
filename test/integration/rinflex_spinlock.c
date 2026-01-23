@@ -13,8 +13,8 @@
 // CHECK: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_XCHG
 
 // CHECK: ------ . ------ . ------ . ------ . ------
-// CHECK-NEXT: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_RMW
-// CHECK: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: AFTER_CMPXCHG_S
+// CHECK-NEXT: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_XCHG
+// CHECK: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_XCHG
 
 // clang-format on
 

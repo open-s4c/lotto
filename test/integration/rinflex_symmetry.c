@@ -1,7 +1,7 @@
 // clang-format off
 // REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
 // UNSUPPORTED: aarch64
-// RUN: (! %lotto %rinflex-stress -- %b)
+// RUN: (! %lotto %stress4rinflex -- %b)
 // RUN: %lotto %rinflex -r 30 2>&1 | iconv -t utf-8 -f utf-8 -c | %check %s
 
 // CHECK: ------ . ------ . ------ . ------ . ------

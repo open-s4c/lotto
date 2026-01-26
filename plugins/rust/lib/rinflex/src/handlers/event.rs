@@ -1,13 +1,15 @@
-use lotto::collections::FxHashMap;
 use lotto::raw;
 use lotto::Stateful;
 use lotto::{
-    base::Value,
+    base::{Category, Value},
     brokers::statemgr::*,
     cli::flags::{FlagKey, STR_CONVERTER_BOOL},
+    collections::FxHashMap,
     engine::handler::{self, TaskId},
     log::*,
 };
+
+use std::collections::BTreeMap;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::LazyLock;
@@ -15,14 +17,14 @@ use std::sync::LazyLock;
 use crate::handlers::cas;
 use crate::handlers::stacktrace;
 use crate::idmap::IdMap;
-use crate::{Event, GenericEventCore, StackTrace, Transition};
+use crate::{Event, GenericEventCore, MemoryAccess, StackTrace, Transition};
 
 pub static HANDLER: LazyLock<EventHandler> = LazyLock::new(|| EventHandler {
     cfg: Config {
         enabled: AtomicBool::new(false),
     },
     pers: Persistent {
-        tasks: FxHashMap::default(),
+        tasks: BTreeMap::new(),
     },
     pc_cnt: FxHashMap::default(),
     st_map: IdMap::default(),
@@ -54,10 +56,19 @@ impl handler::Handler for EventHandler {
         let ma = cas::get_rt_memory_access(id);
         let stid = self.st_map.put(&stacktrace);
         let transition = Transition::new(ctx);
+
+        // During capture, we are going to check whether this event
+        // should be blocked, if the operation were to read this
+        // value. That is, the really executed event might not read
+        // this value, and we must update the real value after it
+        // really happens. See posthandle.
+        let eval = ma.as_ref().map(MemoryAccess::loaded_value).flatten();
+
         let ecore = GenericEventCore {
             t: transition.clone(),
             _phantom: PhantomData,
             stacktrace: stid,
+            eval,
             // addr: ma.as_ref().map(|ma| ma.addr().to_owned()),
             // rval: ma.as_ref().map(MemoryAccess::loaded_value).flatten(),
         };
@@ -73,23 +84,53 @@ impl handler::Handler for EventHandler {
             stacktrace,
             m: ma,
         };
-        //println!("handle_event: {}", event);
         self.pers.tasks.insert(id, event);
     }
 
-    // fn posthandle(&mut self, ctx: &raw::context_t) {
-    //     if ctx.cat == Category::CAT_NONE || !self.cfg.enabled.load(Ordering::Relaxed) {
-    //         return;
-    //     }
-    //     let entry = self
-    //         .pers
-    //         .tasks
-    //         .get_mut(&TaskId(ctx.id))
-    //         .expect("handler_event's posthandle expects event data from capture");
-    //     // Task i just executed a memory operation, and we should
-    //     // update the value to reflect the "real" value.
-    //     entry.m = cas::get_rt_memory_access(TaskId(ctx.id));
-    // }
+    fn posthandle(&mut self, ctx: &raw::context_t) {
+        if ctx.cat == Category::CAT_NONE || !self.cfg.enabled.load(Ordering::Relaxed) {
+            return;
+        }
+        let entry = self
+            .pers
+            .tasks
+            .get_mut(&TaskId(ctx.id))
+            .expect("handler_event's posthandle expects event data from capture");
+
+        // Task i just executed a memory operation, and we should
+        // update the value to reflect the "real" value.
+        let Some(ref oldm) = entry.m else {
+            return;
+        };
+        let Some(ref realm) = cas::get_rt_memory_access(TaskId(ctx.id)) else {
+            panic!("real memory access not available");
+        };
+        let oldv = oldm.loaded_value();
+        let realv = realm.loaded_value();
+        if oldv == realv {
+            return;
+        }
+
+        // The actual event reads another value. Update counters.
+        let stid = self.st_map.put(&entry.stacktrace);
+        let mut ecore = GenericEventCore {
+            _phantom: PhantomData,
+            t: entry.t.clone(),
+            stacktrace: stid,
+            eval: oldv,
+        };
+        self.pc_cnt.entry(ecore.clone()).and_modify(|c| *c -= 1);
+        ecore.eval = realv;
+        let newcnt = *self
+            .pc_cnt
+            .entry(ecore)
+            .and_modify(|c| *c += 1)
+            .or_insert(1);
+
+        // Update the record.
+        entry.cnt = newcnt;
+        entry.m = Some(realm.clone());
+    }
 }
 
 //
@@ -109,7 +150,7 @@ impl Marshable for Config {
 
 #[derive(Encode, Decode, Debug)]
 pub struct Persistent {
-    pub tasks: FxHashMap<TaskId, Event>,
+    pub tasks: BTreeMap<TaskId, Event>,
 }
 
 impl Marshable for Persistent {

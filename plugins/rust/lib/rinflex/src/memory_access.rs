@@ -244,10 +244,7 @@ impl Modify {
         self.read_value
     }
 
-    #[allow(unreachable_code)]
     pub unsafe fn reload_value(&self) -> Option<u64> {
-        panic!("should not call it");
-
         if self.has_invalid_real_addr() {
             return self.loaded_value();
         }
@@ -552,8 +549,9 @@ impl MemoryOperationExt for Category {
                 | Category::CAT_AFTER_RMW
                 | Category::CAT_BEFORE_CMPXCHG
                 | Category::CAT_AFTER_CMPXCHG_S
-                | Category::CAT_AFTER_CMPXCHG_F // | Category::CAT_BEFORE_XCHG
-                                                // | Category::CAT_AFTER_XCHG
+                | Category::CAT_AFTER_CMPXCHG_F
+                | Category::CAT_BEFORE_XCHG
+                | Category::CAT_AFTER_XCHG
         )
     }
 

@@ -8,17 +8,18 @@ input       = -i %t.trace
 filter      = src/runtime|src/plotto|libvsync
 
 # lotto subcommands
-debug       = debug %tmpdir %input --file-filter="%filter"
-explore     = explore %tmpdir %input %output
-inflex      = inflex %tmpdir %input %output
-record      = record %tmpdir %output
-replay      = replay %tmpdir %input
-rinflex     = rinflex %tmpdir %input
-run         = run %tmpdir
-sc          = sc %tmpdir %output
-show        = show %tmpdir %input
-stress      = stress %tmpdir %output
-trace       = trace %tmpdir %output
+debug          = debug %tmpdir %input --file-filter="%filter"
+explore        = explore %tmpdir %input %output
+inflex         = inflex %tmpdir %input %output
+record         = record %tmpdir %output
+replay         = replay %tmpdir %input
+rinflex        = rinflex %tmpdir %input
+run            = run %tmpdir
+sc             = sc %tmpdir %output
+show           = show %tmpdir %input
+stress         = stress %tmpdir %output
+stress4rinflex = stress %tmpdir %output -s random --stable-address-method MAP --handler-address enable --handler-cas enable --handler-stacktrace enable --handler-event enable
+trace          = trace %tmpdir %output
 
 # tikl flags
 -q

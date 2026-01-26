@@ -4,7 +4,7 @@
 //! CAS operation can succeed or not, but now it is extended to record
 //! all memory operations.
 
-use lotto::collections::FxHashMap;
+use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::LazyLock;
 use std::sync::Mutex;
@@ -25,9 +25,9 @@ static HANDLER: LazyLock<CasPredictor> = LazyLock::new(|| CasPredictor {
         enabled: AtomicBool::new(false),
     },
     pers: Persistent {
-        tasks: FxHashMap::default(),
+        tasks: BTreeMap::new(),
     },
-    rt_map: Mutex::new(FxHashMap::default()),
+    rt_map: Mutex::new(BTreeMap::new()),
 });
 
 #[derive(Stateful)]
@@ -38,10 +38,11 @@ struct CasPredictor {
     pers: Persistent,
 
     // Real-time values from the current execution.
-    rt_map: Mutex<FxHashMap<TaskId, MemoryAccess>>,
+    rt_map: Mutex<BTreeMap<TaskId, MemoryAccess>>,
 }
 
 impl CasPredictor {
+    #[inline]
     fn update_task_from_ctx(&mut self, ctx: &raw::context_t) {
         if !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
@@ -73,11 +74,11 @@ impl Handler for CasPredictor {
         self.update_task_from_ctx(ctx);
     }
 
-    // fn posthandle(&mut self, ctx: &raw::context_t) {
-    //     // We need to save the "real" read value, which is only
-    //     // available after the event is resumed.
-    //     self.update_task_from_ctx(ctx);
-    // }
+    fn posthandle(&mut self, ctx: &raw::context_t) {
+        // We need to save the "real" read value, which is only
+        // available after the event is resumed.
+        self.update_task_from_ctx(ctx);
+    }
 }
 
 #[inline]
@@ -135,20 +136,18 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
 
     // NOTE: We need to get the value early for the order enforcer to
     // detect whether the event should be blocked.
-    let read_value = None; // For now, disable read_value completely.
-
-    // let read_value = if ctx.cat.is_read() {
-    //     if ctx.cat.is_before() {
-    //         let value = unsafe { sized_read(raw_addr as u64, size as usize) };
-    //         Some(value)
-    //     } else {
-    //         // BEFORE should be *immediately* followed by AFTER in the
-    //         // said thread.  Use the old, recorded value.
-    //         get_memory_access_value(TaskId(ctx.id))
-    //     }
-    // } else {
-    //     None
-    // };
+    let read_value = if ctx.cat.is_read() {
+        // 1. Currently, only consider XCHG events.
+        // 2. An AFTER event is understood as the same operation as the BEFORE event, so they use the same value.
+        if ctx.cat.is_before() && ctx.cat.is_xchg() {
+            let value = unsafe { crate::sized_read(raw_addr as u64, size as usize) };
+            Some(value)
+        } else {
+            get_memory_access_value(TaskId(ctx.id))
+        }
+    } else {
+        None
+    };
 
     let item = Modify {
         addr,
@@ -157,27 +156,29 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
         kind,
         read_value,
     };
+
     Some(item)
 }
 
+/// `Read` events are not recorded.
 #[inline]
-fn ctx_to_read(ctx: &raw::context_t) -> Option<Read> {
-    let (addr, size) = match ctx.cat {
-        Category::CAT_BEFORE_READ | Category::CAT_BEFORE_AREAD | Category::CAT_AFTER_AREAD => {
-            (get_val(ctx.args[0]), get_val(ctx.args[1]))
-        }
-        _ => {
-            return None;
-        }
-    };
-    // let value = unsafe { sized_read(addr, size as usize) };
-    let value = 0;
-    Some(Read {
-        size: size as u8,
-        real_addr: addr,
-        addr: VAddr::get(ctx, addr as usize),
-        value,
-    })
+fn ctx_to_read(_ctx: &raw::context_t) -> Option<Read> {
+    return None;
+    // let (addr, size) = match ctx.cat {
+    //     Category::CAT_BEFORE_READ | Category::CAT_BEFORE_AREAD | Category::CAT_AFTER_AREAD => {
+    //         (get_val(ctx.args[0]), get_val(ctx.args[1]))
+    //     }
+    //     _ => {
+    //         return None;
+    //     }
+    // };
+    // let value = unsafe { crate::sized_read(addr, size as usize) };
+    // Some(Read {
+    //     size: size as u8,
+    //     real_addr: addr,
+    //     addr: VAddr::get(ctx, addr as usize),
+    //     value,
+    // })
 }
 
 fn get_addr(arg: raw::arg_t) -> usize {
@@ -218,7 +219,7 @@ impl Marshable for Config {
 
 #[derive(Encode, Decode, Debug)]
 struct Persistent {
-    tasks: FxHashMap<TaskId, MemoryAccess>,
+    tasks: BTreeMap<TaskId, MemoryAccess>,
 }
 
 impl Marshable for Persistent {

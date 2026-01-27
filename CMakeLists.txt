@@ -27,6 +27,10 @@ set(DICE_LOG_LEVEL
     "INFO"
     CACHE STRING "" FORCE)
 
+set(DICE_MEMSET
+    OFF
+    CACHE BOOL "" FORCE)
+
 set(DICE_LTO
     OFF
     CACHE BOOL "" FORCE)
@@ -36,7 +40,7 @@ set(DICE_DISPATCH_CHAINS
     CACHE STRING "" FORCE)
 
 set(DICE_DISABLE_LOADER
-    on
+    ON
     CACHE BOOL "" FORCE)
 
 add_subdirectory(deps)

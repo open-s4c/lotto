@@ -317,7 +317,8 @@ impl RecInflex {
             "get_trace: attaching constraints, #constraints={}",
             self.constraints.len()
         );
-        let input = self.attach_constraints_to_trace(input, replay_goal, &self.constraints)?;
+        let input =
+            self.unsafely_set_constraints_in_first_config_record(input, &self.constraints)?;
         info!(
             "get_trace: input={}, output={}, replay_goal={}",
             input.display(),

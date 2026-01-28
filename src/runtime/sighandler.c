@@ -1,5 +1,4 @@
-/*
- */
+#include "lotto/base/reason.h"
 #ifndef DISABLE_EXECINFO
     #include <execinfo.h>
 #endif
@@ -10,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <dice/self.h>
 #include <lotto/base/record.h>
 #include <lotto/base/task_id.h>
 #include <lotto/runtime/intercept.h>
@@ -47,9 +47,8 @@ _backtrace_print()
     size = backtrace(array, BACKTRACE_DEPTH);
 
     // print out all the frames to stderr
-    FILE *f = logger_fp() ? : stdout;
-    fflush(f);
-    backtrace_symbols_fd(array, size, fileno(f));
+    fflush(logger_fp());
+    backtrace_symbols_fd(array, size, fileno(logger_fp()));
     #endif
 #endif
 }
@@ -71,24 +70,27 @@ _write_uint64(int fd, uint64_t n)
 static void
 _handle(reason_t user_reason, reason_t runtime_reason)
 {
-    mediator_disable_registration();
-    mediator_t *m   = get_mediator(false);
+    // mediator_disable_registration();
     context_t ctx   = {.cat = CAT_NONE};
-    reason_t reason = m->registration_status != MEDIATOR_REGISTRATION_NONE &&
-                              mediator_in_capture(m) ?
-                          runtime_reason :
-                          user_reason;
-    sys_write(SIGHANLDER_FD, "[", 1);
-    _write_uint64(SIGHANLDER_FD, ctx.id);
-    sys_write(SIGHANLDER_FD, "]", 1);
-    if (m->registration_status == MEDIATOR_REGISTRATION_NONE) {
-        sys_write(SIGHANLDER_FD, "(estimated)", sys_strlen("(estimated)"));
-    }
-    sys_write(SIGHANLDER_FD, " ", 1);
-    const char *str_reason = reason_str(reason);
-    sys_write(SIGHANLDER_FD, str_reason, sys_strlen(str_reason));
-    sys_write(SIGHANLDER_FD, "\n", 1);
+    reason_t reason = user_reason;
 
+    mediator_t *m = mediator_get_data(false);
+    if (m) {
+        reason = m->registration_status != MEDIATOR_REGISTRATION_NONE &&
+                         mediator_in_capture(m) ?
+                     runtime_reason :
+                     user_reason;
+        sys_write(SIGHANLDER_FD, "[", 1);
+        _write_uint64(SIGHANLDER_FD, ctx.id);
+        sys_write(SIGHANLDER_FD, "]", 1);
+        if (m->registration_status == MEDIATOR_REGISTRATION_NONE) {
+            sys_write(SIGHANLDER_FD, "(estimated)", sys_strlen("(estimated)"));
+        }
+        sys_write(SIGHANLDER_FD, " ", 1);
+        const char *str_reason = reason_str(reason);
+        sys_write(SIGHANLDER_FD, str_reason, sys_strlen(str_reason));
+        sys_write(SIGHANLDER_FD, "\n", 1);
+    }
     _backtrace_print();
 
     lotto_exit(&ctx, reason);
@@ -159,13 +161,15 @@ __assert_fail(const char *assertion, const char *file, line_int line,
     if (vatomic_xchg(&_handling, 1))
         REAL(__assert_fail, assertion, file, line, function);
 
-    long unsigned int tid = get_task_id();
+    struct metadata *md = self_md();
+    thread_id tid       = self_id(md);
     logger_println("[%lu] assert failed %s(): %s:%u: %s\n", tid, function, file,
-                (unsigned int)line, assertion);
+                   (unsigned int)line, assertion);
 
     _backtrace_print();
 
     context_t ctx = {
+        .id  = tid,
         .cat = CAT_NONE,
     };
     lotto_exit(&ctx, REASON_ASSERT_FAIL);

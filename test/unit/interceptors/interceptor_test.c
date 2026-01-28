@@ -20,7 +20,7 @@
 #include <lotto/sys/stdlib.h>
 
 static mediator_t _mediator =
-    (mediator_t){.id = 1, .registration_status = MEDIATOR_REGISTRATION_NEED};
+    (mediator_t){.id = 1, .registration_status = MEDIATOR_REGISTRATION_DONE};
 
 /*******************************************************************************
  * pthread_mutex_lock
@@ -119,6 +119,11 @@ lotto_exit(context_t *ctx, reason_t reason)
 void
 mediator_fini(mediator_t *m)
 {
+}
+mediator_t *
+mediator_tls(struct metadata *md)
+{
+    return 0;
 }
 
 bool

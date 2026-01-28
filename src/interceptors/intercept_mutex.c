@@ -1,6 +1,3 @@
-/*
- */
-
 #include <lotto/mutex.h>
 #include <lotto/runtime/intercept.h>
 

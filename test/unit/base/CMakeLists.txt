@@ -13,11 +13,6 @@ foreach(SRC ${SRCS})
     add_executable(${TARGET} ${SRC})
     target_link_libraries(${TARGET} base_testing.o sys_testing.o
                           engine_component memmgr_runtime.o memmgr_user.o)
-    if(${TARGET} STREQUAL leakcheck_test)
-        target_link_libraries(${TARGET} lotto_leakcheck_user_engine)
-    elseif(${TARGET} STREQUAL uafcheck_test)
-        target_link_libraries(${TARGET} lotto_uaf_user_engine)
-    endif()
     add_test(NAME ${TARGET} COMMAND ${TARGET})
 endforeach()
 

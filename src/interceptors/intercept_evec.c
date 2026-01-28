@@ -1,5 +1,3 @@
-/*
- */
 #include <lotto/evec.h>
 #include <lotto/runtime/intercept.h>
 

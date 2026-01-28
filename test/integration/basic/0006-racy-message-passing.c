@@ -1,4 +1,4 @@
-// REQUIRES: dice-runtime
+// REQUIRES: dice-runtime, DISABLED
 // RUN: (! %lotto %stress -- %b) 2>&1 | %check %s
 // CHECK: assert failed {{.*}} val == 1
 

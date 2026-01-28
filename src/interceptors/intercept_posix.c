@@ -1,5 +1,3 @@
-/*
- */
 #include <alloca.h>
 #include <poll.h>
 #include <signal.h>
@@ -26,24 +24,9 @@
 #include <sys/types.h>
 
 int
-sched_yield(void)
-{
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_USER_YIELD));
-    return 0;
-}
-
-int
 sched_setaffinity(__pid_t pid, size_t s, const cpu_set_t *cset)
 {
     logger_debugf("warning: ignoring sched_setaffinity call\n");
-    return 0;
-}
-
-int
-lotto_yield(bool advisory)
-{
-    intercept_capture(ctx(.func = __FUNCTION__,
-                          .cat  = advisory ? CAT_SYS_YIELD : CAT_USER_YIELD));
     return 0;
 }
 

@@ -3,6 +3,7 @@
 #ifndef LOTTO_MEDIATOR_H
 #define LOTTO_MEDIATOR_H
 
+#include <dice/types.h>
 #include <lotto/base/context.h>
 #include <lotto/base/plan.h>
 
@@ -55,6 +56,7 @@ typedef enum mediator_status {
  * creates a new mediator
  */
 mediator_t *mediator_init();
+mediator_t *mediator_tls(metadata_t *md);
 
 /* return
  * - true if capture point became a change point

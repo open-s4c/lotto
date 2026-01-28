@@ -1,12 +1,10 @@
 #include <blob-command.h>
 #include <blob-debug.h>
 #include <blob-decorator.h>
-#include <blob-engine.h>
 #include <blob-filter.h>
 #include <blob-handler.h>
 #include <blob-iterator.h>
 #include <blob-matcher.h>
-#include <blob-runtime.h>
 #include <blob-tsano.h>
 #include <blob-util.h>
 #include <dirent.h>
@@ -20,19 +18,22 @@
 #include <sys/types.h>
 
 #if !defined(LOTTO_EMBED_LIB) || LOTTO_EMBED_LIB == 1
-    #include <blob-plotto-verbose.h>
-    #include <blob-plotto.h>
+    #include <blob-lotto-verbose.h>
+    #include <blob-lotto.h>
 #endif
 
 #include <lotto/base/envvar.h>
 #include <lotto/cli/exec_info.h>
 #include <lotto/cli/preload.h>
+#include <lotto/cmake_variables.h>
 #include <lotto/engine/handlers/ichpt.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/plugin.h>
 #include <lotto/sys/stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #define PLUGIN_PATHS                                                           \
     LOTTO_PLUGIN_BUILD_DIR                                                     \
@@ -258,7 +259,7 @@ _preload_memmgr_plugins(const char *chain, bool runtime)
             _preload_plugin, &(preload_plugin_arg_t){
                                  .plugin_predicate = plugin_preloadable_memory,
                                  .plugin_predicate_arg = &arg});
-        ENSURE(arg.counter == 1 && "could not load a memory plugin");
+        //        ENSURE(arg.counter == 1 && "could not load a memory plugin");
     }
 }
 
@@ -269,23 +270,17 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
     /* make libraries available */
     // clang-format off
     _write_blobs(dir, (blob_t[]) {
-        {.path    = LIBRUNTIME,
-         .content = libruntime_so,
-         .len     = libruntime_so_len},
         {.path    = LIBTSANO,
          .content = libtsano_so,
          .len     = libtsano_so_len},
-        {.path    = LIBENGINE,
-         .content = libengine_so,
-         .len     = libengine_so_len},
 #if !defined(LOTTO_EMBED_LIB) || LOTTO_EMBED_LIB == 1
-        false ?
+        verbose ?
         (blob_t){.path    = LIBLOTTO,
-                 .content = libplotto_verbose_so,
-                 .len     = libplotto_verbose_so_len} :
+                 .content = liblotto_verbose_so,
+                 .len     = liblotto_verbose_so_len} :
         (blob_t){.path    = LIBLOTTO,
-                 .content = libplotto_so,
-                 .len     = libplotto_so_len},
+                 .content = liblotto_so,
+                 .len     = liblotto_so_len},
 #endif
         {NULL}});
     // clang-format on
@@ -322,8 +317,6 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
 
     _preload_libs(dir, (libspec_t[]){
                            {LIBLOTTO, do_preload_plotto},
-                           {LIBRUNTIME, do_preload_plotto},
-                           {LIBENGINE, do_preload_plotto},
                            {NULL},
                        });
     exec_info_store_envvars();

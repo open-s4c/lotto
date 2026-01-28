@@ -1,6 +1,3 @@
-/*
- */
-
 /* Callback functions before and after executing an intercepted function. */
 .extern intercept_lookup_call
 .extern intercept_after_call

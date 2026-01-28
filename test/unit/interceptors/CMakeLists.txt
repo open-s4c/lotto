@@ -1,5 +1,3 @@
-add_subdirectory(switcher)
-
 if(UNIX)
     set(EMPTY_FILE "/dev/null")
 else()
@@ -24,6 +22,7 @@ foreach(SRC ${SRCS})
         posix_interceptors.o
         memmgr_runtime.o
         memmgr_user.o
-        dice)
+        dice
+        dice-self)
     # add_test(NAME ${TEST} COMMAND ${TEST})
 endforeach()

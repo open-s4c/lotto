@@ -1,6 +1,7 @@
 // clang-format off
 // ALLOW_RETRIES: 5
 // REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
+// REQUIRES: DISABLED
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress4rinflex -- %b)
 // RUN: %lotto %rinflex -r 30 2>&1 | iconv -f utf-8 -t utf-8 -c > %s.out

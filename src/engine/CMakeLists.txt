@@ -42,7 +42,5 @@ set_target_properties(engine PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                         ${CMAKE_BINARY_DIR})
 
 set(LIBTARGET "libengine.so")
-install(TARGETS engine DESTINATION lib)
 make_blob(blob-engine ${LIBTARGET} engine)
-
 make_units(engine "")

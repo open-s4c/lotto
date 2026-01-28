@@ -13,21 +13,22 @@ use lotto::cli::FlagKey;
 use lotto::engine::handler::*;
 use lotto::log::*;
 use lotto::raw;
+use lotto::sync::HandlerWrapper;
 use lotto::Stateful;
 
 use std::collections::BTreeMap;
-use std::sync::LazyLock;
 
 use crate::handlers::event;
 use crate::num::U64OrInf;
 use crate::*;
 
-pub static HANDLER: LazyLock<OrderEnforcer> = LazyLock::new(|| OrderEnforcer {
+pub static HANDLER: HandlerWrapper<OrderEnforcer> = HandlerWrapper::new(|| OrderEnforcer {
     cfg: Config::default(),
     fin: Final::default(),
     block: BTreeMap::new(),
     shutdown: false,
     max_clock: get_max_clock(),
+    prev_any_task_filter: None,
 });
 
 fn get_max_clock() -> U64OrInf {
@@ -55,6 +56,8 @@ pub struct OrderEnforcer {
 
     /// The maximal clock that this execution is allowed to reach.
     pub max_clock: U64OrInf,
+
+    prev_any_task_filter: Option<unsafe extern "C" fn(raw::task_id) -> bool>,
 }
 
 impl Handler for OrderEnforcer {
@@ -128,6 +131,12 @@ impl Handler for OrderEnforcer {
         /* It is possible that tset is empty at this point.  In that case,
          * the engine can pick any task, including ones that are already
          * blocked, which is handled in TOPIC_NEXT_TASK above. */
+
+        /* Reduce the likelihood by setting any_task_filter. */
+        if self.block.len() != 0 {
+            self.prev_any_task_filter = cappt.any_task_filter;
+            cappt.any_task_filter = Some(_any_task_filter_blocked_by_constraints);
+        }
     }
 
     fn posthandle(&mut self, ctx: &raw::context_t) {
@@ -336,6 +345,21 @@ pub fn register() {
     lotto::brokers::statemgr::register(&*HANDLER);
     lotto::brokers::statemgr::subscribe_to_statemgr_topics(&*HANDLER);
 }
+
+// ANY_TASK filter
+
+unsafe extern "C" fn _any_task_filter_blocked_by_constraints(task_id: u64) -> bool {
+    if let Some(f) = HANDLER.prev_any_task_filter {
+        if !f(task_id) {
+            return false;
+        }
+    }
+    HANDLER.block.get(&TaskId(task_id)).is_none()
+}
+
+//
+// CLI flags
+//
 
 unsafe extern "C" fn _flag_rinflex_max_clock_callback(v: raw::value, _: *mut std::ffi::c_void) {
     let v = Value::from(v);

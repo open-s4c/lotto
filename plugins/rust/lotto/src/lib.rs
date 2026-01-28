@@ -61,4 +61,5 @@ pub mod cli;
 pub mod collections;
 pub mod engine;
 pub mod owned;
+pub mod sync;
 pub mod sys;

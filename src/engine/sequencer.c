@@ -176,11 +176,11 @@ sequencer_capture(const context_t *ctx)
                                _actions_for(ctx, next, &e),
         .clk             = _seq.clk,
         .next            = next,
-        .any_task_filter = e.any_task_filter,
         .reason          = e.reason,
         .with_slack      = CAT_SLACK(ctx->cat) && e.replay == REPLAY_DONE,
         .replay_type     = replay_type,
     };
+    memcpy(&p.any_task_filters, &e.any_task_filters, sizeof(any_task_filters));
 
     if (plan_next(p) == ACTION_WAKE) {
         ASSERT(p.next != NO_TASK);

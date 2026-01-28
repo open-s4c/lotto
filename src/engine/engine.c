@@ -73,8 +73,6 @@ CONTRACT(static void _check_plan(const context_t *ctx, plan_t p) {
     switch (pure_actions) {
         case ACTION_CONTINUE:
         case ACTION_WAKE | ACTION_YIELD | ACTION_RESUME:
-            ASSERT(p.any_task_filter == NULL || CAT_WAIT(ctx->cat) ||
-                   ctx->cat >= CAT_END_);
             ASSERT(ctx->cat != CAT_TASK_FINI);
             break;
         case ACTION_CALL | ACTION_YIELD | ACTION_RESUME:

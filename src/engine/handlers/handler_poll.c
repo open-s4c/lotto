@@ -256,8 +256,7 @@ _poll_handle(const context_t *ctx, event_t *e)
     tidset_remove_all_keys(&e->tset, &_state.polls);
     if (_should_wait(ctx->id)) {
         e->is_chpt = true;
-        ASSERT(e->any_task_filter == NULL);
-        e->any_task_filter = _should_wait;
+        cappt_add_any_task_filter(e, _should_wait);
     }
 }
 REGISTER_HANDLER(SLOT_POLL, _poll_handle)

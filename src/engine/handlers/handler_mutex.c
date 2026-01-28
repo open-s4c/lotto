@@ -212,8 +212,7 @@ _mutex_handle(const context_t *ctx, event_t *e)
     switch (ctx->cat) {
         case CAT_MUTEX_ACQUIRE:
             _handle_acquire(ctx->id, addr);
-            ASSERT(e->any_task_filter == NULL);
-            e->any_task_filter = _should_wait;
+            cappt_add_any_task_filter(e, _should_wait);
             // fallthru
         case CAT_MUTEX_TRYACQUIRE:
         case CAT_MUTEX_RELEASE:

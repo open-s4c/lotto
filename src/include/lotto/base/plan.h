@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <lotto/base/arg.h>
+#include <lotto/base/cappt.h>
 #include <lotto/base/clk.h>
 #include <lotto/base/reason.h>
 #include <lotto/base/task_id.h>
@@ -44,8 +45,7 @@ typedef struct plan {
     replay_type_t replay_type; //< Whether the capture point has been replayed
                                // by the engine.
     clk_t clk;                 //< The current clock.
-    bool (*any_task_filter)(
-        task_id); //< returns true if the task may wake as ANY_TASK
+    any_task_filters any_task_filters; //< returns true if the task may wake as ANY_TASK
     arg_t args[PLAN_NARGS];
 } plan_t;
 

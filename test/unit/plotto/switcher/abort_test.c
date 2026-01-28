@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "lotto/base/cappt.h"
 #include <lotto/base/context.h>
 #include <lotto/runtime/switcher.h>
 #include <lotto/sys/ensure.h>
@@ -14,7 +15,7 @@ void *
 r1()
 {
     int tid = 2;
-    int yd  = switcher_yield(tid, NULL);
+    int yd  = switcher_yield(tid, NO_ANY_TASK_FILTERS);
     if (yd == SWITCHER_ABORTED)
         return 0;
     switcher_abort();
@@ -28,7 +29,7 @@ void *
 r2()
 {
     int tid = 3;
-    int yd  = switcher_yield(tid, NULL);
+    int yd  = switcher_yield(tid, NO_ANY_TASK_FILTERS);
     if (yd == SWITCHER_ABORTED)
         return 0;
     switcher_abort();

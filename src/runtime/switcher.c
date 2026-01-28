@@ -23,6 +23,7 @@
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#include <lotto/base/cappt.h>
 #include <lotto/base/task_id.h>
 #include <lotto/runtime/switcher.h>
 #include <lotto/sys/assert.h>
@@ -50,8 +51,19 @@ _lotto_switcher_resuming(void)
 {
 }
 
+static inline bool
+may_wake_as_any_task(task_id id, any_task_filters filters)
+{
+    for (int i = 0; i < filters.n; ++i) {
+        any_task_filter_f f = filters.val[i];
+        if (f && !f(id))
+            return false;
+    }
+    return true;
+}
+
 switcher_status_t
-switcher_yield(task_id id, bool (*any_task_filter)(task_id))
+switcher_yield(task_id id, any_task_filters filters)
 {
     task_id prev, next;
     logger_debugf("YIELD  task %lu\n", id);
@@ -68,8 +80,7 @@ switcher_yield(task_id id, bool (*any_task_filter)(task_id))
 
     next = _switcher.next;
     while (next != id && _switcher.status != SWITCHER_ABORTED &&
-           (next != ANY_TASK ||
-            (any_task_filter != NULL && any_task_filter(id)))) {
+           (next != ANY_TASK || may_wake_as_any_task(id, filters))) {
         vcond_signal(&_switcher.cnd[bucket]);
         vcond_wait(&_switcher.cnd[bucket], &_switcher.mutex);
         if (_switcher.slack) {

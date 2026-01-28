@@ -18,11 +18,11 @@ void *
 r1()
 {
     int tid = mock_get_task_id();
-    int yd  = switcher_yield(tid, false);
+    int yd  = switcher_yield(tid, NO_ANY_TASK_FILTERS);
     if (yd == SWITCHER_ABORTED)
         return 0;
     switcher_wake(2, 0);
-    yd = switcher_yield(tid, false);
+    yd = switcher_yield(tid, NO_ANY_TASK_FILTERS);
     printf("condition true %d\n", yd == SWITCHER_CONTINUE);
     assert(yd == SWITCHER_CONTINUE);
     return 0;

@@ -326,7 +326,7 @@ mediator_resume(mediator_t *m, context_t *ctx)
     do
         switch (plan_next(m->plan)) {
             case ACTION_YIELD:
-                switcher_yield(ctx->id, m->plan.any_task_filter);
+                switcher_yield(ctx->id, m->plan.any_task_filters);
                 break;
 
             case ACTION_RESUME:

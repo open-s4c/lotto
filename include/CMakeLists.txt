@@ -18,6 +18,7 @@ add_custom_command(
         ${CMAKE_C_COMPILER} -E -I${CMAKE_SOURCE_DIR}/src/include
         -I${CMAKE_BINARY_DIR}/include
         "-I$<JOIN:$<TARGET_PROPERTY:vsync,INTERFACE_INCLUDE_DIRECTORIES>,;-I>"
+        "-I$<JOIN:$<TARGET_PROPERTY:dice,INTERFACE_INCLUDE_DIRECTORIES>,;-I>"
         ${CMAKE_CURRENT_SOURCE_DIR}/lotto/unsafe/_sys.h -o
         ${CMAKE_BINARY_DIR}/include/lotto/unsafe/sys.h
     COMMAND_EXPAND_LISTS

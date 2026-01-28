@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_RUNTIME_FLAG_H
 #define LOTTO_RUNTIME_FLAG_H
 
@@ -33,19 +31,19 @@ struct flag_val {
 #define flag_sval(v)                                                           \
     (struct flag_val)                                                          \
     {                                                                          \
-        ._val = {._type = VALUE_TYPE_STRING, ._sval = v}, .is_default = true,  \
-        .force_no_default = false                                              \
+        ._val       = {._type = VALUE_TYPE_STRING, ._sval = (v)},              \
+        .is_default = true, .force_no_default = false                          \
     }
 #define flag_uval(v)                                                           \
     (struct flag_val)                                                          \
     {                                                                          \
-        ._val = {._type = VALUE_TYPE_UINT64, ._uval = v}, .is_default = true,  \
-        .force_no_default = false                                              \
+        ._val       = {._type = VALUE_TYPE_UINT64, ._uval = (v)},              \
+        .is_default = true, .force_no_default = false                          \
     }
 #define flag_bool(v)                                                           \
     (struct flag_val)                                                          \
     {                                                                          \
-        ._val = {._type = VALUE_TYPE_BOOL, ._bval = v}, .is_default = true,    \
+        ._val = {._type = VALUE_TYPE_BOOL, ._bval = (v)}, .is_default = true,  \
         .force_no_default = false                                              \
     }
 
@@ -57,14 +55,14 @@ struct flag_val {
 #define flag_sval_force_opt(v)                                                 \
     (struct flag_val)                                                          \
     {                                                                          \
-        ._val = {._type = VALUE_TYPE_STRING, ._sval = v}, .is_default = true,  \
-        .force_no_default = true                                               \
+        ._val       = {._type = VALUE_TYPE_STRING, ._sval = (v)},              \
+        .is_default = true, .force_no_default = true                           \
     }
 #define flag_uval_force_opt(v)                                                 \
     (struct flag_val)                                                          \
     {                                                                          \
-        ._val = {._type = VALUE_TYPE_UINT64, ._uval = v}, .is_default = true,  \
-        .force_no_default = true                                               \
+        ._val       = {._type = VALUE_TYPE_UINT64, ._uval = (v)},              \
+        .is_default = true, .force_no_default = true                           \
     }
 
 #define flag_on()  flag_bool(true)

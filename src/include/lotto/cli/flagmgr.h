@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_FLAGMRG_H
 #define LOTTO_FLAGMRG_H
 
@@ -126,7 +124,7 @@ flags_t *flags_default();
 
 #define NEW_PUBLIC_PRETTY_CALLBACK_FLAG(var, opt, long_opt, desc, val,         \
                                         str_converter, CALLBACK)               \
-    static flag_t FLAG_##var;                                                  \
+    LOTTO_WEAK flag_t FLAG_##var;                                              \
     _FLAGMGR_CALLBACK(var, CALLBACK)                                           \
     static void LOTTO_CONSTRUCTOR _flagmgr_constructor_##var(void)             \
     {                                                                          \
@@ -144,7 +142,7 @@ flags_t *flags_default();
 
 #define NEW_PUBLIC_CALLBACK_FLAG(var, opt, long_opt, help, desc, val,          \
                                  CALLBACK)                                     \
-    static flag_t FLAG_##var;                                                  \
+    LOTTO_WEAK flag_t FLAG_##var;                                              \
     _FLAGMGR_CALLBACK(var, CALLBACK)                                           \
     static void LOTTO_CONSTRUCTOR _flagmgr_constructor_##var(void)             \
     {                                                                          \
@@ -156,12 +154,12 @@ flags_t *flags_default();
                                        str_converter)                          \
     static void LOTTO_CONSTRUCTOR _flagmgr_constructor_##var(void)             \
     {                                                                          \
-        var = new_flag(#var, (opt), (long_opt), (help), (desc), (val),         \
-                       (str_converter), NULL);                                 \
+        (var) = new_flag(#var, (opt), (long_opt), (help), (desc), (val),       \
+                         (str_converter), NULL);                               \
     }
 
 #define NEW_PUBLIC_COMMAND_FLAG(var, opt, long_opt, help, desc, val)           \
-    static flag_t FLAG_##var;                                                  \
+    LOTTO_WEAK flag_t FLAG_##var;                                              \
     NEW_PUBLIC_PRETTY_COMMAND_FLAG(FLAG_##var, (opt), (long_opt), (help),      \
                                    (desc), (val), (str_converter_t){})
 

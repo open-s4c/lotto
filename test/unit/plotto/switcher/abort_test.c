@@ -15,7 +15,7 @@ void *
 r1()
 {
     int tid = 2;
-    int yd  = switcher_yield(tid, NO_ANY_TASK_FILTERS);
+    int yd  = switcher_yield(tid, NULL);
     if (yd == SWITCHER_ABORTED)
         return 0;
     switcher_abort();
@@ -29,7 +29,7 @@ void *
 r2()
 {
     int tid = 3;
-    int yd  = switcher_yield(tid, NO_ANY_TASK_FILTERS);
+    int yd  = switcher_yield(tid, NULL);
     if (yd == SWITCHER_ABORTED)
         return 0;
     switcher_abort();

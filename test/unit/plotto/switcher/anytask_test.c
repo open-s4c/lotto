@@ -15,7 +15,7 @@ bool asserted_condition_r3 = false;
 void *
 r1()
 {
-    int yd = switcher_yield(2, NO_ANY_TASK_FILTERS);
+    int yd = switcher_yield(2, NULL);
     if (yd == SWITCHER_ABORTED)
         return 0;
     ++counter;
@@ -27,7 +27,7 @@ r1()
 void *
 r2()
 {
-    int yd = switcher_yield(3, NO_ANY_TASK_FILTERS);
+    int yd = switcher_yield(3, NULL);
     if (yd == SWITCHER_ABORTED)
         return 0;
     ++counter;
@@ -38,7 +38,7 @@ r2()
 void *
 r3()
 {
-    int yd = switcher_yield(4, NO_ANY_TASK_FILTERS);
+    int yd = switcher_yield(4, NULL);
     if (yd == SWITCHER_ABORTED)
         return 0;
     asserted_condition_r3 = true;
@@ -57,7 +57,7 @@ void *
 r4()
 {
     any_task_filters filters = { .n = 1, .val = {_true} };
-    int yd = switcher_yield(5, filters);
+    int yd = switcher_yield(5, &filters);
     if (yd == SWITCHER_ABORTED)
         return 0;
     ++counter;

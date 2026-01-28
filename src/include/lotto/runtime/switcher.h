@@ -15,7 +15,7 @@ typedef enum switcher_status {
     SWITCHER_ABORTED
 } switcher_status_t;
 
-switcher_status_t switcher_yield(task_id id, any_task_filters filters);
+switcher_status_t switcher_yield(task_id id, any_task_filters *filters);
 void switcher_wake(task_id id, nanosec_t slack);
 void switcher_abort(void);
 

@@ -52,10 +52,10 @@ _lotto_switcher_resuming(void)
 }
 
 static inline bool
-may_wake_as_any_task(task_id id, any_task_filters filters)
+may_wake_as_any_task(task_id id, any_task_filters *filters)
 {
-    for (int i = 0; i < filters.n; ++i) {
-        any_task_filter_f f = filters.val[i];
+    for (int i = 0; i < filters->n; ++i) {
+        any_task_filter_f f = filters->val[i];
         if (f && !f(id))
             return false;
     }
@@ -63,7 +63,7 @@ may_wake_as_any_task(task_id id, any_task_filters filters)
 }
 
 switcher_status_t
-switcher_yield(task_id id, any_task_filters filters)
+switcher_yield(task_id id, any_task_filters *filters)
 {
     task_id prev, next;
     logger_debugf("YIELD  task %lu\n", id);
@@ -80,7 +80,8 @@ switcher_yield(task_id id, any_task_filters filters)
 
     next = _switcher.next;
     while (next != id && _switcher.status != SWITCHER_ABORTED &&
-           (next != ANY_TASK || may_wake_as_any_task(id, filters))) {
+           (next != ANY_TASK || 
+            (filters != NULL && may_wake_as_any_task(id, filters)))) {
         vcond_signal(&_switcher.cnd[bucket]);
         vcond_wait(&_switcher.cnd[bucket], &_switcher.mutex);
         if (_switcher.slack) {

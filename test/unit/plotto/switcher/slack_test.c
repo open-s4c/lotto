@@ -20,7 +20,7 @@ r1()
     sleep(2); // Forces yield of r2 to execute while the next is still r1
               // thread, running the nanosleep.
     printf("Entered thread 1\n");
-    int yd = switcher_yield(2, NO_ANY_TASK_FILTERS);
+    int yd = switcher_yield(2, NULL);
     if (yd == SWITCHER_ABORTED)
         return 0;
     ++counter;
@@ -34,7 +34,7 @@ void *
 r2()
 {
     printf("Entered thread 2\n");
-    int yd = switcher_yield(3, NO_ANY_TASK_FILTERS);
+    int yd = switcher_yield(3, NULL);
     if (yd == SWITCHER_ABORTED)
         return 0;
     ++counter;

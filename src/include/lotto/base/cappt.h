@@ -32,8 +32,6 @@ typedef struct {
     any_task_filter_f val[MAX_ANY_TASK_FILTERS];
 } any_task_filters;
 
-#define NO_ANY_TASK_FILTERS ((any_task_filters){0})
-
 typedef struct cappt {
     const clk_t clk;    /**< Current sequencer clock */
     bool is_chpt;       /**< Whether the capture point becomes a change point */

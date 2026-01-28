@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <lotto/base/context.h>
 #include <lotto/runtime/switcher.h>
@@ -18,11 +19,11 @@ void *
 r1()
 {
     int tid = mock_get_task_id();
-    int yd  = switcher_yield(tid, NO_ANY_TASK_FILTERS);
+    int yd  = switcher_yield(tid, NULL);
     if (yd == SWITCHER_ABORTED)
         return 0;
     switcher_wake(2, 0);
-    yd = switcher_yield(tid, NO_ANY_TASK_FILTERS);
+    yd = switcher_yield(tid, NULL);
     printf("condition true %d\n", yd == SWITCHER_CONTINUE);
     assert(yd == SWITCHER_CONTINUE);
     return 0;

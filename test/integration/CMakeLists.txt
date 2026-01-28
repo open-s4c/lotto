@@ -2,9 +2,6 @@ enable_language(CXX)
 # disable clang tidy for this folder
 unset(CMAKE_C_CLANG_TIDY)
 
-# ------------------------------------------------------------------------------
-# tikl setup
-# ------------------------------------------------------------------------------
 message(STATUS "TIKL_PROGRAM: ${TIKL_PROGRAM}")
 
 set(TIKL_TIMEOUT
@@ -17,6 +14,14 @@ set(TIKL_WORKERS
 
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
+add_custom_target(tikl-test)
+add_dependencies(tikl-test tikl-build lotto-cli)
+
+add_subdirectory(basic)
+
+# ------------------------------------------------------------------------------
+# tikl integration tests
+# ------------------------------------------------------------------------------
 
 # TODO: some sources are still failing
 set(FAILING_SRCS
@@ -51,10 +56,10 @@ foreach(SRC ${ALL_SRCS})
 endforeach()
 
 add_custom_target(
-    tikl-test
+    tikl-integration-test
     COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRCS}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-add_dependencies(tikl-test tikl-build lotto-cli)
+add_dependencies(tikl-test tikl-integration-test)
 
 foreach(SRC ${SRCS})
     get_filename_component(TEST ${SRC} NAME_WLE)

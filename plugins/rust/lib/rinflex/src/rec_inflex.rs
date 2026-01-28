@@ -122,9 +122,9 @@ impl RecInflex {
         if ip == 0 {
             return Ok(None);
         }
-        let event = self.event_at_clock(&self.flags, &self.trace_fail, ip)?;
+        let (event, delta) = self.event_at_clock(&self.flags, &self.trace_fail, ip)?;
         info!("Source event is\n{}", event.display()?);
-        Ok(Some((ip, event)))
+        Ok(Some((ip.wrapping_add_signed(delta as i64), event)))
     }
 
     /// Runs inverseinflex on the current trace_success.
@@ -140,9 +140,9 @@ impl RecInflex {
         inflex.min = min;
         let iip = inflex.run_inverse_fast()?;
         info!("IIP is {}", iip);
-        let event = self.event_at_clock(&self.flags, &self.trace_success, iip)?;
+        let (event, delta) = self.event_at_clock(&self.flags, &self.trace_success, iip)?;
         info!("Target event is\n{}", event.display()?);
-        Ok(Some((iip, event)))
+        Ok(Some((iip.wrapping_add_signed(delta as i64), event)))
     }
 
     /// Check if current set of OCs \/ {pair} is a bug for the prefix trace_fail[:ip-1].
@@ -264,7 +264,7 @@ impl RecInflex {
         info!("Essentiality check");
         let mut num_added_virt_ocs = 0;
         while let Some(trace_fail_alt) = self.essentiality_witness(ip, &pair)? {
-            let alt_event = self.event_at_clock(&self.flags, &trace_fail_alt, ip)?;
+            let (alt_event, _delta) = self.event_at_clock(&self.flags, &trace_fail_alt, ip)?;
             let virt_pair = PrimitiveConstraint {
                 source: source.clone(),
                 target: alt_event,
@@ -317,7 +317,8 @@ impl RecInflex {
             "get_trace: attaching constraints, #constraints={}",
             self.constraints.len()
         );
-        let input = self.attach_constraints_to_trace(input, replay_goal, &self.constraints)?;
+        let input =
+            self.unsafely_set_constraints_in_first_config_record(input, &self.constraints)?;
         info!(
             "get_trace: input={}, output={}, replay_goal={}",
             input.display(),
@@ -358,54 +359,69 @@ impl RecInflex {
         }
     }
 
-    fn event_at_clock(&self, flags: &Flags, trace: &Path, clock: Clock) -> Result<Event, Error> {
+    fn event_at_clock(
+        &self,
+        flags: &Flags,
+        trace: &Path,
+        clock: Clock,
+    ) -> Result<(Event, i32), Error> {
         let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let event = trace::get_event_at_clk(flags, trace, clock)?;
 
-        // Not CAS.
-        if event.t.cat != Category::CAT_BEFORE_CMPXCHG {
-            return Ok(event);
-        }
-
-        // For CAS operations, Inflex and InverseInflex will always
-        // find BEFORE_CMPXCHG, which is always followed by, and only
-        // followed by AFTER_CMPXCHG_S or AFTER_CMPXCHG_F.
-        //
-        // (Justification: BEFORE_CMPXCHG is always followed by
-        // AFTER_CMPXCHG_[SF], and whenever AFTER_CMPXCHG_[SF] is
-        // causing a bug / invalidating a bug, BEFORE_CMPXCHG will be
-        // selected as IP/IIP.)
-        //
-        // The pattern will always be like:
-        //   ... B F ... B F ... B S
-        // where ... denotes other events, possibly happening inside
-        // the CAS loop body.
-        //
-        // The PC counts are obviously wrong: each B and F's counts
-        // are incrementing, but they should be considered the same
-        // atomic operation. Here, replace BEFORE_CMPXCHG as
-        // AFTER_CMPXCHG_S because that is the true, intended meaning
-        // of the program.
-        //
-        // The handling is correct for CAS loops: they always
-        // terminate with a SUCCESS.
-        //
-        // However, there is another pattern:
-        //   if (atomic_compare_exchange(...)) {
-        //       /* do something */
-        //   } else {
-        //       /* do something else */
-        //   }
-        //
-        // In this case, B, S, and F's counts are correct. We simply
-        // keep BEFORE_CMPXCHG to expose more events. Unfortunately,
-        // it is impossible to tell this pattern from a one-shot
-        // successful CAS loop. This is probably problematic.
-        let after_event = trace::get_event_at_clk(flags, trace, clock + 1)?;
-        if after_event.t.cat == Category::CAT_AFTER_CMPXCHG_S {
-            return Ok(after_event);
+        if event.t.cat == Category::CAT_BEFORE_CMPXCHG {
+            // For CAS operations, Inflex and InverseInflex will always
+            // find BEFORE_CMPXCHG, which is always followed by, and only
+            // followed by AFTER_CMPXCHG_S or AFTER_CMPXCHG_F.
+            //
+            // (Justification: BEFORE_CMPXCHG is always followed by
+            // AFTER_CMPXCHG_[SF], and whenever AFTER_CMPXCHG_[SF] is
+            // causing a bug / invalidating a bug, BEFORE_CMPXCHG will be
+            // selected as IP/IIP.)
+            //
+            // The pattern will always be like:
+            //   ... B F ... B F ... B S
+            // where ... denotes other events, possibly happening inside
+            // the CAS loop body.
+            //
+            // The PC counts are obviously wrong: each B and F's counts
+            // are incrementing, but they should be considered the same
+            // atomic operation. Here, replace BEFORE_CMPXCHG as
+            // AFTER_CMPXCHG_S because that is the true, intended meaning
+            // of the program.
+            //
+            // The handling is correct for CAS loops: they always
+            // terminate with a SUCCESS.
+            //
+            // However, there is another pattern:
+            //   if (atomic_compare_exchange(...)) {
+            //       /* do something */
+            //   } else {
+            //       /* do something else */
+            //   }
+            //
+            // In this case, B, S, and F's counts are correct. We simply
+            // keep BEFORE_CMPXCHG to expose more events. Unfortunately,
+            // it is impossible to tell this pattern from a one-shot
+            // successful CAS loop. This is probably problematic.
+            let after_event = trace::get_event_at_clk(flags, trace, clock + 1)?;
+            if after_event.t.cat == Category::CAT_AFTER_CMPXCHG_S {
+                return Ok((after_event, 0));
+            } else {
+                return Ok((event, 0));
+            }
+        } else if event.t.cat == Category::CAT_AFTER_XCHG {
+            // This is in fact similar to CMPXCHG, but they are
+            // handled differently, because there is no counterpart to
+            // AFTER_CMPXCHG_S and _F events. Here, we make sure we
+            // always return the BEFORE event.
+            let before_event = trace::get_event_at_clk(flags, trace, clock - 1)?;
+            if before_event.t.cat == Category::CAT_BEFORE_XCHG {
+                return Ok((before_event, -1));
+            } else {
+                return Ok((event, 0));
+            }
         } else {
-            return Ok(event);
+            return Ok((event, 0));
         }
     }
 

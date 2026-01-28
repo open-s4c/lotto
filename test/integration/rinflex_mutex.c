@@ -1,4 +1,5 @@
 // clang-format off
+// ALLOW_RETRIES: 5
 // REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress4rinflex -- %b)

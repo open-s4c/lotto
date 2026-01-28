@@ -1,5 +1,3 @@
-/*
- */
 /**
  * - When a thead is created it gets priority 0
  * - __lotto_priority(false, prio) is ignored
@@ -11,9 +9,9 @@
  */
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
-#include <category.h>
-#include <state.h>
-
+#include "category.h"
+#include "state.h"
+#include <dice/module.h>
 #include <lotto/base/tidmap.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
@@ -41,6 +39,8 @@ REGISTER_EPHEMERAL(_state, {
     tidmap_init(&_state.map, MARSHABLE_STATIC(sizeof(task_t)));
     _state.m.print = _priority_print;
 })
+
+DICE_MODULE_INIT()
 
 /*******************************************************************************
  * internal functions

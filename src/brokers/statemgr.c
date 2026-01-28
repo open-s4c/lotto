@@ -1,5 +1,3 @@
-/*
- */
 #include <string.h>
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE

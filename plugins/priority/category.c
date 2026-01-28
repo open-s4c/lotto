@@ -1,7 +1,4 @@
-/*
- */
-#include <category.h>
-
+#include "category.h"
 #include <lotto/brokers/catmgr.h>
 #include <lotto/sys/assert.h>
 #include <lotto/util/macros.h>

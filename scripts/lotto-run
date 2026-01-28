@@ -1,0 +1,17 @@
+#!/bin/sh
+set -ex
+ROOTDIR=$(readlink -f $(dirname "$0")/..)
+
+if [ -z "$LOTTO_BUILD" ]; then
+	LOTTO_BUILD="$ROOTDIR/build"
+fi
+
+DICE_SOURCE="$ROOTDIR/deps/dice"
+DICE_BUILD="$LOTTO_BUILD/deps/dice"
+
+exec env \
+	DICE_SOURCE="$DICE_SOURCE" \
+	DICE_BUILD="$DICE_BUILD" \
+	${DICE_SOURCE}/scripts/dice \
+	-with ${LOTTO_BUILD}/liblotto.so \
+	$@

@@ -1,7 +1,6 @@
-/*
- */
 #include <dlfcn.h>
-#include <errno.h>
+#include <libgen.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -147,7 +146,8 @@ _load_plugin(plugin_t *plugin, void *arg)
         return 0;
     void *handle = dlopen(plugin->path, RTLD_NOW | RTLD_GLOBAL);
     if (!handle) {
-        logger_errorf("error loading plugin '%s': %s\n", plugin->path, dlerror());
+        logger_errorf("error loading plugin '%s': %s\n", plugin->path,
+                      dlerror());
         plugin->disabled = true;
     }
     return 0;

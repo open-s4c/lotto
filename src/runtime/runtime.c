@@ -4,9 +4,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
-#include "interceptor_internal.h"
+#define DICE_XTOR_PRIO 101
+#define LOGGER_PREFIX  LOGGER_CUR_FILE
+#define LOGGER_BLOCK   LOGGER_CUR_BLOCK
+#include <dice/self.h>
 #include <lotto/base/clk.h>
 #include <lotto/base/trace_file.h>
 #include <lotto/brokers/pubsub.h>
@@ -31,8 +32,9 @@ static trace_t *_replayer;
 static FILE *_logger_fp;
 
 void sighandler_init(void);
+void lotto_set_interceptor_initialized(void);
 
-static void LOTTO_CONSTRUCTOR
+static void
 _runtime_init()
 {
     lotto_set_interceptor_initialized();
@@ -72,13 +74,13 @@ _runtime_init()
     engine_init(_replayer, _recorder);
 }
 
-static void LOTTO_CONSTRUCTOR
+static void
 _logger_init()
 {
     const char *var = getenv("LOTTO_LOGGER_LEVEL");
 
     enum logger_level level = LOGGER_ERROR;
-    FILE *null           = sys_fopen("/dev/null", "a+");
+    FILE *null              = sys_fopen("/dev/null", "a+");
     if (var) {
         if (strcmp(var, "debug") == 0)
             level = LOGGER_DEBUG;
@@ -113,6 +115,11 @@ _logger_init()
     }
 }
 
+DICE_MODULE_INIT({
+    _runtime_init();
+    _logger_init();
+})
+
 typedef struct {
     const context_t *ctx;
     reason_t reason;
@@ -128,7 +135,8 @@ _fini_cb(void *arg)
     int err = 0;
     if (vatomic_xchg(&_only_once, 1) == 0) {
         mediator_t *m = get_mediator(false);
-        mediator_fini(m);
+        if (m)
+            mediator_fini(m);
 
         err = engine_fini(dat->ctx, dat->reason);
 
@@ -159,7 +167,7 @@ lotto_exit(context_t *ctx, reason_t reason)
 {
     fflush(stdout);
     fflush(stderr);
-    ctx->id     = (ctx->id == NO_TASK) ? get_task_id() : ctx->id;
+    ctx->id     = (ctx->id == NO_TASK) ? 1 : ctx->id;
     cb_data dat = {
         .ctx    = ctx,
         .reason = reason,
@@ -169,7 +177,7 @@ lotto_exit(context_t *ctx, reason_t reason)
     sys_abort();
 }
 
-static void LOTTO_DESTRUCTOR
+static void DICE_DTOR
 _runtime_fini()
 {
     if (_logger_fp) {

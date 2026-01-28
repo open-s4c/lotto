@@ -64,7 +64,6 @@ set(FAILING_SRCS
     order_performance.c
     order_test.c
     order_violation.c
-    priority.c
     producer_consumer.c
     quack.c
     queue_mpmc.c

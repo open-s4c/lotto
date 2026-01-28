@@ -1,3 +1,4 @@
+#include <dice/chains/intercept.h>
 #include <dice/mempool.h>
 #include <dice/module.h>
 #include <dice/self.h>
@@ -40,9 +41,7 @@ static struct mediator_destructor {
 
 /* thread-specific data key(visible to all threads of same process) */
 static pthread_key_t key;
-static vatomic32_t _registration_enabled;
-
-DICE_MODULE_INIT({ vatomic_init(&_registration_enabled, true); })
+static vatomic32_t _registration_enabled = VATOMIC_INIT(true);
 
 static bool
 _mediator_registration_enabled()
@@ -123,11 +122,23 @@ dtor_free(void *arg, void *ptr)
     mempool_free(ptr);
 }
 
+#define EVENT_NOP 7
+PS_ADVERTISE_TYPE(EVENT_NOP)
+static void
+ensure_ps_intialized_(void)
+{
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_NOP, 0, 0);
+}
+
 inline mediator_t *
 mediator_get_data(bool new_task)
 {
     once_init_key();
     struct metadata *md = self_md();
+    if (md == NULL) {
+        ensure_ps_intialized_();
+        md = self_md();
+    }
     ASSERT(md != NULL);
     mediator_t *m = self_tls_get(md, (uintptr_t)&mediator_key_);
     if (m == NULL) {

@@ -1,7 +1,4 @@
-/*
- */
-#include <category.h>
-
+#include "category.h"
 #include <lotto/base/context.h>
 #include <lotto/priority.h>
 #include <lotto/runtime/intercept.h>

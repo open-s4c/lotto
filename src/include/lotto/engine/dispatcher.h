@@ -1,7 +1,6 @@
 #ifndef LOTTO_DISPATCHER_H
 #define LOTTO_DISPATCHER_H
 
-#include <dice/module.h>
 #include <lotto/base/cappt.h>
 #include <lotto/base/context.h>
 #include <lotto/base/plan.h>
@@ -36,7 +35,10 @@ void dispatcher_register(slot_t slot, handle_f handle);
 task_id dispatch_event(const context_t *ctx, event_t *e);
 
 #define REGISTER_HANDLER(slot, handle)                                         \
-    DICE_MODULE_INIT({ dispatcher_register(slot, handle); })
+    static void LOTTO_CONSTRUCTOR _dispatcher_register_##slot(void)            \
+    {                                                                          \
+        dispatcher_register(slot, handle);                                     \
+    }
 
 #define REGISTER_HANDLER_EXTERNAL(slot, handle)                                \
     static void LOTTO_CONSTRUCTOR _dispatcher_register_##slot(void)            \

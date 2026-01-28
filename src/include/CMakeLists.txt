@@ -1,3 +1,6 @@
+add_library(lotto-src.h INTERFACE)
+target_include_directories(lotto-src.h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
 execute_process(
     COMMAND "${CMAKE_C_COMPILER}" -print-file-name=libasan.so
     OUTPUT_VARIABLE LIBASAN_PATH

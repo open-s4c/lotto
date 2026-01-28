@@ -4,4 +4,4 @@ set_target_properties(lotto_rust_runtime PROPERTIES LIBRARY_OUTPUT_DIRECTORY
 target_include_directories(
     lotto_rust_runtime PRIVATE ${PROJECT_SOURCE_DIR}/include
                                ${PROJECT_SOURCE_DIR}/src/include)
-target_link_libraries(lotto_rust_runtime PRIVATE runtime)
+target_link_libraries(lotto_rust_runtime PRIVATE engine)

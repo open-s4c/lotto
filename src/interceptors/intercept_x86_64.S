@@ -1,7 +1,4 @@
 /*
- */
-
-/*
  * callee-save: r12, r13, r14, r15, rbx, rsp, rbp
  * caller-save: rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11
  * arguments: rdi, rsi, rdx, rcx, r8, r9

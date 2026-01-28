@@ -1,6 +1,3 @@
-/*
- */
-
 .section .note.GNU-stack,"",@progbits
 
 #if defined(__x86_64__)

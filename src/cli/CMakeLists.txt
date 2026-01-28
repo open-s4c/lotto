@@ -31,8 +31,6 @@ endif()
 macro(add_cli_dependencies TARGET)
     add_dependencies(
         "${TARGET}"
-        blob-plotto
-        blob-plotto-verbose
         blob-tsano
         blob-util
         blob-debug
@@ -42,8 +40,8 @@ macro(add_cli_dependencies TARGET)
         blob-iterator
         blob-matcher
         blob-handler
-        blob-runtime
-        blob-engine
+        blob-lotto
+        blob-lotto-verbose
         ${ARGN})
 endmacro()
 

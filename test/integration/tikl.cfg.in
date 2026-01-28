@@ -15,7 +15,6 @@ record         = record %tmpdir %output
 replay         = replay %tmpdir %input
 rinflex        = rinflex %tmpdir %input
 run            = run %tmpdir
-sc             = sc %tmpdir %output
 show           = show %tmpdir %input
 stress         = stress %tmpdir %output
 stress4rinflex = stress %tmpdir %output -s random --stable-address-method MAP --handler-address enable --handler-cas enable --handler-stacktrace enable --handler-event enable
@@ -23,7 +22,7 @@ trace          = trace %tmpdir %output
 
 # tikl flags
 -q
--vv
+#-vv
 -j 1
 # -j @TIKL_WORKERS@
 -t @TIKL_TIMEOUT@
@@ -36,3 +35,4 @@ trace          = trace %tmpdir %output
 -D @LOTTO_ENGINE_NAME@
 -D @LOTTO_RUST_LIT_FEATURE@
 -D @LOTTO_STABLE_ADDRESS_MAP_LIT_FEATURE@
+-D dice-runtime

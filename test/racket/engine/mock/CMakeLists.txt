@@ -1,5 +1,6 @@
 gen_pubsub_headers("${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}")
 include_directories(${CMAKE_BINARY_DIR}/generated)
+
 # prepare base component and mocked parts
 add_mock(
     TARGET engine_mock.c
@@ -11,7 +12,6 @@ add_mock(
             lotto/engine/prng.h #
             lotto/engine/dispatcher.h #
             lotto/engine/recorder.h #
-            lotto/engine/handlers/mutex.h #
     EXCLUDE io.h
             logger.h
             FLAGS
@@ -53,59 +53,3 @@ target_link_libraries(
     sys_testing.o
     memmgr_runtime.o
     memmgr_user.o)
-
-add_binding(
-    TARGET recorder.rkt
-    INCLUDE lotto/engine/recorder.h lotto/base/trace_flat.h
-            lotto/sys/stream_file.h lotto/sys/stream_impl.h
-    EXCLUDE sys/types.h)
-add_library(mocked_recorder SHARED)
-target_link_libraries(
-    mocked_recorder
-    engine_component
-    engine_recorder_testing.o
-    brokers_statemgr_testing.o
-    base_testing.o
-    sys_testing.o
-    memmgr_runtime.o
-    memmgr_user.o)
-
-add_library(replay_component SHARED)
-target_link_libraries(
-    replay_component
-    engine_engine_testing.o
-    engine_sequencer_testing.o
-    engine_recorder_testing.o
-    base_testing.o
-    sys_testing.o
-    states_prng_testing.o
-    states_sequencer_testing.o
-    engine_dispatcher_testing.o
-    brokers_testing.o
-    engine_handler_creation_testing.o
-    engine_handler_blocking_testing.o
-    states_handler_blocking_testing.o
-    memmgr_runtime.o
-    memmgr_user.o
-    dice.o)
-
-add_library(deadlock_component SHARED)
-target_link_libraries(
-    deadlock_component
-    engine_component
-    engine_engine_testing.o
-    engine_sequencer_testing.o
-    engine_recorder_testing.o
-    base_testing.o
-    sys_testing.o
-    states_prng_testing.o
-    states_sequencer_testing.o
-    engine_dispatcher_testing.o
-    brokers_testing.o
-    engine_handler_creation_testing.o
-    engine_handler_deadlock_testing.o
-    states_handler_deadlock_testing.o
-    memmgr_runtime.o
-    memmgr_user.o
-    dice.o
-    dice-self.o)

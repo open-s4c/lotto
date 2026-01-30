@@ -169,7 +169,6 @@ add_subdirectory(demos)
 add_subdirectory(test)
 add_subdirectory(doc)
 add_subdirectory(modules)
-# add_subdirectory(plugins)
 
 add_subdirectory(scripts)
 

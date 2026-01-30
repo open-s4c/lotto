@@ -80,3 +80,8 @@ main()
     pthread_join(t2, 0);
     return 0;
 }
+
+#include "lotto/qemu/lotto_qemu_sighandler.h"
+QLOTTO_SIGHANDLER
+#include "lotto/qemu/lotto_qemu_deconstructor.h"
+QLOTTO_DECONSTRUCTOR

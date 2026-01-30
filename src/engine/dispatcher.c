@@ -38,9 +38,13 @@ _handle_chain(const context_t *ctx, event_t *e)
     }
 }
 
+void handle_creation(const context_t *ctx, event_t *e);
+
 task_id
 dispatch_event(const context_t *ctx, event_t *e)
 {
+    handle_creation(ctx, e);
+
     /* dispatch to handlers */
     _handle_chain(ctx, e);
 

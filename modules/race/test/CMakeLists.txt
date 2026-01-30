@@ -1,0 +1,18 @@
+file(GLOB SRCS *_test.c)
+foreach(SRC ${SRCS})
+    get_filename_component(TARGET ${SRC} NAME_WLE)
+    string(REGEX REPLACE "_test" "_testing" SRC_LIB ${TARGET})
+    add_executable(${TARGET} ${SRC})
+    target_link_libraries(
+        ${TARGET}
+        engine_${SRC_LIB}.o
+        states_${SRC_LIB}.o
+        sys_testing.o
+        # brokers_pubsub_testing.o
+        base_testing.o
+        states_sequencer_testing.o
+        memmgr_runtime.o
+        memmgr_user.o
+        dice)
+    add_test(NAME ${TARGET} COMMAND ${TARGET})
+endforeach()

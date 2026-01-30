@@ -2,16 +2,6 @@ enable_language(CXX)
 # disable clang tidy for this folder
 unset(CMAKE_C_CLANG_TIDY)
 
-message(STATUS "TIKL_PROGRAM: ${TIKL_PROGRAM}")
-
-set(TIKL_TIMEOUT
-    300
-    CACHE STRING "tikl timeout")
-
-set(TIKL_WORKERS
-    1
-    CACHE STRING "Number of tikl workers")
-
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 add_custom_target(tikl-test)

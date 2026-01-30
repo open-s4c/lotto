@@ -52,6 +52,20 @@ link_libraries(libvsync::vsync)
 add_library(vsync ALIAS libvsync::vsync)
 
 # ------------------------------------------------------------------------------
+# tikl tests options
+# ------------------------------------------------------------------------------
+
+message(STATUS "TIKL_PROGRAM: ${TIKL_PROGRAM}")
+
+set(TIKL_TIMEOUT
+    300
+    CACHE STRING "tikl timeout")
+
+set(TIKL_WORKERS
+    1
+    CACHE STRING "Number of tikl workers")
+
+# ------------------------------------------------------------------------------
 # CMake libs
 # ------------------------------------------------------------------------------
 # include(cmake/submodule.cmake)
@@ -154,7 +168,8 @@ add_subdirectory(src)
 add_subdirectory(demos)
 add_subdirectory(test)
 add_subdirectory(doc)
-add_subdirectory(plugins)
+add_subdirectory(modules)
+# add_subdirectory(plugins)
 
 add_subdirectory(scripts)
 

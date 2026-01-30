@@ -17,7 +17,8 @@ use std::sync::LazyLock;
 use crate::handlers::cas;
 use crate::handlers::stacktrace;
 use crate::idmap::IdMap;
-use crate::{Event, GenericEventCore, MemoryAccess, StackTrace, Transition};
+use crate::Eff;
+use crate::{Event, GenericEventCore, StackTrace, Transition};
 
 pub static HANDLER: LazyLock<EventHandler> = LazyLock::new(|| EventHandler {
     cfg: Config {
@@ -62,13 +63,13 @@ impl handler::Handler for EventHandler {
         // value. That is, the really executed event might not read
         // this value, and we must update the real value after it
         // really happens. See posthandle.
-        let eval = ma.as_ref().map(MemoryAccess::loaded_value).flatten();
+        let eff = Eff::from(ma.as_ref());
 
         let ecore = GenericEventCore {
             t: transition.clone(),
             _phantom: PhantomData,
             stacktrace: stid,
-            eval,
+            eff,
             // addr: ma.as_ref().map(|ma| ma.addr().to_owned()),
             // rval: ma.as_ref().map(MemoryAccess::loaded_value).flatten(),
         };
@@ -110,6 +111,8 @@ impl handler::Handler for EventHandler {
         if oldv == realv {
             return;
         }
+        let oldeff = Eff::from(oldm);
+        let neweff = Eff::from(realm);
 
         // The actual event reads another value. Update counters.
         let stid = self.st_map.put(&entry.stacktrace);
@@ -117,10 +120,10 @@ impl handler::Handler for EventHandler {
             _phantom: PhantomData,
             t: entry.t.clone(),
             stacktrace: stid,
-            eval: oldv,
+            eff: oldeff,
         };
         self.pc_cnt.entry(ecore.clone()).and_modify(|c| *c -= 1);
-        ecore.eval = realv;
+        ecore.eff = neweff;
         let newcnt = *self
             .pc_cnt
             .entry(ecore)

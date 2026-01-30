@@ -100,6 +100,7 @@ fn main() -> Result<()> {
         .rustified_enum("state_type")
         .rustified_enum("str_converter_type")
         .rustified_enum("record_granularity")
+        .constified_enum_module("rmw_op")
         .bitfield_enum("record")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .clang_arg(clang_user_include_arg)

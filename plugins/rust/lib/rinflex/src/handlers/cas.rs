@@ -113,6 +113,11 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
         Category::CAT_BEFORE_RMW | Category::CAT_AFTER_RMW => ModifyKind::Rmw {
             is_after,
             delta: get_val(ctx.args[2]),
+            operator: {
+                let val = get_val(ctx.args[3]) as u32;
+                // Safety: it's coming from the interceptor directly
+                unsafe { std::mem::transmute(val) }
+            },
         },
 
         // XCHG
@@ -137,9 +142,9 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
     // NOTE: We need to get the value early for the order enforcer to
     // detect whether the event should be blocked.
     let read_value = if ctx.cat.is_read() {
-        // 1. Currently, only consider XCHG events.
+        // 1. Currently, only consider XCHG and RMW events.
         // 2. An AFTER event is understood as the same operation as the BEFORE event, so they use the same value.
-        if ctx.cat.is_before() && ctx.cat.is_xchg() {
+        if ctx.cat.is_before() && (ctx.cat.is_xchg() || ctx.cat.is_rmw()) {
             let value = unsafe { crate::sized_read(raw_addr as u64, size as usize) };
             Some(value)
         } else {

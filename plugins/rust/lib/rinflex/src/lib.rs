@@ -20,7 +20,7 @@ use lotto::base::{Category, Clock, StableAddress, StableAddressMethod, TaskId};
 use lotto::brokers::{Decode, Encode};
 use lotto::log::*;
 use lotto::raw;
-use memory_access::MemoryAccess;
+use memory_access::{MemoryAccess, Modify, ModifyKind};
 use report::Instruction;
 use std::hash::Hash;
 use std::marker::PhantomData;
@@ -128,6 +128,77 @@ pub struct Event {
     pub m: Option<MemoryAccess>,
 }
 
+/// The effect of a memory operation.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Eff {
+    Trivial,
+    XchgSame,
+    XchgUp,
+    XchgDown,
+    RmwSame,
+    RmwUp,
+    RmwDown,
+}
+
+#[inline]
+fn eval_rmw(op: raw::rmw_op::Type, old: u64, new: u64) -> u64 {
+    use raw::rmw_op::*;
+    match op {
+        RMW_OP_ADD => old + new,
+        RMW_OP_SUB => old - new,
+        RMW_OP_OR => old | new,
+        RMW_OP_AND => old & new,
+        RMW_OP_XOR => old ^ new,
+        RMW_OP_NAND => !(old & new),
+        _ => unreachable!("unknown rmw op"),
+    }
+}
+
+impl From<&MemoryAccess> for Eff {
+    fn from(value: &MemoryAccess) -> Self {
+        use std::cmp::Ordering::*;
+        match value.to_modify() {
+            Some(Modify {
+                read_value: Some(old),
+                kind: ModifyKind::Xchg { value: new, .. },
+                ..
+            }) => match new.cmp(old) {
+                Less => Eff::XchgDown,
+                Equal => Eff::XchgSame,
+                Greater => Eff::XchgUp,
+            },
+            Some(Modify {
+                read_value: Some(old),
+                kind:
+                    ModifyKind::Rmw {
+                        delta,
+                        operator: op,
+                        ..
+                    },
+                ..
+            }) => {
+                let new = eval_rmw(*op, *old, *delta);
+                match new.cmp(old) {
+                    Less => Eff::RmwDown,
+                    Equal => Eff::RmwSame,
+                    Greater => Eff::RmwUp,
+                }
+            }
+            _ => Eff::Trivial,
+        }
+    }
+}
+
+impl From<Option<&MemoryAccess>> for Eff {
+    fn from(value: Option<&MemoryAccess>) -> Self {
+        if let Some(ma) = value {
+            Eff::from(ma)
+        } else {
+            Eff::Trivial
+        }
+    }
+}
+
 /// The equivalence "core" of an [`Event`].
 ///
 /// `c1 == c2` if and only if `e1.equals(e2)`
@@ -136,9 +207,7 @@ pub struct GenericEventCore<StackTraceType> {
     pub t: Transition,
     pub stacktrace: StackTraceType,
     // pub addr: Option<vaddr::VAddr>,
-    /// Effect value: only recorded for XCHG.
-    pub eval: Option<u64>,
-
+    pub eff: Eff,
     pub _phantom: PhantomData<StackTraceType>,
 }
 
@@ -147,7 +216,7 @@ pub struct GenericEventCoreRef<'a, StackTraceType> {
     pub t: &'a Transition,
     pub stacktrace: &'a StackTraceType,
     // pub addr: Option<&'a vaddr::VAddr>,
-    pub eval: Option<u64>,
+    pub eff: Eff,
     pub _phantom: PhantomData<&'a StackTraceType>,
 }
 
@@ -160,7 +229,7 @@ impl From<Event> for EventCore {
             t: value.t,
             _phantom: PhantomData,
             stacktrace: value.stacktrace,
-            eval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
+            eff: Eff::from(value.m.as_ref()),
             // addr: value.m.as_ref().map(|m| m.addr().to_owned()),
             // rval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
         }
@@ -173,7 +242,7 @@ impl<'a> From<&'a Event> for EventCoreRef<'a> {
             t: &value.t,
             _phantom: PhantomData,
             stacktrace: &value.stacktrace,
-            eval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
+            eff: Eff::from(value.m.as_ref()),
             // addr: value.m.as_ref().map(MemoryAccess::addr),
             // rval: value.m.as_ref().map(|m| m.loaded_value()).flatten(),
         }
@@ -186,7 +255,7 @@ impl<'a, T: std::fmt::Display> std::fmt::Display for GenericEventCoreRef<'a, T> 
         write!(f, "  t: {},\n", self.t)?;
         write!(f, "  st: {},\n", self.stacktrace)?;
         // write!(f, "  loc: {:?},\n", self.addr)?;
-        write!(f, "  eval: {:?},\n", self.eval)?;
+        write!(f, "  eff: {:?},\n", self.eff)?;
         write!(f, "}}")?;
         Ok(())
     }
@@ -231,13 +300,13 @@ impl Event {
     /// Display this event.
     pub fn display(&self) -> Result<String, error::Error> {
         let mut result = format!(
-            "event - tid: {}, clk: {}, {} x pc: {}, cat: {}, eval: {:?}\n[{}]\n{}",
+            "event - tid: {}, clk: {}, {} x pc: {}, cat: {}, eff: {:?}\n[{}]\n{}",
             self.t.id,
             self.clk,
             self.cnt,
             self.t.pc,
             self.t.cat,
-            self.m.as_ref().map(MemoryAccess::loaded_value).flatten(),
+            Eff::from(self.m.as_ref()),
             self.stacktrace
                 .0
                 .iter()

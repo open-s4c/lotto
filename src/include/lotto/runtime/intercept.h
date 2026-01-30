@@ -52,4 +52,16 @@ typedef void (*fini_t)();
 void lotto_intercept_register_fini(fini_t func);
 void lotto_intercept_fini();
 
+/*
+ * instrumentation
+ */
+enum rmw_op {
+    RMW_OP_ADD,
+    RMW_OP_SUB,
+    RMW_OP_AND,
+    RMW_OP_OR,
+    RMW_OP_XOR,
+    RMW_OP_NAND,
+};
+
 #endif

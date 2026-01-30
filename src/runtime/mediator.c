@@ -122,7 +122,7 @@ dtor_free(void *arg, void *ptr)
     mempool_free(ptr);
 }
 
-#define EVENT_NOP 7
+#define EVENT_NOP 8
 PS_ADVERTISE_TYPE(EVENT_NOP)
 static void
 ensure_ps_intialized_(void)

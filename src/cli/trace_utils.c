@@ -16,7 +16,7 @@
 #include <lotto/cli/exec_info.h>
 #include <lotto/cli/flagmgr.h>
 #include <lotto/cli/trace_utils.h>
-#include <lotto/states/handlers/available.h>
+//#include <lotto/states/handlers/available.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/stdio.h>

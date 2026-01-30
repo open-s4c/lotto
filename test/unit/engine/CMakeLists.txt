@@ -1,5 +1,4 @@
 add_subdirectory(util)
-add_subdirectory(handlers)
 
 add_executable(sequencer_test sequencer_test.c)
 target_link_libraries(

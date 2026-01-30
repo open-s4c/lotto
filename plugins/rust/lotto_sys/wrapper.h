@@ -33,6 +33,7 @@
 #include "lotto/cli/utils.h"
 #include "lotto/engine/dispatcher.h"
 #include "lotto/engine/prng.h"
+#include "lotto/runtime/intercept.h"
 #include "lotto/states/handlers/termination.h"
 #include "lotto/states/prng.h"
 #include "lotto/states/sequencer.h"

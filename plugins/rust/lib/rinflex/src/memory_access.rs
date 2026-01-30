@@ -56,6 +56,7 @@
 use bincode::{Decode, Encode};
 use lotto::base::category::Category;
 
+use crate::raw;
 pub use crate::vaddr::VAddr;
 use crate::{sized_read, Event, Transition};
 
@@ -275,6 +276,9 @@ pub enum ModifyKind {
 
         /// The delta value.
         delta: u64,
+
+        /// Operator.
+        operator: raw::rmw_op::Type,
     },
 
     /// Compare and swap

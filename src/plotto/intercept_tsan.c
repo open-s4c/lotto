@@ -235,57 +235,57 @@ TSAN_DECL_EXCHANGE(uint, 64, exchange, 8)
 #undef TSAN_DECL_EXCHANGE
 #undef TSAN_DECL_EXCHANGE_
 
-#define TSAN_DECL_RMW_(T, F, SIZE)                                             \
+#define TSAN_DECL_RMW_(T, F, SIZE, OP)                                         \
     TSAN_DECL(T, F, volatile T *a, T v, __tsan_memory_order mo)                \
     {                                                                          \
         context_t *ctx =                                                       \
             ctx(.func = __FUNCTION__,                                          \
-                .args = {arg_ptr(a), arg(size_t, SIZE), arg(T, v)});           \
+                .args = {arg_ptr(a), arg(size_t, SIZE), arg(T, v),             \
+                    arg(int, OP)});                                            \
         intercept_capture(ctx_cat(ctx, CAT_BEFORE_RMW));                       \
         T r = CALL_TSAN_A(F, a, v);                                            \
         intercept_capture(ctx_cat(ctx, CAT_AFTER_RMW));                        \
         return r;                                                              \
     }
 
-#define TSAN_DECL_RMW(P, S, F, SIZE)                                           \
-    TSAN_DECL_RMW_(P##S##_t, atomic##S##_##F, SIZE)
+#define TSAN_DECL_RMW(P, S, F, SIZE, OP)                                       \
+    TSAN_DECL_RMW_(P##S##_t, atomic##S##_##F, SIZE, OP)
 
+TSAN_DECL_RMW(uint, 8, fetch_add, 1, RMW_OP_ADD)
+TSAN_DECL_RMW(uint, 16, fetch_add, 2, RMW_OP_ADD)
+TSAN_DECL_RMW(uint, 32, fetch_add, 4, RMW_OP_ADD)
+TSAN_DECL_RMW(uint, 64, fetch_add, 8, RMW_OP_ADD)
+// TSAN_DECL_RMW(__uint, 128, fetch_add, 16, RMW_OP_ADD)
 
-TSAN_DECL_RMW(uint, 8, fetch_add, 1)
-TSAN_DECL_RMW(uint, 16, fetch_add, 2)
-TSAN_DECL_RMW(uint, 32, fetch_add, 4)
-TSAN_DECL_RMW(uint, 64, fetch_add, 8)
-// TSAN_DECL_RMW(__uint, 128, fetch_add, 16)
+TSAN_DECL_RMW(uint, 8, fetch_sub, 1, RMW_OP_SUB)
+TSAN_DECL_RMW(uint, 16, fetch_sub, 2, RMW_OP_SUB)
+TSAN_DECL_RMW(uint, 32, fetch_sub, 4, RMW_OP_SUB)
+TSAN_DECL_RMW(uint, 64, fetch_sub, 8, RMW_OP_SUB)
+// TSAN_DECL_RMW(__uint, 128, fetch_sub, 16, RMW_OP_SUB)
 
-TSAN_DECL_RMW(uint, 8, fetch_sub, 1)
-TSAN_DECL_RMW(uint, 16, fetch_sub, 2)
-TSAN_DECL_RMW(uint, 32, fetch_sub, 4)
-TSAN_DECL_RMW(uint, 64, fetch_sub, 8)
-// TSAN_DECL_RMW(__uint, 128, fetch_sub, 16)
+TSAN_DECL_RMW(uint, 8, fetch_and, 1, RMW_OP_AND)
+TSAN_DECL_RMW(uint, 16, fetch_and, 2, RMW_OP_AND)
+TSAN_DECL_RMW(uint, 32, fetch_and, 4, RMW_OP_AND)
+TSAN_DECL_RMW(uint, 64, fetch_and, 8, RMW_OP_AND)
+// TSAN_DECL_RMW(__uint, 128, fetch_and, 16, RMW_OP_AND)
 
-TSAN_DECL_RMW(uint, 8, fetch_and, 1)
-TSAN_DECL_RMW(uint, 16, fetch_and, 2)
-TSAN_DECL_RMW(uint, 32, fetch_and, 4)
-TSAN_DECL_RMW(uint, 64, fetch_and, 8)
-// TSAN_DECL_RMW(__uint, 128, fetch_and, 16)
+TSAN_DECL_RMW(uint, 8, fetch_or, 1, RMW_OP_OR)
+TSAN_DECL_RMW(uint, 16, fetch_or, 2, RMW_OP_OR)
+TSAN_DECL_RMW(uint, 32, fetch_or, 4, RMW_OP_OR)
+TSAN_DECL_RMW(uint, 64, fetch_or, 8, RMW_OP_OR)
+// TSAN_DECL_RMW(__uint, 128, fetch_or, 16, RMW_OP_OR)
 
-TSAN_DECL_RMW(uint, 8, fetch_or, 1)
-TSAN_DECL_RMW(uint, 16, fetch_or, 2)
-TSAN_DECL_RMW(uint, 32, fetch_or, 4)
-TSAN_DECL_RMW(uint, 64, fetch_or, 8)
-// TSAN_DECL_RMW(__uint, 128, fetch_or, 16)
+TSAN_DECL_RMW(uint, 8, fetch_xor, 1, RMW_OP_XOR)
+TSAN_DECL_RMW(uint, 16, fetch_xor, 2, RMW_OP_XOR)
+TSAN_DECL_RMW(uint, 32, fetch_xor, 4, RMW_OP_XOR)
+TSAN_DECL_RMW(uint, 64, fetch_xor, 8, RMW_OP_XOR)
+// TSAN_DECL_RMW(__uint, 128, fetch_xor, 16, RMW_OP_XOR)
 
-TSAN_DECL_RMW(uint, 8, fetch_xor, 1)
-TSAN_DECL_RMW(uint, 16, fetch_xor, 2)
-TSAN_DECL_RMW(uint, 32, fetch_xor, 4)
-TSAN_DECL_RMW(uint, 64, fetch_xor, 8)
-// TSAN_DECL_RMW(__uint, 128, fetch_xor, 16)
-
-TSAN_DECL_RMW(uint, 8, fetch_nand, 1)
-TSAN_DECL_RMW(uint, 16, fetch_nand, 2)
-TSAN_DECL_RMW(uint, 32, fetch_nand, 4)
-TSAN_DECL_RMW(uint, 64, fetch_nand, 8)
-// TSAN_DECL_RMW(__uint, 128, fetch_nand, 16)
+TSAN_DECL_RMW(uint, 8, fetch_nand, 1, RMW_OP_NAND)
+TSAN_DECL_RMW(uint, 16, fetch_nand, 2, RMW_OP_NAND)
+TSAN_DECL_RMW(uint, 32, fetch_nand, 4, RMW_OP_NAND)
+TSAN_DECL_RMW(uint, 64, fetch_nand, 8, RMW_OP_NAND)
+// TSAN_DECL_RMW(__uint, 128, fetch_nand, 16, RMW_OP_NAND)
 #undef TSAN_DECL_RMW
 #undef TSAN_DECL_RMW_
 

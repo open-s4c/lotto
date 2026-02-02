@@ -1,6 +1,3 @@
-/*
- */
-
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -10,7 +7,7 @@
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/states/handlers/termination.h>
+#include <lotto/modules/termination/state.h>
 #include <lotto/util/macros.h>
 
 static uint64_t cur_chpt    = 0;

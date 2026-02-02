@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_STATE_TASK_VELOCITY_H
 #define LOTTO_STATE_TASK_VELOCITY_H
 

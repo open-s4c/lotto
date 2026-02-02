@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_PRIORITY_CATEGORY_H
 #define LOTTO_PRIORITY_CATEGORY_H
 

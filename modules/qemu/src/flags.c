@@ -1,11 +1,8 @@
-/*
- */
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
-#include <state.h>
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <stdlib.h>
 
 #include <lotto/cli/flagmgr.h>
+#include <lotto/modules/qemu/state.h>
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_QEMU_GDB_ENABLED, "G", "gdb",
                          "enable qemu gdb server", flag_off(),

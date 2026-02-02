@@ -1,5 +1,5 @@
 sanitize()
-add_compile_definitions(_GNU_SOURCE)
+add_compile_definitions(_GNU_SOURCE DICE_MODULE_SLOT=9)
 add_subdirectory(gdb)
 add_subdirectory(flags)
 add_subdirectory(python)

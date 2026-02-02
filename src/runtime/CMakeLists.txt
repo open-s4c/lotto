@@ -44,7 +44,7 @@ set(LIBS
 macro(add_runtime TARGET)
     add_library(${TARGET} SHARED ${SRCS})
     target_link_libraries(${TARGET} PRIVATE ${LIBS})
-    target_compile_definitions(${TARGET} PRIVATE DICE_MODULE_SLOT=5)
+    target_compile_definitions(${TARGET} PRIVATE DICE_MODULE_SLOT=9)
     set_target_properties(${TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                                ${CMAKE_BINARY_DIR})
     install(TARGETS ${TARGET} DESTINATION lib)

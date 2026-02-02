@@ -18,8 +18,8 @@
 #include <lotto/cli/flagmgr.h>
 #include <lotto/cli/flags/prng.h>
 #include <lotto/cli/subcmd.h>
-#include <lotto/states/handlers/enforce.h>
-#include <lotto/states/handlers/termination.h>
+#include <lotto/modules/enforce/state.h>
+#include <lotto/modules/termination/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/now.h>
 #include <lotto/sys/stdio.h>
@@ -497,11 +497,11 @@ flags_print(const flags_t *f)
         enum value_type type            = val->_type;
         switch (type) {
             case VALUE_TYPE_BOOL:
-                logger_printf("%s",
-                           STR_CONVERTER_IS_PRESENT(_options[i].str_converter) ?
-                               enabled_str(is_on(*val)) :
-                           is_on(*val) ? "on" :
-                                         "off");
+                logger_printf(
+                    "%s", STR_CONVERTER_IS_PRESENT(_options[i].str_converter) ?
+                              enabled_str(is_on(*val)) :
+                          is_on(*val) ? "on" :
+                                        "off");
                 break;
             case VALUE_TYPE_UINT64:
                 if (STR_CONVERTER_IS_PRESENT(_options[i].str_converter)) {

@@ -1,7 +1,7 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/cli/flagmgr.h>
-#include <lotto/states/handlers/termination.h>
+#include <lotto/modules/termination/state.h>
 
 static void
 _termination_mode_help(char *dst)

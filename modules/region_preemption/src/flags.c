@@ -1,7 +1,7 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/cli/flagmgr.h>
-#include <lotto/states/handlers/region_preemption.h>
+#include <lotto/modules/region_preemption/state.h>
 
 NEW_PRETTY_CALLBACK_FLAG(
     HANDLER_REGION_PREEMPTION_ENABLED, "", "region-preemption",

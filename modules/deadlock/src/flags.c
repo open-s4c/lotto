@@ -1,7 +1,7 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/cli/flagmgr.h>
-#include <lotto/states/handlers/deadlock.h>
+#include <lotto/modules/deadlock/state.h>
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_DEADLOCK_ENABLED, "", "handler-deadlock",
                          "enable deadlock handler", flag_on(),

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include <lotto/cli/flagmgr.h>
-#include <lotto/states/handlers/watchdog.h>
+#include <lotto/modules/watchdog/state.h>
 
 #define DEFAULT_BUDGET 100
 

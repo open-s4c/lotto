@@ -1,7 +1,7 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/cli/flagmgr.h>
-#include <lotto/states/handlers/enforce.h>
+#include <lotto/modules/enforce/state.h>
 
 static void
 _enforce_modes_help(char *dst)

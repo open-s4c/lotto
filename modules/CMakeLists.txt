@@ -7,19 +7,6 @@ configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 
 set(SLOT 9) # we pick runtime
 
-# set_target_properties( lotto_priority_engine PROPERTIES
-# LIBRARY_OUTPUT_DIRECTORY
-# "${LOTTO_PLUGIN_BUILD_DIR}")
-
-# add_library(lotto_priority_cli SHARED module.c flag.c state.c category.c)
-# set_target_properties(lotto_priority_cli PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-# "${LOTTO_PLUGIN_BUILD_DIR}")
-# target_link_libraries(lotto_priority_cli PRIVATE lotto.h lotto-src.h)
-#
-# install( TARGETS lotto_priority_engine lotto_priority_cli DESTINATION
-# DESTINATION
-# "${LOTTO_PLUGIN_INSTALL_DIR}")
-
 function(add_runtime_module)
     set(MODULE_RUNTIME_SOURCES ${ARGV})
     message(STATUS "Module ${MODULE_NAME} (runtime): ${MODULE_RUNTIME_SOURCES}")
@@ -30,7 +17,13 @@ function(add_runtime_module)
     target_link_libraries(${TARGET} PRIVATE lotto.h lotto-src.h dice.h)
     target_compile_definitions(${TARGET} PRIVATE DICE_MODULE_SLOT=${MODULE_SLOT}
                                                  DICE_MULTIFILE_MODULE)
-    add_lotto_builtin(${TARGET})
+    if("${LIB_TYPE}" STREQUAL "SHARED")
+        set_target_properties(
+            ${TARGET} PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
+                                           "${LOTTO_PLUGIN_BUILD_DIR}")
+    else()
+        add_lotto_builtin(${TARGET})
+    endif()
 endfunction()
 
 macro(add_driver_module)
@@ -42,7 +35,13 @@ macro(add_driver_module)
     target_link_libraries(${TARGET} PRIVATE lotto.h lotto-src.h dice.h)
     target_compile_definitions(${TARGET} PRIVATE DICE_MODULE_SLOT=${MODULE_SLOT}
                                                  DICE_MULTIFILE_MODULE)
-    target_link_libraries(lotto-driver PRIVATE ${TARGET})
+    if("${LIB_TYPE}" STREQUAL "SHARED")
+        set_target_properties(${TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                                   "${LOTTO_PLUGIN_BUILD_DIR}")
+        target_link_libraries(lotto-driver PRIVATE ${TARGET})
+    else()
+        target_link_libraries(lotto-driver PRIVATE ${TARGET})
+    endif()
 endmacro()
 
 macro(add_module NAME)

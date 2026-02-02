@@ -22,7 +22,7 @@ trace          = trace %tmpdir %output
 
 # tikl flags
 -q
-#-vv
+-v
 -j 1
 # -j @TIKL_WORKERS@
 -t @TIKL_TIMEOUT@

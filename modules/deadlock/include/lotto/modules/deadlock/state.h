@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_STATE_DEADLOCK_H
 #define LOTTO_STATE_DEADLOCK_H
 

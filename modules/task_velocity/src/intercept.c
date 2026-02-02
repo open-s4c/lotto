@@ -1,5 +1,3 @@
-/*
- */
 #include <lotto/base/category.h>
 #include <lotto/base/context.h>
 #include <lotto/runtime/intercept.h>

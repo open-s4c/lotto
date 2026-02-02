@@ -1,12 +1,10 @@
-/*
- */
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/marshable.h>
 #include <lotto/base/string.h>
 #include <lotto/brokers/catmgr.h>
 #include <lotto/brokers/statemgr.h>
-#include <lotto/states/handlers/enforce.h>
+#include <lotto/modules/enforce/state.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
 

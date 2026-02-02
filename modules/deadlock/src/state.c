@@ -1,9 +1,7 @@
-/*
- */
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/brokers/statemgr.h>
-#include <lotto/states/handlers/deadlock.h>
+#include <lotto/modules/deadlock/state.h>
 #include <lotto/sys/logger_block.h>
 
 static deadlock_config_t _config = {
@@ -15,9 +13,9 @@ static deadlock_config_t _config = {
 REGISTER_CONFIG(_config, {
     logger_infof("enabled             = %s\n", _config.enabled ? "on" : "off");
     logger_infof("lost_resource_check = %s\n",
-              _config.lost_resource_check ? "on" : "off");
+                 _config.lost_resource_check ? "on" : "off");
     logger_infof("extra_release_check = %s\n",
-              _config.extra_release_check ? "on" : "off");
+                 _config.extra_release_check ? "on" : "off");
 })
 
 deadlock_config_t *

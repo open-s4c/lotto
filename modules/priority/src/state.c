@@ -10,8 +10,6 @@ REGISTER_CONFIG(_config, {
     logger_infof("enabled = %s\n", _config.enabled ? "on" : "off");
 })
 
-DICE_MODULE_INIT()
-
 priority_config_t *
 priority_config()
 {

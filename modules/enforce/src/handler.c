@@ -1,5 +1,3 @@
-/*
- */
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/marshable.h>
@@ -9,7 +7,7 @@
 #include <lotto/brokers/pubsub.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
-#include <lotto/states/handlers/enforce.h>
+#include <lotto/modules/enforce/state.h>
 #include <lotto/states/sequencer.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
@@ -108,9 +106,9 @@ _as_expected(const context_t *ctx)
 
 #define REPORT(fmt, F, n, x, y)                                                \
     do {                                                                       \
-        logger_errorf("MISMATCH [field: %s, expected: " fmt ", actual: " fmt      \
-                   "]\n",                                                      \
-                   #n, F(x), F(y));                                            \
+        logger_errorf("MISMATCH [field: %s, expected: " fmt ", actual: " fmt   \
+                      "]\n",                                                   \
+                      #n, F(x), F(y));                                         \
     } while (0)
 
 #define _(X) X
@@ -130,7 +128,7 @@ _report(const context_t *ctx)
         arg_t a = _read_val(&ctx->args[0], ctx->args[1].value.u64);
         if (enforce_state()->val.value.u64 != a.value.u64) {
             logger_errorf("MISMATCH [field: val, expected: %lu, actual: %lu]\n",
-                       enforce_state()->val.value.u64, a.value.u64);
+                          enforce_state()->val.value.u64, a.value.u64);
         }
     }
     if (MODE(PC) && !EQUAL_PC)
@@ -145,7 +143,8 @@ _report(const context_t *ctx)
         }
         logger_errorf(", actual: ");
         for (size_t i = 0; i < ctx->args[1].value.u64; i++) {
-            logger_errorf("%2.2x", *((unsigned char *)ctx->args[0].value.ptr + i));
+            logger_errorf("%2.2x",
+                          *((unsigned char *)ctx->args[0].value.ptr + i));
         }
         logger_errorf("]\n");
     }

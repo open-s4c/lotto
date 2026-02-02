@@ -1,6 +1,3 @@
-/*
- */
-
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/reason.h>
@@ -8,9 +5,9 @@
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/engine/handlers/mutex.h>
 #include <lotto/engine/prng.h>
-#include <lotto/states/handlers/deadlock.h>
+#include <lotto/modules/deadlock/state.h>
+#include <lotto/modules/mutex.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/casts.h>
@@ -76,7 +73,7 @@ _released(task_id id, uintptr_t addr)
 
     task_id owner = rsrc->owner;
     logger_debugf("[%lx] releasing resource 0x%lx owned by %lu\n", id, addr,
-               owner);
+                  owner);
     tidbag_remove(&rsrc->tasks, id);
 
     if (tidbag_size(&rsrc->tasks) == 0) {
@@ -143,7 +140,7 @@ _check_deadlock_iter(task_id tid, uint64_t key, task_id cycle)
 
             if (res) {
                 logger_errorf("  (tid: %lu) <- (rsrc: 0x%lx) <- (tid: %lu) \n",
-                           cur, key, tid);
+                              cur, key, tid);
                 return true;
             }
 

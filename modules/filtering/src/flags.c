@@ -1,7 +1,7 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/cli/flagmgr.h>
-#include <lotto/states/handlers/filtering.h>
+#include <lotto/modules/filtering/state.h>
 #include <lotto/sys/string.h>
 
 NEW_CALLBACK_FLAG(FILTERING, "F", "filtering-on", "",

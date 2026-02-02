@@ -83,7 +83,7 @@ target_link_libraries(
             sys.o
             memmgr_runtime.o
             memmgr_user.o
-            dice)
+            dice.o)
 target_compile_options(lotto-driver PRIVATE -g)
 target_compile_definitions(lotto-driver
                            PRIVATE LOTTO_VERSION="${PROJECT_VERSION}")

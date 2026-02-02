@@ -23,7 +23,8 @@ macro(make_blob TARGET FILE FILE_TARGET)
         COMMAND xxd -i ${NAME} ${CMAKE_BINARY_DIR}/include/${TARGET}.h
         DEPENDS ${TARGET_DEPS}
         WORKING_DIRECTORY ${DIR})
-    add_custom_target(${TARGET} DEPENDS ${CMAKE_BINARY_DIR}/include/${TARGET}.h)
+    message("add target ${TARGET}.h")
+    add_custom_target(${TARGET}.h DEPENDS ${CMAKE_BINARY_DIR}/include/${TARGET}.h)
 endmacro()
 
 macro(make_units PREFIX EXCLUDES)

@@ -18,7 +18,8 @@ set(CLI_UTILS_SRCS
     exec.c
     exec_info.c
     trace_utils.c
-    preload.c)
+    #preload.c
+)
 
 file(GLOB OPTIONAL_SRCS log_utils.c)
 list(APPEND CLI_UTILS_SRCS ${OPTIONAL_SRCS})
@@ -31,34 +32,39 @@ endif()
 macro(add_cli_dependencies TARGET)
     add_dependencies(
         "${TARGET}"
-        blob-plotto
-        blob-plotto-verbose
-        blob-tsano
-        blob-util
-        blob-debug
-        blob-command
-        blob-decorator
-        blob-filter
-        blob-iterator
-        blob-matcher
-        blob-handler
-        blob-runtime
-        blob-engine
+        blob-plotto.h
+        blob-plotto-verbose.h
+        blob-tsano.h
+        blob-util.h
+        blob-debug.h
+        blob-command.h
+        blob-decorator.h
+        blob-filter.h
+        blob-iterator.h
+        blob-matcher.h
+        blob-handler.h
+        blob-runtime.h
+        blob-engine.h
         ${ARGN})
 endmacro()
+
+add_library(preload.o OBJECT preload.c)
+add_cli_dependencies(preload.o)
 
 add_library(cli.o OBJECT ${CLI_UTILS_SRCS})
 target_compile_options(cli.o PRIVATE -g)
 target_include_directories(cli.o PUBLIC ${CMAKE_BINARY_DIR}/include)
 target_link_libraries(cli.o PUBLIC m)
-add_cli_dependencies(cli.o)
+target_link_libraries(cli.o PRIVATE preload.o)
+#add_cli_dependencies(cli.o)
 
 add_library(cli_testing.o OBJECT ${CLI_UTILS_SRCS})
 target_compile_definitions(cli_testing.o PRIVATE -DLOTTO_TEST)
 target_compile_options(cli_testing.o PRIVATE -g)
 target_include_directories(cli_testing.o PUBLIC ${CMAKE_BINARY_DIR}/include)
 target_link_libraries(cli_testing.o PUBLIC m)
-add_cli_dependencies(cli_testing.o)
+target_link_libraries(cli_testing.o PRIVATE preload.o)
+#add_cli_dependencies(cli_testing.o)
 
 # ##############################################################################
 # CLI lotto command
@@ -102,3 +108,23 @@ set_target_properties(
     lotto-cli PROPERTIES OUTPUT_NAME lotto RUNTIME_OUTPUT_DIRECTORY
                                            ${CMAKE_BINARY_DIR})
 install(TARGETS lotto-cli DESTINATION bin)
+
+add_library(driver SHARED ${FLAG_SRCS} ${CLI_SRCS} ${CLI_UTILS_SRCS})
+target_link_libraries(driver
+        PRIVATE states.o
+        brokers.o
+        base.o
+        sys.o
+        crep_no_record.o
+        memmgr_runtime.o
+        memmgr_user.o
+        dice)
+target_compile_options(driver PRIVATE -g)
+target_compile_definitions(driver PRIVATE LOTTO_VERSION="${PROJECT_VERSION}")
+target_link_libraries(driver PRIVATE preload.o)
+#add_cli_dependencies(driver)
+
+add_executable(lotto-cli-new main.c)
+target_link_libraries(lotto-cli-new PUBLIC driver)
+target_link_libraries(lotto-cli-new PRIVATE preload.o)
+#add_cli_dependencies(lotto-cli-new)

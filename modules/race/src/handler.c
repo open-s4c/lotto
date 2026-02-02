@@ -1,5 +1,3 @@
-/*
- */
 #include <stddef.h>
 #include <string.h>
 
@@ -8,9 +6,9 @@
 #include <lotto/base/tidmap.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/engine/handlers/ichpt.h>
-#include <lotto/engine/handlers/race.h>
-#include <lotto/states/handlers/race.h>
+#include <lotto/modules/ichpt.h>
+#include <lotto/modules/race.h>
+#include <lotto/modules/race/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
@@ -291,10 +289,10 @@ _race_handle(const context_t *ctx, event_t *e)
 
     if (race_config()->abort_on_race) {
         logger_errorf("Data race detected at addr: %p (strict mode)\n",
-                   (void *)race.addr);
+                      (void *)race.addr);
         logger_fatalf("(tid: %lx instr: %p) and (tid: %lx instr: %p)\n",
-                   race.loc1.id, (void *)race.loc1.pc, race.loc2.id,
-                   (void *)race.loc2.pc);
+                      race.loc1.id, (void *)race.loc1.pc, race.loc2.id,
+                      (void *)race.loc2.pc);
     } else
         race_print(race);
     if (race_config()->only_write_ichpt) {

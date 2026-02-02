@@ -1,9 +1,7 @@
-/*
- */
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/brokers/statemgr.h>
-#include <lotto/states/handlers/atomic.h>
+#include <lotto/modules/atomic/state.h>
 #include <lotto/sys/logger_block.h>
 
 static atomic_config_t _config;

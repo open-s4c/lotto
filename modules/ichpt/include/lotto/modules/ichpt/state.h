@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_STATE_ICHPT_H
 #define LOTTO_STATE_ICHPT_H
 #include <stdbool.h>

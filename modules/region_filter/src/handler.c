@@ -1,11 +1,9 @@
-/*
- */
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/tidbag.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/states/handlers/region_filter.h>
+#include <lotto/modules/region_filter/state.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
 

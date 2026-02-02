@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_STATE_REGION_FILTER_H
 #define LOTTO_STATE_REGION_FILTER_H
 

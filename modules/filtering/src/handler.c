@@ -1,5 +1,3 @@
-/*
- */
 #include <string.h>
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
@@ -9,7 +7,7 @@
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
-#include <lotto/states/handlers/filtering.h>
+#include <lotto/modules/filtering/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/stdio.h>

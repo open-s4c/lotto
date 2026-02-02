@@ -14,9 +14,10 @@ macro(add_module NAME)
     add_lotto_builtin(lotto-${NAME}.o)
 endmacro()
 
-include_directories(timeout/include)
 include_directories(blocking/include)
+include_directories(ichpt/include)
 include_directories(mutex/include)
+include_directories(timeout/include)
 
 # /* blocking handlers */                                                   #
 add_module(blocking)
@@ -26,17 +27,19 @@ add_module(evec)
 add_module(poll)
 add_module(timeout)
 add_module(impasse)
-# /* hard filters */                                                        #
-# GEN_SLOT(USER_FILTER)                                                     #
-# GEN_SLOT(REGION_PREEMPTION)                                               #
-# GEN_SLOT(REGION_FILTER)                                                   #
-# GEN_SLOT(FILTERING)                                                       # #
-# /* feature handlers */                                                    #
+
+# hard filters                                                                 #
+# GEN_SLOT(USER_FILTER)                                                        #
+add_module(region_preemption)
+add_module(region_filter)
+add_module(filtering)
+
+# feature handlers
 add_module(available)
 add_module(watchdog)
-# GEN_SLOT(ICHPT)                                                           #
-# GEN_SLOT(RACE)                                                            #
-# GEN_SLOT(ATOMIC)                                                          #
+add_module(ichpt)
+add_module(race)
+add_module(atomic)
 add_module(yield)
 # GEN_SLOT(ADDRESS)                                                         #
 # GEN_SLOT(DROP)                                                            #

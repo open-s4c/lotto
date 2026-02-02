@@ -1,9 +1,7 @@
-/*
- */
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/brokers/statemgr.h>
-#include <lotto/states/handlers/ichpt.h>
+#include <lotto/modules/ichpt/state.h>
 #include <lotto/sys/logger_block.h>
 
 /* config contains the initial state of the handler */

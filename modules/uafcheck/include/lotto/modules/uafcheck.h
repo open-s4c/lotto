@@ -1,6 +1,3 @@
-/*
- */
-
 #ifndef LOTTO_UAFCHECK_H
 #define LOTTO_UAFCHECK_H
 

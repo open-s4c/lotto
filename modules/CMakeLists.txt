@@ -6,12 +6,52 @@ set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 
 set(SLOT 5) # we pick runtime
+
+# set_target_properties( lotto_priority_engine PROPERTIES
+# LIBRARY_OUTPUT_DIRECTORY
+# "${LOTTO_PLUGIN_BUILD_DIR}")
+
+# add_library(lotto_priority_cli SHARED module.c flag.c state.c category.c)
+# set_target_properties(lotto_priority_cli PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+# "${LOTTO_PLUGIN_BUILD_DIR}")
+# target_link_libraries(lotto_priority_cli PRIVATE lotto.h lotto-src.h)
+#
+# install( TARGETS lotto_priority_engine lotto_priority_cli DESTINATION
+# DESTINATION
+# "${LOTTO_PLUGIN_INSTALL_DIR}")
+
+function(add_runtime_module)
+    set(MODULE_RUNTIME_SOURCES ${ARGV})
+    message(STATUS "Module ${MODULE_NAME} (runtime): ${MODULE_RUNTIME_SOURCES}")
+    set(LIB_TYPE OBJECT)
+    set(TARGET lotto-${MODULE_NAME})
+
+    add_library(${TARGET} ${LIB_TYPE} ${MODULE_RUNTIME_SOURCES})
+    target_link_libraries(${TARGET} PRIVATE lotto.h lotto-src.h dice.h)
+    target_compile_definitions(${TARGET} PRIVATE DICE_MODULE_SLOT=${MODULE_SLOT}
+                                                 DICE_MULTIFILE_MODULE)
+    add_lotto_builtin(${TARGET})
+endfunction()
+
+macro(add_driver_module)
+    set(MODULE_DRIVER_SOURCES ${ARGN})
+    message(STATUS "Module ${MODULE_NAME} (driver):  ${MODULE_DRIVER_SOURCES}")
+    set(LIB_TYPE SHARED)
+    set(TARGET lotto-driver-${MODULE_NAME})
+    add_library(${TARGET} ${LIB_TYPE} ${MODULE_DRIVER_SOURCES})
+    target_link_libraries(${TARGET} PRIVATE lotto.h lotto-src.h dice.h)
+    target_compile_definitions(${TARGET} PRIVATE DICE_MODULE_SLOT=${MODULE_SLOT}
+                                                 DICE_MULTIFILE_MODULE)
+    target_link_libraries(lotto-driver PRIVATE ${TARGET})
+endmacro()
+
 macro(add_module NAME)
     math(EXPR SLOT "${SLOT}+1")
+    unset(MODULE_RUNTIME_SOURCES)
+    unset(MODULE_DRIVER_SOURCES)
+    set(MODULE_NAME ${NAME})
+    set(MODULE_SLOT ${SLOT})
     add_subdirectory(${NAME})
-    target_compile_definitions(lotto-${NAME}.o PRIVATE DICE_MODULE_SLOT=${SLOT}
-                                                       DICE_MULTIFILE_MODULE)
-    add_lotto_builtin(lotto-${NAME}.o)
 endmacro()
 
 include_directories(blocking/include)

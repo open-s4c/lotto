@@ -1,5 +1,2 @@
-add_library(lotto-atomic.o OBJECT state.c handler.c module.c)
-target_link_libraries(lotto-atomic.o PRIVATE lotto.h lotto-src.h dice.h)
-
-add_library(lotto-atomic SHARED)
-target_link_libraries(lotto-atomic PRIVATE lotto-atomic.o)
+add_runtime_module(state.c handler.c module.c)
+add_driver_module(state.c flags.c module.c)

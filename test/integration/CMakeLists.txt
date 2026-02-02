@@ -1,4 +1,3 @@
-return()
 enable_language(CXX)
 # disable clang tidy for this folder
 unset(CMAKE_C_CLANG_TIDY)
@@ -8,7 +7,7 @@ configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 add_dependencies(tikl-test tikl-build lotto-cli)
 
 add_subdirectory(basic)
-
+return()
 # ------------------------------------------------------------------------------
 # tikl integration tests
 # ------------------------------------------------------------------------------

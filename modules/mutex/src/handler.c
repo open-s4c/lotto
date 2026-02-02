@@ -1,16 +1,12 @@
-/*
- */
 #include <errno.h>
-
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
-
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/pubsub_interface.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
-#include <lotto/states/handlers/mutex.h>
+#include <lotto/modules/mutex/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/logger_block.h>
@@ -129,7 +125,7 @@ _posthandle_tryacquire(task_id id, uint64_t addr)
     if (mtx->owner == id) {
         mtx->count++;
         logger_debugf("[%lu] mutex (try)aquired 0x%lx (count: %d)\n", id, addr,
-                   mtx->count);
+                      mtx->count);
         return 0;
     }
     return EBUSY;
@@ -166,7 +162,8 @@ _posthandle_acquire(task_id id, uint64_t addr)
 
     ASSERT(mtx->owner == id && "deadlock due to disrespecting locks");
     mtx->count++;
-    logger_debugf("[%lu] mutex aquired 0x%lx (count: %d)\n", id, addr, mtx->count);
+    logger_debugf("[%lu] mutex aquired 0x%lx (count: %d)\n", id, addr,
+                  mtx->count);
 }
 
 static void
@@ -179,7 +176,7 @@ _posthandle_release(task_id id, uint64_t addr)
     }
 
     logger_debugf("[%lu] mutex release 0x%lx (count: %d)\n", id, addr,
-               mtx->count - 1);
+                  mtx->count - 1);
 
     if (mtx->owner != id) {
         logger_errorf(

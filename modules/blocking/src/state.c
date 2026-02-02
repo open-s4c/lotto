@@ -1,11 +1,10 @@
-/*
- */
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#include <dice/module.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/modules/blocking/state.h>
 #include <lotto/sys/logger_block.h>
-#include <lotto/util/macros.h>
+
 
 /*******************************************************************************
  * persistent state

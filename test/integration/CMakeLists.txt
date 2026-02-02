@@ -4,10 +4,10 @@ unset(CMAKE_C_CLANG_TIDY)
 
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
-add_dependencies(tikl-test tikl-build lotto-cli)
+add_dependencies(tikl-test tikl-build)
 
 add_subdirectory(basic)
-return()
+
 # ------------------------------------------------------------------------------
 # tikl integration tests
 # ------------------------------------------------------------------------------
@@ -18,13 +18,8 @@ set(TSAN_0006-racy-message-passing ON)
 
 # TODO: some sources are still failing
 set(FAILING_SRCS
-    atomic_return.c
-    await_while_round_robin.c
-    # deadlock.c deadlock_handler.c deadlock_inflex.c deadlock_lost_resource.c
-    # deadlock_replay.c
     debug-replay-end.c
     double_free.c
-    empty_task.c
     enforce_address.c
     enforce_cat.c
     enforce_data.c
@@ -32,9 +27,7 @@ set(FAILING_SRCS
     explore_test.c
     filter_config.c
     filter_default.c
-    hw_queue.c
     impasse.c
-    inactivity_timeout.c
     inflex_abc.c
     inflex_abc_nocli.c
     inflex_empty_test.c
@@ -43,61 +36,11 @@ set(FAILING_SRCS
     inflex_method_lp.c
     inflex_test.c
     loop_inflex_test.c
-    # mp.c mp_race.c mutex.c
-    nested_spin_loops.c
-    no_mutual_exclusion.c
-    no_record.c
     notsan_mediator_null.c
-    order_hide.c
-    order_no_preemptions.c
-    order_performance.c
-    order_test.c
-    order_violation.c
-    producer_consumer.c
-    quack.c
-    queue_mpmc.c
-    record_granularity_test_arm64.c
     record_granularity_test_x86.c
-    region_atomic.c
-    region_preemption_transparent.c
-    rinflex.c
-    rinflex_3oc.c
-    rinflex_essentiality.c
-    rinflex_flaky_events.c
-    rinflex_loop.c
-    rinflex_mutex.c
-    rinflex_symmetry.c
-    rinflex_two_disjoint_bugs.c
-    segfault_beginning.c
-    shared_mutex_await.c
-    spin_await.c
-    spin_loops_with_writes.c
     tsano_inflex_abc.c
     tsano_inflex_abc_stress.c
-    user_yield.c
-    user_yield_advisory.c
-    velocity.c
-    wait.c
-    inflex_cas.c
-    # The following test cases tend to show problems on some systems
-    #
-    # inflex_method_be.c inflex_method_le.c inflex_method_lp.c inflex_abc.c
-    # debug-replay-end.c rinflex_3oc.c rinflex_cas.c rinflex_flaky_events.c
-    # rinflex_loop.c rinflex_symmetry.c rinflex_two_disjoint_bugs.c spin_await.c
-    #
-    # The following tests are flaky on the pipeline
-    #
-    inflex_test.c
-    rinflex.c
-    record_granularity_test_x86.c
-    inflex_method_be.c
-    inflex_method_le.c
-    inflex_method_lp.c
-    await_while_round_robin.c
-    inflex_abc_nocli.c
-    enforce_cat.c
-    tsano_inflex_abc.c
-    filter_config.c)
+    wait.c)
 
 file(GLOB ALL_SRCS *.c)
 set(SRCS)

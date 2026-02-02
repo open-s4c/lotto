@@ -17,7 +17,6 @@
 #include <lotto/cli/flagmgr.h>
 #include <lotto/cli/flags/sequencer.h>
 #include <lotto/cli/trace_utils.h>
-#include <lotto/engine/handlers/ichpt.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/now.h>
 #include <lotto/sys/stdio.h>

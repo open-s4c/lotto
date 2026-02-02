@@ -19,7 +19,7 @@
 #include <lotto/cli/subcmd.h>
 #include <lotto/cli/trace_utils.h>
 #include <lotto/cli/utils.h>
-#include <lotto/states/handlers/available.h>
+#include <lotto/modules/available/state.h>
 #include <lotto/sys/stdio.h>
 
 DECLARE_FLAG_OUTPUT;

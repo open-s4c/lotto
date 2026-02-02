@@ -26,7 +26,6 @@
 #include <lotto/cli/exec_info.h>
 #include <lotto/cli/preload.h>
 #include <lotto/cmake_variables.h>
-#include <lotto/engine/handlers/ichpt.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/logger_block.h>

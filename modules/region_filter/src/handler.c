@@ -1,5 +1,4 @@
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/tidbag.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>

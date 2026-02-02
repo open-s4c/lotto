@@ -1,5 +1,4 @@
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/engine/dispatcher.h>
 #include <lotto/modules/atomic/state.h>
 #include <lotto/sys/assert.h>

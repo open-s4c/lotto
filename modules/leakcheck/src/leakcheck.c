@@ -1,6 +1,3 @@
-/*
- */
-
 #ifndef DISABLE_EXECINFO
     #include <execinfo.h>
 #endif

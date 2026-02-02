@@ -1,3 +1,8 @@
+set(SLOT 9) # we pick runtime
+set(RUNTIME_MODULE_TYPE_uafcheck SHARED)
+set(RUNTIME_MODULE_TYPE_leakcheck SHARED)
+set(RUNTIME_MODULE_TYPE_user_mempool SHARED)
+
 enable_language(CXX)
 # disable clang tidy for this folder
 unset(CMAKE_C_CLANG_TIDY)
@@ -5,55 +10,72 @@ unset(CMAKE_C_CLANG_TIDY)
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 
-set(SLOT 9) # we pick runtime
+macro(add_runtime_module)
+    set(RUNTIME_MODULE_TYPE OBJECT)
+    if(DEFINED RUNTIME_MODULE_TYPE_${MODULE_NAME})
+        set(RUNTIME_MODULE_TYPE ${RUNTIME_MODULE_TYPE_${MODULE_NAME}})
+    endif()
+    set(RUNTIME_MODULE_SOURCES ${ARGV})
+    set(RUNTIME_MODULE_TARGET lotto-${MODULE_NAME})
+    message(STATUS "Module ${MODULE_NAME} (runtime): ${RUNTIME_MODULE_SOURCES}")
 
-function(add_runtime_module)
-    set(MODULE_RUNTIME_SOURCES ${ARGV})
-    message(STATUS "Module ${MODULE_NAME} (runtime): ${MODULE_RUNTIME_SOURCES}")
-    set(LIB_TYPE OBJECT)
-    set(TARGET lotto-${MODULE_NAME})
-
-    add_library(${TARGET} ${LIB_TYPE} ${MODULE_RUNTIME_SOURCES})
-    target_link_libraries(${TARGET} PRIVATE lotto.h lotto-src.h dice.h)
+    add_library(${RUNTIME_MODULE_TARGET} ${RUNTIME_MODULE_TYPE}
+                                         ${RUNTIME_MODULE_SOURCES})
+    target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto.h lotto-src.h
+                                                           dice.h)
     target_compile_definitions(
-        ${TARGET}
+        ${RUNTIME_MODULE_TARGET}
         PRIVATE DICE_MULTIFILE_MODULE #
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
-    if("${LIB_TYPE}" STREQUAL "SHARED")
+    if("${RUNTIME_MODULE_TYPE}" STREQUAL "SHARED")
         set_target_properties(
-            ${TARGET} PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
-                                           "${LOTTO_PLUGIN_BUILD_DIR}")
+            ${RUNTIME_MODULE_TARGET}
+            PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
+                                 "${LOTTO_PLUGIN_BUILD_DIR}")
     else()
-        add_lotto_builtin(${TARGET})
+        add_lotto_builtin(${RUNTIME_MODULE_TARGET})
     endif()
-endfunction()
+endmacro()
 
 macro(add_driver_module)
-    set(MODULE_DRIVER_SOURCES ${ARGN})
-    message(STATUS "Module ${MODULE_NAME} (driver):  ${MODULE_DRIVER_SOURCES}")
-    set(LIB_TYPE OBJECT)
-    set(TARGET lotto-driver-${MODULE_NAME})
-    add_library(${TARGET} ${LIB_TYPE} ${MODULE_DRIVER_SOURCES})
-    target_link_libraries(${TARGET} PRIVATE lotto.h lotto-src.h dice.h)
+    set(DRIVER_MODULE_TYPE SHARED)
+    if(DEFINED DRIVER_MODULE_TYPE_${MODULE_NAME})
+        set(DRIVER_MODULE_TYPE ${DRIVER_MODULE_TYPE_${MODULE_NAME}})
+    endif()
+    set(DRIVER_MODULE_SOURCES ${ARGV})
+    set(DRIVER_MODULE_TARGET lotto-driver-${MODULE_NAME})
+    message(STATUS "Module ${MODULE_NAME} (driver): ${DRIVER_MODULE_SOURCES}")
+
+    add_library(${DRIVER_MODULE_TARGET} ${DRIVER_MODULE_TYPE}
+                                        ${DRIVER_MODULE_SOURCES})
+    target_link_libraries(${DRIVER_MODULE_TARGET} PRIVATE lotto.h lotto-src.h
+                                                          dice.h)
     target_compile_definitions(
-        ${TARGET}
+        ${DRIVER_MODULE_TARGET}
         PRIVATE DICE_MULTIFILE_MODULE #
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
-    if("${LIB_TYPE}" STREQUAL "SHARED")
-        set_target_properties(${TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                                                   "${LOTTO_PLUGIN_BUILD_DIR}")
-        target_link_libraries(lotto-driver PRIVATE ${TARGET})
+    if("${DRIVER_MODULE_TYPE}" STREQUAL "SHARED")
+        set_target_properties(
+            ${DRIVER_MODULE_TARGET}
+            PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
+                                 "${LOTTO_PLUGIN_BUILD_DIR}")
     else()
-        target_link_libraries(lotto-driver PRIVATE ${TARGET})
+        add_lotto_builtin(${DRIVER_MODULE_TARGET})
+    endif()
+    if("${DRIVER_MODULE_TYPE}" STREQUAL "SHARED")
+        set_target_properties(
+            ${DRIVER_MODULE_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                               "${LOTTO_PLUGIN_BUILD_DIR}")
+        target_link_libraries(lotto-driver PRIVATE ${DRIVER_MODULE_TARGET})
+    else()
+        target_link_libraries(lotto-driver PRIVATE ${DRIVER_MODULE_TARGET})
     endif()
 endmacro()
 
 macro(add_module NAME)
     math(EXPR SLOT "${SLOT}+1")
-    unset(MODULE_RUNTIME_SOURCES)
-    unset(MODULE_DRIVER_SOURCES)
     set(MODULE_NAME ${NAME})
     set(MODULE_SLOT ${SLOT})
     add_subdirectory(${NAME})
@@ -113,6 +135,10 @@ add_module(tsan)
 if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
     add_module(qemu)
 endif()
+add_module(fork)
+add_module(uafcheck)
+add_module(leakcheck)
+add_module(user_mempool)
 
 # GEN_SLOT(PRNG)                                                            #
 # GEN_SLOT(CONFIG)                                                          #

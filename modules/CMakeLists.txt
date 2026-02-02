@@ -110,6 +110,7 @@ add_module(inactivity_timeout)
 add_module(time)
 add_module(random)
 add_module(tsan)
+add_module(qemu)
 
 # GEN_SLOT(PRNG)                                                            #
 # GEN_SLOT(CONFIG)                                                          #

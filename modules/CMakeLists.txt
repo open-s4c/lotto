@@ -4,27 +4,40 @@ unset(CMAKE_C_CLANG_TIDY)
 
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
+set(SLOT 5)
+
+macro(add_module NAME)
+    math(EXPR SLOT "${SLOT}+1")
+    add_subdirectory(${NAME})
+    target_compile_definitions(lotto-${NAME}.o PRIVATE DICE_MODULE_SLOT=${SLOT}
+                                                       DICE_MULTIFILE_MODULE)
+    add_lotto_builtin(lotto-${NAME}.o)
+endmacro()
+
+include_directories(timeout/include)
+include_directories(blocking/include)
+include_directories(mutex/include)
 
 # /* blocking handlers */                                                   #
-# GEN_SLOT(BLOCKING)                                                        #
+add_module(blocking)
 # GEN_SLOT(JOIN)                                                            #
-# GEN_SLOT(MUTEX)                                                           #
-# GEN_SLOT(EVEC)                                                            #
-# GEN_SLOT(POLL)                                                            #
-# GEN_SLOT(TIMEOUT)                                                         #
-# GEN_SLOT(IMPASSE)                                                         # #
+add_module(mutex)
+add_module(evec)
+add_module(poll)
+add_module(timeout)
+add_module(impasse)
 # /* hard filters */                                                        #
 # GEN_SLOT(USER_FILTER)                                                     #
 # GEN_SLOT(REGION_PREEMPTION)                                               #
 # GEN_SLOT(REGION_FILTER)                                                   #
 # GEN_SLOT(FILTERING)                                                       # #
 # /* feature handlers */                                                    #
-# GEN_SLOT(AVAILABLE)                                                       #
-# GEN_SLOT(WATCHDOG)                                                        #
+add_module(available)
+add_module(watchdog)
 # GEN_SLOT(ICHPT)                                                           #
 # GEN_SLOT(RACE)                                                            #
 # GEN_SLOT(ATOMIC)                                                          #
-# GEN_SLOT(YIELD)                                                           #
+add_module(yield)
 # GEN_SLOT(ADDRESS)                                                         #
 # GEN_SLOT(DROP)                                                            #
 # GEN_SLOT(TERMINATION)                                                     #
@@ -53,5 +66,4 @@ configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 # GEN_SLOT(CATMGR)                                                          # #
 # GEN_SLOT(ANYSTALL)
 
-add_subdirectory(blocking)
 # add_subdirectory(priority)

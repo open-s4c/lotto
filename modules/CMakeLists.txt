@@ -5,7 +5,7 @@ unset(CMAKE_C_CLANG_TIDY)
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 
-set(SLOT 5) # we pick runtime
+set(SLOT 9) # we pick runtime
 
 # set_target_properties( lotto_priority_engine PROPERTIES
 # LIBRARY_OUTPUT_DIRECTORY
@@ -36,7 +36,7 @@ endfunction()
 macro(add_driver_module)
     set(MODULE_DRIVER_SOURCES ${ARGN})
     message(STATUS "Module ${MODULE_NAME} (driver):  ${MODULE_DRIVER_SOURCES}")
-    set(LIB_TYPE SHARED)
+    set(LIB_TYPE OBJECT)
     set(TARGET lotto-driver-${MODULE_NAME})
     add_library(${TARGET} ${LIB_TYPE} ${MODULE_DRIVER_SOURCES})
     target_link_libraries(${TARGET} PRIVATE lotto.h lotto-src.h dice.h)

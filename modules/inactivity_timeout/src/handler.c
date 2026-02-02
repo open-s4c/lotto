@@ -1,6 +1,3 @@
-/*
- */
-
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <limits.h>
@@ -11,7 +8,7 @@
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/states/handlers/inactivity_timeout.h>
+#include <lotto/modules/inactivity_timeout/state.h>
 #include <lotto/sys/logger_block.h>
 
 static struct event_data {
@@ -34,7 +31,7 @@ _expired(union sigval timer_data)
 {
     struct event_data *data = timer_data.sival_ptr;
     logger_println("Task [%lu] has no capture point received after %lu seconds",
-                data->id, data->alarm);
+                   data->id, data->alarm);
     _reset_alarm(timer);
     data->alarm += inactivity_timeout_config()->alarm;
 }

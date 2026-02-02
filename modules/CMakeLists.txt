@@ -4,8 +4,8 @@ unset(CMAKE_C_CLANG_TIDY)
 
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
-set(SLOT 5)
 
+set(SLOT 5) # we pick runtime
 macro(add_module NAME)
     math(EXPR SLOT "${SLOT}+1")
     add_subdirectory(${NAME})
@@ -19,7 +19,7 @@ include_directories(ichpt/include)
 include_directories(mutex/include)
 include_directories(timeout/include)
 
-# /* blocking handlers */                                                   #
+# blocking handlers
 add_module(blocking)
 # GEN_SLOT(JOIN)                                                            #
 add_module(mutex)
@@ -41,18 +41,16 @@ add_module(ichpt)
 add_module(race)
 add_module(atomic)
 add_module(yield)
-# GEN_SLOT(ADDRESS)                                                         #
-# GEN_SLOT(DROP)                                                            #
 add_module(termination)
 # GEN_SLOT(CAS)                                                             # #
 
 # advanced handlers                                                            #
-# GEN_SLOT(CONSTRAINT_SATISFACTION)                                         #
 # GEN_SLOT(RUSTY_ENGINE)                                                    #
-# GEN_SLOT(RECONSTRUCT)                                                     #
 add_module(priority)
 # GEN_SLOT(QEMU)                                                            #
 add_module(task_velocity)
+add_module(order)
+add_module(disable)
 
 # scheduling strategy handlers
 add_module(pos)
@@ -61,14 +59,18 @@ add_module(pct)
 # error detectors
 add_module(deadlock)
 add_module(enforce)
+add_module(inactivity_timeout)
 
-# /* other components */                                                    #
+# other components
 add_module(time)
+add_module(random)
+add_module(tsan)
+
 # GEN_SLOT(PRNG)                                                            #
 # GEN_SLOT(CONFIG)                                                          #
 # GEN_SLOT(CONTRACT)                                                        #
 # GEN_SLOT(SEQUENCER)                                                       #
 # GEN_SLOT(RECORDER)                                                        #
-# GEN_SLOT(INACTIVITY_TIMEOUT)                                              #
-# GEN_SLOT(CATMGR)                                                          # #
+
+# GEN_SLOT(CATMGR)                                                          #
 # GEN_SLOT(ANYSTALL)

@@ -1,5 +1,4 @@
-#define LOGGER_PREFIX "priority"
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <dice/module.h>
 #include <lotto/brokers/statemgr.h>

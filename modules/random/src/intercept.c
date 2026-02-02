@@ -3,8 +3,7 @@
 #include <signal.h>
 #include <time.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/callrec.h>
 #include <lotto/base/record.h>
 #include <lotto/base/topic.h>

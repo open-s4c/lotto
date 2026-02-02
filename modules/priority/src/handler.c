@@ -7,8 +7,7 @@
  * - If the event is mutable, the handler filters out all tasks whose priority
  * is not maximum
  */
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "category.h"
 #include "state.h"
 #include <dice/module.h>

@@ -5,8 +5,7 @@
  * - If the event is mutable, the handler remove the given task from a tidset
  * according to the probability
  */
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
 #include <lotto/base/tidmap.h>
 #include <lotto/brokers/statemgr.h>

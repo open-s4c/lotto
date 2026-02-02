@@ -15,8 +15,11 @@ function(add_runtime_module)
 
     add_library(${TARGET} ${LIB_TYPE} ${MODULE_RUNTIME_SOURCES})
     target_link_libraries(${TARGET} PRIVATE lotto.h lotto-src.h dice.h)
-    target_compile_definitions(${TARGET} PRIVATE DICE_MODULE_SLOT=${MODULE_SLOT}
-                                                 DICE_MULTIFILE_MODULE)
+    target_compile_definitions(
+        ${TARGET}
+        PRIVATE DICE_MULTIFILE_MODULE #
+                DICE_MODULE_SLOT=${MODULE_SLOT} #
+                LOGGER_PREFIX="${MODULE_NAME}")
     if("${LIB_TYPE}" STREQUAL "SHARED")
         set_target_properties(
             ${TARGET} PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
@@ -33,8 +36,11 @@ macro(add_driver_module)
     set(TARGET lotto-driver-${MODULE_NAME})
     add_library(${TARGET} ${LIB_TYPE} ${MODULE_DRIVER_SOURCES})
     target_link_libraries(${TARGET} PRIVATE lotto.h lotto-src.h dice.h)
-    target_compile_definitions(${TARGET} PRIVATE DICE_MODULE_SLOT=${MODULE_SLOT}
-                                                 DICE_MULTIFILE_MODULE)
+    target_compile_definitions(
+        ${TARGET}
+        PRIVATE DICE_MULTIFILE_MODULE #
+                DICE_MODULE_SLOT=${MODULE_SLOT} #
+                LOGGER_PREFIX="${MODULE_NAME}")
     if("${LIB_TYPE}" STREQUAL "SHARED")
         set_target_properties(${TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                                    "${LOTTO_PLUGIN_BUILD_DIR}")

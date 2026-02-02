@@ -1,9 +1,6 @@
-/*
- */
 #include <unistd.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/pubsub_interface.h>
 #include <lotto/runtime/intercept.h>
@@ -69,9 +66,10 @@ _intercept_posix_mem_unlock(void)
 
 #define LOTTO_MEMPOOL_SIZE       ((size_t)1024 * 1024 * 1024)
 #define SHOULD_USE_LOTTO_MEMPOOL (_recursive > 0)
-#define IN_LOTTO_MEMPOOL(p)                                                          \
+#define IN_LOTTO_MEMPOOL(p)                                                    \
     ((char *)(p) >= _pool && (char *)(p) <= _pool + sizeof(_pool))
-#define LOTTO_MEMPOOL_REDIRECT(F, ...) lotto_mempool_##F(&_lotto_mempool, __VA_ARGS__)
+#define LOTTO_MEMPOOL_REDIRECT(F, ...)                                         \
+    lotto_mempool_##F(&_lotto_mempool, __VA_ARGS__)
 
 static uint64_t _recursive;
 static bool _malloc_initialized = false;

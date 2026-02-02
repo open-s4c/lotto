@@ -1,8 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/reason.h>
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/statemgr.h>

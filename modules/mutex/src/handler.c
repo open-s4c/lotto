@@ -1,6 +1,5 @@
 #include <errno.h>
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/pubsub_interface.h>
 #include <lotto/brokers/statemgr.h>

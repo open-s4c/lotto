@@ -84,6 +84,19 @@ fn main() -> Result<()> {
     let dice_include_arg = format!("-I{}", dice_include_dir.display());
     println!("Dice include dir is {}", dice_include_arg);
 
+
+    let modules_include_dirs = vec![
+            get_lotto_dir().join("modules").join("termination").join("include"),
+            get_lotto_dir().join("build").join("modules").join("rusty").join("include"),
+    ];
+
+    println!("Modules include dir is {:?}", modules_include_dirs);
+    modules_include_dirs.iter().for_each( |m|
+        assert!(m.exists(),
+        "Could not find Dice include dir at {:?}",
+        m)
+    );
+
     #[allow(unused_mut)]
     let mut builder = bindgen::Builder::default()
         .header("wrapper.h")
@@ -114,6 +127,13 @@ fn main() -> Result<()> {
         .fold(builder, |builder, include_arg| {
             builder.clang_arg(include_arg)
         });
+    builder = modules_include_dirs
+        .into_iter()
+        .map(|include_dir| format!("-I{}", include_dir.display()))
+        .fold(builder, |builder, include_arg| {
+            builder.clang_arg(include_arg)
+        });
+
 
     #[cfg(feature = "stable_address_map")]
     {

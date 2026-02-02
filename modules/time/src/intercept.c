@@ -176,29 +176,3 @@ sleep(unsigned int seconds)
     return 0;
 }
 #endif
-
-ssize_t
-getrandom(void *buf, size_t buflen, unsigned int flags)
-{
-    if (buflen == 0)
-        return 0;
-
-    ASSERT(buf != NULL);
-
-    uint32_t buf_idx = 0;
-    uint8_t *buf_p   = (uint8_t *)buf;
-
-    uint64_t seed = prng_next();
-    uint64_t r    = 0;
-
-    while (buf_idx < buflen) {
-        if (buf_idx % 8 == 0) {
-            r = lcg_next(seed);
-        }
-        buf_p[buf_idx] = CAST_TYPE(uint8_t, r & 0xFF);
-        r              = r >> 8;
-        buf_idx++;
-    }
-
-    return buf_idx;
-}

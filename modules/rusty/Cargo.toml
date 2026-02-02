@@ -16,7 +16,7 @@ members = [
     "handlers/*/",
 
     # Staticlibs
-    "engine",
+    "runtime",
     "cli"]
 resolver = "2"
 
@@ -35,7 +35,7 @@ lotto_sys = { path = "lotto_sys" }
 lotto_link = { path = "lotto_link" }
 
 rusty_cli = { path = "cli/rusty_cli" }
-rusty_engine = { path = "engine/rusty_engine" }
+rusty_engine = { path = "runtime/rusty_engine" }
 rusty_handlers = { path = "handlers" }
 
 [profile.dev]

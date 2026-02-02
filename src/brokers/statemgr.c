@@ -17,7 +17,7 @@
 
 typedef struct {
     marshable_t *m;
-    slot_t slot;
+    int slot;
 } entry_t;
 
 typedef struct {
@@ -32,7 +32,7 @@ typedef struct {
     size_t index;
     size_t size;
     bool empty;
-    slot_t slot;
+    int slot;
 } header_t;
 
 static char *
@@ -63,7 +63,7 @@ _header_unmarshal(const void *buf)
 }
 
 static void
-_statemgr_register(statemgr_t *mgr, slot_t slot, marshable_t *m)
+_statemgr_register(statemgr_t *mgr, int slot, marshable_t *m)
 {
     size_t index   = mgr->length;
     entry_t *entry = &mgr->entries[index];
@@ -74,7 +74,7 @@ _statemgr_register(statemgr_t *mgr, slot_t slot, marshable_t *m)
 }
 
 void
-statemgr_register(slot_t slot, marshable_t *m, state_type_t type)
+statemgr_register(int slot, marshable_t *m, state_type_t type)
 {
     ASSERT(slot < MAX_SLOTS);
     _statemgr_register(&_groups[type], slot, m);

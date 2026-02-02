@@ -27,7 +27,7 @@ typedef enum state_type {
  * @param type the type of state
  *
  */
-void statemgr_register(slot_t slot, marshable_t *m, state_type_t type);
+void statemgr_register(int slot, marshable_t *m, state_type_t type);
 
 size_t statemgr_size(state_type_t type);
 

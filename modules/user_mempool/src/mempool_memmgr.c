@@ -1,10 +1,8 @@
-/*
- */
 #include <errno.h>
 #include <limits.h>
-#include <mempool.h>
 #include <stdlib.h>
 
+#include <lotto/modules/mempool.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/memmgr_impl.h>
 #include <lotto/sys/mempool.h>

@@ -1,15 +1,11 @@
-/*
- */
 #include <unistd.h>
 
 #include <sys/types.h>
 #include <vsync/atomic/core.h>
 #include <vsync/spinlock/caslock.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
-#include <uafcheck.h>
-
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
+#include <lotto/modules/uafcheck.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/memmgr_impl.h>

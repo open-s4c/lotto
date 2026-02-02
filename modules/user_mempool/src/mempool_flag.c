@@ -1,14 +1,10 @@
-/*
- */
 #include <stdlib.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
-
-#include <mempool.h>
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
 #include <lotto/brokers/statemgr.h>
 #include <lotto/cli/flagmgr.h>
+#include <lotto/modules/mempool.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/util/macros.h>

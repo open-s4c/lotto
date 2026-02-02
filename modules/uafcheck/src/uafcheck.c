@@ -7,8 +7,7 @@
 #include <vsync/queue/internal/bounded_ret.h>
 #undef ASSERT
 
-#include <uafcheck.h>
-
+#include <lotto/modules/uafcheck.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/real.h>
 #include <lotto/sys/string.h>

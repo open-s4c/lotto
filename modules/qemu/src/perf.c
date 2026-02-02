@@ -5,8 +5,8 @@
 
 #include <lotto/base/context.h>
 #include <lotto/base/task_id.h>
-#include <lotto/perf/perf.h>
-#include <lotto/qlotto/qemu/callbacks.h>
+#include <lotto/modules/qemu/perf.h>
+#include <lotto/modules/qemu/callbacks.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/now.h>
 #include <lotto/util/macros.h>

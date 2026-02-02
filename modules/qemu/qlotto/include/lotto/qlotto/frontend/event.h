@@ -1,12 +1,10 @@
-/*
- */
-
 #ifndef LOTTO_QEMU_EVENT_H
 #define LOTTO_QEMU_EVENT_H
 
 #include <stdint.h>
 
 #include <lotto/base/category.h>
+#include <lotto/base/context.h>
 #include <lotto/base/map.h>
 
 typedef struct event_s {

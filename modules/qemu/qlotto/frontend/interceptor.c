@@ -1,6 +1,3 @@
-/*
- */
-
 #include <signal.h>
 #include <unistd.h>
 
@@ -10,15 +7,15 @@
 #include <lotto/base/task_id.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
-#include <lotto/perf/perf.h>
+#include <lotto/modules/qemu/cpustatecc.h>
+#include <lotto/modules/qemu/perf.h>
+#include <lotto/modules/qemu/util.h>
 #include <lotto/qlotto/frontend/event.h>
 #include <lotto/qlotto/frontend/perf.h>
 #include <lotto/qlotto/frontend/stubs.h>
 #include <lotto/qlotto/gdb/gdb_server_stub.h>
 #include <lotto/qlotto/gdb/handling/stop_reason.h>
 #include <lotto/qlotto/mapping.h>
-#include <lotto/qlotto/qemu/cpustatecc.h>
-#include <lotto/qlotto/qemu/util.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/runtime/runtime.h>
 #include <lotto/sys/assert.h>

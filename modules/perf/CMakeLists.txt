@@ -1,5 +1,0 @@
-sanitize()
-set(SRCS perf.c)
-add_library(lperf.o OBJECT ${SRCS})
-target_compile_options(lperf.o PRIVATE -Wno-uninitialized)
-add_compile_definitions(_GNU_SOURCE)

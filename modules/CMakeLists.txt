@@ -43,23 +43,27 @@ add_module(atomic)
 add_module(yield)
 # GEN_SLOT(ADDRESS)                                                         #
 # GEN_SLOT(DROP)                                                            #
-# GEN_SLOT(TERMINATION)                                                     #
+add_module(termination)
 # GEN_SLOT(CAS)                                                             # #
-# /* advanced handlers */                                                   #
+
+# advanced handlers                                                            #
 # GEN_SLOT(CONSTRAINT_SATISFACTION)                                         #
 # GEN_SLOT(RUSTY_ENGINE)                                                    #
 # GEN_SLOT(RECONSTRUCT)                                                     #
-# GEN_SLOT(PRIORITY)                                                        #
+add_module(priority)
 # GEN_SLOT(QEMU)                                                            #
-# GEN_SLOT(CAPTURE_GROUP)                                                   #
-# GEN_SLOT(TASK_VELOCITY)                                                   # #
-# /* strategy handlers */                                                   #
-# GEN_SLOT(POS)                                                             #
-# GEN_SLOT(PCT)                                                             # #
-# /* error detectors */                                                     #
-# GEN_SLOT(DEADLOCK)                                                        #
-# GEN_SLOT(ENFORCEMENT)                                                     # #
+add_module(task_velocity)
+
+# scheduling strategy handlers
+add_module(pos)
+add_module(pct)
+
+# error detectors
+add_module(deadlock)
+add_module(enforce)
+
 # /* other components */                                                    #
+add_module(time)
 # GEN_SLOT(PRNG)                                                            #
 # GEN_SLOT(CONFIG)                                                          #
 # GEN_SLOT(CONTRACT)                                                        #
@@ -68,5 +72,3 @@ add_module(yield)
 # GEN_SLOT(INACTIVITY_TIMEOUT)                                              #
 # GEN_SLOT(CATMGR)                                                          # #
 # GEN_SLOT(ANYSTALL)
-
-# add_subdirectory(priority)

@@ -1,5 +1,3 @@
-/*
- */
 /*******************************************************************************
  * Implements PCT
  *
@@ -12,7 +10,7 @@
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
-#include <lotto/states/handlers/pct.h>
+#include <lotto/modules/pct/state.h>
 #include <lotto/states/sequencer.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>

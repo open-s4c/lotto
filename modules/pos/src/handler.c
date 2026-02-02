@@ -1,5 +1,3 @@
-/*
- */
 /*******************************************************************************
  * Implements POS
  *
@@ -11,7 +9,7 @@
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
-#include <lotto/states/handlers/pos.h>
+#include <lotto/modules/pos/state.h>
 #include <lotto/states/sequencer.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
@@ -204,7 +202,7 @@ _pos_print(const marshable_t *m)
         first     = false;
         task_t *t = (task_t *)cur;
         logger_printf("(%lu, %lu, %lu, %s)", cur->key, t->priority, t->addr,
-                   t->is_write ? "true" : "false");
+                      t->is_write ? "true" : "false");
     }
     logger_println("]");
 }

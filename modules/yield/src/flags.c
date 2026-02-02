@@ -1,7 +1,7 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/cli/flagmgr.h>
-#include <lotto/states/handlers/yield.h>
+#include <lotto/modules/yield/state.h>
 
 NEW_CALLBACK_FLAG(ADVISORY_YIELD, "", "advisory-yield", "",
                   "does not force sched_yield() to result in a context switch",

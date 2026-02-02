@@ -1,7 +1,7 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/cli/flagmgr.h>
-#include <lotto/states/handlers/race.h>
+#include <lotto/modules/race/state.h>
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_RACE_ENABLED, "", "handler-race",
                          "enable data race detection handler", flag_on(),

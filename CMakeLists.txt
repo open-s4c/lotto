@@ -24,7 +24,7 @@ include(cmake/stable_options.cmake)
 # ##############################################################################
 
 set(DICE_LOG_LEVEL
-    "DEBUG"
+    "INFO"
     CACHE STRING "" FORCE)
 
 set(DICE_MEMSET

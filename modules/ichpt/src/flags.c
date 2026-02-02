@@ -3,7 +3,7 @@
 
 #include <lotto/brokers/pubsub.h>
 #include <lotto/cli/flagmgr.h>
-#include <lotto/states/handlers/ichpt.h>
+#include <lotto/modules/ichpt/state.h>
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_ICHPT_ENABLED, "", "handler-ichpt",
                          "enable ichpt handler", flag_on(), STR_CONVERTER_BOOL,

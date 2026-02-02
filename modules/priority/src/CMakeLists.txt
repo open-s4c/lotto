@@ -16,3 +16,7 @@ target_link_libraries(lotto-priority PRIVATE lotto-priority.o)
 # install( TARGETS lotto_priority_engine lotto_priority_cli DESTINATION
 # DESTINATION
 # "${LOTTO_PLUGIN_INSTALL_DIR}")
+
+add_library(lotto-driver-priority SHARED state.c flag.c category.c module.c)
+target_link_libraries(lotto-driver-priority PRIVATE lotto.h lotto-src.h dice.h)
+target_link_libraries(lotto-driver PRIVATE lotto-driver-priority)

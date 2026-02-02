@@ -1,6 +1,4 @@
-if(NOT "${LOTTO_RUST}")
-    return()
-endif()
+configure_file(include/lotto/modules/rusty.h include/lotto/modules/rusty.h)
 
 # ##############################################################################
 # Import Corrosion
@@ -49,7 +47,6 @@ corrosion_import_crate(
 # Plugins
 # ##############################################################################
 add_subdirectory(runtime)
-add_subdirectory(engine)
 add_subdirectory(cli)
 
 # ##############################################################################

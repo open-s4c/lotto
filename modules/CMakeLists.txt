@@ -139,6 +139,9 @@ add_module(fork)
 add_module(uafcheck)
 add_module(leakcheck)
 add_module(user_mempool)
+if(${LOTTO_RUST})
+    add_module(rusty)
+endif()
 
 # GEN_SLOT(PRNG)                                                            #
 # GEN_SLOT(CONFIG)                                                          #

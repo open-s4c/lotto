@@ -23,19 +23,16 @@
 #include "lotto/cli/exec.h"
 #include "lotto/cli/exec_info.h"
 #include "lotto/cli/flagmgr.h"
-#include "lotto/cli/flags/handlers/termination.h"
 #include "lotto/cli/flags/memmgr.h"
-#include "lotto/cli/flags/sequencer.h"
 #include "lotto/cli/flags/prng.h"
+#include "lotto/cli/flags/sequencer.h"
 #include "lotto/cli/preload.h"
 #include "lotto/cli/subcmd.h"
 #include "lotto/cli/trace_utils.h"
 #include "lotto/cli/utils.h"
 #include "lotto/engine/dispatcher.h"
 #include "lotto/engine/prng.h"
-#include "lotto/runtime/intercept.h"
 #include "lotto/states/handlers/termination.h"
-#include "lotto/states/handlers/ichpt.h"
 #include "lotto/states/prng.h"
 #include "lotto/states/sequencer.h"
 #include "lotto/sys/fcntl.h"
@@ -52,4 +49,7 @@
 #include "lotto/sys/string.h"
 #include "lotto/sys/unistd.h"
 #include "lotto/sys/wait.h"
+#include <lotto/modules/rusty.h>
+#include <lotto/modules/termination/flags.h>
+#include <lotto/modules/termination/state.h>
 /* IWYU pragma: end_keep */

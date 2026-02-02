@@ -1,12 +1,12 @@
-# CategoryMacro 
+# CategoryMacro
 
 ## How to initialise Cargo.toml
 
-Add the following to the [dependencies] in the Cargo.toml of the handler: 
+Add the following to the [dependencies] in the Cargo.toml of the handler:
 
 ```rust
 as-any = "0.3.1"
-category_macro = { path = "../../../rust/category_macro" }
+category_macro = { path = "../../category_macro" }
 syn = { version = "1.0.60", features = ["extra-traits", "full", "fold"] }
 quote = "1.0.9"
 proc-macro2 = "1.0.24"
@@ -16,7 +16,7 @@ proc-macro-error = "1.0"
 
 ## How to initialise the proc-macro in the handler file
 
-In the handler file: 
+In the handler file:
 
 ```rust
 use category_macro::CategoryMacro
@@ -24,7 +24,7 @@ use lotto::engine::pubsub::CustomCatTrait
 use as_any::Downcast
 ```
 
-Contextfields the proc-macro can generate out of the C context: 
+Contextfields the proc-macro can generate out of the C context:
 
 ```rust
 #[derive(CategoryMacro)]
@@ -53,12 +53,12 @@ pub struct Custom {
 
 To distinguish between these two cases, the proc macro uses the following rules:
 - if the name of the field is `name` or `tid`: data is taken from the corresponding field of context_t
-- we refer to all other fields as value fields 
+- we refer to all other fields as value fields
 - for the n-th value field of `Custom`: data is taken from the n-th element of the values-array
 
 Since the latter involves some conversion between a C type and a Rust type, only the following types of value fields are supported: `Address`, `AddrSize`, `ValuesType`.
 
-Other valid examples: 
+Other valid examples:
 ```rust
 #[derive(CategoryMacro)]
 #[handler_type(HANDLER)]
@@ -103,7 +103,7 @@ pub struct CustomExample4 {
 - `CUSTOM` and `custom` are in snake case convention: `custom_example`
 
 ### Cannot generate / needs to be added manually
-- implementation of `Custom`ContextHandler for `HANDLER` with fn handle_`custom`_context(&mut self, custom_context: &`Custom`): what the handler actually does when it's a custom category 
+- implementation of `Custom`ContextHandler for `HANDLER` with fn handle_`custom`_context(&mut self, custom_context: &`Custom`): what the handler actually does when it's a custom category
 - implementation of other custom categories trait with its handle function (if needed)
 - registeration of custom category (see next Section)
 

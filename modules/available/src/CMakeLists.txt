@@ -10,4 +10,4 @@ target_link_libraries(lotto-available-cli.o PRIVATE lotto.h lotto-src.h dice.h)
 add_library(lotto-available-cli SHARED)
 target_link_libraries(lotto-available-cli PRIVATE lotto-available-cli.o)
 
-target_link_libraries(lotto-cli PRIVATE lotto-available-cli)
+target_link_libraries(lotto-driver PRIVATE lotto-available-cli)

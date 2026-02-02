@@ -1,22 +1,27 @@
+#include <stdint.h>
 #include <string.h>
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/marshable.h>
+#include <lotto/base/slot.h>
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/sys/assert.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/string.h>
 
-#define CANARY 0xbadfeed
+#define CANARY    0xbadfeed
+#define MAX_SLOTS 1024
 
 typedef struct {
     marshable_t *m;
+    slot_t slot;
 } entry_t;
 
 typedef struct {
-    entry_t entries[1024];
+    entry_t entries[MAX_SLOTS];
     size_t length;
 } statemgr_t;
 
@@ -27,6 +32,7 @@ typedef struct {
     size_t index;
     size_t size;
     bool empty;
+    slot_t slot;
 } header_t;
 
 static char *
@@ -52,24 +58,26 @@ _header_unmarshal(const void *buf)
     sys_memcpy(&h, buf, sizeof(header_t));
     if (h.canary != CANARY)
         logger_fatalf("unmarshal error: dead canary\n");
-
+    // TODO: ASSERT(h.slot != NO_SLOT);
     return h;
 }
 
 static void
-_statemgr_register(statemgr_t *mgr, marshable_t *m)
+_statemgr_register(statemgr_t *mgr, slot_t slot, marshable_t *m)
 {
     size_t index   = mgr->length;
     entry_t *entry = &mgr->entries[index];
     entry->m       = m;
+    entry->slot    = slot;
     mgr->length++;
+    // TODO: check if slot already taken?
 }
 
-
 void
-statemgr_register(marshable_t *m, state_type_t type)
+statemgr_register(slot_t slot, marshable_t *m, state_type_t type)
 {
-    _statemgr_register(&_groups[type], m);
+    ASSERT(slot < MAX_SLOTS);
+    _statemgr_register(&_groups[type], slot, m);
 }
 
 static size_t
@@ -97,10 +105,8 @@ _statemgr_unmarshal(statemgr_t *mgr, const void *buf)
     marshable_t *m;
     for (size_t i = 0; i < mgr->length; i++) {
         header_t h = _header_unmarshal(buf);
-        if (h.index > i)
+        if (h.slot != mgr->entries[i].slot)
             continue;
-
-        ASSERT(h.index == i);
 
         if ((m = mgr->entries[i].m) == NULL) {
             logger_warnf(
@@ -160,9 +166,12 @@ _statemgr_marshal(statemgr_t *mgr, void *buf)
             char *payload = _add_header(buf);
             void *next    = marshable_marshal(m, payload);
             ASSERT((uintptr_t)next >= (uintptr_t)payload);
-            header_t h = {.index = i,
-                          .size  = (char *)next - payload,
-                          .empty = false};
+            header_t h = {
+                .index = i,
+                .size  = (char *)next - payload,
+                .empty = false,
+                .slot  = mgr->entries[i].slot,
+            };
             _header_marshal(h, buf);
             buf = next;
         }

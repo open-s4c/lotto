@@ -3,8 +3,6 @@ set(TSAN_0005-atomic-message-passing ON)
 set(TSAN_0006-racy-message-passing ON)
 
 file(GLOB SRCS *.c)
-set(SRCS 0001-mutex-overwrite-var.c 0004-mutex-deadlock.c 0002-mutex-trylock.c
-         0003-await-increment.c)
 
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(../tikl.cfg.in ${TIKL_CFG} @ONLY)

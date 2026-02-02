@@ -2,7 +2,15 @@ sanitize()
 add_compile_options(-fPIC)
 add_compile_definitions(_GNU_SOURCE)
 
-set(SRCS engine.c sequencer.c recorder.c dispatcher.c clock.c creation.c)
+add_compile_definitions(DICE_MODULE_SLOT=8)
+set(SRCS
+    engine.c
+    sequencer.c
+    recorder.c
+    dispatcher.c
+    clock.c
+    creation.c
+    module.c)
 add_library(engine.o OBJECT ${SRCS})
 target_compile_options(engine.o PUBLIC -g)
 

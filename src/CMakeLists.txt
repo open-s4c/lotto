@@ -10,6 +10,8 @@ include_directories(../modules/termination/include)
 include_directories(../modules/enforce/include)
 include_directories(../modules/available/include)
 
+add_compile_definitions(DICE_MULTIFILE_MODULE)
+
 add_subdirectory(sys)
 add_subdirectory(base)
 add_subdirectory(brokers)

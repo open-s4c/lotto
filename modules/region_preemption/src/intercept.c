@@ -1,9 +1,7 @@
-/*
- */
 #include <lotto/base/context.h>
+#include <lotto/modules/region_preemption/state.h>
 #include <lotto/region_preemption.h>
 #include <lotto/runtime/intercept.h>
-#include <lotto/states/handlers/region_preemption.h>
 
 void
 lotto_region_preemption_switch(bool in_region)

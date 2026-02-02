@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_STATE_RACE_H
 #define LOTTO_STATE_RACE_H
 #include <stdbool.h>

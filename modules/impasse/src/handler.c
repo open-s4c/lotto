@@ -1,10 +1,8 @@
-/*
- */
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
 #include <lotto/engine/dispatcher.h>
-#include <lotto/engine/handlers/blocking.h>
+#include <lotto/modules/blocking.h>
 
 STATIC void
 _impasse_handle(const context_t *ctx, event_t *e)

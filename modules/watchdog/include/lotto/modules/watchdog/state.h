@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_STATE_WATCHDOG_H
 #define LOTTO_STATE_WATCHDOG_H
 

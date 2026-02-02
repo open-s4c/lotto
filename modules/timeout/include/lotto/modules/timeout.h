@@ -1,5 +1,3 @@
-/*
- */
 #ifndef HANDLER_TIMEOUT_H
 #define HANDLER_TIMEOUT_H
 

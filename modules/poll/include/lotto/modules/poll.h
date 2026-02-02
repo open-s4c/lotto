@@ -1,7 +1,5 @@
-/*
- */
-#ifndef LOTTO_STATE_POLL_H
-#define LOTTO_STATE_POLL_H
+#ifndef HANDLER_POLL_H
+#define HANDLER_POLL_H
 
 #ifndef _GNU_SOURCE
     #define _GNU_SOURCE

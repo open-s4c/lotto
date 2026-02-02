@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_HANDLER_MUTEX_H
 #define LOTTO_HANDLER_MUTEX_H
 

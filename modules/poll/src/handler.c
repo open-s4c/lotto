@@ -1,5 +1,3 @@
-/*
- */
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
@@ -7,8 +5,8 @@
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/clock.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/engine/handlers/poll.h>
-#include <lotto/engine/handlers/timeout.h>
+#include <lotto/modules/poll.h>
+#include <lotto/modules/timeout.h>
 #include <lotto/sys/poll.h>
 
 /*******************************************************************************

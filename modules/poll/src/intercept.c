@@ -12,9 +12,9 @@
 #include <lotto/brokers/pubsub.h>
 #include <lotto/cli/trace_utils.h>
 #include <lotto/engine/clock.h>
-#include <lotto/engine/handlers/poll.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/recorder.h>
+#include <lotto/modules/poll.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/real.h>

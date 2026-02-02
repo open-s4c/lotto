@@ -55,3 +55,8 @@ endmacro()
 add_runtime(lotto)
 add_runtime(lotto-verbose)
 target_compile_definitions(lotto-verbose PRIVATE -DLOTTO_VERBOSE)
+
+function(add_lotto_builtin LIB)
+    target_link_libraries(lotto PRIVATE ${LIB})
+    target_link_libraries(lotto-verbose PRIVATE ${LIB})
+endfunction()

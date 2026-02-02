@@ -24,7 +24,7 @@ include(cmake/stable_options.cmake)
 # ##############################################################################
 
 set(DICE_LOG_LEVEL
-    "INFO"
+    "DEBUG"
     CACHE STRING "" FORCE)
 
 set(DICE_MEMSET
@@ -39,10 +39,15 @@ set(DICE_DISPATCH_CHAINS
     "1,4,7,2,3,5,6,0"
     CACHE STRING "" FORCE)
 
+set(DICE_MAX_BUILTIN_SLOTS
+    8
+    CACHE INT "" FORCE)
+
 set(DICE_DISABLE_LOADER
     ON
     CACHE BOOL "" FORCE)
 add_compile_definitions(LOG_PREFIX="[ dice] ")
+add_compile_definitions(LOG_LEVEL=${DICE_LOG_LEVEL})
 
 add_subdirectory(deps)
 link_libraries(dice.h)

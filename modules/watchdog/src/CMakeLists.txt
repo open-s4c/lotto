@@ -1,9 +1,2 @@
-add_library(lotto-watchdog.o OBJECT module.c state.c handler.c)
-target_link_libraries(lotto-watchdog.o PRIVATE lotto.h lotto-src.h dice.h)
-
-add_library(lotto-watchdog SHARED)
-target_link_libraries(lotto-watchdog PRIVATE lotto-watchdog.o)
-
-add_library(lotto-driver-watchdog SHARED state.c flags.c module.c)
-target_link_libraries(lotto-driver-watchdog PRIVATE lotto.h lotto-src.h dice.h)
-target_link_libraries(lotto-driver PRIVATE lotto-driver-watchdog)
+add_runtime_module(module.c state.c handler.c)
+add_driver_module(state.c flags.c module.c)

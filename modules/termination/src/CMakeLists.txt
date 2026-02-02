@@ -1,9 +1,2 @@
-add_library(lotto-termination.o OBJECT state.c handler.c module.c)
-target_link_libraries(lotto-termination.o PRIVATE lotto.h lotto-src.h dice.h)
-
-add_library(lotto-termination SHARED)
-target_link_libraries(lotto-termination PRIVATE lotto-termination.o)
-
-add_library(lotto-driver-termination SHARED state.c flags.c module.c)
-target_link_libraries(lotto-driver-termination PRIVATE lotto.h lotto-src.h dice.h)
-target_link_libraries(lotto-driver PRIVATE lotto-driver-termination)
+add_runtime_module(state.c handler.c module.c)
+add_driver_module(state.c flags.c module.c)

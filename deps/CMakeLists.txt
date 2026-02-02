@@ -24,7 +24,7 @@ add_custom_target(blob-tsano DEPENDS ${CMAKE_BINARY_DIR}/include/blob-tsano.h)
 # ------------------------------------------------------------------------------
 # capstone
 # ------------------------------------------------------------------------------
-if("${LOTTO_FRONTEND}" STREQUAL "UVMM" OR "${LOTTO_FRONTEND}" STREQUAL "QEMU")
+if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
     set(CAPSTONE_ARCHITECTURE_DEFAULT OFF)
     set(CAPSTONE_ARM64_SUPPORT ON)
     set(CAPSTONE_DIET ON)
@@ -57,8 +57,7 @@ ExternalProject_Add(
     BINARY_DIR ""
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ${MAKE} -C ${TIKL_SRC} CC=cc all
-    INSTALL_COMMAND ${MAKE} -C ${TIKL_SRC} PREFIX=${PREFIX}
-                    install
+    INSTALL_COMMAND ${MAKE} -C ${TIKL_SRC} PREFIX=${PREFIX} install
     BUILD_BYPRODUCTS ${PREFIX}/bin/tikl
     DEPENDS "")
 

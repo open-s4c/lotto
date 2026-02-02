@@ -110,7 +110,9 @@ add_module(inactivity_timeout)
 add_module(time)
 add_module(random)
 add_module(tsan)
-add_module(qemu)
+if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
+    add_module(qemu)
+endif()
 
 # GEN_SLOT(PRNG)                                                            #
 # GEN_SLOT(CONFIG)                                                          #

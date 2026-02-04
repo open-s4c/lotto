@@ -214,7 +214,6 @@ plugin_preloadable_memory(const plugin_t *plugin, void *arg)
 static int
 _preload_plugin(plugin_t *plugin, void *arg)
 {
-    logger_println("preloading %s %s", plugin->name, plugin->path);
     preload_plugin_arg_t *args          = (preload_plugin_arg_t *)arg;
     plugin_predicate_f plugin_predicate = args->plugin_predicate;
     void *plugin_predicate_arg          = args->plugin_predicate_arg;

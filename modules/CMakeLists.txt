@@ -17,7 +17,7 @@ macro(add_runtime_module)
     endif()
     set(RUNTIME_MODULE_SOURCES ${ARGV})
     set(RUNTIME_MODULE_TARGET lotto-runtime-${MODULE_NAME})
-    message(STATUS "Module ${MODULE_NAME} (runtime): ${RUNTIME_MODULE_SOURCES}")
+    message(STATUS "Module ${MODULE_SLOT} (runtime): ${MODULE_NAME}")
 
     add_library(${RUNTIME_MODULE_TARGET} ${RUNTIME_MODULE_TYPE}
                                          ${RUNTIME_MODULE_SOURCES})
@@ -45,7 +45,7 @@ macro(add_driver_module)
     endif()
     set(DRIVER_MODULE_SOURCES ${ARGV})
     set(DRIVER_MODULE_TARGET lotto-driver-${MODULE_NAME})
-    message(STATUS "Module ${MODULE_NAME} (driver): ${DRIVER_MODULE_SOURCES}")
+    message(STATUS "Module ${MODULE_SLOT} (driver) : ${MODULE_NAME}")
 
     add_library(${DRIVER_MODULE_TARGET} ${DRIVER_MODULE_TYPE}
                                         ${DRIVER_MODULE_SOURCES})

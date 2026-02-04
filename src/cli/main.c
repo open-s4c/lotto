@@ -65,7 +65,7 @@ main(int argc, char **argv)
 
     if (getenv("LOTTO_CLI_RESTARTED")) {
         const char* added_preload_len_str = getenv("LOTTO_ADDED_PRELOAD_LEN");
-        if (added_preload_len_str) {
+        if (added_preload_len_str && strcmp(added_preload_len_str, "0") != 0) {
             char* ld_preload = getenv("LD_PRELOAD") + (size_t) atoll(added_preload_len_str);
             setenv("LD_PRELOAD", ld_preload, true);
         }

@@ -18,8 +18,7 @@ set(TSAN_0006-racy-message-passing ON)
 
 # TODO: some sources are still failing
 set(FAILING_SRCS
-    debug-replay-end.c
-    double_free.c
+    double_free.c # needs memmgr-user=uaf
     enforce_address.c
     enforce_cat.c
     enforce_data.c
@@ -27,14 +26,12 @@ set(FAILING_SRCS
     explore_test.c
     filter_config.c
     filter_default.c
-    impasse.c
+    impasse.c # needs join handler
     inflex_abc_nocli.c
-    inflex_empty_test.c
-    inflex_method_be.c
-    inflex_method_le.c
-    inflex_method_lp.c
-    inflex_test.c
-    loop_inflex_test.c
+    inflex_method_be.c # needs full tsan support
+    inflex_method_le.c # needs full tsan support
+    inflex_method_lp.c # needs full tsan support
+    loop_inflex_test.c # needs full tsan support
     notsan_mediator_null.c
     record_granularity_test_x86.c
     tsano_inflex_abc.c

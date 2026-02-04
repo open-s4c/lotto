@@ -63,6 +63,8 @@ main(int argc, char **argv)
         }
     }
 
+    lotto_plugin_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
+                  plugin_dir);
     if (getenv("LOTTO_CLI_RESTARTED")) {
         const char* added_preload_len_str = getenv("LOTTO_ADDED_PRELOAD_LEN");
         if (added_preload_len_str && strcmp(added_preload_len_str, "0") != 0) {
@@ -70,8 +72,6 @@ main(int argc, char **argv)
             setenv("LD_PRELOAD", ld_preload, true);
         }
     } else {
-        lotto_plugin_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
-                          plugin_dir);
         if (0 != lotto_plugin_enable_only(plugin_list))
             exit(1);
         size_t added_preload_len = 0;

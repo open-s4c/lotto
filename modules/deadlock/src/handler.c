@@ -224,6 +224,7 @@ STATIC void
 _deadlock_handle(const context_t *ctx, event_t *e)
 {
     ASSERT(e);
+    logger_println("enabled: %lu %d", e->clk, deadlock_config()->enabled);
     if (e->skip || !deadlock_config()->enabled)
         return;
 

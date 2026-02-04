@@ -86,6 +86,8 @@ include_directories(ichpt/include)
 include_directories(mutex/include)
 include_directories(timeout/include)
 
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LOTTO_MODULE_BUILD_DIR}")
+
 # blocking handlers
 add_module(blocking)
 # GEN_SLOT(JOIN)                                                            #

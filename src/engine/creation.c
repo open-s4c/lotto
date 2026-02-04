@@ -1,3 +1,8 @@
+#ifdef DICE_MODULE_SLOT
+    #undef DICE_MODULE_SLOT
+#endif
+#define DICE_MODULE_SLOT 11
+
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/tidmap.h>

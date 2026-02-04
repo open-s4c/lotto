@@ -65,12 +65,14 @@ _header_unmarshal(const void *buf)
 static void
 _statemgr_register(statemgr_t *mgr, int slot, marshable_t *m)
 {
+    for (size_t i = 0; i < mgr->length; i++) {
+        ASSERT(mgr->entries[i].slot != slot);
+    }
     size_t index   = mgr->length;
     entry_t *entry = &mgr->entries[index];
     entry->m       = m;
     entry->slot    = slot;
     mgr->length++;
-    // TODO: check if slot already taken?
 }
 
 void
@@ -105,7 +107,6 @@ _statemgr_unmarshal(statemgr_t *mgr, const void *buf)
     marshable_t *m;
     for (size_t i = 0; i < mgr->length;) {
         header_t h = _header_unmarshal(buf);
-        logger_println("unmarshal %d %d", h.slot, mgr->entries[i].slot);
         if (h.slot != mgr->entries[i].slot) {
             i++;
             continue;
@@ -117,6 +118,7 @@ _statemgr_unmarshal(statemgr_t *mgr, const void *buf)
                 "skipping.\n",
                 h.index);
             buf = _add_header(buf) + h.size;
+            i++;
             continue;
         }
 
@@ -124,7 +126,7 @@ _statemgr_unmarshal(statemgr_t *mgr, const void *buf)
         const void *next = marshable_unmarshal(m, payload);
         ASSERT((uintptr_t)next - (uintptr_t)payload == h.size);
         buf = next;
-        i = 0;
+        i   = 0;
     }
     return buf;
 }
@@ -135,7 +137,6 @@ statemgr_unmarshal(const void *buf, state_type_t type, bool publish)
     ASSERT(type < STATE_TYPE_END_);
     ASSERT(type != STATE_TYPE_EPHEMERAL);
     ASSERT(buf);
-    logger_println("type %d", type);
     header_t h = _header_unmarshal(buf);
     if (h.empty)
         return (char *)buf + h.size;

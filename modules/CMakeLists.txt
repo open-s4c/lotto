@@ -1,4 +1,4 @@
-set(SLOT 9) # we pick runtime
+set(SLOT 16) # we pick runtime
 set(RUNTIME_MODULE_TYPE_uafcheck SHARED)
 set(RUNTIME_MODULE_TYPE_leakcheck SHARED)
 set(RUNTIME_MODULE_TYPE_user_mempool SHARED)

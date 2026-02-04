@@ -28,7 +28,6 @@ set(FAILING_SRCS
     filter_config.c
     filter_default.c
     impasse.c
-    inflex_abc.c
     inflex_abc_nocli.c
     inflex_empty_test.c
     inflex_method_be.c

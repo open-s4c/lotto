@@ -7,7 +7,7 @@ from pylotto.handler import stop_handler
 
 def init(lotto_path, file_filter, function_filter, addr2line, symbol_file,
          plugin_paths):
-    file_regex = fr'^.*/libengine.so$|^{lotto_path}/.*${fr"|{file_filter}" if file_filter else ""}'
+    file_regex = fr'^.*/libengine.so$|^.*/lotto-runtime-.*$|^.*/lotto-driver.*$|^{lotto_path}/.*${fr"|{file_filter}" if file_filter else ""}'
     function_regex = function_filter if function_filter else '$^'
     frame_matcher = Matcher(file_regex, function_regex)
     UpLotto(frame_matcher)

@@ -32,7 +32,7 @@ macro(add_runtime_module)
         set_target_properties(
             ${RUNTIME_MODULE_TARGET}
             PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
-                                 "${LOTTO_PLUGIN_BUILD_DIR}")
+                                 "${LOTTO_MODULE_BUILD_DIR}")
     else()
         add_lotto_builtin(${RUNTIME_MODULE_TARGET})
     endif()
@@ -60,14 +60,14 @@ macro(add_driver_module)
         set_target_properties(
             ${DRIVER_MODULE_TARGET}
             PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
-                                 "${LOTTO_PLUGIN_BUILD_DIR}")
+                                 "${LOTTO_MODULE_BUILD_DIR}")
     else()
         add_lotto_builtin(${DRIVER_MODULE_TARGET})
     endif()
     if("${DRIVER_MODULE_TYPE}" STREQUAL "SHARED")
         set_target_properties(
             ${DRIVER_MODULE_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                                               "${LOTTO_PLUGIN_BUILD_DIR}")
+                                               "${LOTTO_MODULE_BUILD_DIR}")
         target_link_libraries(lotto-driver PRIVATE ${DRIVER_MODULE_TARGET})
     else()
         target_link_libraries(lotto-driver PRIVATE ${DRIVER_MODULE_TARGET})

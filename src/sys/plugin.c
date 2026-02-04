@@ -32,7 +32,7 @@
 #define SO_SUFFIX     ".so"
 #define SO_SUFFIX_LEN (sizeof(SO_SUFFIX) - 1)
 
-#define DRIVER_PLUGIN_PREFIX     "liblotto-driver-"
+#define DRIVER_PLUGIN_PREFIX     "lotto-driver-"
 #define DRIVER_PLUGIN_PREFIX_LEN (sizeof(DRIVER_PLUGIN_PREFIX) - 1)
 
 #define STARTS_WITH(s, LITERAL_NAME) (sys_strncmp((s), LITERAL_NAME, LITERAL_NAME##_LEN)  == 0)
@@ -340,9 +340,9 @@ _scandir(const char *scan_dir)
         if (_ends_with(entry->d_name, RUNTIME_PLUGIN_SUFFIX)) {
             kind |= PLUGIN_KIND_RUNTIME;
         }
-        if (strstr(entry->d_name, "mempool_") != NULL ||
-            strstr(entry->d_name, "uaf_") != NULL ||
-            strstr(entry->d_name, "leakcheck_") != NULL) {
+        if (strstr(entry->d_name, "user_mempool") != NULL ||
+            strstr(entry->d_name, "uafcheck") != NULL ||
+            strstr(entry->d_name, "leakcheck") != NULL) {
             kind |= PLUGIN_KIND_MEMMGR;
         }
         if (kind == PLUGIN_KIND_NONE) {

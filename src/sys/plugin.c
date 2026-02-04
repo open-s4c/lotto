@@ -20,20 +20,13 @@
 #define PLUGIN_PREFIX          "liblotto_"
 #define PLUGIN_PREFIX_LEN      (sizeof(PLUGIN_PREFIX) - 1)
 
-#define ENGINE_PLUGIN_SUFFIX     "engine.so"
-#define ENGINE_PLUGIN_SUFFIX_LEN (sizeof(ENGINE_PLUGIN_SUFFIX) - 1)
-
-#define CLI_PLUGIN_SUFFIX     "cli.so"
-#define CLI_PLUGIN_SUFFIX_LEN (sizeof(CLU_PLUGIN_SUFFIX) - 1)
-
-#define RUNTIME_PLUGIN_SUFFIX     "runtime.so"
-#define RUNTIME_PLUGIN_SUFFIX_LEN (sizeof(RUNTIME_PLUGIN_SUFFIX) - 1)
-
 #define SO_SUFFIX     ".so"
 #define SO_SUFFIX_LEN (sizeof(SO_SUFFIX) - 1)
 
 #define DRIVER_PLUGIN_PREFIX     "lotto-driver-"
 #define DRIVER_PLUGIN_PREFIX_LEN (sizeof(DRIVER_PLUGIN_PREFIX) - 1)
+#define RUNTIME_PLUGIN_PREFIX     "lotto-runtime-"
+#define RUNTIME_PLUGIN_PREFIX_LEN (sizeof(DRIVER_PLUGIN_PREFIX) - 1)
 
 #define STARTS_WITH(s, LITERAL_NAME) (sys_strncmp((s), LITERAL_NAME, LITERAL_NAME##_LEN)  == 0)
 
@@ -334,10 +327,7 @@ _scandir(const char *scan_dir)
         if (STARTS_WITH(entry->d_name, DRIVER_PLUGIN_PREFIX)) {
             kind |= PLUGIN_KIND_CLI;
         }
-        if (_ends_with(entry->d_name, ENGINE_PLUGIN_SUFFIX)) {
-            kind |= PLUGIN_KIND_ENGINE;
-        }
-        if (_ends_with(entry->d_name, RUNTIME_PLUGIN_SUFFIX)) {
+        if (STARTS_WITH(entry->d_name, RUNTIME_PLUGIN_PREFIX)) {
             kind |= PLUGIN_KIND_RUNTIME;
         }
         if (strstr(entry->d_name, "user_mempool") != NULL ||

@@ -11,12 +11,12 @@ set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 
 macro(add_runtime_module)
-    set(RUNTIME_MODULE_TYPE OBJECT)
+    set(RUNTIME_MODULE_TYPE SHARED)
     if(DEFINED RUNTIME_MODULE_TYPE_${MODULE_NAME})
         set(RUNTIME_MODULE_TYPE ${RUNTIME_MODULE_TYPE_${MODULE_NAME}})
     endif()
     set(RUNTIME_MODULE_SOURCES ${ARGV})
-    set(RUNTIME_MODULE_TARGET lotto-${MODULE_NAME})
+    set(RUNTIME_MODULE_TARGET lotto-runtime-${MODULE_NAME})
     message(STATUS "Module ${MODULE_NAME} (runtime): ${RUNTIME_MODULE_SOURCES}")
 
     add_library(${RUNTIME_MODULE_TARGET} ${RUNTIME_MODULE_TYPE}
@@ -61,14 +61,6 @@ macro(add_driver_module)
             ${DRIVER_MODULE_TARGET}
             PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
                                  "${LOTTO_MODULE_BUILD_DIR}")
-    else()
-        add_lotto_builtin(${DRIVER_MODULE_TARGET})
-    endif()
-    if("${DRIVER_MODULE_TYPE}" STREQUAL "SHARED")
-        set_target_properties(
-            ${DRIVER_MODULE_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                                               "${LOTTO_MODULE_BUILD_DIR}")
-        target_link_libraries(lotto-driver PRIVATE ${DRIVER_MODULE_TARGET})
     else()
         target_link_libraries(lotto-driver PRIVATE ${DRIVER_MODULE_TARGET})
     endif()

@@ -31,62 +31,11 @@ pthread_nop_ETIMEDOUT_()
     return ETIMEDOUT;
 }
 
-void
-_lotto_evec_prepare_(void *addr)
-{
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_SYS_YIELD));
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_EVEC_PREPARE,
-                          .args = {arg_ptr(addr)}));
-}
-
-void
-_lotto_evec_wait_(void *addr)
-{
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_SYS_YIELD));
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_EVEC_WAIT,
-                          .args = {arg_ptr(addr)}));
-}
-
-enum lotto_timed_wait_status
-_lotto_evec_timed_wait_(void *addr, const struct timespec *restrict abstime)
-{
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_SYS_YIELD));
-    enum lotto_timed_wait_status ret;
-    intercept_capture(
-        ctx(.func = __FUNCTION__, .cat = CAT_EVEC_TIMED_WAIT,
-            .args = {arg_ptr(addr), arg_ptr(abstime), arg_ptr(&ret)}));
-    return ret;
-}
-
-void
-_lotto_evec_cancel_(void *addr)
-{
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_SYS_YIELD));
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_EVEC_CANCEL,
-                          .args = {arg_ptr(addr)}));
-}
-
-void
-_lotto_evec_wake_(void *addr, uint32_t cnt)
-{
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_SYS_YIELD));
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_EVEC_WAKE,
-                          .args = {arg_ptr(addr), arg(uint32_t, cnt)}));
-}
-
-void
-_lotto_evec_move_(void *src, void *dst)
-{
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_SYS_YIELD));
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_EVEC_MOVE,
-                          .args = {arg_ptr(src), arg_ptr(dst)}));
-}
-
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_WAIT, {
     struct pthread_cond_wait_event *ev = EVENT_PAYLOAD(event);
-    _lotto_evec_prepare_(ev->cond);
+    _lotto_evec_prepare(ev->cond);
     _lotto_mutex_release_named("pthread_cond_wait", ev->mutex);
-    _lotto_evec_wait_(ev->cond);
+    _lotto_evec_wait(ev->cond);
     _lotto_mutex_acquire_named("pthread_cond_wait", ev->mutex);
     ev->func = pthread_nop_zero_;
     return PS_OK;
@@ -95,9 +44,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_WAIT, {
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_TIMEDWAIT, {
     struct pthread_cond_timedwait_event *ev = EVENT_PAYLOAD(event);
     enum lotto_timed_wait_status ret;
-    _lotto_evec_prepare_(ev->cond);
+    _lotto_evec_prepare(ev->cond);
     _lotto_mutex_release_named("pthread_cond_timedwait", ev->mutex);
-    ret = _lotto_evec_timed_wait_(ev->cond, ev->abstime);
+    ret = _lotto_evec_timed_wait(ev->cond, ev->abstime);
     _lotto_mutex_acquire_named("pthread_cond_timedwait", ev->mutex);
     ev->func = (ret == TIMED_WAIT_TIMEOUT) ? pthread_nop_ETIMEDOUT_ :
                                              pthread_nop_zero_;
@@ -105,15 +54,15 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_TIMEDWAIT, {
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_SIGNAL, {
-    struct pthread_cond_timedwait_event *ev = EVENT_PAYLOAD(event);
-    _lotto_evec_wake_(ev->cond, 1);
+    struct pthread_cond_signal_event *ev = EVENT_PAYLOAD(event);
+    _lotto_evec_wake(ev->cond, 1);
     ev->func = pthread_nop_zero_;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_BROADCAST, {
-    struct pthread_cond_timedwait_event *ev = EVENT_PAYLOAD(event);
-    _lotto_evec_wake_(ev->cond, ~((uint32_t)0));
+    struct pthread_cond_broadcast_event *ev = EVENT_PAYLOAD(event);
+    _lotto_evec_wake(ev->cond, ~((uint32_t)0));
     ev->func = pthread_nop_zero_;
     return PS_OK;
 })

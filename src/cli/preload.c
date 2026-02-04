@@ -35,9 +35,9 @@
 #include <sys/types.h>
 
 #define PLUGIN_PATHS                                                           \
-    LOTTO_PLUGIN_BUILD_DIR                                                     \
-    ":" LOTTO_PLUGIN_INSTALL_DIR ":" QLOTTO_PLUGIN_BUILD_DIR                   \
-    ":" QLOTTO_PLUGIN_INSTALL_DIR ":" CMAKE_INSTALL_PREFIX                     \
+    LOTTO_MODULE_BUILD_DIR                                                     \
+    ":" LOTTO_MODULE_INSTALL_DIR ":" QLOTTO_MODULE_BUILD_DIR                   \
+    ":" QLOTTO_MODULE_INSTALL_DIR ":" CMAKE_INSTALL_PREFIX                     \
     "/share/lotto"                                                             \
     ":" CMAKE_BINARY_DIR
 

@@ -1,5 +1,7 @@
-/*
- */
+#ifdef DICE_MODULE_SLOT
+    #undef DICE_MODULE_SLOT
+#endif
+#define DICE_MODULE_SLOT 10
 
 #include <stdint.h>
 #include <stdlib.h>

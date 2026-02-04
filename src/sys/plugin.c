@@ -29,6 +29,14 @@
 #define RUNTIME_PLUGIN_SUFFIX     "runtime.so"
 #define RUNTIME_PLUGIN_SUFFIX_LEN (sizeof(RUNTIME_PLUGIN_SUFFIX) - 1)
 
+#define SO_SUFFIX     ".so"
+#define SO_SUFFIX_LEN (sizeof(SO_SUFFIX) - 1)
+
+#define DRIVER_PLUGIN_PREFIX     "liblotto-driver-"
+#define DRIVER_PLUGIN_PREFIX_LEN (sizeof(DRIVER_PLUGIN_PREFIX) - 1)
+
+#define STARTS_WITH(s, LITERAL_NAME) (sys_strncmp((s), LITERAL_NAME, LITERAL_NAME##_LEN)  == 0)
+
 static plugin_t _plugins[MAX_PLUGINS];
 static size_t _next = 0;
 
@@ -318,12 +326,12 @@ _scandir(const char *scan_dir)
         return -1;
     char path[PATH_MAX];
     for (struct dirent *entry; (entry = readdir(dir));) {
-        if (sys_strncmp(entry->d_name, PLUGIN_PREFIX, PLUGIN_PREFIX_LEN) != 0) {
+        if (!_ends_with(entry->d_name, SO_SUFFIX)) {
             continue;
         }
         char *name         = _plugin_name(entry->d_name);
         plugin_kind_t kind = PLUGIN_KIND_NONE;
-        if (_ends_with(entry->d_name, CLI_PLUGIN_SUFFIX)) {
+        if (STARTS_WITH(entry->d_name, DRIVER_PLUGIN_PREFIX)) {
             kind |= PLUGIN_KIND_CLI;
         }
         if (_ends_with(entry->d_name, ENGINE_PLUGIN_SUFFIX)) {

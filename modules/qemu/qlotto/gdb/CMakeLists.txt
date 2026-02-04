@@ -28,9 +28,9 @@ add_dependencies(
     plugin-lotto)
 
 set_target_properties(plugin-gdb-server PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                                                   "${QLOTTO_PLUGIN_BUILD_DIR}")
+                                                   "${QLOTTO_MODULE_BUILD_DIR}")
 
 install(
     TARGETS plugin-gdb-server
     DESTINATION DESTINATION
-    "${QLOTTO_PLUGIN_INSTALL_DIR}")
+    "${QLOTTO_MODULE_INSTALL_DIR}")

@@ -16,8 +16,8 @@ target_include_directories(
 target_link_libraries(plugin-lotto PRIVATE capstone lperf.o)
 
 set_target_properties(plugin-lotto PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                                              "${QLOTTO_PLUGIN_BUILD_DIR}")
+                                              "${QLOTTO_MODULE_BUILD_DIR}")
 install(
     TARGETS plugin-lotto
     DESTINATION DESTINATION
-    "${QLOTTO_PLUGIN_INSTALL_DIR}")
+    "${QLOTTO_MODULE_INSTALL_DIR}")

@@ -14,9 +14,9 @@ target_link_libraries(plugin-snapshot PRIVATE capstone)
 add_dependencies(plugin-snapshot capstone)
 
 set_target_properties(plugin-snapshot PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                                                 "${QLOTTO_PLUGIN_BUILD_DIR}")
+                                                 "${QLOTTO_MODULE_BUILD_DIR}")
 
 install(
     TARGETS plugin-snapshot
     DESTINATION DESTINATION
-    "${QLOTTO_PLUGIN_INSTALL_DIR}")
+    "${QLOTTO_MODULE_INSTALL_DIR}")

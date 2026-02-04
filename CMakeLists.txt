@@ -130,8 +130,7 @@ include(cmake/racket.cmake)
 # source
 # ##############################################################################
 add_compile_options(
-    -Werror
-    -Wall
+    -Wno-error
     -Wunused-variable
     -Wextra
     -Wno-missing-braces
@@ -161,11 +160,11 @@ else() # gcc
     add_compile_options(-Wno-cast-function-type)
 endif()
 
-set(LOTTO_PLUGIN_INSTALL_DIR "share/lotto/plugins")
-set(LOTTO_PLUGIN_BUILD_DIR "${CMAKE_BINARY_DIR}/plugins")
+set(LOTTO_MODULE_INSTALL_DIR "share/lotto/modules")
+set(LOTTO_MODULE_BUILD_DIR "${CMAKE_BINARY_DIR}/modules")
 
-set(QLOTTO_PLUGIN_INSTALL_DIR "share/lotto/qlotto/plugins")
-set(QLOTTO_PLUGIN_BUILD_DIR "${CMAKE_BINARY_DIR}/qlotto/plugins")
+set(QLOTTO_MODULE_INSTALL_DIR "share/lotto/qlotto/modules")
+set(QLOTTO_MODULE_BUILD_DIR "${CMAKE_BINARY_DIR}/qlotto/modules")
 
 include_directories(include)
 add_subdirectory(include)

@@ -105,7 +105,8 @@ static const void *
 _statemgr_unmarshal(statemgr_t *mgr, const void *buf)
 {
     marshable_t *m;
-    for (size_t i = 0; i < mgr->length;) {
+    size_t count = 0;
+    for (size_t i = 0; i < mgr->length && count < mgr->length;) {
         header_t h = _header_unmarshal(buf);
         if (h.slot != mgr->entries[i].slot) {
             i++;
@@ -113,7 +114,7 @@ _statemgr_unmarshal(statemgr_t *mgr, const void *buf)
         }
 
         if ((m = mgr->entries[i].m) == NULL) {
-            logger_warnf(
+            logger_fatalf(
                 "unmarshal error: index %zu not registered, "
                 "skipping.\n",
                 h.index);
@@ -127,6 +128,7 @@ _statemgr_unmarshal(statemgr_t *mgr, const void *buf)
         ASSERT((uintptr_t)next - (uintptr_t)payload == h.size);
         buf = next;
         i   = 0;
+        count++;
     }
     return buf;
 }
@@ -137,9 +139,6 @@ statemgr_unmarshal(const void *buf, state_type_t type, bool publish)
     ASSERT(type < STATE_TYPE_END_);
     ASSERT(type != STATE_TYPE_EPHEMERAL);
     ASSERT(buf);
-    header_t h = _header_unmarshal(buf);
-    if (h.empty)
-        return (char *)buf + h.size;
     buf = _statemgr_unmarshal(&_groups[type], buf);
 
     if (!publish) {
@@ -246,6 +245,7 @@ statemgr_record_unmarshal(const record_t *r)
             break;
         case RECORD_CONFIG:
             statemgr_unmarshal(r->data, STATE_TYPE_CONFIG, true);
+            break;
             break;
         default:
             logger_fatalf("unexpected %s record\n", kind_str(r->kind));

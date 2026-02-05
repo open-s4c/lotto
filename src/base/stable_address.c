@@ -75,3 +75,27 @@ stable_address_sprint(const stable_address_t *sa, char *output)
             return -1;
     }
 }
+
+
+int
+stable_address_compare(const stable_address_t *sa, const stable_address_t *sb)
+{
+    ASSERT(sa->type == sb->type);
+    switch(sa->type) {
+        case ADDRESS_PTR:
+            return sa->value.ptr < sb->value.ptr ? -1 :
+                   sa->value.ptr > sb->value.ptr ? 1 :
+                   0;
+        case ADDRESS_MAP: {
+            int name_cmp = strcmp(sa->value.map.name, sb->value.map.name);
+            if (name_cmp != 0)
+                return name_cmp;
+            return sa->value.map.offset < sb->value.map.offset ? -1 :
+                   sa->value.map.offset > sb->value.map.offset ? 1 :
+                   0;
+        }
+        default:
+            ASSERT(false && "unreachable");
+            return 0;
+    }
+}

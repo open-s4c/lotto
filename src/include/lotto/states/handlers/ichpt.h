@@ -4,7 +4,7 @@
 #define LOTTO_STATE_ICHPT_H
 #include <stdbool.h>
 
-#include <lotto/base/bag.h>
+#include <lotto/base/vec.h>
 #include <lotto/base/marshable.h>
 #include <lotto/base/stable_address.h>
 
@@ -14,12 +14,13 @@ typedef struct ichpt_config {
 } ichpt_config_t;
 
 typedef struct {
-    bagitem_t t;
+    vecitem_t t;
     stable_address_t addr;
 } item_t;
 
 ichpt_config_t *ichpt_config();
-bag_t *ichpt_initial();
-bag_t *ichpt_final();
+vec_t *ichpt_initial();
+vec_t *ichpt_final();
+int ichpt_item_compare(const vecitem_t *, const vecitem_t *);
 
 #endif

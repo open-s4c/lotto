@@ -24,8 +24,7 @@
  * final addresses of the previous run into the intial of the current run.
  * ****************************************************************************/
 PS_SUBSCRIBE_INTERFACE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
-    bag_clear(ichpt_final());
-    bag_copy(ichpt_final(), ichpt_initial());
+    vec_union(ichpt_final(), ichpt_initial(), ichpt_item_compare);
 })
 
 /* *****************************************************************************
@@ -34,7 +33,7 @@ PS_SUBSCRIBE_INTERFACE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
 size_t
 ichpt_count()
 {
-    return bag_size(ichpt_final());
+    return vec_size(ichpt_final());
 }
 
 bool
@@ -42,11 +41,11 @@ is_ichpt(uintptr_t a)
 {
     stable_address_t sa =
         stable_address_get(a, sequencer_config()->stable_address_method);
-    const bagitem_t *it;
-    for (it = bag_iterate(ichpt_final()); it; it = bag_next(it)) {
-        const item_t *i = (const item_t *)it;
-        if (stable_address_equals(&i->addr, &sa))
+    for (size_t i = 0; i < vec_size(ichpt_final()); ++i) {
+        const item_t *it = (const item_t *)vec_get(ichpt_final(), i);
+        if (stable_address_equals(&it->addr, &sa)) {
             return true;
+        }
     }
     return false;
 }
@@ -56,14 +55,14 @@ add_ichpt(uintptr_t a)
 {
     if (is_ichpt(a))
         return;
-    item_t *i = (item_t *)bag_add(ichpt_final());
+    item_t *i = (item_t *)vec_add(ichpt_final());
     i->addr = stable_address_get(a, sequencer_config()->stable_address_method);
 }
 
 void
 ichpt_reset()
 {
-    bag_clear(ichpt_final());
+    vec_clear(ichpt_final());
 }
 
 void

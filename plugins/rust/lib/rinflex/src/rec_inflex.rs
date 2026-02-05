@@ -368,7 +368,13 @@ impl RecInflex {
         let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let event = trace::get_event_at_clk(flags, trace, clock)?;
 
-        if event.t.cat == Category::CAT_BEFORE_CMPXCHG {
+        if matches!(
+            event.t.cat,
+            Category::CAT_TASK_INIT | Category::CAT_FUNC_EXIT
+        ) {
+            let after_event = trace::get_event_at_clk(flags, trace, clock + 1)?;
+            return Ok((after_event, 1));
+        } else if event.t.cat == Category::CAT_BEFORE_CMPXCHG {
             // For CAS operations, Inflex and InverseInflex will always
             // find BEFORE_CMPXCHG, which is always followed by, and only
             // followed by AFTER_CMPXCHG_S or AFTER_CMPXCHG_F.
@@ -425,9 +431,7 @@ impl RecInflex {
         }
     }
 
-    /// Returns the output trace file, as well as the last clock of
-    /// the output trace. The clock corresponds to the last event
-    /// which is not affected by the constraints.
+    /// Returns the output trace file.
     ///
     /// This is the unsafe version. That is, it doesn't try to
     /// identify whether or not the suffix respects the ordering
@@ -444,11 +448,8 @@ impl RecInflex {
         let mut output = Trace::new_file(&mut st);
         while let Some(r) = input.next_any() {
             if r.kind == raw::record::RECORD_CONFIG && r.clk == 0 {
-                r.unmarshal();
-                handlers::order_enforcer::cli_set_constraints(constraints.clone());
-                let r = Record::new_config(r.clk);
+                let r = update_config_record(r, constraints);
                 output.append(r).expect("append updated config");
-                handlers::order_enforcer::cli_clear_constraints();
             } else {
                 output.append(r.to_owned()).expect("append old record");
             }
@@ -493,11 +494,8 @@ impl RecInflex {
             }
             last_clk = r.clk;
             if r.kind == raw::record::RECORD_CONFIG && r.clk == 0 {
-                r.unmarshal();
-                handlers::order_enforcer::cli_set_constraints(constraints.clone());
-                let r = Record::new_config(r.clk);
+                let r = update_config_record(r, constraints);
                 output.append(r).expect("append updated config");
-                handlers::order_enforcer::cli_clear_constraints();
             } else {
                 output.append(r.to_owned()).expect("append old record");
             }
@@ -634,6 +632,26 @@ impl RecInflex {
         self.next_id += 1;
         id
     }
+}
+
+/// Unmarshal old_config and update it according to the current rinflex state.
+fn update_config_record(old_config: &Record, constraints: &ConstraintSet) -> Owned<Record> {
+    old_config.unmarshal();
+    // ichpt config: the old_config might have an empty ichpt config,
+    // and unmarshal will overwrite the current ichpt_initial. Restore
+    // it.
+    unsafe {
+        raw::vec_union(
+            raw::ichpt_initial(),
+            raw::ichpt_final(),
+            Some(raw::ichpt_item_compare),
+        );
+    }
+    // order_enforcer config
+    handlers::order_enforcer::cli_set_constraints(constraints.clone());
+    let r = Record::new_config(old_config.clk);
+    handlers::order_enforcer::cli_clear_constraints();
+    r
 }
 
 /// For debugging.

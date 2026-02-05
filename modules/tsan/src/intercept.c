@@ -153,7 +153,7 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_RMW, {
 
     context_t *c = ctx(.cat  = CAT_AFTER_RMW,
                        .func = ev->func,
-                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
+                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size), sized_arg(ev->size, ev->val)});
     intercept_capture(c);
     return PS_OK;
 })
@@ -173,7 +173,7 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_XCHG, {
 
     context_t *c = ctx(.cat  = CAT_AFTER_XCHG,
                        .func = ev->func,
-                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
+                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size), sized_arg(ev->size, ev->val)});
     intercept_capture(c);
     return PS_OK;
 })
@@ -183,7 +183,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MA_CMPXCHG, {
 
     context_t *c = ctx(.cat  = CAT_BEFORE_CMPXCHG,
                        .func = ev->func,
-                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
+                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size), sized_arg(ev->size, ev->cmp), sized_arg(ev->size, ev->val)});
     intercept_capture(c);
     return PS_OK;
 })
@@ -193,7 +193,7 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_CMPXCHG, {
 
     context_t *c = ctx(.cat  = sized_eq(ev->size, ev->old, ev->val) ? CAT_AFTER_CMPXCHG_S : CAT_AFTER_CMPXCHG_F,
                        .func = ev->func,
-                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
+                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size), sized_arg(ev->size, ev->cmp), sized_arg(ev->size, ev->val)});
     intercept_capture(c);
     return PS_OK;
 })
@@ -203,7 +203,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MA_CMPXCHG_WEAK, {
 
     context_t *c = ctx(.cat  = CAT_BEFORE_CMPXCHG,
                        .func = ev->func,
-                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
+                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size), sized_arg(ev->size, ev->cmp), sized_arg(ev->size, ev->val)});
     intercept_capture(c);
     return PS_OK;
 })
@@ -213,7 +213,7 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_CMPXCHG_WEAK, {
 
     context_t *c = ctx(.cat  = sized_eq(ev->size, ev->old, ev->val) ? CAT_AFTER_CMPXCHG_S : CAT_AFTER_CMPXCHG_F,
                        .func = ev->func,
-                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
+                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size), sized_arg(ev->size, ev->cmp), sized_arg(ev->size, ev->val)});
     intercept_capture(c);
     return PS_OK;
 })

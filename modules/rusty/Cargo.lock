@@ -116,8 +116,9 @@ dependencies = [
 
 [[package]]
 name = "cmake-package"
-version = "0.1.10"
-source = "git+https://github.com/DIvanov503/cmake-package-rs?branch=path-prefixes#2f95b3035f192b69484c28c14987ad0611d16325"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "caf0f5727bf8e041a7b9aae34697e5ea92d8e9239973ce271bd1c2e53739b6bb"
 dependencies = [
  "itertools 0.14.0",
  "once_cell",

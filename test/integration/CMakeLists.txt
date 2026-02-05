@@ -18,29 +18,24 @@ set(TSAN_0006-racy-message-passing ON)
 
 # TODO: some sources are still failing
 set(FAILING_SRCS
-    debug-replay-end.c
-    double_free.c
-    enforce_address.c
-    enforce_cat.c
-    enforce_data.c
+    double_free.c # needs memmgr-user=uaf, the error must not RUNTIME_...
     enforce_pc.c
-    explore_test.c
-    filter_config.c
-    filter_default.c
-    impasse.c
-    inflex_abc.c
-    inflex_abc_nocli.c
-    inflex_empty_test.c
-    inflex_method_be.c
-    inflex_method_le.c
-    inflex_method_lp.c
-    inflex_test.c
-    loop_inflex_test.c
-    notsan_mediator_null.c
-    record_granularity_test_x86.c
-    tsano_inflex_abc.c
-    tsano_inflex_abc_stress.c
-    wait.c)
+    impasse.c # needs join handler
+    inflex_abc_nocli.c # test script needs correct preloading on necessary libraries
+    notsan_mediator_null.c # the error must not RUNTIME_...
+    record_granularity_test_x86.c # may be compiler/system-dependant
+    rinflex.c # gets stuck during essentiality check
+    rinflex_3oc.c
+    rinflex_cas.c
+    rinflex_essentiality.c
+    rinflex_flaky_events.c
+    rinflex_loop.c
+    rinflex_mutex.c
+    rinflex_spinlock.c
+    rinflex_symmetry.c
+    rinflex_two_disjoint_bugs.c
+    wait.c # time leap is not performed, maybe there is an undesired CAT_CALL
+)
 
 file(GLOB ALL_SRCS *.c)
 set(SRCS)

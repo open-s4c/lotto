@@ -17,6 +17,7 @@
 #include <sys/personality.h>
 
 #define MAX_COMMAND_ARGS 2
+#define ERROR_MAX_LEN    2048
 
 static int _load_plugin(plugin_t *plugin, void *arg);
 
@@ -36,6 +37,7 @@ main(int argc, char **argv)
     const int old_personality = personality(ADDR_NO_RANDOMIZE);
     if (!(old_personality & ADDR_NO_RANDOMIZE)) {
         personality(ADDR_NO_RANDOMIZE);
+        return execv(argv[0], argv);
     }
 
     const char *plugin_dir  = NULL;
@@ -63,25 +65,11 @@ main(int argc, char **argv)
         }
     }
 
-    if (getenv("LOTTO_CLI_RESTARTED")) {
-        const char* added_preload_len_str = getenv("LOTTO_ADDED_PRELOAD_LEN");
-        if (added_preload_len_str && strcmp(added_preload_len_str, "0") != 0) {
-            char* ld_preload = getenv("LD_PRELOAD") + (size_t) atoll(added_preload_len_str);
-            setenv("LD_PRELOAD", ld_preload, true);
-        }
-    } else {
-        lotto_plugin_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
-                          plugin_dir);
-        if (0 != lotto_plugin_enable_only(plugin_list))
-            exit(1);
-        size_t added_preload_len = 0;
-        lotto_plugin_foreach(_load_plugin, &added_preload_len);
-        char added_preload_len_str[128];
-        sys_sprintf(added_preload_len_str, "%lu%c", added_preload_len, '\0');
-        setenv("LOTTO_ADDED_PRELOAD_LEN", added_preload_len_str, true);
-        setenv("LOTTO_CLI_RESTARTED", "1", true);
-        return execv(argv[0], argv);
-    }
+    lotto_plugin_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
+                  plugin_dir);
+    if (0 != lotto_plugin_enable_only(plugin_list))
+        exit(1);
+    lotto_plugin_foreach(_load_plugin, NULL);
 
 
 #if defined(LOTTO_EMBED_LIB) && LOTTO_EMBED_LIB == 0
@@ -156,34 +144,12 @@ _load_plugin(plugin_t *plugin, void *arg)
     (void)arg;
     if (!(plugin->kind & PLUGIN_KIND_CLI))
         return 0;
-
-    const char *ld_preload = getenv("LD_PRELOAD");
-    size_t plugin_len = strlen(plugin->path);
-    size_t new_ld_preload_len = plugin_len + 1;
-
-    if (ld_preload) {
-        new_ld_preload_len += strlen(ld_preload) + 1;
+    void *handle = dlopen(plugin->path, RTLD_NOW | RTLD_GLOBAL);
+    if (!handle) {
+        char error[ERROR_MAX_LEN];
+        strcpy(error, dlerror());
+        logger_errorf("error loading plugin '%s': %s\n", plugin->path, error);
+        plugin->disabled = true;
     }
-
-    char *new_ld_preload = alloca(new_ld_preload_len);
-    if (!new_ld_preload) {
-        logger_errorf("error allocating memory for LD_PRELOAD\n");
-        return 0;
-    }
-
-    size_t added_ld_preload_len = plugin_len;
-    if (ld_preload) {
-        snprintf(new_ld_preload, new_ld_preload_len, "%s:%s", plugin->path, ld_preload);
-        added_ld_preload_len++;
-    } else {
-        snprintf(new_ld_preload, new_ld_preload_len, "%s", plugin->path);
-
-    }
-
-    if (setenv("LD_PRELOAD", new_ld_preload, 1) != 0) {
-        logger_errorf("error setting LD_PRELOAD\n");
-        return 0;
-    }
-    *(size_t*)arg += added_ld_preload_len;
     return 0;
 }

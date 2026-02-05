@@ -363,6 +363,12 @@ _compar(const void *_p, const void *_q)
     const plugin_t *p = (const plugin_t *)_p;
     const plugin_t *q = (const plugin_t *)_q;
     int val;
+    if (strstr(p->name, "rust")) {
+        return 1;
+    }
+    if (strstr(q->name, "rust")) {
+        return -1;
+    }
     if ((val = strcmp(p->name, q->name)))
         return val;
     if ((val = (int)p->kind - (int)q->kind)) {

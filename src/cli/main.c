@@ -17,6 +17,7 @@
 #include <sys/personality.h>
 
 #define MAX_COMMAND_ARGS 2
+#define ERROR_MAX_LEN    2048
 
 static int _load_plugin(plugin_t *plugin, void *arg);
 
@@ -145,7 +146,9 @@ _load_plugin(plugin_t *plugin, void *arg)
         return 0;
     void *handle = dlopen(plugin->path, RTLD_NOW | RTLD_GLOBAL);
     if (!handle) {
-        logger_errorf("error loading plugin '%s': %s\n", plugin->path, dlerror());
+        char error[ERROR_MAX_LEN];
+        strcpy(error, dlerror());
+        logger_errorf("error loading plugin '%s': %s\n", plugin->path, error);
         plugin->disabled = true;
     }
     return 0;

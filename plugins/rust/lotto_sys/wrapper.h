@@ -35,6 +35,7 @@
 #include "lotto/engine/prng.h"
 #include "lotto/runtime/intercept.h"
 #include "lotto/states/handlers/termination.h"
+#include "lotto/states/handlers/ichpt.h"
 #include "lotto/states/prng.h"
 #include "lotto/states/sequencer.h"
 #include "lotto/sys/fcntl.h"

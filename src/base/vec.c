@@ -181,7 +181,7 @@ vec_union(vec_t *left, const vec_t *right, vecitem_comparator_f compar)
     vec_sort(left, compar);
 
     size_t j = 0;               /* next write pos */
-    /* invariant: 0 <= j <= i <= left->cnt */
+    /* invariant: 0 <= j <= i < left->cnt */
     for (size_t i = 0; i < left->cnt; ++i) {
         if (j == 0 || compar(AT(left, i), AT(left, j - 1)) != 0) {
             if (j != i) {

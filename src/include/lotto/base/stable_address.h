@@ -100,4 +100,13 @@ bool stable_address_equals(const stable_address_t *sa1,
  */
 int stable_address_sprint(const stable_address_t *sa, char *s);
 
+/**
+ * Compares two stable addresses.
+ *
+ * @param sa stable address
+ * @param sb stable address
+ * @return <0 less, >0 greater, 0 equal
+ */
+int stable_address_compare(const stable_address_t *sa, const stable_address_t *sb);
+
 #endif

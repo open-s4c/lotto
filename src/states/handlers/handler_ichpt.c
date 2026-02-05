@@ -8,7 +8,7 @@
 
 /* config contains the initial state of the handler */
 static ichpt_config_t _config;
-static bag_t _initial;
+static vec_t _initial;
 
 static void
 _item_print(const marshable_t *m)
@@ -24,22 +24,21 @@ static void
 _print_m(const marshable_t *m)
 {
     logger_infof("instruction addresses:\n");
-    bag_t *b = (bag_t *)m;
-    const bagitem_t *it;
-    for (it = bag_iterate(b); it; it = bag_next(it)) {
-        _item_print(&it->m);
+    vec_t *v = (vec_t *)m;
+    for (size_t i = 0; i < vec_size(v); ++i) {
+        _item_print(&vec_get(v, i)->m);
     }
 }
 REGISTER_STATE(CONFIG, _config, {
     _config.m = MARSHABLE_STATIC(sizeof(ichpt_config_t));
-    bag_init(&_initial, MARSHABLE_ITEM);
+    vec_init(&_initial, MARSHABLE_ITEM);
     _initial.m.print = _print_m;
     marshable_bind(&_config.m, &_initial.m);
 })
 
-static bag_t _final;
+static vec_t _final;
 REGISTER_STATE(FINAL, _final, {
-    bag_init(&_final, MARSHABLE_ITEM);
+    vec_init(&_final, MARSHABLE_ITEM);
     _final.m.print = _print_m;
 })
 
@@ -49,14 +48,22 @@ ichpt_config()
     return &_config;
 }
 
-bag_t *
+vec_t *
 ichpt_initial()
 {
     return &_initial;
 }
 
-bag_t *
+vec_t *
 ichpt_final()
 {
     return &_final;
+}
+
+int
+ichpt_item_compare(const vecitem_t *ia, const vecitem_t *ib)
+{
+    const item_t *a = (const item_t *)ia;
+    const item_t *b = (const item_t *)ib;
+    return stable_address_compare(&a->addr, &b->addr);
 }

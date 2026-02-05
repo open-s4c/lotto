@@ -11,6 +11,5 @@ NEW_PRETTY_CALLBACK_FLAG(HANDLER_ICHPT_ENABLED, "", "handler-ichpt",
                          "enable ichpt handler", flag_on(), STR_CONVERTER_BOOL,
                          { ichpt_config()->enabled = is_on(v); })
 PS_SUBSCRIBE_INTERFACE(TOPIC_AFTER_UNMARSHAL_FINAL, {
-    bag_clear(ichpt_initial());
-    bag_copy(ichpt_initial(), ichpt_final());
+    vec_union(ichpt_initial(), ichpt_final(), ichpt_item_compare);
 })

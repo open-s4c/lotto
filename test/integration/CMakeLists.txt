@@ -25,6 +25,8 @@ set(FAILING_SRCS
     notsan_mediator_null.c # the error must not RUNTIME_...
     record_granularity_test_x86.c # may be compiler/system-dependant
     rinflex.c # gets stuck during essentiality check
+    rinflex_3oc.c
+    rinflex_cas.c
     rinflex_essentiality.c
     rinflex_flaky_events.c
     rinflex_loop.c

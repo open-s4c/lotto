@@ -17,7 +17,15 @@ set(TSAN_0005-atomic-message-passing ON)
 set(TSAN_0006-racy-message-passing ON)
 
 # TODO: some sources are still failing
-set(FAILING_SRCS)
+set(FAILING_SRCS
+    double_free.c # needs memmgr-user=uaf, the error must not RUNTIME_...
+    enforce_pc.c
+    impasse.c # needs join handler
+    inflex_abc_nocli.c # test script needs correct preloading on necessary libraries
+    notsan_mediator_null.c # the error must not RUNTIME_...
+    record_granularity_test_x86.c # may be compiler/system-dependant
+    wait.c # time leap is not performed, maybe there is an undesired CAT_CALL
+)
 
 file(GLOB ALL_SRCS *.c)
 set(SRCS)

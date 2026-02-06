@@ -144,13 +144,13 @@ pub enum Eff {
 fn eval_rmw(op: raw::rmw_op::Type, old: u64, new: u64) -> u64 {
     use raw::rmw_op::*;
     match op {
-        RMW_OP_ADD => old + new,
-        RMW_OP_SUB => old - new,
+        RMW_OP_ADD => old.wrapping_add(new),
+        RMW_OP_SUB => old.wrapping_sub(new),
         RMW_OP_OR => old | new,
         RMW_OP_AND => old & new,
         RMW_OP_XOR => old ^ new,
         RMW_OP_NAND => !(old & new),
-        _ => unreachable!("unknown rmw op"),
+        _ => unreachable!("unknown rmw op {:?}", op),
     }
 }
 

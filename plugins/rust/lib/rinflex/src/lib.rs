@@ -133,8 +133,7 @@ pub struct Event {
 pub enum Eff {
     Trivial,
     XchgSame,
-    XchgUp,
-    XchgDown,
+    XchgChanged,
     RmwSame,
     RmwUp,
     RmwDown,
@@ -163,9 +162,8 @@ impl From<&MemoryAccess> for Eff {
                 kind: ModifyKind::Xchg { value: new, .. },
                 ..
             }) => match new.cmp(old) {
-                Less => Eff::XchgDown,
                 Equal => Eff::XchgSame,
-                Greater => Eff::XchgUp,
+                _ => Eff::XchgChanged,
             },
             Some(Modify {
                 read_value: Some(old),

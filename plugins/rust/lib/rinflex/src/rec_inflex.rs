@@ -344,8 +344,30 @@ impl RecInflex {
                 warn!("Cannot find satisfying execution in get_trace");
                 return Err(Error::ExecutionNotFound);
             }
+
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(replay_goal));
             flags.set_by_opt(&flag_seed(), Value::U64(now()));
+
+            // Restore ichpt. Ichpt_initial was lost whenever we
+            // unmarshal a config record, but it is nevertheless
+            // required because we accumulate them in Inflex and other
+            // procedures. It is incorrect to set this in the first
+            // config record because the trace prefix is only
+            // meaningful given the same config.
+            //
+            // Safety: we are trying to explore NEW behaviors after a
+            // known prefix. The prefix is not affected by this. Also,
+            // more ichpt means more explored behaviors, so soundness
+            // is guaranteed. OTOH, if we miss some ichpt, we may not
+            // find the desired outcome at all.
+            unsafe {
+                raw::vec_union(
+                    raw::ichpt_initial(),
+                    raw::ichpt_final(),
+                    Some(raw::ichpt_item_compare),
+                );
+            }
+
             let exitcode = checked_execute(&input, &flags, true)?;
             if let Some(actual_outcome) = postexec(&output, exitcode)? {
                 bar.tick_valid();
@@ -637,17 +659,6 @@ impl RecInflex {
 /// Unmarshal old_config and update it according to the current rinflex state.
 fn update_config_record(old_config: &Record, constraints: &ConstraintSet) -> Owned<Record> {
     old_config.unmarshal();
-    // ichpt config: the old_config might have an empty ichpt config,
-    // and unmarshal will overwrite the current ichpt_initial. Restore
-    // it.
-    unsafe {
-        raw::vec_union(
-            raw::ichpt_initial(),
-            raw::ichpt_final(),
-            Some(raw::ichpt_item_compare),
-        );
-    }
-    // order_enforcer config
     handlers::order_enforcer::cli_set_constraints(constraints.clone());
     let r = Record::new_config(old_config.clk);
     handlers::order_enforcer::cli_clear_constraints();

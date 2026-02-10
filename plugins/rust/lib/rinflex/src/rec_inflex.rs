@@ -1,6 +1,5 @@
 use std::path::{Path, PathBuf};
 
-use lotto::base::category::Category;
 use lotto::base::envvar::EnvScope;
 use lotto::base::flags::*;
 use lotto::base::Trace;
@@ -11,11 +10,11 @@ use lotto::log::*;
 use lotto::owned::Owned;
 use lotto::raw;
 use lotto::sys::now;
-use lotto::sys::Stream;
 
 use crate::error::Error;
 use crate::handlers;
 use crate::inflex::{always, checked_execute, postexec, Outcome};
+use crate::memory_access::MemoryOperationExt;
 use crate::progress::ProgressBar;
 use crate::{inflex, trace, Constraint, ConstraintSet, Event, PrimitiveConstraint};
 
@@ -395,60 +394,9 @@ impl RecInflex {
         let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let event = trace::get_event_at_clk(flags, trace, clock)?;
 
-        if matches!(
-            event.t.cat,
-            Category::CAT_TASK_INIT | Category::CAT_FUNC_EXIT
-        ) {
-            let after_event = trace::get_event_at_clk(flags, trace, clock + 1)?;
-            return Ok((after_event, 1));
-        } else if event.t.cat == Category::CAT_BEFORE_CMPXCHG {
-            // For CAS operations, Inflex and InverseInflex will always
-            // find BEFORE_CMPXCHG, which is always followed by, and only
-            // followed by AFTER_CMPXCHG_S or AFTER_CMPXCHG_F.
-            //
-            // (Justification: BEFORE_CMPXCHG is always followed by
-            // AFTER_CMPXCHG_[SF], and whenever AFTER_CMPXCHG_[SF] is
-            // causing a bug / invalidating a bug, BEFORE_CMPXCHG will be
-            // selected as IP/IIP.)
-            //
-            // The pattern will always be like:
-            //   ... B F ... B F ... B S
-            // where ... denotes other events, possibly happening inside
-            // the CAS loop body.
-            //
-            // The PC counts are obviously wrong: each B and F's counts
-            // are incrementing, but they should be considered the same
-            // atomic operation. Here, replace BEFORE_CMPXCHG as
-            // AFTER_CMPXCHG_S because that is the true, intended meaning
-            // of the program.
-            //
-            // The handling is correct for CAS loops: they always
-            // terminate with a SUCCESS.
-            //
-            // However, there is another pattern:
-            //   if (atomic_compare_exchange(...)) {
-            //       /* do something */
-            //   } else {
-            //       /* do something else */
-            //   }
-            //
-            // In this case, B, S, and F's counts are correct. We simply
-            // keep BEFORE_CMPXCHG to expose more events. Unfortunately,
-            // it is impossible to tell this pattern from a one-shot
-            // successful CAS loop. This is probably problematic.
-            let after_event = trace::get_event_at_clk(flags, trace, clock + 1)?;
-            if after_event.t.cat == Category::CAT_AFTER_CMPXCHG_S {
-                return Ok((after_event, 0));
-            } else {
-                return Ok((event, 0));
-            }
-        } else if event.t.cat == Category::CAT_AFTER_XCHG {
-            // This is in fact similar to CMPXCHG, but they are
-            // handled differently, because there is no counterpart to
-            // AFTER_CMPXCHG_S and _F events. Here, we make sure we
-            // always return the BEFORE event.
+        if event.t.cat.is_after() {
             let before_event = trace::get_event_at_clk(flags, trace, clock - 1)?;
-            if before_event.t.cat == Category::CAT_BEFORE_XCHG {
+            if before_event.t.cat.is_before() {
                 return Ok((before_event, -1));
             } else {
                 return Ok((event, 0));

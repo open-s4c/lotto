@@ -137,6 +137,8 @@ pub enum Eff {
     RmwSame,
     RmwUp,
     RmwDown,
+    CasSuccess,
+    CasFailure,
 }
 
 #[inline]
@@ -182,6 +184,17 @@ impl From<&MemoryAccess> for Eff {
                     Greater => Eff::RmwUp,
                 }
             }
+            Some(Modify {
+                read_value: Some(old),
+                kind: ModifyKind::Cas { expected, .. },
+                ..
+            }) => {
+                if old == expected {
+                    Eff::CasSuccess
+                } else {
+                    Eff::CasFailure
+                }
+            }
             _ => Eff::Trivial,
         }
     }
@@ -220,6 +233,20 @@ pub struct GenericEventCoreRef<'a, StackTraceType> {
 
 type EventCore = GenericEventCore<StackTrace>;
 type EventCoreRef<'a> = GenericEventCoreRef<'a, StackTrace>;
+
+impl<S1> GenericEventCore<S1> {
+    pub fn from_ref<'a, S2>(
+        r: GenericEventCoreRef<'a, S1>,
+        stacktrace_convert: impl FnOnce(&S1) -> S2,
+    ) -> GenericEventCore<S2> {
+        GenericEventCore {
+            t: r.t.clone(),
+            stacktrace: stacktrace_convert(r.stacktrace),
+            eff: r.eff,
+            _phantom: PhantomData,
+        }
+    }
+}
 
 impl From<Event> for EventCore {
     fn from(value: Event) -> Self {

@@ -280,52 +280,8 @@ fn should_block(cur: &Event, constraint: &Constraint) -> bool {
         return true;
     }
 
-    /* CAS check: effectively regard AFTER_CMPXCHG_S as
-     * "BEFORE_CAS that is predicted to succeed".
-     *
-     * This is because E -> T -> AFTER_CMPXCHG_S is equivalent to E ->
-     * AFTER_CMPXCHG_S -> T.
-     *
-     * Therefore, if target is AFTER_CMPXCHG_S, we need to insert T
-     * before the corresponding BEFORE_CMPXCHG, which is only correct
-     * when BEFORE_CMPXCHG is followed immediately by AFTER_CMPXCHG_S,
-     * so we need to predict whether it will succeed.
-     */
-    if let Some((cas_success, cas_after_event)) = convert_cas_before_to_after(cur.clone()) {
-        // let source_conflicting_with_cur = source.m.is_some()
-        //     && cur.m.is_some()
-        //     && source
-        //         .m
-        //         .clone()
-        //         .unwrap()
-        //         .conflicting_with(&cur.m.clone().unwrap());
-        if cas_after_event.equals(target)
-        // && source_conflicting_with_cur
-        {
-            if cas_success {
-                debug!("cas-block-s");
-            } else {
-                debug!("cas-block-f");
-            }
-            return true;
-        }
-    }
-
     debug!("fallback-unblockable");
     false
-}
-
-fn convert_cas_before_to_after(mut cur: Event) -> Option<(bool, Event)> {
-    if cur.t.cat != Category::CAT_BEFORE_CMPXCHG {
-        return None;
-    }
-    if cur.m.clone().unwrap().predict_cas() {
-        cur.t.cat = Category::CAT_AFTER_CMPXCHG_S;
-        Some((true, cur))
-    } else {
-        cur.t.cat = Category::CAT_AFTER_CMPXCHG_F;
-        Some((false, cur))
-    }
 }
 
 #[derive(Encode, Decode, Debug, Default)]

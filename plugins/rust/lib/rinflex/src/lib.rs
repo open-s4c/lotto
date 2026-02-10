@@ -360,6 +360,7 @@ impl std::fmt::Display for Event {
 pub struct PrimitiveConstraint {
     pub source: Event,
     pub target: Event,
+    pub clk: Clock,
 }
 
 impl PartialEq for PrimitiveConstraint {

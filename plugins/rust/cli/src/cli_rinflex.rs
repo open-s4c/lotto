@@ -92,7 +92,9 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
             }
         };
 
+        let replay_goal = pair.clk;
         rinflex.push_real_constraint(pair);
+        rinflex.reset_input(replay_goal)?;
     }
 
     let mut num_ocs = 0;

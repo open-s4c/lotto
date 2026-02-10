@@ -100,6 +100,14 @@ impl RecInflex {
         })
     }
 
+    pub fn reset_input(&mut self, replay_goal: Clock) -> Result<(), Error> {
+        let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+        let with_oc =
+            self.attach_constraints_to_trace(&self.trace_fail, replay_goal, &self.constraints)?;
+        trace::replay(&self.flags, &with_oc, &self.trace_fail);
+        Ok(())
+    }
+
     /// Do one iteration of the Recursive Inflex main loop.
     ///
     /// It returns [None] when the analysis should terminate.
@@ -111,9 +119,7 @@ impl RecInflex {
     /// Runs inflex on the current trace_fail.
     fn find_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Event)>, Error> {
         info!("Finding IP...");
-        let updated = self
-            .unsafely_set_constraints_in_first_config_record(&self.trace_fail, &self.constraints)?;
-        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &updated);
+        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &self.trace_fail);
         inflex.output = self.trace_temp.clone();
         inflex.min = min;
         inflex.report_progress = self.report_progress;
@@ -130,11 +136,7 @@ impl RecInflex {
     /// Runs inverseinflex on the current trace_success.
     fn find_inverse_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Event)>, Error> {
         info!("Finding IIP...");
-        let updated = self.unsafely_set_constraints_in_first_config_record(
-            &self.trace_success,
-            &self.constraints,
-        )?;
-        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &updated);
+        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &self.trace_success);
         inflex.output = self.trace_temp.clone();
         inflex.report_progress = self.report_progress;
         inflex.min = min;
@@ -238,6 +240,7 @@ impl RecInflex {
         let pair = PrimitiveConstraint {
             source: source.clone(),
             target: target.clone(),
+            clk: ip - 1,
         };
 
         // Primitive checking
@@ -268,6 +271,7 @@ impl RecInflex {
             let virt_pair = PrimitiveConstraint {
                 source: source.clone(),
                 target: alt_event,
+                clk: ip - 1,
             };
             info!("Found an essentiality witness\n{}", virt_pair);
             if virt_pair.source.t.id == virt_pair.target.t.id {
@@ -317,8 +321,7 @@ impl RecInflex {
             "get_trace: attaching constraints, #constraints={}",
             self.constraints.len()
         );
-        let input =
-            self.unsafely_set_constraints_in_first_config_record(input, &self.constraints)?;
+        let input = self.attach_constraints_to_trace(input, replay_goal, &self.constraints)?;
         info!(
             "get_trace: input={}, output={}, replay_goal={}",
             input.display(),
@@ -567,7 +570,6 @@ impl RecInflex {
         let r = Record::new_config(goal);
         rec.append(r).expect("append updated oc to trace");
         rec.save(&out);
-        handlers::order_enforcer::cli_clear_constraints();
 
         Ok(out)
     }

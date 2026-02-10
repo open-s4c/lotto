@@ -100,10 +100,16 @@ impl RecInflex {
     }
 
     pub fn reset_input(&mut self, replay_goal: Clock) -> Result<(), Error> {
-        let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
-        let with_oc =
-            self.attach_constraints_to_trace(&self.trace_fail, replay_goal, &self.constraints)?;
-        trace::replay(&self.flags, &with_oc, &self.trace_fail);
+        info!("Resetting input");
+        self.get_trace(
+            Outcome::Fail,
+            replay_goal,
+            &self.trace_fail,
+            &self.trace_temp,
+            true,
+            true,
+        )?;
+        std::fs::copy(&self.trace_temp, &self.trace_fail).expect("reset input");
         Ok(())
     }
 

@@ -117,7 +117,7 @@ impl RecInflex {
     }
 
     /// Runs inflex on the current trace_fail.
-    fn find_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Event)>, Error> {
+    fn find_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Clock, Event)>, Error> {
         info!("Finding IP...");
         let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &self.trace_fail);
         inflex.output = self.trace_temp.clone();
@@ -129,12 +129,13 @@ impl RecInflex {
             return Ok(None);
         }
         let (event, delta) = self.event_at_clock(&self.flags, &self.trace_fail, ip)?;
+        let ip_fixed = ip.wrapping_add_signed(delta as i64).min(ip);
         info!("Source event is\n{}", event.display()?);
-        Ok(Some((ip.wrapping_add_signed(delta as i64), event)))
+        Ok(Some((ip, ip_fixed, event)))
     }
 
     /// Runs inverseinflex on the current trace_success.
-    fn find_inverse_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Event)>, Error> {
+    fn find_inverse_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Clock, Event)>, Error> {
         info!("Finding IIP...");
         let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &self.trace_success);
         inflex.output = self.trace_temp.clone();
@@ -143,8 +144,9 @@ impl RecInflex {
         let iip = inflex.run_inverse_fast()?;
         info!("IIP is {}", iip);
         let (event, delta) = self.event_at_clock(&self.flags, &self.trace_success, iip)?;
+        let iip_fixed = iip.wrapping_add_signed(delta as i64).min(iip);
         info!("Target event is\n{}", event.display()?);
-        Ok(Some((iip.wrapping_add_signed(delta as i64), event)))
+        Ok(Some((iip, iip_fixed, event)))
     }
 
     /// Check if current set of OCs \/ {pair} is a bug for the prefix trace_fail[:ip-1].
@@ -212,7 +214,7 @@ impl RecInflex {
         );
 
         // Find IP.
-        let Some((ip, source)) = self.find_inflex(inflex_min)? else {
+        let Some((_ip_orig, ip, source)) = self.find_inflex(inflex_min)? else {
             return Ok(None);
         };
 
@@ -232,7 +234,7 @@ impl RecInflex {
         )?;
 
         // Find IIP.
-        let Some((iip, target)) = self.find_inverse_inflex(ip)? else {
+        let Some((_iip_orig, iip, target)) = self.find_inverse_inflex(ip)? else {
             return Ok(None);
         };
 
@@ -456,92 +458,7 @@ impl RecInflex {
         }
     }
 
-    /// Returns the output trace file.
-    ///
-    /// This is the unsafe version. That is, it doesn't try to
-    /// identify whether or not the suffix respects the ordering
-    /// constraints. Rather, it just modifies the config.
-    pub fn unsafely_set_constraints_in_first_config_record(
-        &self,
-        input: &Path,
-        constraints: &ConstraintSet,
-    ) -> Result<PathBuf, Error> {
-        let input_filename = input.file_name().expect("must be a file").to_str().unwrap();
-        let output_path = self.tempdir.join(format!("{}+oc", input_filename));
-        let mut input = Trace::load_file(input);
-        let mut st = Stream::new_file_out(&output_path);
-        let mut output = Trace::new_file(&mut st);
-        while let Some(r) = input.next_any() {
-            if r.kind == raw::record::RECORD_CONFIG && r.clk == 0 {
-                let r = update_config_record(r, constraints);
-                output.append(r).expect("append updated config");
-            } else {
-                output.append(r.to_owned()).expect("append old record");
-            }
-            input.advance();
-        }
-        Ok(output_path)
-    }
-
-    /// Returns the output trace file, as well as the last clock of
-    /// the output trace. The clock corresponds to the last event
-    /// which is not affected by the constraints.
-    pub fn set_constraints_in_first_config_record(
-        &self,
-        input: &Path,
-        constraints: &ConstraintSet,
-    ) -> Result<(PathBuf, Clock), Error> {
-        if constraints.len() == 0 {
-            let last_clk = trace::get_last_clk(input);
-            return Ok((input.to_owned(), last_clk));
-        }
-
-        let lowest_clk = self
-            .constraints
-            .iter()
-            .fold(u64::MAX, |res, r| res.min(r.c.clock_lower_bound()))
-            .saturating_sub(1); // Account for `event_at_clock` which may return the *next* event
-
-        let input_filename = input.file_name().expect("must be a file").to_str().unwrap();
-        let output_path = self.tempdir.join(format!("{}+oc", input_filename));
-
-        let mut input = Trace::load_file(input);
-        let mut st = Stream::new_file_out(&output_path);
-        let mut output = Trace::new_file(&mut st);
-        let mut last_clk = 0;
-
-        while let Some(r) = input.next_any() {
-            // Only keep records in the range [0 .. start_clk - 1].
-            // All records from start_clk are potentially invalidated
-            // by the constraints.
-            if r.clk >= lowest_clk {
-                break;
-            }
-            last_clk = r.clk;
-            if r.kind == raw::record::RECORD_CONFIG && r.clk == 0 {
-                let r = update_config_record(r, constraints);
-                output.append(r).expect("append updated config");
-            } else {
-                output.append(r.to_owned()).expect("append old record");
-            }
-            input.advance();
-        }
-
-        // Make sure we can replay up to lowest_clk - 1.
-        if last_clk != lowest_clk - 1 {
-            let mut r = Record::new(0);
-            r.clk = lowest_clk - 1;
-            r.kind = raw::record::RECORD_OPAQUE;
-            output.append(r).expect("OPAQUE");
-        }
-
-        Ok((output_path, lowest_clk - 1))
-    }
-
     /// Attach constraints to trace through order_enforcer's config.
-    ///
-    /// If goal is non-zero, it will update the constraints to the
-    /// specified clock automatically by using `update_constraints`.
     ///
     /// The constraints are attached at the clock goal, and any events
     /// following goal+1 will respect the constraints.
@@ -558,24 +475,25 @@ impl RecInflex {
         let input_filename = input.file_name().expect("must be a file").to_str().unwrap();
         let out = self.tempdir.join(format!("{}+oc", input_filename));
 
-        let all = if goal == 0 {
-            constraints.clone()
-        } else {
-            self.update_constraints(input, goal, constraints)?
-        };
-        handlers::order_enforcer::cli_set_constraints(all);
+        handlers::order_enforcer::cli_set_constraints(constraints.clone());
 
         let mut rec = Trace::load_file(input);
         rec.trim_to_goal(goal, true);
         let r = Record::new_config(goal);
         rec.append(r).expect("append updated oc to trace");
         rec.save(&out);
+        // Embed the current constraints into the trace file.  Do not
+        // clear constraints for inflex (which will truncate the
+        // trace). This sound because (1) a constraint added before
+        // its clk does no harm, and (2) a constraint duplicated after
+        // its clock will be deduped.
 
         Ok(out)
     }
 
     /// Update `constraints_to_update` using records from clock 0 to
     /// clock `goal` (inclusive).
+    #[allow(dead_code)]
     pub fn update_constraints(
         &self,
         input: &Path,
@@ -656,15 +574,6 @@ impl RecInflex {
         self.next_id += 1;
         id
     }
-}
-
-/// Unmarshal old_config and update it according to the current rinflex state.
-fn update_config_record(old_config: &Record, constraints: &ConstraintSet) -> Owned<Record> {
-    old_config.unmarshal();
-    handlers::order_enforcer::cli_set_constraints(constraints.clone());
-    let r = Record::new_config(old_config.clk);
-    handlers::order_enforcer::cli_clear_constraints();
-    r
 }
 
 /// For debugging.

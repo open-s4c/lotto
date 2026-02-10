@@ -1,4 +1,5 @@
 use lotto::raw;
+use lotto::sync::HandlerWrapper;
 use lotto::Stateful;
 use lotto::{
     base::{Category, Value},
@@ -12,15 +13,14 @@ use lotto::{
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::LazyLock;
 
 use crate::handlers::cas;
 use crate::handlers::stacktrace;
 use crate::idmap::IdMap;
 use crate::Eff;
-use crate::{Event, GenericEventCore, StackTrace, Transition};
+use crate::{Event, GenericEventCore, GenericEventCoreRef, StackTrace, Transition};
 
-pub static HANDLER: LazyLock<EventHandler> = LazyLock::new(|| EventHandler {
+pub static HANDLER: HandlerWrapper<EventHandler> = HandlerWrapper::new(|| EventHandler {
     cfg: Config {
         enabled: AtomicBool::new(false),
     },
@@ -34,6 +34,13 @@ pub static HANDLER: LazyLock<EventHandler> = LazyLock::new(|| EventHandler {
 /// The index in the `st_map`.
 type StackTraceId = usize;
 
+type EventCore = GenericEventCore<StackTraceId>;
+
+pub struct Count {
+    capture: u64,
+    resume: u64,
+}
+
 #[derive(Stateful)]
 pub struct EventHandler {
     #[config]
@@ -41,7 +48,7 @@ pub struct EventHandler {
     #[persistent]
     pub pers: Persistent,
 
-    pub pc_cnt: FxHashMap<GenericEventCore<StackTraceId>, u64>,
+    pub pc_cnt: FxHashMap<EventCore, Count>,
 
     // Do not store stacktrace in pc_cnt to save some RAM.
     pub st_map: IdMap<StackTrace>,
@@ -65,26 +72,21 @@ impl handler::Handler for EventHandler {
         // really happens. See posthandle.
         let eff = Eff::from(ma.as_ref());
 
-        let ecore = GenericEventCore {
+        let ecore = EventCore {
             t: transition.clone(),
             _phantom: PhantomData,
             stacktrace: stid,
             eff,
-            // addr: ma.as_ref().map(|ma| ma.addr().to_owned()),
-            // rval: ma.as_ref().map(MemoryAccess::loaded_value).flatten(),
         };
-        let cnt = *self
-            .pc_cnt
-            .entry(ecore)
-            .and_modify(|c| *c += 1)
-            .or_insert(1);
+        let cnt = capture(&mut self.pc_cnt, ecore);
         let event = Event {
             t: transition,
             clk: e.clk,
-            cnt,
+            cnt: cnt.capture,
             stacktrace,
             m: ma,
         };
+        //println!("updated event {} capture -> {}", event.t, cnt.capture);
         self.pers.tasks.insert(id, event);
     }
 
@@ -97,43 +99,83 @@ impl handler::Handler for EventHandler {
             .tasks
             .get_mut(&TaskId(ctx.id))
             .expect("handler_event's posthandle expects event data from capture");
+        let mut ecore = ecore_from_event(&mut self.st_map, &*entry);
+
+        let Some(ref oldm) = entry.m else {
+            // Not memory operation
+            resume(&mut self.pc_cnt, ecore);
+            return;
+        };
 
         // Task i just executed a memory operation, and we should
         // update the value to reflect the "real" value.
-        let Some(ref oldm) = entry.m else {
-            return;
-        };
         let Some(ref realm) = cas::get_rt_memory_access(TaskId(ctx.id)) else {
             panic!("real memory access not available");
         };
         let oldv = oldm.loaded_value();
         let realv = realm.loaded_value();
         if oldv == realv {
+            // Prediction is correct.
+            resume(&mut self.pc_cnt, ecore);
             return;
         }
         let oldeff = Eff::from(oldm);
         let neweff = Eff::from(realm);
 
-        // The actual event reads another value. Update counters.
-        let stid = self.st_map.put(&entry.stacktrace);
-        let mut ecore = GenericEventCore {
-            _phantom: PhantomData,
-            t: entry.t.clone(),
-            stacktrace: stid,
-            eff: oldeff,
-        };
-        self.pc_cnt.entry(ecore.clone()).and_modify(|c| *c -= 1);
+        // The actual event reads another value. Uncapture the oldeff,
+        // capture neweff, and resume neweff.
+        ecore.eff = oldeff;
+        self.pc_cnt
+            .entry(ecore.clone())
+            .and_modify(|cnt| cnt.capture -= 1);
         ecore.eff = neweff;
-        let newcnt = *self
+        let newcnt = self
             .pc_cnt
             .entry(ecore)
-            .and_modify(|c| *c += 1)
-            .or_insert(1);
+            .and_modify(|cnt| {
+                cnt.capture += 1;
+                cnt.resume = cnt.capture;
+            })
+            .or_insert(Count {
+                capture: 1,
+                resume: 1,
+            });
 
         // Update the record.
-        entry.cnt = newcnt;
+        entry.cnt = newcnt.resume;
         entry.m = Some(realm.clone());
+        //println!("RESUME event {} cnt={}", entry.t, newcnt.resume);
     }
+}
+
+fn ecore_from_event(st_map: &mut IdMap<StackTrace>, e: &Event) -> EventCore {
+    let stid = st_map.put(&e.stacktrace);
+    EventCore {
+        t: e.t.clone(),
+        stacktrace: stid,
+        eff: Eff::from(e.m.as_ref()),
+        _phantom: PhantomData,
+    }
+}
+
+fn capture(pc_cnt: &mut FxHashMap<EventCore, Count>, ecore: EventCore) -> &mut Count {
+    pc_cnt
+        .entry(ecore)
+        .and_modify(|cnt| cnt.capture = cnt.resume + 1)
+        .or_insert(Count {
+            capture: 1,
+            resume: 0,
+        })
+}
+
+fn resume(pc_cnt: &mut FxHashMap<EventCore, Count>, ecore: EventCore) -> &mut Count {
+    pc_cnt
+        .entry(ecore)
+        .and_modify(|cnt| cnt.resume = cnt.capture)
+        .or_insert(Count {
+            capture: 0,
+            resume: 1,
+        })
 }
 
 //
@@ -199,6 +241,17 @@ pub fn register_flags() {
 //
 // Interfaces
 //
+
+/// Return how many times this event actually happened.
+pub fn get_event_happened_cnt(ecore_ref: GenericEventCoreRef<StackTrace>) -> u64 {
+    let handler = unsafe { HANDLER.get_mut() };
+    let ecore = GenericEventCore::from_ref(ecore_ref, |st| handler.st_map.put(&st));
+    handler
+        .pc_cnt
+        .get(&ecore)
+        .map(|cnt| cnt.resume)
+        .unwrap_or(0)
+}
 
 pub fn get_event(task: TaskId) -> Option<Event> {
     HANDLER.pers.tasks.get(&task).cloned()

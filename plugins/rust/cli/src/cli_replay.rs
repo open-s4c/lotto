@@ -49,7 +49,12 @@ fn replay(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
 
     let args = first.args().to_owned();
     rec.advance();
-    rec.next(raw::record::RECORD_CONFIG).unwrap().unmarshal();
+    while let Some(r) = {
+        rec.advance();
+        rec.next(raw::record::RECORD_CONFIG)
+    } {
+        r.unmarshal();
+    }
     drop(rec);
 
     envvar_set! {

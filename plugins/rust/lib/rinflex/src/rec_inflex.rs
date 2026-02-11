@@ -1,6 +1,5 @@
 use std::path::{Path, PathBuf};
 
-use lotto::base::category::Category;
 use lotto::base::envvar::EnvScope;
 use lotto::base::flags::*;
 use lotto::base::Trace;
@@ -11,11 +10,11 @@ use lotto::log::*;
 use lotto::owned::Owned;
 use lotto::raw;
 use lotto::sys::now;
-use lotto::sys::Stream;
 
 use crate::error::Error;
 use crate::handlers;
 use crate::inflex::{always, checked_execute, postexec, Outcome};
+use crate::memory_access::MemoryOperationExt;
 use crate::progress::ProgressBar;
 use crate::{inflex, trace, Constraint, ConstraintSet, Event, PrimitiveConstraint};
 
@@ -100,6 +99,20 @@ impl RecInflex {
         })
     }
 
+    pub fn reset_input(&mut self, replay_goal: Clock) -> Result<(), Error> {
+        info!("Resetting input");
+        self.get_trace(
+            Outcome::Fail,
+            replay_goal,
+            &self.trace_fail,
+            &self.trace_temp,
+            true,
+            true,
+        )?;
+        std::fs::copy(&self.trace_temp, &self.trace_fail).expect("reset input");
+        Ok(())
+    }
+
     /// Do one iteration of the Recursive Inflex main loop.
     ///
     /// It returns [None] when the analysis should terminate.
@@ -109,11 +122,9 @@ impl RecInflex {
     }
 
     /// Runs inflex on the current trace_fail.
-    fn find_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Event)>, Error> {
+    fn find_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Clock, Event)>, Error> {
         info!("Finding IP...");
-        let updated = self
-            .unsafely_set_constraints_in_first_config_record(&self.trace_fail, &self.constraints)?;
-        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &updated);
+        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &self.trace_fail);
         inflex.output = self.trace_temp.clone();
         inflex.min = min;
         inflex.report_progress = self.report_progress;
@@ -123,26 +134,24 @@ impl RecInflex {
             return Ok(None);
         }
         let (event, delta) = self.event_at_clock(&self.flags, &self.trace_fail, ip)?;
+        let ip_fixed = ip.wrapping_add_signed(delta as i64).min(ip);
         info!("Source event is\n{}", event.display()?);
-        Ok(Some((ip.wrapping_add_signed(delta as i64), event)))
+        Ok(Some((ip, ip_fixed, event)))
     }
 
     /// Runs inverseinflex on the current trace_success.
-    fn find_inverse_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Event)>, Error> {
+    fn find_inverse_inflex(&mut self, min: Clock) -> Result<Option<(Clock, Clock, Event)>, Error> {
         info!("Finding IIP...");
-        let updated = self.unsafely_set_constraints_in_first_config_record(
-            &self.trace_success,
-            &self.constraints,
-        )?;
-        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &updated);
+        let mut inflex = inflex::Inflex::new_with_flags_and_input(&self.flags, &self.trace_success);
         inflex.output = self.trace_temp.clone();
         inflex.report_progress = self.report_progress;
         inflex.min = min;
         let iip = inflex.run_inverse_fast()?;
         info!("IIP is {}", iip);
         let (event, delta) = self.event_at_clock(&self.flags, &self.trace_success, iip)?;
+        let iip_fixed = iip.wrapping_add_signed(delta as i64).min(iip);
         info!("Target event is\n{}", event.display()?);
-        Ok(Some((iip.wrapping_add_signed(delta as i64), event)))
+        Ok(Some((iip, iip_fixed, event)))
     }
 
     /// Check if current set of OCs \/ {pair} is a bug for the prefix trace_fail[:ip-1].
@@ -210,7 +219,7 @@ impl RecInflex {
         );
 
         // Find IP.
-        let Some((ip, source)) = self.find_inflex(inflex_min)? else {
+        let Some((_ip_orig, ip, source)) = self.find_inflex(inflex_min)? else {
             return Ok(None);
         };
 
@@ -230,7 +239,7 @@ impl RecInflex {
         )?;
 
         // Find IIP.
-        let Some((iip, target)) = self.find_inverse_inflex(ip)? else {
+        let Some((_iip_orig, iip, target)) = self.find_inverse_inflex(ip)? else {
             return Ok(None);
         };
 
@@ -238,6 +247,7 @@ impl RecInflex {
         let pair = PrimitiveConstraint {
             source: source.clone(),
             target: target.clone(),
+            clk: ip - 1,
         };
 
         // Primitive checking
@@ -268,6 +278,7 @@ impl RecInflex {
             let virt_pair = PrimitiveConstraint {
                 source: source.clone(),
                 target: alt_event,
+                clk: ip - 1,
             };
             info!("Found an essentiality witness\n{}", virt_pair);
             if virt_pair.source.t.id == virt_pair.target.t.id {
@@ -317,8 +328,7 @@ impl RecInflex {
             "get_trace: attaching constraints, #constraints={}",
             self.constraints.len()
         );
-        let input =
-            self.unsafely_set_constraints_in_first_config_record(input, &self.constraints)?;
+        let input = self.attach_constraints_to_trace(input, replay_goal, &self.constraints)?;
         info!(
             "get_trace: input={}, output={}, replay_goal={}",
             input.display(),
@@ -344,8 +354,30 @@ impl RecInflex {
                 warn!("Cannot find satisfying execution in get_trace");
                 return Err(Error::ExecutionNotFound);
             }
+
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(replay_goal));
             flags.set_by_opt(&flag_seed(), Value::U64(now()));
+
+            // Restore ichpt. Ichpt_initial was lost whenever we
+            // unmarshal a config record, but it is nevertheless
+            // required because we accumulate them in Inflex and other
+            // procedures. It is incorrect to set this in the first
+            // config record because the trace prefix is only
+            // meaningful given the same config.
+            //
+            // Safety: we are trying to explore NEW behaviors after a
+            // known prefix. The prefix is not affected by this. Also,
+            // more ichpt means more explored behaviors, so soundness
+            // is guaranteed. OTOH, if we miss some ichpt, we may not
+            // find the desired outcome at all.
+            unsafe {
+                raw::vec_union(
+                    raw::ichpt_initial(),
+                    raw::ichpt_final(),
+                    Some(raw::ichpt_item_compare),
+                );
+            }
+
             let exitcode = checked_execute(&input, &flags, true)?;
             if let Some(actual_outcome) = postexec(&output, exitcode)? {
                 bar.tick_valid();
@@ -368,60 +400,9 @@ impl RecInflex {
         let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let event = trace::get_event_at_clk(flags, trace, clock)?;
 
-        if matches!(
-            event.t.cat,
-            Category::CAT_TASK_INIT | Category::CAT_FUNC_EXIT
-        ) {
-            let after_event = trace::get_event_at_clk(flags, trace, clock + 1)?;
-            return Ok((after_event, 1));
-        } else if event.t.cat == Category::CAT_BEFORE_CMPXCHG {
-            // For CAS operations, Inflex and InverseInflex will always
-            // find BEFORE_CMPXCHG, which is always followed by, and only
-            // followed by AFTER_CMPXCHG_S or AFTER_CMPXCHG_F.
-            //
-            // (Justification: BEFORE_CMPXCHG is always followed by
-            // AFTER_CMPXCHG_[SF], and whenever AFTER_CMPXCHG_[SF] is
-            // causing a bug / invalidating a bug, BEFORE_CMPXCHG will be
-            // selected as IP/IIP.)
-            //
-            // The pattern will always be like:
-            //   ... B F ... B F ... B S
-            // where ... denotes other events, possibly happening inside
-            // the CAS loop body.
-            //
-            // The PC counts are obviously wrong: each B and F's counts
-            // are incrementing, but they should be considered the same
-            // atomic operation. Here, replace BEFORE_CMPXCHG as
-            // AFTER_CMPXCHG_S because that is the true, intended meaning
-            // of the program.
-            //
-            // The handling is correct for CAS loops: they always
-            // terminate with a SUCCESS.
-            //
-            // However, there is another pattern:
-            //   if (atomic_compare_exchange(...)) {
-            //       /* do something */
-            //   } else {
-            //       /* do something else */
-            //   }
-            //
-            // In this case, B, S, and F's counts are correct. We simply
-            // keep BEFORE_CMPXCHG to expose more events. Unfortunately,
-            // it is impossible to tell this pattern from a one-shot
-            // successful CAS loop. This is probably problematic.
-            let after_event = trace::get_event_at_clk(flags, trace, clock + 1)?;
-            if after_event.t.cat == Category::CAT_AFTER_CMPXCHG_S {
-                return Ok((after_event, 0));
-            } else {
-                return Ok((event, 0));
-            }
-        } else if event.t.cat == Category::CAT_AFTER_XCHG {
-            // This is in fact similar to CMPXCHG, but they are
-            // handled differently, because there is no counterpart to
-            // AFTER_CMPXCHG_S and _F events. Here, we make sure we
-            // always return the BEFORE event.
+        if event.t.cat.is_after() {
             let before_event = trace::get_event_at_clk(flags, trace, clock - 1)?;
-            if before_event.t.cat == Category::CAT_BEFORE_XCHG {
+            if before_event.t.cat.is_before() {
                 return Ok((before_event, -1));
             } else {
                 return Ok((event, 0));
@@ -431,92 +412,7 @@ impl RecInflex {
         }
     }
 
-    /// Returns the output trace file.
-    ///
-    /// This is the unsafe version. That is, it doesn't try to
-    /// identify whether or not the suffix respects the ordering
-    /// constraints. Rather, it just modifies the config.
-    pub fn unsafely_set_constraints_in_first_config_record(
-        &self,
-        input: &Path,
-        constraints: &ConstraintSet,
-    ) -> Result<PathBuf, Error> {
-        let input_filename = input.file_name().expect("must be a file").to_str().unwrap();
-        let output_path = self.tempdir.join(format!("{}+oc", input_filename));
-        let mut input = Trace::load_file(input);
-        let mut st = Stream::new_file_out(&output_path);
-        let mut output = Trace::new_file(&mut st);
-        while let Some(r) = input.next_any() {
-            if r.kind == raw::record::RECORD_CONFIG && r.clk == 0 {
-                let r = update_config_record(r, constraints);
-                output.append(r).expect("append updated config");
-            } else {
-                output.append(r.to_owned()).expect("append old record");
-            }
-            input.advance();
-        }
-        Ok(output_path)
-    }
-
-    /// Returns the output trace file, as well as the last clock of
-    /// the output trace. The clock corresponds to the last event
-    /// which is not affected by the constraints.
-    pub fn set_constraints_in_first_config_record(
-        &self,
-        input: &Path,
-        constraints: &ConstraintSet,
-    ) -> Result<(PathBuf, Clock), Error> {
-        if constraints.len() == 0 {
-            let last_clk = trace::get_last_clk(input);
-            return Ok((input.to_owned(), last_clk));
-        }
-
-        let lowest_clk = self
-            .constraints
-            .iter()
-            .fold(u64::MAX, |res, r| res.min(r.c.clock_lower_bound()))
-            .saturating_sub(1); // Account for `event_at_clock` which may return the *next* event
-
-        let input_filename = input.file_name().expect("must be a file").to_str().unwrap();
-        let output_path = self.tempdir.join(format!("{}+oc", input_filename));
-
-        let mut input = Trace::load_file(input);
-        let mut st = Stream::new_file_out(&output_path);
-        let mut output = Trace::new_file(&mut st);
-        let mut last_clk = 0;
-
-        while let Some(r) = input.next_any() {
-            // Only keep records in the range [0 .. start_clk - 1].
-            // All records from start_clk are potentially invalidated
-            // by the constraints.
-            if r.clk >= lowest_clk {
-                break;
-            }
-            last_clk = r.clk;
-            if r.kind == raw::record::RECORD_CONFIG && r.clk == 0 {
-                let r = update_config_record(r, constraints);
-                output.append(r).expect("append updated config");
-            } else {
-                output.append(r.to_owned()).expect("append old record");
-            }
-            input.advance();
-        }
-
-        // Make sure we can replay up to lowest_clk - 1.
-        if last_clk != lowest_clk - 1 {
-            let mut r = Record::new(0);
-            r.clk = lowest_clk - 1;
-            r.kind = raw::record::RECORD_OPAQUE;
-            output.append(r).expect("OPAQUE");
-        }
-
-        Ok((output_path, lowest_clk - 1))
-    }
-
     /// Attach constraints to trace through order_enforcer's config.
-    ///
-    /// If goal is non-zero, it will update the constraints to the
-    /// specified clock automatically by using `update_constraints`.
     ///
     /// The constraints are attached at the clock goal, and any events
     /// following goal+1 will respect the constraints.
@@ -533,25 +429,25 @@ impl RecInflex {
         let input_filename = input.file_name().expect("must be a file").to_str().unwrap();
         let out = self.tempdir.join(format!("{}+oc", input_filename));
 
-        let all = if goal == 0 {
-            constraints.clone()
-        } else {
-            self.update_constraints(input, goal, constraints)?
-        };
-        handlers::order_enforcer::cli_set_constraints(all);
+        handlers::order_enforcer::cli_set_constraints(constraints.clone());
 
         let mut rec = Trace::load_file(input);
         rec.trim_to_goal(goal, true);
         let r = Record::new_config(goal);
         rec.append(r).expect("append updated oc to trace");
         rec.save(&out);
-        handlers::order_enforcer::cli_clear_constraints();
+        // Embed the current constraints into the trace file.  Do not
+        // clear constraints for inflex (which will truncate the
+        // trace). This sound because (1) a constraint added before
+        // its clk does no harm, and (2) a constraint duplicated after
+        // its clock will be deduped.
 
         Ok(out)
     }
 
     /// Update `constraints_to_update` using records from clock 0 to
     /// clock `goal` (inclusive).
+    #[allow(dead_code)]
     pub fn update_constraints(
         &self,
         input: &Path,
@@ -632,26 +528,6 @@ impl RecInflex {
         self.next_id += 1;
         id
     }
-}
-
-/// Unmarshal old_config and update it according to the current rinflex state.
-fn update_config_record(old_config: &Record, constraints: &ConstraintSet) -> Owned<Record> {
-    old_config.unmarshal();
-    // ichpt config: the old_config might have an empty ichpt config,
-    // and unmarshal will overwrite the current ichpt_initial. Restore
-    // it.
-    unsafe {
-        raw::vec_union(
-            raw::ichpt_initial(),
-            raw::ichpt_final(),
-            Some(raw::ichpt_item_compare),
-        );
-    }
-    // order_enforcer config
-    handlers::order_enforcer::cli_set_constraints(constraints.clone());
-    let r = Record::new_config(old_config.clk);
-    handlers::order_enforcer::cli_clear_constraints();
-    r
 }
 
 /// For debugging.

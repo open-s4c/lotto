@@ -133,24 +133,25 @@ pub struct Event {
 pub enum Eff {
     Trivial,
     XchgSame,
-    XchgUp,
-    XchgDown,
+    XchgChanged,
     RmwSame,
     RmwUp,
     RmwDown,
+    CasSuccess,
+    CasFailure,
 }
 
 #[inline]
 fn eval_rmw(op: raw::rmw_op::Type, old: u64, new: u64) -> u64 {
     use raw::rmw_op::*;
     match op {
-        RMW_OP_ADD => old + new,
-        RMW_OP_SUB => old - new,
+        RMW_OP_ADD => old.wrapping_add(new),
+        RMW_OP_SUB => old.wrapping_sub(new),
         RMW_OP_OR => old | new,
         RMW_OP_AND => old & new,
         RMW_OP_XOR => old ^ new,
         RMW_OP_NAND => !(old & new),
-        _ => unreachable!("unknown rmw op"),
+        _ => unreachable!("unknown rmw op {:?}", op),
     }
 }
 
@@ -163,9 +164,8 @@ impl From<&MemoryAccess> for Eff {
                 kind: ModifyKind::Xchg { value: new, .. },
                 ..
             }) => match new.cmp(old) {
-                Less => Eff::XchgDown,
                 Equal => Eff::XchgSame,
-                Greater => Eff::XchgUp,
+                _ => Eff::XchgChanged,
             },
             Some(Modify {
                 read_value: Some(old),
@@ -182,6 +182,17 @@ impl From<&MemoryAccess> for Eff {
                     Less => Eff::RmwDown,
                     Equal => Eff::RmwSame,
                     Greater => Eff::RmwUp,
+                }
+            }
+            Some(Modify {
+                read_value: Some(old),
+                kind: ModifyKind::Cas { expected, .. },
+                ..
+            }) => {
+                if old == expected {
+                    Eff::CasSuccess
+                } else {
+                    Eff::CasFailure
                 }
             }
             _ => Eff::Trivial,
@@ -222,6 +233,20 @@ pub struct GenericEventCoreRef<'a, StackTraceType> {
 
 type EventCore = GenericEventCore<StackTrace>;
 type EventCoreRef<'a> = GenericEventCoreRef<'a, StackTrace>;
+
+impl<S1> GenericEventCore<S1> {
+    pub fn from_ref<'a, S2>(
+        r: GenericEventCoreRef<'a, S1>,
+        stacktrace_convert: impl FnOnce(&S1) -> S2,
+    ) -> GenericEventCore<S2> {
+        GenericEventCore {
+            t: r.t.clone(),
+            stacktrace: stacktrace_convert(r.stacktrace),
+            eff: r.eff,
+            _phantom: PhantomData,
+        }
+    }
+}
 
 impl From<Event> for EventCore {
     fn from(value: Event) -> Self {
@@ -362,6 +387,7 @@ impl std::fmt::Display for Event {
 pub struct PrimitiveConstraint {
     pub source: Event,
     pub target: Event,
+    pub clk: Clock,
 }
 
 impl PartialEq for PrimitiveConstraint {

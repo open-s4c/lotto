@@ -142,9 +142,9 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
     // NOTE: We need to get the value early for the order enforcer to
     // detect whether the event should be blocked.
     let read_value = if ctx.cat.is_read() {
-        // 1. Currently, only consider XCHG and RMW events.
+        // 1. Currently, only consider CAS, XCHG and RMW events.
         // 2. An AFTER event is understood as the same operation as the BEFORE event, so they use the same value.
-        if ctx.cat.is_before() && (ctx.cat.is_xchg() || ctx.cat.is_rmw()) {
+        if ctx.cat.is_before() && (ctx.cat.is_xchg() || ctx.cat.is_rmw() || ctx.cat.is_cas()) {
             let value = unsafe { crate::sized_read(raw_addr as u64, size as usize) };
             Some(value)
         } else {

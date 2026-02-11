@@ -217,14 +217,35 @@ impl StateTopicSubscriber for OrderEnforcer {
         // config record at replay_goal, which can cause duplicate
         // constraints. Here, only add those unseen before.
         let already_has = |c: &Constraint| self.fin.constraints.iter().any(|old| old.id == c.id);
-        let unseen: Vec<_> = self
+        let mut unseen: Vec<_> = self
             .cfg
             .new_constraints
             .iter()
             .filter(|new| !already_has(new))
+            .cloned()
             .collect();
-        debug!("Adding {} new constraints: {:#?}", unseen.len(), unseen);
-        self.fin.constraints.extend(unseen.into_iter().cloned());
+
+        // Update event counters
+        for c in &mut unseen {
+            let e_src = &mut c.c.source;
+            let e_tgt = &mut c.c.target;
+            let ecore_src = GenericEventCoreRef::from(&*e_src);
+            let ecore_tgt = GenericEventCoreRef::from(&*e_tgt);
+            let src_cnt = event::get_event_happened_cnt(ecore_src);
+            let tgt_cnt = event::get_event_happened_cnt(ecore_tgt);
+            e_src.cnt = e_src
+                .cnt
+                .checked_sub(src_cnt)
+                .expect("underflow in constraint's source");
+            e_tgt.cnt = e_tgt
+                .cnt
+                .checked_sub(tgt_cnt)
+                .expect("underflow in constraint's target");
+        }
+        for (i, c) in unseen.iter().enumerate() {
+            debug!("add updated constraint {} => {}", i, c);
+        }
+        self.fin.constraints.extend(unseen);
 
         // Do not clear new_constraints so that lotto show can display them.
     }
@@ -238,11 +259,11 @@ fn should_block(cur: &Event, constraint: &Constraint) -> bool {
     let target = &constraint.c.target;
     if cur.t == source.t || cur.t == target.t {
         debug!(
-            "checking [t:{},cat:{},cnt:{},read:{:?}] against {}",
+            "checking [t:{},cat:{},cnt:{},eff:{:?}] against {}",
             cur.t.id,
             cur.t.cat,
             cur.cnt,
-            cur.m.as_ref().map(MemoryAccess::loaded_value).flatten(),
+            Eff::from(cur.m.as_ref()),
             constraint
         );
     }
@@ -259,52 +280,8 @@ fn should_block(cur: &Event, constraint: &Constraint) -> bool {
         return true;
     }
 
-    /* CAS check: effectively regard AFTER_CMPXCHG_S as
-     * "BEFORE_CAS that is predicted to succeed".
-     *
-     * This is because E -> T -> AFTER_CMPXCHG_S is equivalent to E ->
-     * AFTER_CMPXCHG_S -> T.
-     *
-     * Therefore, if target is AFTER_CMPXCHG_S, we need to insert T
-     * before the corresponding BEFORE_CMPXCHG, which is only correct
-     * when BEFORE_CMPXCHG is followed immediately by AFTER_CMPXCHG_S,
-     * so we need to predict whether it will succeed.
-     */
-    if let Some((cas_success, cas_after_event)) = convert_cas_before_to_after(cur.clone()) {
-        // let source_conflicting_with_cur = source.m.is_some()
-        //     && cur.m.is_some()
-        //     && source
-        //         .m
-        //         .clone()
-        //         .unwrap()
-        //         .conflicting_with(&cur.m.clone().unwrap());
-        if cas_after_event.equals(target)
-        // && source_conflicting_with_cur
-        {
-            if cas_success {
-                debug!("cas-block-s");
-            } else {
-                debug!("cas-block-f");
-            }
-            return true;
-        }
-    }
-
     debug!("fallback-unblockable");
     false
-}
-
-fn convert_cas_before_to_after(mut cur: Event) -> Option<(bool, Event)> {
-    if cur.t.cat != Category::CAT_BEFORE_CMPXCHG {
-        return None;
-    }
-    if cur.m.clone().unwrap().predict_cas() {
-        cur.t.cat = Category::CAT_AFTER_CMPXCHG_S;
-        Some((true, cur))
-    } else {
-        cur.t.cat = Category::CAT_AFTER_CMPXCHG_F;
-        Some((false, cur))
-    }
 }
 
 #[derive(Encode, Decode, Debug, Default)]

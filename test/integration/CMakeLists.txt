@@ -77,6 +77,7 @@ foreach(SRC ${SRCS})
         unset(SANITIZE)
     endif()
     target_compile_options(${TARGET} PUBLIC -O0 -g -DVATOMIC_BUILTINS)
+    target_compile_options(${TARGET} PRIVATE -Wno-incompatible-pointer-types)
     target_link_options(${TARGET} PUBLIC -rdynamic)
     target_link_libraries(${TARGET} PRIVATE vsync pthread)
 
@@ -134,6 +135,7 @@ macro(add_lit_c_tests)
         else()
             unset(SANITIZE)
         endif()
+	target_compile_options(${TEST} PRIVATE -Wno-incompatible-pointer-types)
         target_compile_options(
             ${TEST} PUBLIC ${SANITIZE} -O0 -g -DVATOMIC_BUILTINS
                            ${COMPILE_OPTION_TRACE_PC})

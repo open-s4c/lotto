@@ -41,3 +41,9 @@ target_link_libraries(
     memmgr_runtime.o
     memmgr_user.o)
 add_test(NAME slack_test COMMAND slack_test)
+
+file(GLOB SRCS *.c)
+foreach(SRC ${SRCS})
+    get_filename_component(TEST ${SRC} NAME_WLE)
+    target_compile_options(${TEST} PRIVATE -Wno-incompatible-pointer-types)
+endforeach()

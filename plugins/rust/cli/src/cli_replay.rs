@@ -57,6 +57,10 @@ fn replay(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
     }
     drop(rec);
 
+    let mut rec = Trace::load_file(input_fn);
+    rec.next(raw::record::RECORD_CONFIG).unwrap().unmarshal();
+    drop(rec);
+
     envvar_set! {
         "LOTTO_REPLAY" => flags.get_sval(&FLAG_INPUT),
         "LOTTO_LOGGER_BLOCK" => flags.get_sval(&FLAG_LOGGER_BLOCK),

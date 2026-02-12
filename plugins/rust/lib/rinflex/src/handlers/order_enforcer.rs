@@ -363,6 +363,11 @@ pub fn register_flags() {
 //
 // Interfaces for CLI
 //
+pub fn cli_cfg_constraints() -> &'static mut ConstraintSet {
+    let cfg = unsafe { HANDLER.config_mut() };
+    &mut cfg.new_constraints
+}
+
 pub fn cli_set_constraints(constraints: ConstraintSet) {
     let cfg = unsafe { HANDLER.config_mut() };
     let fin = unsafe { HANDLER.final_mut() };

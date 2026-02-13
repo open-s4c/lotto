@@ -88,7 +88,7 @@ impl RecInflex {
             let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(now()));
                 let exitcode = checked_execute(&with_oc, &flags, true)?;
-                if let Some(outcome) = postexec(&self.trace_temp, exitcode)? {
+                if let Some(outcome) = postexec(&self.trace_temp, exitcode, |_| true)? {
                     break outcome;
                 } else {
                     bar.tick_invalid();
@@ -101,6 +101,9 @@ impl RecInflex {
 
     pub fn reset_input(&mut self, replay_goal: Clock) -> Result<(), Error> {
         info!("Resetting input");
+        let f_tid =
+            trace::get_last_tid(&self.trace_fail).expect("trace_fail should have last record");
+        let filter_match_tid = |output: &Path| Some(f_tid) == trace::get_last_tid(output);
         self.get_trace(
             Outcome::Fail,
             replay_goal,
@@ -108,6 +111,7 @@ impl RecInflex {
             &self.trace_temp,
             true,
             true,
+            filter_match_tid,
         )?;
         std::fs::copy(&self.trace_temp, &self.trace_fail).expect("reset input");
         Ok(())
@@ -173,7 +177,7 @@ impl RecInflex {
             let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(now()));
                 let exitcode = checked_execute(&check_trace, &flags, true)?;
-                if let Some(outcome) = postexec(&self.trace_temp, exitcode)? {
+                if let Some(outcome) = postexec(&self.trace_temp, exitcode, |_| true)? {
                     break outcome;
                 } else {
                     bar.tick_invalid();
@@ -198,6 +202,7 @@ impl RecInflex {
             &self.trace_fail_alt,
             false,
             false,
+            |_| true,
         );
         self.pop_constraint();
         match result {
@@ -236,6 +241,7 @@ impl RecInflex {
             &self.trace_success,
             true,
             true,
+            |_| true,
         )?;
 
         // Find IIP.
@@ -265,6 +271,7 @@ impl RecInflex {
                 &self.trace_fail,
                 true,
                 true,
+                |_| true,
             )?;
             symm_set.push(pair);
             return self.inflex_pair(iip - 1, depth + 1, symm_set);
@@ -323,6 +330,7 @@ impl RecInflex {
         output: &Path,
         unlimited: bool,
         try_hard: bool,
+        filter: impl Fn(&Path) -> bool,
     ) -> Result<(), Error> {
         info!(
             "get_trace: attaching constraints, #constraints={}",
@@ -379,7 +387,7 @@ impl RecInflex {
             }
 
             let exitcode = checked_execute(&input, &flags, true)?;
-            if let Some(actual_outcome) = postexec(&output, exitcode)? {
+            if let Some(actual_outcome) = postexec(&output, exitcode, &filter)? {
                 bar.tick_valid();
                 if expected_outcome == actual_outcome {
                     return Ok(());

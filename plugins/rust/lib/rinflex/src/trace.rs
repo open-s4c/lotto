@@ -101,3 +101,9 @@ pub fn get_event_at_clk(flags: &Flags, file: &Path, clk: Clock) -> Result<Event,
         None => return Err(Error::EventNotFound(file.to_path_buf(), clk)),
     }
 }
+
+/// Get the id field of the last record.
+pub fn get_last_tid(input: &Path) -> Option<TaskId> {
+    let mut rec = Trace::load_file(input);
+    rec.last().map(|r| r.id).map(TaskId)
+}

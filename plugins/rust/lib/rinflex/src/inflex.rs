@@ -113,7 +113,7 @@ impl Inflex {
             let success_forever = always(self.rounds, || loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
                 let exitcode = checked_execute(&self.input, &flags, true)?;
-                if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
                     bar.tick_valid();
                     return Ok(outcome.is_success());
                 } else {
@@ -146,7 +146,7 @@ impl Inflex {
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
                     let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                    if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
                         return Ok(outcome.is_success());
                     } else {
                         bar.tick_invalid();
@@ -189,7 +189,7 @@ impl Inflex {
             let fail_forever = always(self.rounds, || loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
                 let exitcode = checked_execute(&self.input, &flags, true)?;
-                if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
                     bar.tick_valid();
                     return Ok(outcome.is_fail());
                 } else {
@@ -223,7 +223,7 @@ impl Inflex {
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
                     let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if let Some(outcome) = postexec(&self.temp_output, exitcode)? {
+                    if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
                         return Ok(outcome.is_fail());
                     } else {
                         bar.tick_invalid();
@@ -311,7 +311,11 @@ pub fn checked_execute(trace: &Path, flags: &Flags, config: bool) -> Result<i32,
 /// Additionally check the outcome.
 ///
 /// Returns None if the execution should be discarded.
-pub fn postexec(output: &Path, exitcode: i32) -> Result<Option<Outcome>, Error> {
+pub fn postexec(
+    output: &Path,
+    exitcode: i32,
+    filter: impl Fn(&Path) -> bool,
+) -> Result<Option<Outcome>, Error> {
     let mut rec = Trace::load_file(output);
     let last = rec.last().expect("no last record");
 
@@ -347,6 +351,11 @@ pub fn postexec(output: &Path, exitcode: i32) -> Result<Option<Outcome>, Error> 
     // a failure, but exitcode may be 0.
     if last.reason.is_abort() {
         return Ok(Some(Outcome::Fail));
+    }
+
+    // User-supplied filter.
+    if !filter(output) {
+        return Ok(None);
     }
 
     // All tests passed.

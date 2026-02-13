@@ -4,23 +4,23 @@
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress4rinflex -- %b)
 // RUN: %lotto %rinflex -r 30 2>&1 | iconv -f utf-8 -t utf-8 -c > %s.out
-// RUN: ( %check %s --check-prefix=CAS_FIRST < %s.out ) || ( %check %s --check-prefix=CAS_SECOND < %s.out )
+// RUN: ( %check %s --check-prefix=CAS_S < %s.out ) || ( %check %s --check-prefix=CAS_F < %s.out )
 
-// CAS_FIRST: ------ . ------ . ------ . ------ . ------
-// CAS_FIRST-NEXT: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
-// CAS_FIRST: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
+// CAS_S: ------ . ------ . ------ . ------ . ------
+// CAS_S-NEXT: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
+// CAS_S: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
 
-// CAS_FIRST: ------ . ------ . ------ . ------ . ------
-// CAS_FIRST-NEXT: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
-// CAS_FIRST: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
+// CAS_S: ------ . ------ . ------ . ------ . ------
+// CAS_S-NEXT: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
+// CAS_S: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
 
-// CAS_SECOND: ------ . ------ . ------ . ------ . ------
-// CAS_SECOND-NEXT: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
-// CAS_SECOND: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
+// CAS_S: ------ . ------ . ------ . ------ . ------
+// CAS_S-NEXT: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
+// CAS_S: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
 
-// CAS_SECOND: ------ . ------ . ------ . ------ . ------
-// CAS_SECOND-NEXT: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
-// CAS_SECOND: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
+// CAS_F: ------ . ------ . ------ . ------ . ------
+// CAS_F-NEXT: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
+// CAS_F: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}
 
 // clang-format on
 
@@ -33,8 +33,8 @@ atomic_int x = 0;
 atomic_int y = 0;
 
 /* Two possible outcomes:
- * 1. A->C->B  (B->D) is implied
- * 2. C->A->D  (D->B) is implied
+ * 1. A->C->B->D
+ * 2. C->A->D->B
  */
 
 void *

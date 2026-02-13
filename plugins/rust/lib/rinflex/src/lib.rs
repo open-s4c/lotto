@@ -135,8 +135,7 @@ pub enum Eff {
     XchgSame,
     XchgChanged,
     RmwSame,
-    RmwUp,
-    RmwDown,
+    RmwChanged,
     CasSuccess,
     CasFailure,
 }
@@ -179,9 +178,8 @@ impl From<&MemoryAccess> for Eff {
             }) => {
                 let new = eval_rmw(*op, *old, *delta);
                 match new.cmp(old) {
-                    Less => Eff::RmwDown,
                     Equal => Eff::RmwSame,
-                    Greater => Eff::RmwUp,
+                    _ => Eff::RmwChanged,
                 }
             }
             Some(Modify {

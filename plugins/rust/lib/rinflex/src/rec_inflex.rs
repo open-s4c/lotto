@@ -231,7 +231,7 @@ impl RecInflex {
         );
         self.get_trace(
             Outcome::Success,
-            ip.checked_sub(1).expect("IP cannot be 0"),
+            ip - 1,
             &self.trace_fail,
             &self.trace_success,
             true,
@@ -429,8 +429,6 @@ impl RecInflex {
         let input_filename = input.file_name().expect("must be a file").to_str().unwrap();
         let out = self.tempdir.join(format!("{}+oc", input_filename));
 
-        handlers::order_enforcer::cli_set_constraints(constraints.clone());
-
         let mut rec = Trace::load_file(input);
         rec.trim_to_goal(goal, true);
         let r = Record::new_config(goal);
@@ -505,7 +503,8 @@ impl RecInflex {
             positive: false,
             id,
         };
-        self.constraints.push(constraint);
+        self.constraints.push(constraint.clone());
+        handlers::order_enforcer::cli_cfg_constraints().push(constraint);
     }
 
     fn push_virtual_constraint(&mut self, c: PrimitiveConstraint, positive: bool) {
@@ -516,10 +515,12 @@ impl RecInflex {
             positive,
             id,
         };
-        self.constraints.push(constraint);
+        self.constraints.push(constraint.clone());
+        handlers::order_enforcer::cli_cfg_constraints().push(constraint);
     }
 
     fn pop_constraint(&mut self) -> Option<Constraint> {
+        handlers::order_enforcer::cli_cfg_constraints().pop();
         self.constraints.pop()
     }
 

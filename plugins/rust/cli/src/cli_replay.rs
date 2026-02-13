@@ -48,7 +48,15 @@ fn replay(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
     };
 
     let args = first.args().to_owned();
-    rec.advance();
+    while let Some(r) = {
+        rec.advance();
+        rec.next(raw::record::RECORD_CONFIG)
+    } {
+        r.unmarshal();
+    }
+    drop(rec);
+
+    let mut rec = Trace::load_file(input_fn);
     rec.next(raw::record::RECORD_CONFIG).unwrap().unmarshal();
     drop(rec);
 

@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 lotto.workspace = true
+bincode.workspace = true
 rustc-hash = { version = "1.1.0", features = [] }
 log = "0.4.20"
 lazy_static = { version = "1.4.0", features = [] }

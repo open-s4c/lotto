@@ -1,6 +1,6 @@
 // clang-format off
 // REQUIRES: RUST_HANDLERS_AVAILABLE
-// RUN: %lotto stress -s pos -r 5 -- %b
+// RUN: %lotto stress --handler-await-address enable --handler-spin-loop enable -s pos  -r 5 -- %b
 // clang-format on
 #include <assert.h>
 #include <pthread.h>

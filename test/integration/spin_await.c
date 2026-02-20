@@ -1,7 +1,7 @@
 // clang-format off
 // ALLOW_RETRIES: 100
 // REQUIRES: RUST_HANDLERS_AVAILABLE
-// RUN: (%lotto stress -s random -r 1 -- %b 2>&1)
+// RUN: (%lotto stress --handler-await-address enable --handler-spin-loop enable -s random -r 1 -- %b 2>&1)
 // clang-format on
 #include <assert.h>
 #include <pthread.h>

@@ -21,6 +21,9 @@ pub fn register() {
 }
 
 pub fn register_flags() {
+    handler_await_address::register_flags();
+    handler_spin_loop::register_flags();
+
     #[cfg(feature = "stable_address_map")]
     handler_rinflex::register_flags();
 }

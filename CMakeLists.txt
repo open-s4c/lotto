@@ -19,10 +19,11 @@ add_compile_options("-fPIC" "-Werror")
 set(LOTTO_FRONTEND_LIST POSIX QEMU)
 include(cmake/stable_options.cmake)
 
+option(LOTTO_LTO "Enable LTO for whole project" OFF)
+
 # ##############################################################################
 # Dependencies
 # ##############################################################################
-
 set(DICE_LOG_LEVEL
     "INFO"
     CACHE STRING "" FORCE)
@@ -32,7 +33,7 @@ set(DICE_MEMSET
     CACHE BOOL "" FORCE)
 
 set(DICE_LTO
-    OFF
+    ${LOTTO_LTO}
     CACHE BOOL "" FORCE)
 
 set(DICE_DISPATCH_CHAINS
@@ -44,7 +45,6 @@ set(DICE_DISABLE_LOADER
     CACHE BOOL "" FORCE)
 
 add_subdirectory(deps)
-link_libraries(dice.h)
 
 find_package(libvsync 4.2 CONFIG REQUIRED)
 link_libraries(libvsync::vsync)

@@ -88,7 +88,7 @@ target_link_libraries(
             cli.o
             memmgr_runtime.o
             memmgr_user.o
-            dice)
+            dice.o)
 if("${LOTTO_DRUM}")
     target_link_libraries(lotto-cli PRIVATE curses)
 endif()

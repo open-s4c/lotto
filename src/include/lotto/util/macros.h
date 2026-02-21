@@ -1,7 +1,7 @@
-/*
- */
 #ifndef LOTTO_MACROS_H
 #define LOTTO_MACROS_H
+
+#include <dice/compiler.h>
 
 #ifdef LOTTO_TEST
     #define NORETURN
@@ -25,6 +25,7 @@
 #define LOTTO_CONSTRUCTOR_PRIO 101
 #define LOTTO_CONSTRUCTOR      __attribute__((constructor(LOTTO_CONSTRUCTOR_PRIO)))
 #define LOTTO_DESTRUCTOR       __attribute__((destructor))
+#define LOTTO_WEAK             DICE_WEAK
 
 #define NUM_TO_BIT(num) ((num) ? 1ULL << ((num)-1) : 0ULL)
 #define IS_BIT(bit)     (!((bit) & ((bit)-1)))

@@ -1,3 +1,8 @@
+link_libraries(dice.h)
+if(${LOTTO_LTO})
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    add_compile_options(-fno-strict-aliasing -Wall)
+endif()
 include_directories(${PROJECT_SOURCE_DIR}/src/include)
 include_directories(${PROJECT_SOURCE_DIR}/src)
 

@@ -21,21 +21,15 @@ set(FAILING_SRCS
     double_free.c # needs memmgr-user=uaf, the error must not RUNTIME_...
     enforce_pc.c
     impasse.c # needs join handler
-    inflex_abc_nocli.c # test script needs correct preloading on necessary libraries
+    inflex_abc_nocli.c # test script needs correct preloading on necessary
+                       # libraries
     notsan_mediator_null.c # the error must not RUNTIME_...
     record_granularity_test_x86.c # may be compiler/system-dependant
-    rinflex.c # gets stuck during essentiality check
-    rinflex_3oc.c
-    rinflex_cas.c
-    rinflex_essentiality.c
-    rinflex_flaky_events.c
-    rinflex_loop.c
-    rinflex_mutex.c
-    rinflex_spinlock.c
-    rinflex_symmetry.c
-    rinflex_two_disjoint_bugs.c
     wait.c # time leap is not performed, maybe there is an undesired CAT_CALL
 )
+# rinflex.c # gets stuck during essentiality check rinflex_3oc.c rinflex_cas.c
+# rinflex_essentiality.c rinflex_flaky_events.c rinflex_loop.c rinflex_mutex.c
+# rinflex_spinlock.c rinflex_symmetry.c rinflex_two_disjoint_bugs.c
 
 file(GLOB ALL_SRCS *.c)
 set(SRCS)

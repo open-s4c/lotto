@@ -304,6 +304,10 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
     _preload_lib(LIBASAN, true);
 #endif
 
+    _preload_libs(dir, (libspec_t[]){
+                           {LIBLOTTO, do_preload_plotto},
+                           {NULL},
+                       });
     /* Load three dirs in order. */
     _preload_memmgr_plugins(memmgr_chain_runtime, true);
     _preload_memmgr_plugins(memmgr_chain_user, false);
@@ -314,10 +318,6 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
                                         plugin_preloadable_not_memory});
     }
 
-    _preload_libs(dir, (libspec_t[]){
-                           {LIBLOTTO, do_preload_plotto},
-                           {NULL},
-                       });
     exec_info_store_envvars();
 }
 

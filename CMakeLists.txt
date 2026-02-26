@@ -12,6 +12,7 @@ if(PROJECT_IS_TOP_LEVEL)
     set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
 endif()
 add_compile_options("-fPIC" "-Werror")
+add_compile_definitions(DICE_MAIN_START_DISABLE)
 
 # ##############################################################################
 # Include stable options (shared with release)

@@ -162,7 +162,11 @@ impl MarshableStateList {
 
     fn register(&self) {
         unsafe {
-            raw::statemgr_register(lotto_sys::MODULE_SLOT as i32, &self.m as *const _ as *mut _, self.ty);
+            raw::statemgr_register(
+                lotto_sys::MODULE_SLOT as i32,
+                &self.m as *const _ as *mut _,
+                self.ty,
+            );
         }
     }
 }

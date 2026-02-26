@@ -17,7 +17,7 @@
 
 #define MAX_PLUGINS            100
 #define MAX_PLUGIN_NAME_LENGTH 1023
-#define PLUGIN_PREFIX          "liblotto_"
+#define PLUGIN_PREFIX          "lotto-"
 #define PLUGIN_PREFIX_LEN      (sizeof(PLUGIN_PREFIX) - 1)
 
 #define SO_SUFFIX     ".so"
@@ -295,7 +295,7 @@ static char *
 _plugin_name(const char *filename)
 {
     filename += PLUGIN_PREFIX_LEN;
-    size_t len = strrchr(filename, '_') - filename;
+    size_t len = strrchr(filename, '.') - filename;
     return sys_strndup(filename, len);
 }
 

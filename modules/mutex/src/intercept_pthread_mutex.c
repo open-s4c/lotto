@@ -32,7 +32,7 @@ pthread_nop_one_()
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_LOCK, {
     struct pthread_mutex_lock_event *ev = EVENT_PAYLOAD(event);
     (void)_lotto_mutex_acquire_named("pthread_mutex_lock", ev->mutex);
-    ev->func = pthread_nop_zero_;
+    ev->func = (void*)pthread_nop_zero_;
     return PS_OK;
 })
 
@@ -40,17 +40,17 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_LOCK, {
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_TRYLOCK, {
     struct pthread_mutex_trylock_event *ev = EVENT_PAYLOAD(event);
 
-    ev->func =
+    ev->func = 
         _lotto_mutex_tryacquire_named("pthread_mutex_trylock", ev->mutex) == 0 ?
-            pthread_nop_zero_ :
-            pthread_nop_one_;
+            (void *)pthread_nop_zero_ :
+            (void *)pthread_nop_one_;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_UNLOCK, {
     struct pthread_mutex_unlock_event *ev = EVENT_PAYLOAD(event);
     (void)_lotto_mutex_release_named("pthread_mutex_unlock", ev->mutex);
-    ev->func = pthread_nop_zero_;
+    ev->func = (void *)pthread_nop_zero_;
     return PS_OK;
 })
 
@@ -58,7 +58,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_UNLOCK, {
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MUTEX_TIMEDLOCK, {
     struct pthread_mutex_timedlock_event *ev = EVENT_PAYLOAD(event);
     (void)_lotto_mutex_acquire_named("pthread_mutex_timedlock", ev->mutex);
-    ev->func = pthread_nop_zero_;
+    ev->func = (void*)pthread_nop_zero_;
     return PS_OK;
 })
 #endif

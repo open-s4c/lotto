@@ -37,7 +37,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_WAIT, {
     _lotto_mutex_release_named("pthread_cond_wait", ev->mutex);
     _lotto_evec_wait(ev->cond);
     _lotto_mutex_acquire_named("pthread_cond_wait", ev->mutex);
-    ev->func = pthread_nop_zero_;
+    ev->func = (void *)pthread_nop_zero_;
     return PS_OK;
 })
 
@@ -48,22 +48,22 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_TIMEDWAIT, {
     _lotto_mutex_release_named("pthread_cond_timedwait", ev->mutex);
     ret = _lotto_evec_timed_wait(ev->cond, ev->abstime);
     _lotto_mutex_acquire_named("pthread_cond_timedwait", ev->mutex);
-    ev->func = (ret == TIMED_WAIT_TIMEOUT) ? pthread_nop_ETIMEDOUT_ :
-                                             pthread_nop_zero_;
+    ev->func = (ret == TIMED_WAIT_TIMEOUT) ? (void *)pthread_nop_ETIMEDOUT_ :
+        (void *)pthread_nop_zero_;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_SIGNAL, {
     struct pthread_cond_signal_event *ev = EVENT_PAYLOAD(event);
     _lotto_evec_wake(ev->cond, 1);
-    ev->func = pthread_nop_zero_;
+    ev->func = (void*)pthread_nop_zero_;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_BROADCAST, {
     struct pthread_cond_broadcast_event *ev = EVENT_PAYLOAD(event);
     _lotto_evec_wake(ev->cond, ~((uint32_t)0));
-    ev->func = pthread_nop_zero_;
+    ev->func = (void*)pthread_nop_zero_;
     return PS_OK;
 })
 

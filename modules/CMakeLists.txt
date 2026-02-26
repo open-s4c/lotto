@@ -82,7 +82,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LOTTO_MODULE_BUILD_DIR}")
 
 # blocking handlers
 add_module(blocking)
-# GEN_SLOT(JOIN)                                                            #
+add_module(join)
 add_module(mutex)
 add_module(evec)
 add_module(poll)
@@ -103,12 +103,9 @@ add_module(race)
 add_module(atomic)
 add_module(yield)
 add_module(termination)
-# GEN_SLOT(CAS)                                                             # #
 
 # advanced handlers                                                            #
-# GEN_SLOT(RUSTY_ENGINE)                                                    #
 add_module(priority)
-# GEN_SLOT(QEMU)                                                            #
 add_module(task_velocity)
 add_module(order)
 add_module(disable)

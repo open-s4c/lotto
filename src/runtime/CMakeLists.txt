@@ -39,6 +39,7 @@ set(LIBS
     dice-pthread_mutex.o
     dice-pthread_cond.o
     dice-tsan.o
+    dice-stacktrace.o
     interceptors.o)
 
 macro(add_runtime TARGET)

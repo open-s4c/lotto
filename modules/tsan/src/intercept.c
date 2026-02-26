@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <dice/events/stacktrace.h>
 #include <dice/chains/capture.h>
 #include <dice/chains/intercept.h>
 #include <dice/events/pthread.h>
@@ -117,7 +118,10 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MA_AWRITE, {
     struct ma_awrite_event *ev = EVENT_PAYLOAD(event);
 
     context_t *c = ctx(.cat = CAT_BEFORE_AWRITE, .func = ev->func, .pc = EV_PC,
-                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
+                       .args = {arg_ptr(ev->addr), 
+                           arg(size_t, ev->size),
+                           sized_arg(ev->size, ev->val)
+                       });
     intercept_capture(c);
     return PS_OK;
 })
@@ -126,7 +130,7 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_AWRITE, {
     struct ma_awrite_event *ev = EVENT_PAYLOAD(event);
 
     context_t *c = ctx(.cat = CAT_AFTER_AWRITE, .func = ev->func, .pc = EV_PC,
-                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size)});
+                       .args = {arg_ptr(ev->addr), arg(size_t, ev->size), sized_arg(ev->size, ev->val)});
     intercept_capture(c);
     return PS_OK;
 })
@@ -136,7 +140,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MA_RMW, {
 
     context_t *c = ctx(.cat = CAT_BEFORE_RMW, .func = ev->func, .pc = EV_PC,
                        .args = {arg_ptr(ev->addr), arg(size_t, ev->size),
-                                sized_arg(ev->size, ev->val)});
+                                sized_arg(ev->size, ev->val), arg(uint32_t, ev->op)});
     intercept_capture(c);
     return PS_OK;
 })
@@ -146,7 +150,7 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_RMW, {
 
     context_t *c = ctx(.cat = CAT_AFTER_RMW, .func = ev->func, .pc = EV_PC,
                        .args = {arg_ptr(ev->addr), arg(size_t, ev->size),
-                                sized_arg(ev->size, ev->val)});
+                           sized_arg(ev->size, ev->val), arg(uint32_t, ev->op)});
     intercept_capture(c);
     return PS_OK;
 })
@@ -235,4 +239,16 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_FENCE, {
     context_t *c = ctx(.cat = CAT_AFTER_FENCE, .func = ev->func, );
     intercept_capture(c);
     return PS_OK;
+})
+
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_STACKTRACE_ENTER, {
+    stacktrace_event_t *ev = EVENT_PAYLOAD(event);
+    context_t *ctx = ctx(.func = "func_entry", .cat = CAT_FUNC_ENTRY,
+                         .args = {arg_ptr(ev->caller)});
+    intercept_capture(ctx);
+})
+
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_STACKTRACE_EXIT, {
+    context_t *ctx = ctx(.func = "func_exit", .cat = CAT_FUNC_EXIT);
+    intercept_capture(ctx);
 })

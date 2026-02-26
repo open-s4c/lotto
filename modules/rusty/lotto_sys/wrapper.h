@@ -1,5 +1,7 @@
 /* IWYU pragma: begin_keep */
+#include "dice/events/memaccess.h"
 #include "lotto/base/cappt.h"
+#include "lotto/base/vec.h"
 #include "lotto/base/context.h"
 #include "lotto/base/envvar.h"
 #include "lotto/base/flag.h"
@@ -33,6 +35,7 @@
 #include "lotto/engine/dispatcher.h"
 #include "lotto/engine/prng.h"
 #include "lotto/modules/termination/state.h"
+#include "lotto/modules/ichpt/state.h"
 #include "lotto/states/prng.h"
 #include "lotto/states/sequencer.h"
 #include "lotto/sys/fcntl.h"

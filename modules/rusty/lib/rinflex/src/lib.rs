@@ -56,31 +56,39 @@ impl std::fmt::Display for Transition {
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Encode, Decode, Hash)]
+pub enum Either<L, R> {
+    Left(L),
+    Right(R),
+}
+
 /// A unique identifier for a stackframe.
 ///
 /// Used in stacktrace.
 #[derive(Debug, Clone, Eq, PartialEq, Encode, Decode, Hash)]
 pub struct StackFrameId {
-    /// Symbol name
-    pub sname: Option<String>,
+    /// Symbol name, or offset of the call instruction
+    pub sname: Either<String, u64>,
 
     /// File name
     pub fname: String,
 
     /// The PC of the CALL instruction (inside caller).
-    pub call_pc: StableAddress,
-
-    /// Return address in the executable (inside caller).
-    pub offset: usize,
+    pub caller_pc: StableAddress,
 }
 
 impl std::fmt::Display for StackFrameId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(sname) = &self.sname {
+        if let Either::Left(sname) = &self.sname {
             return write!(f, "{}", sname);
         }
         let fname = self.fname.rsplit("/").next().unwrap_or(&self.fname);
-        write!(f, "{}(+{:04x})", fname, self.offset)
+        write!(
+            f,
+            "{}(+{:04x})",
+            fname,
+            self.caller_pc.as_map_address().offset
+        )
     }
 }
 
@@ -333,38 +341,27 @@ impl Event {
             self.stacktrace
                 .0
                 .iter()
+                .skip(1)
                 .map(|x| x.to_string())
                 .collect::<Vec<_>>()
                 .join(","),
             self.instruction().display()?
         );
-        let n = self.stacktrace.0.len();
-        if n < 2 {
-            return Ok(result);
-        }
-        let mut j = n - 1;
-        while j >= 1 {
-            let callee = &self.stacktrace.0[j];
-            let caller = &self.stacktrace.0[j - 1];
-            let call_pc_map_addr = callee.call_pc.as_map_address();
+        for (i, frame) in self.stacktrace.0.iter().skip(1).rev().enumerate() {
             let call_insn = Instruction {
-                path: PathBuf::from(&caller.fname),
-                offset: call_pc_map_addr.offset,
+                path: PathBuf::from(&frame.fname),
+                offset: frame.caller_pc.as_map_address().offset,
             };
             if let Ok(line) = call_insn.display_source() {
                 result.push_str(&format!(
                     "--> [{}] Called by {}\n{}",
-                    j,
+                    i + 1,
                     line.replace("\n", " "),
                     call_insn.display_assembly().unwrap_or("".to_string()),
                 ));
             } else {
-                result.push_str(&format!("--> [{}] Called by {}\n", j, caller));
-                if let Ok(asm) = call_insn.display_assembly() {
-                    result.push_str(&asm);
-                }
+                result.push_str(&format!("--> [{}] Called by {}\n", i + 1, frame));
             }
-            j -= 1;
         }
         Ok(result)
     }

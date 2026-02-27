@@ -1,4 +1,4 @@
-use crate::{StackFrameId, StackTrace};
+use crate::{Either, StackFrameId, StackTrace};
 use lotto::collections::FxHashMap;
 use lotto::{base::HandlerArg, base::StableAddress, raw, Stateful};
 use lotto::{
@@ -8,7 +8,8 @@ use lotto::{
     engine::handler::{self, TaskId},
     log::*,
 };
-use std::ffi::CStr;
+use std::ffi::{c_void, CStr};
+use std::mem::MaybeUninit;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     LazyLock,
@@ -37,33 +38,13 @@ impl handler::Handler for StackTraceHandler {
         let id = TaskId(ctx.id);
         match ctx.cat {
             raw::base_category::CAT_FUNC_ENTRY => {
-                // CAVEAT: if we don't have "dli_sname", we try to get
-                // (call_return_address - fbase) as the identifier.
-                // But this may incorrectly give a function multiple
-                // identifiers, e.g.:
-                //
-                // foo [static]:
-                //     CALL bar
-                //     CALL baz
-                //
-                // If in bar and baz we try to find the foo's id, we
-                // will get two different ids due to different return
-                // addresses.
-                //
-                // This is not an issue in our case: we only try to
-                // retrieve function id from tsan's func_entry and
-                // func_exit, and each function is guaranteed to have
-                // only one pair of them.
-                let call_pc = get_arg_ptr(&ctx.args[0]) - call_insn_len();
-                let call_pc = StableAddress::with_default_method(call_pc);
-                let sname = get_arg_str(&ctx.args[1]);
-                let fname = get_arg_str(&ctx.args[2]).unwrap_or("UNKNOWN".to_string());
-                let offset = get_arg_ptr(&ctx.args[3]);
+                let caller_pc = get_arg_ptr(&ctx.args[0]) - call_insn_len();
+                let (sname, fname) = get_pc_info(caller_pc as *const c_void);
+                let caller_pc = StableAddress::with_default_method(caller_pc);
                 let frame_id = StackFrameId {
-                    call_pc,
+                    caller_pc,
                     sname,
                     fname,
-                    offset,
                 };
                 self.tasks
                     .entry(id)
@@ -88,17 +69,6 @@ fn get_arg_ptr(arg: &raw::arg) -> usize {
     arg.addr()
 }
 
-fn get_arg_str(arg: &raw::arg) -> Option<String> {
-    let arg = HandlerArg::from(*arg);
-    let ptr = arg.addr() as *const i8;
-    if ptr.is_null() {
-        return None;
-    }
-    let cstr = unsafe { CStr::from_ptr(ptr) };
-    let s = cstr.to_str().unwrap();
-    Some(s.to_string())
-}
-
 /// Length of a function call instruction.
 fn call_insn_len() -> usize {
     if cfg!(target_arch = "x86_64") {
@@ -107,6 +77,42 @@ fn call_insn_len() -> usize {
         4
     } else {
         0
+    }
+}
+
+#[repr(C)]
+#[allow(non_camel_case_types)]
+struct link_map {
+    #[cfg(target_pointer_width = "64")]
+    l_addr: libc::Elf64_Addr,
+    #[cfg(target_pointer_width = "32")]
+    l_addr: libc::Elf32_Addr,
+}
+
+/// Given a PC, find its symbol and the file.
+fn get_pc_info(pc: *const c_void) -> (Either<String, u64>, String) {
+    unsafe {
+        let mut info = MaybeUninit::uninit();
+        let mut map = MaybeUninit::uninit();
+        libc::dladdr1(
+            pc,
+            info.as_mut_ptr(),
+            map.as_mut_ptr(),
+            libc::RTLD_DI_LINKMAP,
+        );
+        let info = info.assume_init();
+
+        let sname = if !info.dli_sname.is_null() {
+            Either::Left(CStr::from_ptr(info.dli_sname).to_string_lossy().to_string())
+        } else {
+            // Get the offset of the CALL instruction into the ELF file
+            let map = map.assume_init() as *mut link_map;
+            let map = &*map;
+            let pc = pc as u64;
+            Either::Right(pc - map.l_addr)
+        };
+        let fname = CStr::from_ptr(info.dli_fname).to_string_lossy().to_string();
+        (sname, fname)
     }
 }
 

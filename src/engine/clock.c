@@ -1,7 +1,4 @@
 /*
- */
-
-/*
  * TODO:
  * - implement TOPIC for capture and clock increment
  * - implement FLAGS for start_time (base == start_time?)

@@ -1,5 +1,7 @@
-/*
- */
+#include <dice/chains/intercept.h>
+#include <dice/mempool.h>
+#include <dice/module.h>
+#include <dice/self.h>
 #include <lotto/base/context.h>
 #include <lotto/base/task_id.h>
 #include <lotto/engine/engine.h>
@@ -27,6 +29,8 @@ bool _leave_capture(mediator_t *m);
 bool _nested_capture(mediator_t *m);
 static inline bool _guard_capture(mediator_t *m, context_t *ctx);
 
+static mediator_t mediator_key_;
+
 #define MEDIATOR_DESTRUCTOR_CAP 1024
 
 size_t ndestructors;
@@ -37,13 +41,7 @@ static struct mediator_destructor {
 
 /* thread-specific data key(visible to all threads of same process) */
 static pthread_key_t key;
-static vatomic32_t _registration_enabled;
-
-static LOTTO_CONSTRUCTOR void
-_lotto_mediator_init(void)
-{
-    vatomic_init(&_registration_enabled, true);
-}
+static vatomic32_t _registration_enabled = VATOMIC_INIT(true);
 
 static bool
 _mediator_registration_enabled()
@@ -112,13 +110,41 @@ once_init_key(void)
     });
 }
 
-inline __attribute__((always_inline)) mediator_t *
+mediator_t *
+mediator_tls(struct metadata *md)
+{
+    return self_tls_get(md, (uintptr_t)&mediator_key_);
+}
+
+static void
+dtor_free(void *arg, void *ptr)
+{
+    mempool_free(ptr);
+}
+
+#define EVENT_NOP 8
+PS_ADVERTISE_TYPE(EVENT_NOP)
+static void
+ensure_ps_intialized_(void)
+{
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_NOP, 0, 0);
+}
+
+inline mediator_t *
 mediator_get_data(bool new_task)
 {
     once_init_key();
-    mediator_t *m = (mediator_t *)pthread_getspecific(key);
+    struct metadata *md = self_md();
+    if (md == NULL) {
+        ensure_ps_intialized_();
+        md = self_md();
+    }
+    ASSERT(md != NULL);
+    mediator_t *m = self_tls_get(md, (uintptr_t)&mediator_key_);
     if (m == NULL) {
         m = mediator_init();
+        self_tls_set(md, (uintptr_t)&mediator_key_, m,
+                     (struct tls_dtor){.free = dtor_free});
     }
     if (m->registration_status != MEDIATOR_REGISTRATION_NONE) {
         return m;
@@ -141,7 +167,7 @@ mediator_t *
 mediator_init()
 {
     /* allocate mediator thread-specific storage */
-    mediator_t *m = sys_malloc(sizeof(mediator_t));
+    mediator_t *m = (mediator_t *)mempool_alloc(sizeof(mediator_t));
     ASSERT((m != NULL) && "sys_malloc failed");
     *m = (mediator_t){.id                  = next_task_id(),
                       .plan.actions        = ACTION_RESUME,
@@ -150,8 +176,8 @@ mediator_init()
                       .registration_status = MEDIATOR_REGISTRATION_NONE,
                       .guards.detach       = 1};
     once_init_key();
-    ENSURE(sys_pthread_setspecific(key, m) == 0 &&
-           "pthread_setspecific failed");
+    // ENSURE(sys_pthread_setspecific(key, m) == 0 &&
+    //        "pthread_setspecific failed");
 
     return m;
 }
@@ -292,7 +318,7 @@ mediator_capture(mediator_t *m, context_t *ctx)
 
             default:
                 logger_fatalf("unexpected action: %s\n",
-                           action_str(plan_next(m->plan)));
+                              action_str(plan_next(m->plan)));
         }
     while (!plan_done(&m->plan));
 
@@ -345,7 +371,7 @@ mediator_resume(mediator_t *m, context_t *ctx)
 
             default:
                 logger_fatalf("unexpected action: %s\n",
-                           action_str(plan_next(m->plan)));
+                              action_str(plan_next(m->plan)));
         }
     while (!plan_done(&m->plan));
     _leave_capture(m);

@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_DISPATCHER_H
 #define LOTTO_DISPATCHER_H
 

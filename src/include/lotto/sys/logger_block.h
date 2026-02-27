@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_LOGGER_BLOCK_H
 #define LOTTO_LOGGER_BLOCK_H
 
@@ -15,38 +13,38 @@ void logger_block_fini(void);
 
 #if defined LOGGER_BLOCK && defined LOGGER_PREFIX && !defined(LOGGER_DISABLE)
     #undef logger_fatalf
-    #define logger_fatalf(fmt, ...)                                               \
+    #define logger_fatalf(fmt, ...)                                            \
         ({                                                                     \
-            if (!LOGGER_BLOCK)                                                    \
-                logger_fatalf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__);          \
+            if (!LOGGER_BLOCK)                                                 \
+                logger_fatalf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__);    \
         })
 
     #undef logger_errorf
-    #define logger_errorf(fmt, ...)                                               \
+    #define logger_errorf(fmt, ...)                                            \
         ({                                                                     \
-            if (!LOGGER_BLOCK)                                                    \
-                logger_errorf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__);          \
+            if (!LOGGER_BLOCK)                                                 \
+                logger_errorf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__);    \
         })
 
     #undef logger_warnf
-    #define logger_warnf(fmt, ...)                                                \
+    #define logger_warnf(fmt, ...)                                             \
         ({                                                                     \
-            if (!LOGGER_BLOCK)                                                    \
-                logger_warnf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__);           \
+            if (!LOGGER_BLOCK)                                                 \
+                logger_warnf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__);     \
         })
 
     #undef logger_infof
-    #define logger_infof(fmt, ...)                                                \
+    #define logger_infof(fmt, ...)                                             \
         ({                                                                     \
-            if (!LOGGER_BLOCK)                                                    \
-                logger_infof("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__);           \
+            if (!LOGGER_BLOCK)                                                 \
+                logger_infof("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__);     \
         })
 
     #undef logger_debugf
-    #define logger_debugf(fmt, ...)                                               \
+    #define logger_debugf(fmt, ...)                                            \
         ({                                                                     \
-            if (!LOGGER_BLOCK)                                                    \
-                logger_debugf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__);          \
+            if (!LOGGER_BLOCK)                                                 \
+                logger_debugf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__);    \
         })
 #endif
 

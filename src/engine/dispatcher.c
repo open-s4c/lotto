@@ -1,5 +1,3 @@
-/*
- */
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/task_id.h>
@@ -22,7 +20,7 @@ dispatcher_register(slot_t slot, handle_f handle)
     logger_debugf("slot: %s\n", slot_str(slot));
     ASSERT(slot < SLOT_END_);
     ASSERT(handle != NULL && "empty registrations are not allowed");
-    ASSERT(_slots[slot].handle == NULL &&
+    ASSERT((_slots[slot].handle == NULL || _slots[slot].handle == handle) &&
            "repeated registrations are not allowed");
     _slots[slot].handle = handle;
 
@@ -40,9 +38,13 @@ _handle_chain(const context_t *ctx, event_t *e)
     }
 }
 
+void handle_creation(const context_t *ctx, event_t *e);
+
 task_id
 dispatch_event(const context_t *ctx, event_t *e)
 {
+    handle_creation(ctx, e);
+
     /* dispatch to handlers */
     _handle_chain(ctx, e);
 

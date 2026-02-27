@@ -6,44 +6,17 @@ gen_pubsub_headers("${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}")
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
 include_directories(include)
+include_directories(../modules/termination/include)
+include_directories(../modules/enforce/include)
+include_directories(../modules/available/include)
 
-# ##############################################################################
-# sys and base
-# ##############################################################################
+add_compile_definitions(DICE_MULTIFILE_MODULE)
+
 add_subdirectory(sys)
 add_subdirectory(base)
-
-# ##############################################################################
-# brokers and states
-# ##############################################################################
 add_subdirectory(brokers)
 add_subdirectory(states)
-
-# ##############################################################################
-# engine
-# ##############################################################################
 add_subdirectory(engine)
-
-# ##############################################################################
-# perf
-# ##############################################################################
-add_subdirectory(perf)
-
-# ##############################################################################
-# shared lotto runtime
-# ##############################################################################
+add_subdirectory(interceptors)
 add_subdirectory(runtime)
-
-# ##############################################################################
-# Frontends
-# ##############################################################################
-add_subdirectory(plotto)
-
-if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
-    add_subdirectory(qlotto)
-endif()
-
-# ##############################################################################
-# driver and cli
-# ##############################################################################
 add_subdirectory(cli)

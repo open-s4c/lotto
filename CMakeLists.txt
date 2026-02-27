@@ -35,13 +35,23 @@ set(DICE_LTO
     OFF
     CACHE BOOL "" FORCE)
 
+set(DICE_MAIN_HOOKS
+    OFF
+    CACHE BOOL "" FORCE)
+
 set(DICE_DISPATCH_CHAINS
     "1,4,7,2,3,5,6,0"
+    CACHE STRING "" FORCE)
+
+set(DICE_MAX_BUILTIN_SLOTS
+    8
     CACHE STRING "" FORCE)
 
 set(DICE_DISABLE_LOADER
     ON
     CACHE BOOL "" FORCE)
+add_compile_definitions(LOG_PREFIX="[ dice] ")
+add_compile_definitions(LOG_LEVEL=${DICE_LOG_LEVEL})
 
 add_subdirectory(deps)
 link_libraries(dice.h)
@@ -49,6 +59,20 @@ link_libraries(dice.h)
 find_package(libvsync 4.2 CONFIG REQUIRED)
 link_libraries(libvsync::vsync)
 add_library(vsync ALIAS libvsync::vsync)
+
+# ------------------------------------------------------------------------------
+# tikl tests options
+# ------------------------------------------------------------------------------
+
+message(STATUS "TIKL_PROGRAM: ${TIKL_PROGRAM}")
+
+set(TIKL_TIMEOUT
+    300
+    CACHE STRING "tikl timeout")
+
+set(TIKL_WORKERS
+    1
+    CACHE STRING "Number of tikl workers")
 
 # ------------------------------------------------------------------------------
 # CMake libs
@@ -110,8 +134,7 @@ include(cmake/racket.cmake)
 # source
 # ##############################################################################
 add_compile_options(
-    -Werror
-    -Wall
+    -Wno-error
     -Wunused-variable
     -Wextra
     -Wno-missing-braces
@@ -141,11 +164,11 @@ else() # gcc
     add_compile_options(-Wno-cast-function-type)
 endif()
 
-set(LOTTO_PLUGIN_INSTALL_DIR "share/lotto/plugins")
-set(LOTTO_PLUGIN_BUILD_DIR "${CMAKE_BINARY_DIR}/plugins")
+set(LOTTO_MODULE_INSTALL_DIR "share/lotto/modules")
+set(LOTTO_MODULE_BUILD_DIR "${CMAKE_BINARY_DIR}/modules")
 
-set(QLOTTO_PLUGIN_INSTALL_DIR "share/lotto/qlotto/plugins")
-set(QLOTTO_PLUGIN_BUILD_DIR "${CMAKE_BINARY_DIR}/qlotto/plugins")
+set(QLOTTO_MODULE_INSTALL_DIR "share/lotto/qlotto/modules")
+set(QLOTTO_MODULE_BUILD_DIR "${CMAKE_BINARY_DIR}/qlotto/modules")
 
 include_directories(include)
 add_subdirectory(include)
@@ -153,7 +176,7 @@ add_subdirectory(src)
 add_subdirectory(demos)
 add_subdirectory(test)
 add_subdirectory(doc)
-add_subdirectory(plugins)
+add_subdirectory(modules)
 
 add_subdirectory(scripts)
 

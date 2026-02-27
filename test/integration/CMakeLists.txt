@@ -2,20 +2,9 @@ enable_language(CXX)
 # disable clang tidy for this folder
 unset(CMAKE_C_CLANG_TIDY)
 
-message(STATUS "TIKL_PROGRAM: ${TIKL_PROGRAM}")
-
-set(TIKL_TIMEOUT
-    300
-    CACHE STRING "tikl timeout")
-
-set(TIKL_WORKERS
-    1
-    CACHE STRING "Number of tikl workers")
-
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
-add_custom_target(tikl-test)
-add_dependencies(tikl-test tikl-build lotto-cli)
+add_dependencies(tikl-test tikl-build)
 
 add_subdirectory(basic)
 
@@ -23,28 +12,24 @@ add_subdirectory(basic)
 # tikl integration tests
 # ------------------------------------------------------------------------------
 
+set(TSAN_0003-await-increment ON)
+set(TSAN_0005-atomic-message-passing ON)
+set(TSAN_0006-racy-message-passing ON)
+
 # TODO: some sources are still failing
 set(FAILING_SRCS
-    # The following test cases tend to show problems on some systems
-    #
-    # inflex_method_be.c inflex_method_le.c inflex_method_lp.c inflex_abc.c
-    # debug-replay-end.c rinflex_3oc.c rinflex_cas.c
-    # rinflex_flaky_events.c rinflex_loop.c rinflex_symmetry.c
-    # rinflex_two_disjoint_bugs.c spin_await.c
-    #
-    # The following tests are flaky on the pipeline
-    #
-    inflex_test.c
-    rinflex.c
-    record_granularity_test_x86.c
-    inflex_method_be.c
-    inflex_method_le.c
-    inflex_method_lp.c
-    await_while_round_robin.c
-    inflex_abc_nocli.c
-    enforce_cat.c
-    tsano_inflex_abc.c
-    filter_config.c)
+    double_free.c # needs memmgr-user=uaf, the error must not RUNTIME_...
+    enforce_pc.c
+    impasse.c # needs join handler
+    inflex_abc_nocli.c # test script needs correct preloading on necessary
+                       # libraries
+    notsan_mediator_null.c # the error must not RUNTIME_...
+    record_granularity_test_x86.c # may be compiler/system-dependant
+    wait.c # time leap is not performed, maybe there is an undesired CAT_CALL
+)
+# rinflex.c # gets stuck during essentiality check rinflex_3oc.c rinflex_cas.c
+# rinflex_essentiality.c rinflex_flaky_events.c rinflex_loop.c rinflex_mutex.c
+# rinflex_spinlock.c rinflex_symmetry.c rinflex_two_disjoint_bugs.c
 
 file(GLOB ALL_SRCS *.c)
 set(SRCS)
@@ -70,6 +55,11 @@ foreach(SRC ${SRCS})
         ${TARGET} PROPERTIES OUTPUT_NAME ${TEST} RUNTIME_OUTPUT_DIRECTORY
                                                  "${CMAKE_BINARY_DIR}/tikl")
     add_dependencies(tikl-test ${TARGET})
+
+    if(${TSAN_${TARGET}})
+        target_compile_options(${TARGET} PRIVATE -fsanitize=thread)
+        target_link_options(${TARGET} PRIVATE -fsanitize=thread)
+    endif()
 
     if("${LOTTO_TESTS_WITH_TSAN}")
         set(SANITIZE -fsanitize=thread)
@@ -360,19 +350,3 @@ add_lit_target(lit ${LIT_WORKERS} ${LIT_TIMEOUT} LIT_SRCS)
 add_dependencies(lit lit-prepare ${LIT_DEPS})
 add_lit_target(lit-tests ${LIT_WORKERS} ${LIT_TIMEOUT} LIT_TESTS)
 add_dependencies(lit-tests lit-prepare ${LIT_TESTS_DEPS})
-
-# ##############################################################################
-# Crosscompile for Qlotto
-# ##############################################################################
-
-if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
-    ExternalProject_Add(
-        integration-arm64-linux
-        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-        BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/arm64-linux
-        BUILD_ALWAYS 1
-        CMAKE_ARGS
-            -DCMAKE_TOOLCHAIN_FILE:PATH=${CMAKE_SOURCE_DIR}/cmake/arm64.cmake
-            -DCMAKE_C_FLAGS="-static" -DLOTTO_FRONTEND=QEMU
-        INSTALL_COMMAND "")
-endif()

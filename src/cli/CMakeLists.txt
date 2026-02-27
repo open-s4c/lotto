@@ -1,5 +1,5 @@
 sanitize()
-add_compile_definitions(_GNU_SOURCE)
+add_compile_definitions(_GNU_SOURCE DICE_MODULE_SLOT=9)
 add_subdirectory(gdb)
 add_subdirectory(flags)
 add_subdirectory(python)
@@ -31,8 +31,6 @@ endif()
 macro(add_cli_dependencies TARGET)
     add_dependencies(
         "${TARGET}"
-        blob-plotto
-        blob-plotto-verbose
         blob-tsano
         blob-util
         blob-debug
@@ -42,30 +40,29 @@ macro(add_cli_dependencies TARGET)
         blob-iterator
         blob-matcher
         blob-handler
-        blob-runtime
-        blob-engine
+        blob-lotto
+        blob-lotto-verbose
         ${ARGN})
+    target_include_directories(${TARGET} PUBLIC ${CMAKE_BINARY_DIR}/include)
 endmacro()
 
 add_library(cli.o OBJECT ${CLI_UTILS_SRCS})
 target_compile_options(cli.o PRIVATE -g)
-target_include_directories(cli.o PUBLIC ${CMAKE_BINARY_DIR}/include)
 target_link_libraries(cli.o PUBLIC m)
 add_cli_dependencies(cli.o)
 
 add_library(cli_testing.o OBJECT ${CLI_UTILS_SRCS})
 target_compile_definitions(cli_testing.o PRIVATE -DLOTTO_TEST)
 target_compile_options(cli_testing.o PRIVATE -g)
-target_include_directories(cli_testing.o PUBLIC ${CMAKE_BINARY_DIR}/include)
 target_link_libraries(cli_testing.o PUBLIC m)
 add_cli_dependencies(cli_testing.o)
 
 # ##############################################################################
 # CLI lotto command
 # ##############################################################################
+file(COPY python DESTINATION ${CMAKE_BINARY_DIR})
 
 file(GLOB CLI_SRCS "commands/*.c")
-
 if(NOT "${LOTTO_DRUM}")
     list(REMOVE_ITEM CLI_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/commands/cli_drum.c)
 endif()
@@ -75,30 +72,38 @@ foreach(HANDLER ${LOTTO_DISABLE_HANDLERS})
 endforeach()
 
 file(GLOB_RECURSE FLAG_SRCS "flags/*.c")
-add_executable(lotto-cli main.c ${FLAG_SRCS} ${CLI_SRCS})
-target_compile_definitions(lotto-cli PRIVATE LOTTO_REAL_NEXT
-                                             LOTTO_VERSION="${PROJECT_VERSION}")
 
+add_library(lotto-driver SHARED ${FLAG_SRCS} ${CLI_SRCS})
 target_link_libraries(
-    lotto-cli
-    PRIVATE states.o
+    lotto-driver
+    PRIVATE cli.o
+            states.o
             brokers.o
             base.o
             sys.o
-            cli.o
             memmgr_runtime.o
             memmgr_user.o
-            dice)
+            dice.o)
+target_link_libraries(lotto-driver
+        PRIVATE lotto-driver-available)
+target_compile_options(lotto-driver PRIVATE -g)
+target_compile_definitions(lotto-driver
+                           PRIVATE LOTTO_VERSION="${PROJECT_VERSION}")
+
 if("${LOTTO_DRUM}")
-    target_link_libraries(lotto-cli PRIVATE curses)
+    target_link_libraries(lotto-driver PRIVATE curses)
 endif()
 
+add_executable(lotto-cli main.c)
 target_compile_options(lotto-cli PRIVATE -g)
-set_target_properties(lotto-cli PROPERTIES ENABLE_EXPORTS ON)
-file(COPY python DESTINATION ${CMAKE_BINARY_DIR})
-
+target_link_libraries(lotto-cli PRIVATE lotto-driver)
 target_include_directories(lotto-cli PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_compile_definitions(lotto-cli PRIVATE LOTTO_REAL_NEXT
+                                             LOTTO_VERSION="${PROJECT_VERSION}")
 set_target_properties(
-    lotto-cli PROPERTIES OUTPUT_NAME lotto RUNTIME_OUTPUT_DIRECTORY
-                                           ${CMAKE_BINARY_DIR})
+    lotto-cli
+    PROPERTIES ENABLE_EXPORTS ON
+               OUTPUT_NAME lotto
+               RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 install(TARGETS lotto-cli DESTINATION bin)

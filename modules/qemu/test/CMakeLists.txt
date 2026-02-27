@@ -1,0 +1,8 @@
+ExternalProject_Add(
+    integration-arm64-linux
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/arm64-linux
+    BUILD_ALWAYS 1
+    CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE:PATH=${CMAKE_SOURCE_DIR}/cmake/arm64.cmake
+               -DCMAKE_C_FLAGS="-static" -DLOTTO_FRONTEND=QEMU
+    INSTALL_COMMAND "")

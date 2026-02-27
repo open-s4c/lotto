@@ -1,24 +1,27 @@
-/*
- */
+#include <stdint.h>
 #include <string.h>
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/marshable.h>
+#include <lotto/base/slot.h>
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/sys/assert.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/string.h>
 
-#define CANARY 0xbadfeed
+#define CANARY    0xbadfeed
+#define MAX_SLOTS 1024
 
 typedef struct {
     marshable_t *m;
+    int slot;
 } entry_t;
 
 typedef struct {
-    entry_t entries[1024];
+    entry_t entries[MAX_SLOTS];
     size_t length;
 } statemgr_t;
 
@@ -29,6 +32,7 @@ typedef struct {
     size_t index;
     size_t size;
     bool empty;
+    int slot;
 } header_t;
 
 static char *
@@ -54,24 +58,28 @@ _header_unmarshal(const void *buf)
     sys_memcpy(&h, buf, sizeof(header_t));
     if (h.canary != CANARY)
         logger_fatalf("unmarshal error: dead canary\n");
-
+    // TODO: ASSERT(h.slot != NO_SLOT);
     return h;
 }
 
 static void
-_statemgr_register(statemgr_t *mgr, marshable_t *m)
+_statemgr_register(statemgr_t *mgr, int slot, marshable_t *m)
 {
+    for (size_t i = 0; i < mgr->length; i++) {
+        ASSERT(mgr->entries[i].slot != slot);
+    }
     size_t index   = mgr->length;
     entry_t *entry = &mgr->entries[index];
     entry->m       = m;
+    entry->slot    = slot;
     mgr->length++;
 }
 
-
 void
-statemgr_register(marshable_t *m, state_type_t type)
+statemgr_register(int slot, marshable_t *m, state_type_t type)
 {
-    _statemgr_register(&_groups[type], m);
+    ASSERT(slot < MAX_SLOTS);
+    _statemgr_register(&_groups[type], slot, m);
 }
 
 static size_t
@@ -97,19 +105,21 @@ static const void *
 _statemgr_unmarshal(statemgr_t *mgr, const void *buf)
 {
     marshable_t *m;
-    for (size_t i = 0; i < mgr->length; i++) {
+    size_t count = 0;
+    for (size_t i = 0; i < mgr->length && count < mgr->length;) {
         header_t h = _header_unmarshal(buf);
-        if (h.index > i)
+        if (h.slot != mgr->entries[i].slot) {
+            i++;
             continue;
-
-        ASSERT(h.index == i);
+        }
 
         if ((m = mgr->entries[i].m) == NULL) {
-            logger_warnf(
+            logger_fatalf(
                 "unmarshal error: index %zu not registered, "
                 "skipping.\n",
                 h.index);
             buf = _add_header(buf) + h.size;
+            i++;
             continue;
         }
 
@@ -117,6 +127,8 @@ _statemgr_unmarshal(statemgr_t *mgr, const void *buf)
         const void *next = marshable_unmarshal(m, payload);
         ASSERT((uintptr_t)next - (uintptr_t)payload == h.size);
         buf = next;
+        i   = 0;
+        count++;
     }
     return buf;
 }
@@ -127,9 +139,6 @@ statemgr_unmarshal(const void *buf, state_type_t type, bool publish)
     ASSERT(type < STATE_TYPE_END_);
     ASSERT(type != STATE_TYPE_EPHEMERAL);
     ASSERT(buf);
-    header_t h = _header_unmarshal(buf);
-    if (h.empty)
-        return (char *)buf + h.size;
     buf = _statemgr_unmarshal(&_groups[type], buf);
 
     if (!publish) {
@@ -162,9 +171,12 @@ _statemgr_marshal(statemgr_t *mgr, void *buf)
             char *payload = _add_header(buf);
             void *next    = marshable_marshal(m, payload);
             ASSERT((uintptr_t)next >= (uintptr_t)payload);
-            header_t h = {.index = i,
-                          .size  = (char *)next - payload,
-                          .empty = false};
+            header_t h = {
+                .index = i,
+                .size  = (char *)next - payload,
+                .empty = false,
+                .slot  = mgr->entries[i].slot,
+            };
             _header_marshal(h, buf);
             buf = next;
         }
@@ -233,6 +245,7 @@ statemgr_record_unmarshal(const record_t *r)
             break;
         case RECORD_CONFIG:
             statemgr_unmarshal(r->data, STATE_TYPE_CONFIG, true);
+            break;
             break;
         default:
             logger_fatalf("unexpected %s record\n", kind_str(r->kind));

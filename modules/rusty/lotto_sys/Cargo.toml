@@ -1,0 +1,17 @@
+[package]
+name = "lotto_sys"
+version = "0.1.0"
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bincode.workspace = true
+
+[build-dependencies]
+anyhow = "1.0"
+bindgen = "0.69.1"
+cmake-package = "0.1.11"
+
+[features]
+stable_address_map = []

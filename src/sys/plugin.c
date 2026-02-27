@@ -17,17 +17,18 @@
 
 #define MAX_PLUGINS            100
 #define MAX_PLUGIN_NAME_LENGTH 1023
-#define PLUGIN_PREFIX          "liblotto_"
+#define PLUGIN_PREFIX          "lotto-"
 #define PLUGIN_PREFIX_LEN      (sizeof(PLUGIN_PREFIX) - 1)
 
-#define ENGINE_PLUGIN_SUFFIX     "engine.so"
-#define ENGINE_PLUGIN_SUFFIX_LEN (sizeof(ENGINE_PLUGIN_SUFFIX) - 1)
+#define SO_SUFFIX     ".so"
+#define SO_SUFFIX_LEN (sizeof(SO_SUFFIX) - 1)
 
-#define CLI_PLUGIN_SUFFIX     "cli.so"
-#define CLI_PLUGIN_SUFFIX_LEN (sizeof(CLU_PLUGIN_SUFFIX) - 1)
+#define DRIVER_PLUGIN_PREFIX     "lotto-driver-"
+#define DRIVER_PLUGIN_PREFIX_LEN (sizeof(DRIVER_PLUGIN_PREFIX) - 1)
+#define RUNTIME_PLUGIN_PREFIX     "lotto-runtime-"
+#define RUNTIME_PLUGIN_PREFIX_LEN (sizeof(DRIVER_PLUGIN_PREFIX) - 1)
 
-#define RUNTIME_PLUGIN_SUFFIX     "runtime.so"
-#define RUNTIME_PLUGIN_SUFFIX_LEN (sizeof(RUNTIME_PLUGIN_SUFFIX) - 1)
+#define STARTS_WITH(s, LITERAL_NAME) (sys_strncmp((s), LITERAL_NAME, LITERAL_NAME##_LEN)  == 0)
 
 static plugin_t _plugins[MAX_PLUGINS];
 static size_t _next = 0;
@@ -294,7 +295,7 @@ static char *
 _plugin_name(const char *filename)
 {
     filename += PLUGIN_PREFIX_LEN;
-    size_t len = strrchr(filename, '_') - filename;
+    size_t len = strrchr(filename, '.') - filename;
     return sys_strndup(filename, len);
 }
 
@@ -318,23 +319,20 @@ _scandir(const char *scan_dir)
         return -1;
     char path[PATH_MAX];
     for (struct dirent *entry; (entry = readdir(dir));) {
-        if (sys_strncmp(entry->d_name, PLUGIN_PREFIX, PLUGIN_PREFIX_LEN) != 0) {
+        if (!_ends_with(entry->d_name, SO_SUFFIX)) {
             continue;
         }
         char *name         = _plugin_name(entry->d_name);
         plugin_kind_t kind = PLUGIN_KIND_NONE;
-        if (_ends_with(entry->d_name, CLI_PLUGIN_SUFFIX)) {
+        if (STARTS_WITH(entry->d_name, DRIVER_PLUGIN_PREFIX)) {
             kind |= PLUGIN_KIND_CLI;
         }
-        if (_ends_with(entry->d_name, ENGINE_PLUGIN_SUFFIX)) {
-            kind |= PLUGIN_KIND_ENGINE;
-        }
-        if (_ends_with(entry->d_name, RUNTIME_PLUGIN_SUFFIX)) {
+        if (STARTS_WITH(entry->d_name, RUNTIME_PLUGIN_PREFIX)) {
             kind |= PLUGIN_KIND_RUNTIME;
         }
-        if (strstr(entry->d_name, "mempool_") != NULL ||
-            strstr(entry->d_name, "uaf_") != NULL ||
-            strstr(entry->d_name, "leakcheck_") != NULL) {
+        if (strstr(entry->d_name, "user_mempool") != NULL ||
+            strstr(entry->d_name, "uafcheck") != NULL ||
+            strstr(entry->d_name, "leakcheck") != NULL) {
             kind |= PLUGIN_KIND_MEMMGR;
         }
         if (kind == PLUGIN_KIND_NONE) {
@@ -365,6 +363,12 @@ _compar(const void *_p, const void *_q)
     const plugin_t *p = (const plugin_t *)_p;
     const plugin_t *q = (const plugin_t *)_q;
     int val;
+    if (strstr(p->name, "rust")) {
+        return 1;
+    }
+    if (strstr(q->name, "rust")) {
+        return -1;
+    }
     if ((val = strcmp(p->name, q->name)))
         return val;
     if ((val = (int)p->kind - (int)q->kind)) {

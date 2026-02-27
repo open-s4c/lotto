@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_STATEMGR_H
 #define LOTTO_STATEMGR_H
 
@@ -9,6 +7,7 @@
 
 #include <lotto/base/marshable.h>
 #include <lotto/base/record.h>
+#include <lotto/base/slot.h>
 #include <vsync/common/macros.h>
 
 typedef enum state_type {
@@ -28,7 +27,7 @@ typedef enum state_type {
  * @param type the type of state
  *
  */
-void statemgr_register(marshable_t *m, state_type_t type);
+void statemgr_register(int slot, marshable_t *m, state_type_t type);
 
 size_t statemgr_size(state_type_t type);
 
@@ -56,7 +55,7 @@ void statemgr_record_unmarshal(const record_t *r);
     {                                                                          \
         (var).m =                                                              \
             MARSHABLE_STATIC_PRINTABLE(sizeof(var), STATEMGR_PRINT(type));     \
-        statemgr_register(&(var).m, STATE_TYPE_##type);                        \
+        statemgr_register(DICE_MODULE_SLOT, &(var).m, STATE_TYPE_##type);      \
     }
 
 
@@ -71,14 +70,14 @@ void statemgr_record_unmarshal(const record_t *r);
     {                                                                          \
         (var).m =                                                              \
             MARSHABLE_STATIC_PRINTABLE(sizeof(var), STATEMGR_PRINT(CONFIG));   \
-        statemgr_register(&(var).m, STATE_TYPE_CONFIG);                        \
+        statemgr_register(DICE_MODULE_SLOT, &(var).m, STATE_TYPE_CONFIG);      \
     }
 
 #define REGISTER_CONFIG_NONSTATIC(var, mi)                                     \
     static void LOTTO_CONSTRUCTOR STATEMGR_CONSTRUCTOR(CONFIG)(void)           \
     {                                                                          \
         (var).m = mi;                                                          \
-        statemgr_register(&(var).m, STATE_TYPE_CONFIG);                        \
+        statemgr_register(DICE_MODULE_SLOT, &(var).m, STATE_TYPE_CONFIG);      \
     }
 
 /**
@@ -98,7 +97,7 @@ void statemgr_record_unmarshal(const record_t *r);
     static void LOTTO_CONSTRUCTOR STATEMGR_CONSTRUCTOR(type)(void)             \
     {                                                                          \
         (var).m = MARSHABLE_STATIC(sizeof(var));                               \
-        statemgr_register(&(var).m, STATEMGR_CALLBACK(type),                   \
+        statemgr_register(DICE_MODULE_SLOT, &(var).m, STATEMGR_CALLBACK(type), \
                           STATE_TYPE_##type);                                  \
     }
 
@@ -120,7 +119,8 @@ void statemgr_record_unmarshal(const record_t *r);
     static void LOTTO_CONSTRUCTOR STATEMGR_CONSTRUCTOR(type)(void)             \
     {                                                                          \
         STATEMGR_INIT(type)((marshable_t *)&var);                              \
-        statemgr_register((marshable_t *)&var, STATE_TYPE_##type);             \
+        statemgr_register(DICE_MODULE_SLOT, (marshable_t *)&var,               \
+                          STATE_TYPE_##type);                                  \
     }
 
 

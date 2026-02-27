@@ -38,10 +38,11 @@ void context_print(const context_t *ctx);
 #define ctx_raw(...) (&(context_t){.args = {0}, __VA_ARGS__})
 
 #define ctx(...)                                                               \
-    (&(context_t){.func = "UNKNOWN",                                           \
-                  .cat  = CAT_NONE,                                            \
+    (&(context_t){.cat  = CAT_NONE,                                            \
                   .id   = NO_TASK,                                             \
+                  .vid  = NO_TASK,                                             \
                   .pc   = ((uintptr_t)__builtin_return_address(CTX_LEVELS)),   \
+                  .func = "UNKNOWN",                                           \
                   .func_addr =                                                 \
                       ((uintptr_t)__builtin_frame_address(CTX_LEVELS)),        \
                   .args = {0},                                                 \

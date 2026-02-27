@@ -48,7 +48,17 @@ void context_print(const context_t *ctx);
                   .args = {0},                                                 \
                   __VA_ARGS__})
 
-#define ctx_cat(ctx, c) (ctx->cat = c, ctx)
+#define ctx_pc(...)                                                            \
+    (&(context_t){.cat  = CAT_NONE,                                            \
+                  .id   = NO_TASK,                                             \
+                  .vid  = NO_TASK,                                             \
+                  .func = "UNKNOWN",                                           \
+                  .func_addr =                                                 \
+                      ((uintptr_t)__builtin_frame_address(CTX_LEVELS)),        \
+                  .args = {0},                                                 \
+                  __VA_ARGS__})
+
+#define ctx_cat(ctx, c) ((ctx)->cat = c, ctx)
 
 #define ctx_empty (&(context_t){0})
 

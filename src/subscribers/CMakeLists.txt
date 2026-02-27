@@ -3,5 +3,5 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 add_compile_options(-fPIC -Wno-uninitialized)
 add_compile_definitions(_GNU_SOURCE)
 
-set(SRCS intercept_pthread_create.c)
-add_library(interceptors.o OBJECT ${SRCS})
+set(SRCS pthread_create_join.c)
+add_library(subscribers.o OBJECT ${SRCS})

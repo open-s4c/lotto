@@ -40,7 +40,7 @@ set(LIBS
     dice-pthread_cond.o
     dice-tsan.o
     dice-stacktrace.o
-    interceptors.o)
+    subscribers.o)
 
 macro(add_runtime TARGET)
     add_library(${TARGET} SHARED ${SRCS})

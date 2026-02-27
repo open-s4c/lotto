@@ -49,7 +49,8 @@ main(void)
     vatomic_write(&start, 1);
 
     for (int i = 0; i < NTHREADS; ++i) {
-        pthread_join(threads[i], NULL);
+        int err = pthread_join(threads[i], NULL);
+        assert(err == 0);
     }
 
     assert(last > 0 && last <= 100);

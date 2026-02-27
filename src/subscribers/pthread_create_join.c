@@ -1,3 +1,7 @@
+#ifdef DICE_MODULE_SLOT
+    #undef DICE_MODULE_SLOT
+#endif
+//#define DICE_MODULE_SLOT
 #include <errno.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -6,16 +10,20 @@
 #include <dice/chains/capture.h>
 #include <dice/chains/intercept.h>
 #include <dice/events/pthread.h>
+#include <dice/events/self.h>
 #include <dice/events/thread.h>
 #include <dice/interpose.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>
+#include <dice/self.h>
 #include <lotto/base/arg.h>
 #include <lotto/base/category.h>
 #include <lotto/base/context.h>
 #include <lotto/rsrc_deadlock.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/logger.h>
+
+DICE_MODULE_INIT()
 
 #if 0
 int detachstate;
@@ -38,6 +46,19 @@ return ret;
 // -----------------------------------------------------------------------------
 // thread_start and thread_exit
 // -----------------------------------------------------------------------------
+
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_INIT, {
+    if (self_id(md) != MAIN_THREAD)
+        return PS_OK;
+    bool detached = false;
+    context_t *c  = ctx(.func = "pthread_thread_start", .cat = CAT_TASK_INIT,
+                        .args = {
+                            [0] = arg(uintptr_t, (uintptr_t)pthread_self()),
+                            [1] = arg(bool, detached),
+                       });
+    intercept_capture(c);
+    return PS_OK;
+})
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
     bool detached = false;
@@ -81,24 +102,13 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_THREAD_CREATE, {
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_THREAD_JOIN, {
-    struct pthread_join_event *ev = EVENT_PAYLOAD(event);
-
-    ev->ret = EINTR;
-    // alternative is CAT_JOIN
-    context_t *c = ctx(.func = "pthread_join", .cat = CAT_CALL,
-                       .args = {
-                           [0] = arg_ptr(&ev->thread),
-                           [1] = arg_ptr(ev->ptr),
-                           [2] = arg_ptr(&ev->ret),
-                       });
+    context_t *c = ctx(.func = "pthread_join", .cat = CAT_CALL);
     (void)intercept_before_call(c);
 })
-
 PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_THREAD_JOIN, {
     intercept_after_call("pthread_join");
     return PS_OK;
 })
-
 
 struct pthread_detach_event {
     const void *pc;

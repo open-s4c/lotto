@@ -149,7 +149,7 @@ mediator_get_data(bool new_task)
     if (m->registration_status != MEDIATOR_REGISTRATION_NONE) {
         return m;
     }
-    bool register_main = _mediator_registration_enabled();
+    bool register_main = false; //_mediator_registration_enabled();
     ASSERT(!(register_main && new_task) && "task creation was not intercepted");
     if (!(register_main || new_task)) {
         return m;
@@ -242,6 +242,9 @@ mediator_capture(mediator_t *m, context_t *ctx)
         }
         return false;
     }
+    struct metadata *md = self_md();
+    if (self_retired(md))
+        return false;
 
     switch (ctx->cat) {
         case CAT_KEY_CREATE:

@@ -1,1 +1,1 @@
-add_runtime_module(handler.c module.c)
+add_runtime_module(handler.c subscribers.c module.c)

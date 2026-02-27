@@ -1,5 +1,3 @@
-/*
- */
 /*******************************************************************************
  * Switcher is a sort of barrier where tasks get blocked until it's their
  * turn. The interface is basically yield() to block a task and wake() to

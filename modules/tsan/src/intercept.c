@@ -235,7 +235,7 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_CMPXCHG_WEAK, {
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MA_FENCE, {
     struct ma_fence_event *ev = EVENT_PAYLOAD(event);
 
-    context_t *c = ctx_pc(.cat = CAT_BEFORE_FENCE, .func = ev->func, );
+    context_t *c = ctx_pc(.cat = CAT_BEFORE_FENCE, .pc = EV_PC, .func = ev->func);
     intercept_capture(c);
     return PS_OK;
 })
@@ -243,19 +243,20 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_MA_FENCE, {
 PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_MA_FENCE, {
     struct ma_fence_event *ev = EVENT_PAYLOAD(event);
 
-    context_t *c = ctx_pc(.cat = CAT_AFTER_FENCE, .func = ev->func, );
+    context_t *c = ctx_pc(.cat = CAT_AFTER_FENCE, .pc = EV_PC, .func = ev->func);
     intercept_capture(c);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_STACKTRACE_ENTER, {
     stacktrace_event_t *ev = EVENT_PAYLOAD(event);
-    context_t *ctx         = ctx_pc(.func = "func_entry", .cat = CAT_FUNC_ENTRY,
-                                    .args = {arg_ptr(ev->caller)});
+    context_t *ctx         = ctx_pc(.cat = CAT_FUNC_ENTRY, .func = "func_entry",
+                                    .pc = EV_PC, .args = {arg_ptr(ev->caller)});
     intercept_capture(ctx);
 })
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_STACKTRACE_EXIT, {
-    context_t *ctx = ctx_pc(.func = "func_exit", .cat = CAT_FUNC_EXIT);
+    stacktrace_event_t *ev = EVENT_PAYLOAD(event);
+    context_t *ctx = ctx_pc(.cat = CAT_FUNC_EXIT, .pc = EV_PC, .func = "func_exit");
     intercept_capture(ctx);
 })

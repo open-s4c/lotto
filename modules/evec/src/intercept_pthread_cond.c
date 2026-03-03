@@ -34,9 +34,9 @@ pthread_nop_ETIMEDOUT_()
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_WAIT, {
     struct pthread_cond_wait_event *ev = EVENT_PAYLOAD(event);
     _lotto_evec_prepare(ev->cond);
-    _lotto_mutex_release_named("pthread_cond_wait", ev->mutex);
+    _lotto_mutex_release_named("pthread_cond_wait", ev->mutex, ev->pc);
     _lotto_evec_wait(ev->cond);
-    _lotto_mutex_acquire_named("pthread_cond_wait", ev->mutex);
+    _lotto_mutex_acquire_named("pthread_cond_wait", ev->mutex, ev->pc);
     ev->func = (void *)pthread_nop_zero_;
     return PS_OK;
 })
@@ -45,25 +45,25 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_TIMEDWAIT, {
     struct pthread_cond_timedwait_event *ev = EVENT_PAYLOAD(event);
     enum lotto_timed_wait_status ret;
     _lotto_evec_prepare(ev->cond);
-    _lotto_mutex_release_named("pthread_cond_timedwait", ev->mutex);
+    _lotto_mutex_release_named("pthread_cond_timedwait", ev->mutex, ev->pc);
     ret = _lotto_evec_timed_wait(ev->cond, ev->abstime);
-    _lotto_mutex_acquire_named("pthread_cond_timedwait", ev->mutex);
+    _lotto_mutex_acquire_named("pthread_cond_timedwait", ev->mutex, ev->pc);
     ev->func = (ret == TIMED_WAIT_TIMEOUT) ? (void *)pthread_nop_ETIMEDOUT_ :
-        (void *)pthread_nop_zero_;
+                                             (void *)pthread_nop_zero_;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_SIGNAL, {
     struct pthread_cond_signal_event *ev = EVENT_PAYLOAD(event);
     _lotto_evec_wake(ev->cond, 1);
-    ev->func = (void*)pthread_nop_zero_;
+    ev->func = (void *)pthread_nop_zero_;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_COND_BROADCAST, {
     struct pthread_cond_broadcast_event *ev = EVENT_PAYLOAD(event);
     _lotto_evec_wake(ev->cond, ~((uint32_t)0));
-    ev->func = (void*)pthread_nop_zero_;
+    ev->func = (void *)pthread_nop_zero_;
     return PS_OK;
 })
 

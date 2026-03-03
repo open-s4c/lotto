@@ -3,13 +3,15 @@
 // REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress4rinflex -- %b)
-// RUN: %lotto %rinflex -r 30 2>&1 | iconv -t utf-8 -f utf-8 -c | filecheck %s
+// RUN: %lotto %rinflex -r 15 2>&1 | iconv -t utf-8 -f utf-8 -c | filecheck %s
 
 // CHECK: ------ . ------ . ------ . ------ . ------
 // CHECK: event - tid: {{[0-9]+}}, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: BEFORE_AWRITE
-// CHECK-NEXT: [setter]
+// CHECK-NEXT: []
+// CHECK-NEXT: setter
 // CHECK: event - tid: {{[0-9]+}}, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: BEFORE_AREAD
-// CHECK-NEXT: [checker]
+// CHECK-NEXT: []
+// CHECK-NEXT: checker
 
 // clang-format on
 

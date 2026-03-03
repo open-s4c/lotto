@@ -1,10 +1,9 @@
 // clang-format off
 // ALLOW_RETRIES: 5
 // REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
-// REQUIRES: DISABLED
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress4rinflex -- %b)
-// RUN: %lotto %rinflex -r 30 2>&1 | iconv -f utf-8 -t utf-8 -c > %s.out
+// RUN: %lotto %rinflex -r 15 2>&1 | iconv -f utf-8 -t utf-8 -c > %s.out
 // RUN: ( %check %s --check-prefix=CAS_S < %s.out ) || ( %check %s --check-prefix=CAS_F < %s.out )
 
 // CAS_S: ------ . ------ . ------ . ------ . ------

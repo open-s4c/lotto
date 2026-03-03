@@ -1,5 +1,5 @@
 // clang-format off
-// UNSUPPORTED: aarch64, clang
+// UNSUPPORTED: aarch64, clang, Clang
 // RUN: %lotto %stress --handler-race disable -r 1 -- %b
 // RUN: %lotto %show | %check %s --check-prefix=MINIMAL
 // RUN: %lotto %stress --handler-race disable -r 1 --record-granularity CHPT -- %b

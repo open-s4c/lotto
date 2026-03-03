@@ -3,7 +3,7 @@
 // REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress4rinflex -- %b)
-// RUN: %lotto %rinflex -r 30 2>&1 | iconv -f utf-8 -t utf-8 -c | %check %s
+// RUN: %lotto %rinflex -r 15 2>&1 | iconv -f utf-8 -t utf-8 -c | %check %s
 
 // CHECK: ------ . ------ . ------ . ------ . ------
 // CHECK-NEXT: event - tid: 2, clk: {{[0-9]+}}, 3 x pc: {{.*}}

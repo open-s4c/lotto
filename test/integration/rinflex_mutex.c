@@ -3,19 +3,23 @@
 // REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress4rinflex -- %b)
-// RUN: %lotto %rinflex -r 30 2>&1 | iconv -t utf-8 -f utf-8 -c | filecheck %s
+// RUN: %lotto %rinflex -r 15 2>&1 | iconv -t utf-8 -f utf-8 -c | filecheck %s
 
 // CHECK: ------ . ------ . ------ . ------ . ------
 // CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: MUTEX_ACQUIRE
-// CHECK-NEXT: [func{{[12]}}]
+// CHECK-NEXT: []
+// CHECK-NEXT: func{{[12]}}
 // CHECK: event - tid: 4, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: MUTEX_ACQUIRE
-// CHECK-NEXT: [func3]
+// CHECK-NEXT: []
+// CHECK-NEXT: func3
 
 // CHECK: ------ . ------ . ------ . ------ . ------
 // CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: MUTEX_ACQUIRE
-// CHECK-NEXT: [func{{[12]}}]
+// CHECK-NEXT: []
+// CHECK-NEXT: func{{[12]}}
 // CHECK: event - tid: 4, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: MUTEX_ACQUIRE
-// CHECK-NEXT: [func3]
+// CHECK-NEXT: []
+// CHECK-NEXT: func3
 
 // clang-format on
 

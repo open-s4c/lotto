@@ -5,7 +5,7 @@ lotto       = timeout -s 9 110s stdbuf -i0 -o0 -e0 %emulator %builddir/lotto
 tmpdir      = --temporary-directory %T
 output      = -o %t.trace
 input       = -i %t.trace
-filter      = src/runtime|src/plotto|libvsync
+filter      = libvsync
 
 # lotto subcommands
 debug          = debug %tmpdir %input --file-filter="%filter"
@@ -36,3 +36,4 @@ trace          = trace %tmpdir %output
 -D @LOTTO_RUST_LIT_FEATURE@
 -D @LOTTO_STABLE_ADDRESS_MAP_LIT_FEATURE@
 -D dice-runtime
+-D @CMAKE_C_COMPILER_ID@

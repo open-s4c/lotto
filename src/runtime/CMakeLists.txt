@@ -28,11 +28,10 @@ set(LIBS
     switcher.o
     sys.o
     base.o
-    states.o
-    brokers.o
     memmgr_runtime.o
     memmgr_user.o
-    engine.o
+    subscribers.o
+    lotto-runtime-engine.o
     dice.o
     dice-self.o
     dice-pthread_create.o
@@ -40,7 +39,7 @@ set(LIBS
     dice-pthread_cond.o
     dice-tsan.o
     dice-stacktrace.o
-    subscribers.o)
+)
 
 macro(add_runtime TARGET)
     add_library(${TARGET} SHARED ${SRCS})

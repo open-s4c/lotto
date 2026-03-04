@@ -6,6 +6,7 @@
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/string.h>
+#include <lotto/util/macros.h>
 
 #define MAX_CATEGORIES 1024
 #define INIT_NEXT      (CAT_END_ + 1) // TODO: remove +1
@@ -30,7 +31,12 @@ STATIC void *_catmgr_marshal(const marshable_t *m, void *buf);
 STATIC const void *_catmgr_unmarshal(marshable_t *m, const void *buf);
 STATIC void _catmgr_print(const marshable_t *m);
 static marshable_t _m;
-REGISTER_STATE(CONFIG, _m, { _m = MARSHABLE_STATE; })
+static void LOTTO_CONSTRUCTOR
+_catmgr_register(void)
+{
+    _m = MARSHABLE_STATE;
+    statemgr_register(DICE_MODULE_SLOT, &_m, STATE_TYPE_CONFIG);
+}
 
 STATIC size_t
 _catmgr_size(const marshable_t *m)

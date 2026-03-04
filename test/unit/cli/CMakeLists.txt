@@ -6,12 +6,10 @@ foreach(SRC ${SRCS})
     target_link_libraries(
         ${TEST}
         base_testing.o
-        brokers_testing.o
+        lotto-driver-engine.o
         cli_testing.o
         pthread
         sys_testing.o
-        states_prng_testing.o
-        states_sequencer_testing.o
         flags_prng_testing.o
         flags_sequencer_testing.o
         memmgr_runtime.o

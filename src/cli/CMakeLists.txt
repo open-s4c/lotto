@@ -77,15 +77,13 @@ add_library(lotto-driver SHARED ${FLAG_SRCS} ${CLI_SRCS})
 target_link_libraries(
     lotto-driver
     PRIVATE cli.o
-            states.o
-            brokers.o
             base.o
             sys.o
             memmgr_runtime.o
             memmgr_user.o
+            lotto-driver-engine.o
             dice.o)
-target_link_libraries(lotto-driver
-        PRIVATE lotto-driver-available)
+target_link_libraries(lotto-driver PRIVATE lotto-driver-available)
 target_compile_options(lotto-driver PRIVATE -g)
 target_compile_definitions(lotto-driver
                            PRIVATE LOTTO_VERSION="${PROJECT_VERSION}")

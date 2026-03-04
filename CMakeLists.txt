@@ -80,6 +80,7 @@ set(TIKL_WORKERS
 # include(cmake/submodule.cmake)
 
 include(cmake/utils.cmake)
+include(cmake/modules.cmake)
 
 # ##############################################################################
 # Generic project configuration

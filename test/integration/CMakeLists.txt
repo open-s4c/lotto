@@ -21,6 +21,7 @@ set(FAILING_SRCS
     double_free.c # needs memmgr-user=uaf, the error must not RUNTIME_...
     inflex_abc_nocli.c # test script needs correct preloading on necessary
                        # libraries
+    notsan_mediator_null.c # the error must not RUNTIME_...
     wait.c # time leap is not performed, maybe there is an undesired CAT_CALL
 )
 # rinflex.c # gets stuck during essentiality check rinflex_3oc.c rinflex_cas.c

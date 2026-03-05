@@ -19,11 +19,8 @@
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/logger.h>
 
-static int retval = 0;
-static int const_func(pthread_rwlock_t *);
-static int const_func_timed(pthread_rwlock_t *, const struct timespec *);
-#define CONST(val) ((retval = (val)), const_func)
-#define CONST_TIMED(val) ((retval = (val)), const_func_timed)
+static int const_zero(pthread_rwlock_t *l) { return 0 ;}
+static int const_zero_timed(pthread_rwlock_t *l, const struct timespec *t) { return 0; }
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_RDLOCK, {
     struct pthread_rwlock_rdlock_event *ev = EVENT_PAYLOAD(event);
@@ -33,7 +30,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_RDLOCK, {
         .func = "pthread_rwlock_rdlock",
         .args = {arg_ptr(ev->lock)},
     ));
-    ev->func = CONST(0);
+    ev->func = const_zero;
     return PS_OK;
 })
 
@@ -45,7 +42,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_WRLOCK, {
         .func = "pthread_rwlock_wrlock",
         .args = {arg_ptr(ev->lock)},
     ));
-    ev->func = CONST(0);
+    ev->func = const_zero;
     return PS_OK;
 })
 
@@ -57,11 +54,16 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_UNLOCK, {
         .func = "pthread_rwlock_unlock",
         .args = {arg_ptr(ev->lock)},
     ));
-    ev->func = CONST(0);
+    ev->func = const_zero;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_TRYRDLOCK, {
+    struct pthread_rwlock_tryrdlock_event *ev = EVENT_PAYLOAD(event);
+    ev->func = const_zero;
+    return PS_OK;
+})
+PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_RWLOCK_TRYRDLOCK, {
     struct pthread_rwlock_tryrdlock_event *ev = EVENT_PAYLOAD(event);
     context_t *ctx = ctx_pc(
         .pc = (uintptr_t)ev->pc,
@@ -70,11 +72,16 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_TRYRDLOCK, {
         .args = {arg_ptr(ev->lock)},
     );
     intercept_capture(ctx);
-    ev->func = CONST((int)ctx->args[1].value.u32);
+    ev->ret = (int)ctx->args[1].value.u32;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_TRYWRLOCK, {
+    struct pthread_rwlock_trywrlock_event *ev = EVENT_PAYLOAD(event);
+    ev->func = const_zero;
+    return PS_OK;
+})
+PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_RWLOCK_TRYWRLOCK, {
     struct pthread_rwlock_trywrlock_event *ev = EVENT_PAYLOAD(event);
     context_t *ctx = ctx_pc(
         .pc = (uintptr_t)ev->pc,
@@ -83,7 +90,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_TRYWRLOCK, {
         .args = {arg_ptr(ev->lock)},
     );
     intercept_capture(ctx);
-    ev->func = CONST((int)ctx->args[1].value.u32);
+    ev->ret = (int)ctx->args[1].value.u32;
     return PS_OK;
 })
 
@@ -95,7 +102,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_TIMEDRDLOCK, {
         .func = "pthread_rwlock_timedrdlock",
         .args = {arg_ptr(ev->lock), arg_ptr(ev->abstime)},
     ));
-    ev->func = CONST_TIMED(0);
+    ev->func = const_zero_timed;
     return PS_OK;
 })
 
@@ -107,17 +114,6 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_TIMEDWRLOCK, {
         .func = "pthread_rwlock_timedwrlock",
         .args = {arg_ptr(ev->lock), arg_ptr(ev->abstime)},
     ));
-    ev->func = CONST_TIMED(0);
+    ev->func = const_zero_timed;
     return PS_OK;
 })
-
-static int
-const_func(pthread_rwlock_t *lock)
-{
-    return retval;
-}
-static int
-const_func_timed(pthread_rwlock_t *lock, const struct timespec *abstime)
-{
-    return retval;
-}

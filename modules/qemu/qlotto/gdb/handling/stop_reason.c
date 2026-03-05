@@ -1,5 +1,3 @@
-/*
- */
 
 #include <lotto/qlotto/gdb/handling/stop_reason.h>
 #include <lotto/sys/assert.h>

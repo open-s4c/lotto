@@ -1,5 +1,3 @@
-/*
- */
 
 #include <lotto/qlotto/qemu/armcpu.h>
 #include <lotto/sys/assert.h>

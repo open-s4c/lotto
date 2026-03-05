@@ -1,7 +1,6 @@
-/*
- */
 #ifndef LOTTO_ENGINE_ENVVAR_H
 #define LOTTO_ENGINE_ENVVAR_H
+
 #include <stdbool.h>
 #include <stdint.h>
 

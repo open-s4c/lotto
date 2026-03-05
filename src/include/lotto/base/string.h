@@ -1,7 +1,6 @@
-/*
- */
 #ifndef LOTTO_BASE_STRING_H
 #define LOTTO_BASE_STRING_H
+
 #include <stdint.h>
 
 char *strupr(char *s);

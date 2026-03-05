@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_UDF_AARCH64_H
 #define LOTTO_UDF_AARCH64_H
 

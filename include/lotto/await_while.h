@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_AWAIT_WHILE_H
-#define LOTTO_AWAIT_WHILE_H
 /**
  * @file await_while.h
  * @brief Prevent user annotated spin loops from unnecessary iterations.
@@ -62,6 +58,8 @@
  * Based on the following paper, but also allowing writes in the spin loop.
  * @cite https://arxiv.org/abs/2012.01067
  */
+#ifndef LOTTO_AWAIT_WHILE_H
+#define LOTTO_AWAIT_WHILE_H
 
 #include <stddef.h>
 #include <stdint.h>

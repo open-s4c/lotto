@@ -1,7 +1,6 @@
-/*
- */
 #ifndef LOTTO_CLI_EXEC_INFO_H
 #define LOTTO_CLI_EXEC_INFO_H
+
 #include <stdbool.h>
 #include <stdint.h>
 

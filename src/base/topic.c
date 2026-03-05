@@ -1,5 +1,3 @@
-/*
- */
 #include <lotto/base/topic.h>
 #include <lotto/sys/assert.h>
 

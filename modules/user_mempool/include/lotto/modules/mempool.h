@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_MEMPOOL_H
 #define LOTTO_MEMPOOL_H
 

@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_QEMU_GDB_SEND_H
 #define LOTTO_QEMU_GDB_SEND_H
 

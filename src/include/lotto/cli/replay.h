@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_CLI_REPLAY_H
 #define LOTTO_CLI_REPLAY_H
 

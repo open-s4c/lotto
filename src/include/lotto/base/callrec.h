@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_CALLREC_H
 #define LOTTO_CALLREC_H
 

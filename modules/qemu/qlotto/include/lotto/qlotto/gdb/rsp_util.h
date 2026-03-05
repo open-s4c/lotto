@@ -1,6 +1,3 @@
-/*
- */
-
 #ifndef RSP_UTIL_H
 #define RSP_UTIL_H
 

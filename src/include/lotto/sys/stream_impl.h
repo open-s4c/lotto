@@ -1,5 +1,3 @@
-/*
- */
 /**
  * Definitions for implementing a stream. The implementation should provide
  * function pointers packed in stream_t.

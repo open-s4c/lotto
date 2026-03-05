@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_CLK_H
 #define LOTTO_CLK_H
 

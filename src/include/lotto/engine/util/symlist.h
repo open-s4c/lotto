@@ -1,5 +1,3 @@
-/*
- */
 #ifndef SYMLIST_H
 #define SYMLIST_H
 

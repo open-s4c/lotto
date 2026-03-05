@@ -1,5 +1,3 @@
-/*
- */
 
 // system
 #include <stdbool.h>

@@ -1,13 +1,10 @@
-/*
- */
-#ifndef LOTTO_CAPPT_H
-#define LOTTO_CAPPT_H
-
 /*******************************************************************************
  * @file cappt.h
  * @brief represents a capture point within the engine
  *
  ******************************************************************************/
+#ifndef LOTTO_CAPPT_H
+#define LOTTO_CAPPT_H
 
 #include <stdbool.h>
 

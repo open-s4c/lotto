@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_SYS_LOTTO_MEMPOOL_H
 #define LOTTO_SYS_LOTTO_MEMPOOL_H
 

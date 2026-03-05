@@ -1,5 +1,3 @@
-/*
- */
 #include <stdbool.h>
 
 #include <lotto/base/marshable.h>

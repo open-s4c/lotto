@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_MEDIATOR_H
 #define LOTTO_MEDIATOR_H
 

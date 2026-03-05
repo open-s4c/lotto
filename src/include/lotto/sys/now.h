@@ -1,7 +1,6 @@
-/*
- */
 #ifndef LOTTO_NOW_H
 #define LOTTO_NOW_H
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>

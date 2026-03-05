@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_UNSAFE_TIME_H
-#define LOTTO_UNSAFE_TIME_H
 /**
  * @file time.h
  * @brief The time interface.
@@ -11,6 +7,8 @@
  * so the returned values will be different during replay. This is an unsafe
  * interface and the user is not recommended to use it.
  */
+#ifndef LOTTO_UNSAFE_TIME_H
+#define LOTTO_UNSAFE_TIME_H
 
 #include <time.h>
 

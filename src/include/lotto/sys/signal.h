@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_SIGNAL_H
 #define LOTTO_SIGNAL_H
 

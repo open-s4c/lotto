@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_REAL_H
 #define LOTTO_REAL_H
 

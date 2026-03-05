@@ -1,5 +1,3 @@
-/*
- */
 
 #include <lotto/await_while.h>
 #include <lotto/runtime/intercept.h>

@@ -1,5 +1,3 @@
-/*
- */
 /**
  * A multistream is a generic extension of streams allowing the data to be split
  * accross multiple sequential chunks.

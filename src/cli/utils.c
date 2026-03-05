@@ -1,5 +1,3 @@
-/*
- */
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>

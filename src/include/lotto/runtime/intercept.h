@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_INTERCEPT_H
 #define LOTTO_INTERCEPT_H
 

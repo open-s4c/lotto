@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_UNISTD_H
 #define LOTTO_UNISTD_H
 

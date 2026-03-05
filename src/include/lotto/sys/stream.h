@@ -1,5 +1,3 @@
-/*
- */
 /**
  * A generic interface for i/o streams.
  */

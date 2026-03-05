@@ -1,5 +1,3 @@
-/*
- */
 /**
  * Definitions for implementing a multistream. The implementation should provide
  * function pointers packed in stream_chunked_t.

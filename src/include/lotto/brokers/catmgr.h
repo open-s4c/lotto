@@ -1,6 +1,3 @@
-
-/*
- */
 #ifndef LOTTO_CAT_MGR_H
 #define LOTTO_CAT_MGR_H
 

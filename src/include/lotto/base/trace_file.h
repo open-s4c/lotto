@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_TRACE_FILE_H
 #define LOTTO_TRACE_FILE_H
 

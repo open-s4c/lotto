@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_TIDSET_H
 #define LOTTO_TIDSET_H
 

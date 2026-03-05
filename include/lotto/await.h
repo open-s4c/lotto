@@ -1,11 +1,9 @@
-/*
- */
-#ifndef LOTTO_AWAIT_H
-#define LOTTO_AWAIT_H
 /**
  * @file await.h
  * @brief Await changes to a memory address
  */
+#ifndef LOTTO_AWAIT_H
+#define LOTTO_AWAIT_H
 
 #include <stddef.h>
 #include <stdint.h>

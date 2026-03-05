@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_POLL_H
 #define LOTTO_POLL_H
 

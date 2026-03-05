@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_SEQUENCER_H
 #define LOTTO_SEQUENCER_H
 

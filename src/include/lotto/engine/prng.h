@@ -1,11 +1,10 @@
-/*
- */
-#ifndef LOTTO_PRNG_H
-#define LOTTO_PRNG_H
 /*******************************************************************************
  * @file prng.h
  * @brief Deterministic random generator for Lotto's engine.
  ******************************************************************************/
+#ifndef LOTTO_PRNG_H
+#define LOTTO_PRNG_H
+
 #include <stdint.h>
 
 /**

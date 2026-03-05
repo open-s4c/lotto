@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_VELOCITY_H
-#define LOTTO_VELOCITY_H
 /**
  * @file velocity.h
  * @brief The task velocity interface.
@@ -11,6 +7,8 @@
  * Initially this probability, or velocity, is set to 1.0. It can be set to any
  * number between 1% and 100%.
  */
+#ifndef LOTTO_VELOCITY_H
+#define LOTTO_VELOCITY_H
 
 #include <stdbool.h>
 #include <stdint.h>

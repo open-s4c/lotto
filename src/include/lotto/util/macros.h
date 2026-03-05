@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_MACROS_H
 #define LOTTO_MACROS_H
 

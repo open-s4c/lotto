@@ -1,5 +1,3 @@
-/*
- */
 
 #include <lotto/base/trace.h>
 #include <lotto/base/trace_impl.h>

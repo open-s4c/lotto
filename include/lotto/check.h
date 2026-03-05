@@ -1,11 +1,10 @@
-/*
- */
-#ifndef LOTTO_CHECK_H
-#define LOTTO_CHECK_H
 /*******************************************************************************
  * @file check.h
  * @brief Supporting functions for Lotto's users.
  ******************************************************************************/
+#ifndef LOTTO_CHECK_H
+#define LOTTO_CHECK_H
+
 #include <stdbool.h>
 #include <stddef.h>
 

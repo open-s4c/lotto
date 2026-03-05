@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_TIME_H
 #define LOTTO_TIME_H
 

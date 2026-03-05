@@ -39,6 +39,10 @@ state_sequencer_print(const marshable_t *m)
                  _engine_state.sequencer.stable_address_method);
 }
 
+/*
+ * prng, sequencer, and catmgr all register CONFIG on DICE_MODULE_SLOT.
+ * statemgr binds same-slot registrations, so constructor order is irrelevant.
+ */
 static void LOTTO_CONSTRUCTOR
 state_register_prng(void)
 {

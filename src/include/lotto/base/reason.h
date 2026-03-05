@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_REASON_H
 #define LOTTO_REASON_H
 

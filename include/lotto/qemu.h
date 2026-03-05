@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_QEMU_H
-#define LOTTO_QEMU_H
 /**
  * @file qemu.h
  * @brief Utilities to instrument QEMU guests.
@@ -11,6 +7,9 @@
  * accordingly. Calling these functions in programs running natively on the
  * host is undefined behavior.
  */
+#ifndef LOTTO_QEMU_H
+#define LOTTO_QEMU_H
+
 #include <lotto/qemu/lotto_udf.h>
 
 /**

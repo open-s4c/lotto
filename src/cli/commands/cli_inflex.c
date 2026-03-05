@@ -1,5 +1,3 @@
-/*
- */
 /*******************************************************************************
  * @file cli_inflex.c
  * @brief Finds the inflection point of a trace.

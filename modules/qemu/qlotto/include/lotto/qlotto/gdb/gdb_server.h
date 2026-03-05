@@ -1,6 +1,3 @@
-/*
- */
-
 #ifndef GDB_SERVER_H
 #define GDB_SERVER_H
 

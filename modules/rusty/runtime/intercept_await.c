@@ -1,5 +1,3 @@
-/*
- */
 
 #include <lotto/await.h>
 #include <lotto/runtime/intercept.h>

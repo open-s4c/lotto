@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_RSRC_DEADLOCK_H
-#define LOTTO_RSRC_DEADLOCK_H
 /**
  * @file deadlock.h
  * @brief Deadlock detector
@@ -10,6 +6,8 @@
  * by a pointer.
  *
  */
+#ifndef LOTTO_RSRC_DEADLOCK_H
+#define LOTTO_RSRC_DEADLOCK_H
 
 #include <stdbool.h>
 #include <stddef.h>

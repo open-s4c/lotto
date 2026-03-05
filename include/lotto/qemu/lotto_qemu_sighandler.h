@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_QEMU_SIGHANDLER_H
 #define LOTTO_QEMU_SIGHANDLER_H
 

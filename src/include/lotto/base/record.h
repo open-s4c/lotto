@@ -1,7 +1,6 @@
-/*
- */
 #ifndef LOTTO_RECORD_H
 #define LOTTO_RECORD_H
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

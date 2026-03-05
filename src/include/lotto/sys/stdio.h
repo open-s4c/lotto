@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_STDIO_H
 #define LOTTO_STDIO_H
 

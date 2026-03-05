@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_SYS_STRING_H
 #define LOTTO_SYS_STRING_H
 

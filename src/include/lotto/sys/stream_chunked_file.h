@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_STREAM_MULTI_FILE_H
 #define LOTTO_STREAM_MULTI_FILE_H
 

@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_FLAG_TERMINATION_H
 #define LOTTO_FLAG_TERMINATION_H
 

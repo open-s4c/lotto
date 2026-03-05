@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_STDLIB_H
 #define LOTTO_STDLIB_H
 

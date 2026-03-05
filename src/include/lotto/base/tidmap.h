@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_TIDMAP_H
 #define LOTTO_TIDMAP_H
 

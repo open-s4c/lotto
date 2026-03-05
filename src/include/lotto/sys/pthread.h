@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_PTHREAD_H
 #define LOTTO_PTHREAD_H
 

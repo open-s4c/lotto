@@ -1,5 +1,6 @@
 #ifndef LOTTO_HANDLER_RACE_H
 #define LOTTO_HANDLER_RACE_H
+
 #include <stdbool.h>
 
 #include <lotto/base/task_id.h>

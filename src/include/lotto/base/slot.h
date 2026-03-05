@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_SLOT_H
 #define LOTTO_SLOT_H
 

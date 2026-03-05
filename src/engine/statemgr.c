@@ -67,6 +67,10 @@ _statemgr_register(statemgr_t *mgr, int slot, marshable_t *m)
 {
     for (size_t i = 0; i < mgr->length; i++) {
         if (mgr->entries[i].slot == slot) {
+            /*
+             * Same-slot registrations are bound into a single marshable chain.
+             * This intentionally removes any dependence on constructor order.
+             */
             marshable_bind(mgr->entries[i].m, m);
             return;
         }

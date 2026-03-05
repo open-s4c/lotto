@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_UNUSED_H
 #define LOTTO_UNUSED_H
 

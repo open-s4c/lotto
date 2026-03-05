@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_SIGHANDLER_H
 #define LOTTO_SIGHANDLER_H
 

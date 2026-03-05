@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_EVEC_H
-#define LOTTO_EVEC_H
 /**
  * @file evec.h
  * @brief Event counters for low level synchronization.
@@ -9,6 +5,8 @@
  * Tasks can wait for a condition to be true and block if the condition is not
  * true. Otherwise, the task can cancel the waiting.
  */
+#ifndef LOTTO_EVEC_H
+#define LOTTO_EVEC_H
 
 #include <stddef.h>
 #include <stdint.h>

@@ -1,5 +1,3 @@
-/*
- */
 
 #include <poll.h>
 #include <stdint.h>

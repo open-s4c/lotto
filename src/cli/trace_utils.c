@@ -1,5 +1,3 @@
-/*
- */
 #include <dirent.h>
 #include <inttypes.h>
 #include <libgen.h>

@@ -1,5 +1,3 @@
-/*
- */
 
 #include <qemu-plugin.h>
 #include <stdbool.h>

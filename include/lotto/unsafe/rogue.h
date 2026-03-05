@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_UNSAFE_ROGUE_H
 #define LOTTO_UNSAFE_ROGUE_H
 

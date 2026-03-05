@@ -1,5 +1,3 @@
-/*
- */
 #ifndef SCHEDULER_STRATEGY_H
 #define SCHEDULER_STRATEGY_H
 

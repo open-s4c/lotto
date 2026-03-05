@@ -1,5 +1,3 @@
-/*
- */
 #include <string.h>
 
 #include <lotto/cli/flagmgr.h>

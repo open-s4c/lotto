@@ -1,5 +1,3 @@
-/*
- */
 /**
  * Macros for redirecting function calls to function pointers.
  */

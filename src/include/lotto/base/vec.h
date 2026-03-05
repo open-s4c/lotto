@@ -1,6 +1,3 @@
-#ifndef LOTTO_VEC_H
-#define LOTTO_VEC_H
-
 /*******************************************************************************
  * @file vec.h
  * @brief Marshable dynamic array of fixed-size items
@@ -11,6 +8,8 @@
  * Vec supports insertion in amortized O(1) time, but does not support
  * fast deletion.
  */
+#ifndef LOTTO_VEC_H
+#define LOTTO_VEC_H
 
 #include <stdbool.h>
 

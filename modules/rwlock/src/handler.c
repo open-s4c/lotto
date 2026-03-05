@@ -1,7 +1,6 @@
 #include <errno.h>
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/brokers/pubsub.h>
-#include <lotto/brokers/pubsub_interface.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
@@ -95,7 +94,7 @@ _rwlock_handle(const context_t *ctx, event_t *e)
 }
 REGISTER_HANDLER(SLOT_RWLOCK, _rwlock_handle)
 
-PS_SUBSCRIBE_INTERFACE(TOPIC_NEXT_TASK, {
+LOTTO_SUBSCRIBE(TOPIC_NEXT_TASK, {
     context_t *ctx = (context_t *)as_any(v);
     ASSERT(ctx);
 

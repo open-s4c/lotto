@@ -17,6 +17,9 @@ add_library(interceptor.o OBJECT ${SRCS})
 add_library(interceptor_testing.o OBJECT ${SRCS})
 target_compile_definitions(interceptor_testing.o PRIVATE -DLOTTO_TEST)
 
+set(SRCS subscribe.c)
+add_library(subscribers.o OBJECT ${SRCS})
+
 # ##############################################################################
 # libruntime
 # ##############################################################################

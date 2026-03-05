@@ -14,8 +14,6 @@ add_compile_definitions(DICE_MULTIFILE_MODULE)
 
 add_subdirectory(sys)
 add_subdirectory(base)
-add_subdirectory(brokers)
-add_subdirectory(states)
 add_subdirectory(engine)
 add_subdirectory(subscribers)
 add_subdirectory(runtime)

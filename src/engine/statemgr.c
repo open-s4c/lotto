@@ -66,7 +66,10 @@ static void
 _statemgr_register(statemgr_t *mgr, int slot, marshable_t *m)
 {
     for (size_t i = 0; i < mgr->length; i++) {
-        ASSERT(mgr->entries[i].slot != slot);
+        if (mgr->entries[i].slot == slot) {
+            marshable_bind(mgr->entries[i].m, m);
+            return;
+        }
     }
     size_t index   = mgr->length;
     entry_t *entry = &mgr->entries[index];
@@ -79,7 +82,8 @@ void
 statemgr_register(int slot, marshable_t *m, state_type_t type)
 {
     ASSERT(slot < MAX_SLOTS);
-    _statemgr_register(&_groups[type], slot, m);
+    if (type != STATE_TYPE_EPHEMERAL)
+        _statemgr_register(&_groups[type], slot, m);
 }
 
 static size_t

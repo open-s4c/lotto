@@ -19,13 +19,15 @@ if [ "${STYLE}" != "" ]; then
     STYLE=":${STYLE}"
 fi
 
+CLANG_FORMAT=clang-format-14
+
 # Apply clang-format to all *.h and *.c files in src folder.
 find "$@" \( -name '*.h' -o -name '*.c' -o -name '*.cpp' -o -name '*.hpp' -o -name '*.cxx' \) \
     -not -path '*/build/*' \
     -not -path '*/deps/*' \
     -not -path '*/mock/*' \
     -type f \
-    -exec clang-format -style=file${STYLE} -i {} +
+    -exec ${CLANG_FORMAT} -style=file${STYLE} -i {} +
 
 if [ "${SILENT}" != "true" ]; then
     # Display changed files and exit with 1 if there were differences.

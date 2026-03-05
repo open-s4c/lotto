@@ -14,9 +14,8 @@ foreach(SRC ${SRCS})
         ${TEST}
         ${TEST}.o
         sys_unreal_testing.o
-        engine_clock_testing.o
+        lotto-driver-engine.o
         base_testing.o
-        brokers_testing.o
         pthread
         interceptor_testing.o
         posix_interceptors.o

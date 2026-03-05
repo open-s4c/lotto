@@ -1,4 +1,3 @@
-gen_pubsub_headers("${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}")
 include_directories(${CMAKE_BINARY_DIR}/generated)
 include(${PROJECT_SOURCE_DIR}/cmake/lit.cmake)
 include_directories(${PROJECT_SOURCE_DIR}/src/include)

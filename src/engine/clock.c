@@ -47,12 +47,12 @@ static struct clock _clock;
 
 static void _clock_tick(uint64_t icount);
 
-PS_SUBSCRIBE_INTERFACE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
+LOTTO_SUBSCRIBE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
     marshable_print_m(&_config);
     _clock.icount_no_offset_count_max = 10;
 })
 
-PS_SUBSCRIBE_INTERFACE(TOPIC_BEFORE_CAPTURE, {
+LOTTO_SUBSCRIBE(TOPIC_BEFORE_CAPTURE, {
 #if defined(QLOTTO_ENABLED)
     const context_t *ctx = (const context_t *)as_any(v);
     _clock_tick(ctx->icount);

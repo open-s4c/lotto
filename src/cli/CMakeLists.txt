@@ -7,7 +7,6 @@ add_subdirectory(python)
 # CLI static library of utils
 # ##############################################################################
 
-gen_pubsub_headers("${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}")
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
 set(CLI_UTILS_SRCS

@@ -61,7 +61,7 @@ static sequencer_t _seq;
 clk_t clk_bound;
 uint64_t time_bound_ns;
 
-PS_SUBSCRIBE_INTERFACE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
+LOTTO_SUBSCRIBE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
     const char *var;
     if ((var = getenv("LOTTO_RECORD_GRANULARITY"))) {
         record_granularities_t gran;
@@ -219,7 +219,7 @@ void
 sequencer_resume(const context_t *ctx)
 {
     struct value val = any(ctx);
-    PS_PUBLISH_INTERFACE(TOPIC_NEXT_TASK, val);
+    LOTTO_PUBLISH(TOPIC_NEXT_TASK, val);
     if (ctx->id == 1 && ctx->cat == CAT_NONE)
         return;
 

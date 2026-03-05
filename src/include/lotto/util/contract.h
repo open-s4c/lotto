@@ -76,7 +76,7 @@
  * is omitted.
  */
 #if !defined(CONTRACT_DISABLE)
-    #define CONTRACT_SUBSCRIBE(topic, code) PS_SUBSCRIBE_INTERFACE(topic, code)
+    #define CONTRACT_SUBSCRIBE(topic, code) LOTTO_SUBSCRIBE(topic, code)
 #else
     #define CONTRACT_SUBSCRIBE(...)
 #endif

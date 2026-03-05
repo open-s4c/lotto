@@ -18,6 +18,8 @@ add_compile_options("-fPIC" "-Werror")
 # ##############################################################################
 set(LOTTO_FRONTEND_LIST POSIX QEMU)
 include(cmake/stable_options.cmake)
+include(cmake/CPM.cmake)
+include(cmake/submodule.cmake)
 
 # ##############################################################################
 # Dependencies
@@ -77,8 +79,6 @@ set(TIKL_WORKERS
 # ------------------------------------------------------------------------------
 # CMake libs
 # ------------------------------------------------------------------------------
-# include(cmake/submodule.cmake)
-
 include(cmake/utils.cmake)
 include(cmake/modules.cmake)
 
@@ -110,8 +110,6 @@ endif()
 
 option(LOTTO_QEMU_YIELD "whether to instrument guest code with yield syscall"
        ${LOTTO_QEMU_YIELD_DEFAULT})
-
-include(cmake/pubsub.cmake)
 
 # ##############################################################################
 # testing configuration

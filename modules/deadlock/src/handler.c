@@ -271,7 +271,7 @@ _deadlock_handle(const context_t *ctx, event_t *e)
     }
     if (e->reason == REASON_RSRC_DEADLOCK) {
         struct value val = bval(true);
-        PS_PUBLISH_INTERFACE(TOPIC_DEADLOCK_DETECTED, val);
+        LOTTO_PUBLISH(TOPIC_DEADLOCK_DETECTED, val);
     }
 }
 REGISTER_HANDLER(SLOT_DEADLOCK, _deadlock_handle)

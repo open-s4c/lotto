@@ -2,7 +2,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/map.h>
 #include <lotto/brokers/pubsub.h>
-#include <lotto/brokers/pubsub_interface.h>
 #include <lotto/brokers/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
@@ -42,7 +41,7 @@ REGISTER_STATE(EPHEMERAL, _state, {
 })
 
 static void _check_timeouts(bool should_publish);
-PS_SUBSCRIBE_INTERFACE(TOPIC_TRIGGER_TIMEOUT, {
+LOTTO_SUBSCRIBE(TOPIC_TRIGGER_TIMEOUT, {
     if (_state.received_timeout || !tidset_has(&_state.waiters, as_uval(v))) {
         return PS_OK;
     }
@@ -309,7 +308,7 @@ _evec_handle(const context_t *ctx, event_t *e)
 }
 REGISTER_HANDLER(SLOT_EVEC, _evec_handle);
 
-PS_SUBSCRIBE_INTERFACE(TOPIC_NEXT_TASK, {
+LOTTO_SUBSCRIBE(TOPIC_NEXT_TASK, {
     const context_t *ctx = (context_t *)as_any(v);
     ASSERT(ctx);
 

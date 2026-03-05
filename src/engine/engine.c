@@ -105,7 +105,7 @@ engine_init(trace_t *input, trace_t *output)
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
     logger_debugf("starting...\n");
-    PS_PUBLISH_INTERFACE(TOPIC_ENGINE_START, nil);
+    LOTTO_PUBLISH(TOPIC_ENGINE_START, nil);
     recorder_init(input, output);
 }
 
@@ -153,7 +153,7 @@ engine_capture(const context_t *ctx)
     log(ctx, "CAPTURE  %s\t%s", category_str(ctx->cat), ctx->func);
 
     struct value val = any(ctx);
-    PS_PUBLISH_INTERFACE(TOPIC_BEFORE_CAPTURE, val);
+    LOTTO_PUBLISH(TOPIC_BEFORE_CAPTURE, val);
     plan_t p = sequencer_capture(ctx);
 
     CONTRACT({

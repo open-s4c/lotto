@@ -9,7 +9,7 @@
 #include <lotto/runtime/mediator.h>
 #include <lotto/runtime/runtime.h>
 #include <lotto/runtime/switcher.h>
-#include <lotto/states/sequencer.h>
+#include <lotto/engine/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/pthread.h>

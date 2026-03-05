@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <lotto/engine/prng.h>
-#include <lotto/states/prng.h>
+#include <lotto/engine/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/util/casts.h>
 

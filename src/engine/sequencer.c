@@ -25,7 +25,7 @@
 #include <lotto/engine/prng.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
-#include <lotto/states/sequencer.h>
+#include <lotto/engine/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/real.h>

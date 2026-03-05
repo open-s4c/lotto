@@ -3,7 +3,7 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/cli/flagmgr.h>
-#include <lotto/states/prng.h>
+#include <lotto/engine/state.h>
 #include <lotto/sys/assert.h>
 NEW_PUBLIC_CALLBACK_FLAG(SEED, "", "seed", "INT",
                          "seed for pseudo-random number generator",

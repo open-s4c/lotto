@@ -4,7 +4,7 @@
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/cli/flagmgr.h>
 #include <lotto/cli/flags/sequencer.h>
-#include <lotto/states/sequencer.h>
+#include <lotto/engine/state.h>
 #include <lotto/sys/string.h>
 
 #ifndef DEFAULT_SLACK_TIME

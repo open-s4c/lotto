@@ -11,7 +11,7 @@
 #include <lotto/engine/dispatcher.h>
 #include <lotto/modules/ichpt.h>
 #include <lotto/modules/ichpt/state.h>
-#include <lotto/states/sequencer.h>
+#include <lotto/engine/state.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
 

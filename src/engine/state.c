@@ -4,8 +4,7 @@
 #include <lotto/base/marshable.h>
 #include <lotto/brokers/pubsub.h>
 #include <lotto/brokers/statemgr.h>
-#include <lotto/states/prng.h>
-#include <lotto/states/sequencer.h>
+#include <lotto/engine/state.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 

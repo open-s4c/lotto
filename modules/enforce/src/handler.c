@@ -7,7 +7,7 @@
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
 #include <lotto/modules/enforce/state.h>
-#include <lotto/states/sequencer.h>
+#include <lotto/engine/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/stdio.h>

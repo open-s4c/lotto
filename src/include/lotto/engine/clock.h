@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_ENGINE_CLOCK_H
 #define LOTTO_ENGINE_CLOCK_H
 

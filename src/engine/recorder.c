@@ -1,5 +1,3 @@
-/*
- */
 
 /**
  * The recorder glues together the input and output traces and the statemgr,

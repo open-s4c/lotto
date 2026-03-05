@@ -1,5 +1,3 @@
-/*
- */
 #ifndef QEMU_GDB_H
 #define QEMU_GDB_H
 

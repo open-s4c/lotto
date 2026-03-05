@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_MEMMGR_USER_H
 #define LOTTO_MEMMGR_USER_H
 

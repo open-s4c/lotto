@@ -1,8 +1,3 @@
-/*
- */
-#ifndef LOTTO_MARSHABLE_H
-#define LOTTO_MARSHABLE_H
-
 /*******************************************************************************
  * @file marshable.h
  * @brief Generic marshable/unmarshable interface
@@ -13,6 +8,9 @@
  * the interface accordingly.  When initializing the data structure, set `m` to
  * point to the desired implementation functions.
  ******************************************************************************/
+#ifndef LOTTO_MARSHABLE_H
+#define LOTTO_MARSHABLE_H
+
 #include <stddef.h>
 
 #include <lotto/sys/assert.h>

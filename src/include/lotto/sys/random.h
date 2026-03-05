@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_RANDOM_H
 #define LOTTO_RANDOM_H
 

@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_FCNTL_H
 #define LOTTO_FCNTL_H
 

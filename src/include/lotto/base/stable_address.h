@@ -1,8 +1,3 @@
-/*
- */
-#ifndef LOTTO_STABLE_ADDRESS_H
-#define LOTTO_STABLE_ADDRESS_H
-
 /*******************************************************************************
  * @file stable_address.h
  * @brief Map raw addresses to a value stable over multiple executions.
@@ -14,6 +9,8 @@
  * filesystem mapping.
  *
  ******************************************************************************/
+#ifndef LOTTO_STABLE_ADDRESS_H
+#define LOTTO_STABLE_ADDRESS_H
 
 #include <lotto/base/marshable.h>
 #include <lotto/base/memory_map.h>

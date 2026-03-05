@@ -1,5 +1,3 @@
-/*
- */
 #include <lotto/base/tidmap.h>
 #include <lotto/sys/assert.h>
 

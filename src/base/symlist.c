@@ -1,5 +1,3 @@
-/*
- */
 
 #include <lotto/engine/util/symlist.h>
 

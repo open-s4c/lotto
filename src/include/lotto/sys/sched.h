@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_SCHED_H
 #define LOTTO_SCHED_H
 

@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_UTIL_PROTOTYPES_H
 #define LOTTO_UTIL_PROTOTYPES_H
 

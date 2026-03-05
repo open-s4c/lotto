@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_SOCKET_H
 #define LOTTO_SOCKET_H
 

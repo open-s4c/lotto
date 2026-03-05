@@ -1,7 +1,6 @@
-/*
- */
 #ifndef LOTTO_PLAN_H
 #define LOTTO_PLAN_H
+
 #include <stdbool.h>
 #include <stdint.h>
 

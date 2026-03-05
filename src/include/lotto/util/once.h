@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_ONCE_H
 #define LOTTO_ONCE_H
 

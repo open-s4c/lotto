@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_QEMU_CALLBACKS_H
 #define LOTTO_QEMU_CALLBACKS_H
 

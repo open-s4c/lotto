@@ -1,5 +1,3 @@
-/*
- */
 
 #include <lotto/sys/stream_impl.h>
 #include <lotto/util/redirect.h>

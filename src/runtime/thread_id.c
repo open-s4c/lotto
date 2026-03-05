@@ -1,5 +1,3 @@
-/*
- */
 #include <lotto/base/task_id.h>
 #include <lotto/sys/assert.h>
 #include <vsync/atomic.h>

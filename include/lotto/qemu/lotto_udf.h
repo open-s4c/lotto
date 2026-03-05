@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_UDF_H
 #define LOTTO_UDF_H
 

@@ -1,5 +1,3 @@
-/*
- */
 
 #include <lotto/qemu/lotto_udf_trace.h>
 #include <lotto/sys/assert.h>

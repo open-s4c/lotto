@@ -1,6 +1,3 @@
-/*
- */
-
 #ifndef LOTTO_SIG_DEFAULTS_WRAP_H
 #define LOTTO_SIG_DEFAULTS_WRAP_H
 

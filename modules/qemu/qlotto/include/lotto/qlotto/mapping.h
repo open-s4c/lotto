@@ -1,95 +1,94 @@
 #ifndef LOTTO_QEMU_MAPPING_H
-    #define LOTTO_QEMU_MAPPING_H
+#define LOTTO_QEMU_MAPPING_H
 
-    #include <qemu-plugin.h>
+#include <qemu-plugin.h>
 
-    #include <capstone/arm64.h>
-    #include <lotto/base/category.h>
-    #include <lotto/qlotto/qemu/util.h>
+#include <capstone/arm64.h>
+#include <lotto/base/category.h>
+#include <lotto/qlotto/qemu/util.h>
 
-    /* Enables (1) or disables (0) instrumentation for a group of instructions
-     */
+/* Enables (1) or disables (0) instrumentation for a group of instructions */
 
-    // compare branch
-    #define INSTR_CB 1
+// compare branch
+#define INSTR_CB 1
 
-    // syscall / hyper call
-    #define INSTR_HS_CALL 0
+// syscall / hyper call
+#define INSTR_HS_CALL 0
 
-    // wait for
-    #define INSTR_WF 0
+// wait for
+#define INSTR_WF 0
 
-    // return
-    #define INSTR_RET 0
+// return
+#define INSTR_RET 0
 
-    // atomic read
-    #define INSTR_AREAD 1
+// atomic read
+#define INSTR_AREAD 1
 
-    // plain read
-    #define INSTR_READ 1
+// plain read
+#define INSTR_READ 1
 
-    // atomic write
-    #define INSTR_AWRITE 1
+// atomic write
+#define INSTR_AWRITE 1
 
-    // plain write
-    #define INSTR_WRITE 1
+// plain write
+#define INSTR_WRITE 1
 
-    // Loop detection
-    #define INSTR_LOOP 1
+// Loop detection
+#define INSTR_LOOP 1
 
-    // Branch link (function call)
-    #define INSTR_FUNC 0
+// Branch link (function call)
+#define INSTR_FUNC 0
 
-    // CAS variants
-    #define INSTR_CAS 1
+// CAS variants
+#define INSTR_CAS 1
 
-    // explicit barriers
-    #define INSTR_DMB 1
+// explicit barriers
+#define INSTR_DMB 1
 
-    // Yield instruction
-    #define INSTR_YIELD 1
+// Yield instruction
+#define INSTR_YIELD 1
 
-    /* Enables (1) or disables (0) instrumentation for a group of instructions
-     */
+/* Enables (1) or disables (0) instrumentation for a group of instructions
+ */
 
-    // compare branch
-    #define INSTR_CB 1
+// compare branch
+#define INSTR_CB 1
 
-    // syscall / hyper call
-    #define INSTR_HS_CALL 0
+// syscall / hyper call
+#define INSTR_HS_CALL 0
 
-    // wait for
-    #define INSTR_WF 0
+// wait for
+#define INSTR_WF 0
 
-    // return
-    #define INSTR_RET 0
+// return
+#define INSTR_RET 0
 
-    // atomic read
-    #define INSTR_AREAD 1
+// atomic read
+#define INSTR_AREAD 1
 
-    // plain read
-    #define INSTR_READ 1
+// plain read
+#define INSTR_READ 1
 
-    // atomic write
-    #define INSTR_AWRITE 1
+// atomic write
+#define INSTR_AWRITE 1
 
-    // plain write
-    #define INSTR_WRITE 1
+// plain write
+#define INSTR_WRITE 1
 
-    // Loop detection
-    #define INSTR_LOOP 1
+// Loop detection
+#define INSTR_LOOP 1
 
-    // Branch link (function call)
-    #define INSTR_FUNC 0
+// Branch link (function call)
+#define INSTR_FUNC 0
 
-    // CAS variants
-    #define INSTR_CAS 1
+// CAS variants
+#define INSTR_CAS 1
 
-    // explicit barriers
-    #define INSTR_DMB 1
+// explicit barriers
+#define INSTR_DMB 1
 
-    // Yield instruction
-    #define INSTR_YIELD 1
+// Yield instruction
+#define INSTR_YIELD 1
 
 enum {
     CAT_EXTRA_HS_CALL = CAT_END_ + 1,
@@ -2153,6 +2152,4 @@ static const struct {
         },
 };
 
-#else
-    #error "This file must be included only once"
 #endif

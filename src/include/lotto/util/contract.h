@@ -1,13 +1,12 @@
-/*
- */
-#ifndef LOTTO_CONTRACT_H
-#define LOTTO_CONTRACT_H
 /**
  * @file contract.h
  * @brief Macros to implement runtime contracts.
  *
  * Contracts are optimized out when CONTRACT_DISABLE is defined.
  */
+#ifndef LOTTO_CONTRACT_H
+#define LOTTO_CONTRACT_H
+
 #include <lotto/util/macros.h>
 
 /**

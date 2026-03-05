@@ -1,5 +1,3 @@
-/*
- */
 #include <stdlib.h>
 
 #include <lotto/base/envvar.h>

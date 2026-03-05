@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_SPAWN_H
 #define LOTTO_SPAWN_H
 

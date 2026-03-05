@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_CASTS_H
 #define LOTTO_CASTS_H
 

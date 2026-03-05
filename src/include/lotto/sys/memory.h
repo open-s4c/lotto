@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_MEMORY_H
 #define LOTTO_MEMORY_H
 

@@ -1,8 +1,3 @@
-/*
- */
-#ifndef LOTTO_TRACE_CHUNKED_H
-#define LOTTO_TRACE_CHUNKED_H
-
 /*******************************************************************************
  * @file trace_chunked.h
  * @brief a chunked trace implementation
@@ -13,6 +8,8 @@
  * same chunk size as the input stream.
  *
  ******************************************************************************/
+#ifndef LOTTO_TRACE_CHUNKED_H
+#define LOTTO_TRACE_CHUNKED_H
 
 #include <lotto/base/trace.h>
 #include <lotto/sys/stream.h>

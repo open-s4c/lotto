@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_DROP_H
-#define LOTTO_DROP_H
 /**
  * @file drop.h
  * @brief The drop interface.
@@ -12,6 +8,8 @@
  * livelock. The drop interface provides a simple way to simply "drop"
  * the current execution if this happens.
  */
+#ifndef LOTTO_DROP_H
+#define LOTTO_DROP_H
 
 #include <stdbool.h>
 #include <stdint.h>

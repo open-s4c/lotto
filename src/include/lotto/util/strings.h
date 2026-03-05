@@ -1,6 +1,3 @@
-/*
- */
-
 #ifndef LOTTO_STRINGS_H
 #define LOTTO_STRINGS_H
 

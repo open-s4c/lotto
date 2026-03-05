@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_LOGGER_H
 #define LOTTO_LOGGER_H
 

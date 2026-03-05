@@ -1,12 +1,11 @@
-/*
- */
-#ifndef LOTTO_ENSURE_H
-#define LOTTO_ENSURE_H
 /**
  * @file ensure.h
  * @brief Defines `ENSURE` as a permanent `ASSERT`..
  *
  */
+#ifndef LOTTO_ENSURE_H
+#define LOTTO_ENSURE_H
+
 #include <lotto/sys/abort.h>
 
 /**

@@ -1,5 +1,3 @@
-/*
- */
 #include <lotto/cli/args.h>
 #include <lotto/sys/stdio.h>
 

@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_CATEGORY_H
-#define LOTTO_CATEGORY_H
 /**
  * @file category.h
  * @brief The category of the calling context.
@@ -9,6 +5,8 @@
  * Whenever a task calls the Lotto runtime, the context from which the call is
  * performed has a category.
  */
+#ifndef LOTTO_CATEGORY_H
+#define LOTTO_CATEGORY_H
 
 #define FOR_EACH_CATEGORY                                                      \
     GEN_CAT(NONE)                                                              \

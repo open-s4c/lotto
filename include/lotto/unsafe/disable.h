@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_UNSAFE_DISABLE_H
-#define LOTTO_UNSAFE_DISABLE_H
 /**
  * @file disable.h
  * @brief The interceptor disable interface.
@@ -11,6 +7,8 @@
  * atomically. This is an unsafe interface and the user is not recommended to
  * use it.
  */
+#ifndef LOTTO_UNSAFE_DISABLE_H
+#define LOTTO_UNSAFE_DISABLE_H
 
 #include <stdbool.h>
 #include <stddef.h>

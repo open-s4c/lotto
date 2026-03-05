@@ -1,5 +1,3 @@
-/*
- */
 
 #include <lotto/sys/signatures/all.h>
 #include <lotto/sys/signatures/defaults_wrap.h>

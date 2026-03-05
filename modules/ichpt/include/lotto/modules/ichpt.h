@@ -1,5 +1,6 @@
 #ifndef LOTTO_HANDLER_ICHPT_H
 #define LOTTO_HANDLER_ICHPT_H
+
 #include <stdbool.h>
 #include <stdint.h>
 

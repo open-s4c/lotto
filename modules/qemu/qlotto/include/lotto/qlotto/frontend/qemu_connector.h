@@ -1,6 +1,3 @@
-/*
- */
-
 #ifndef LOTTO_QEMU_CONNECTOR_H
 #define LOTTO_QEMU_CONNECTOR_H
 

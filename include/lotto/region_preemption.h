@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_REGION_PREEMPTION_H
-#define LOTTO_REGION_PREEMPTION_H
 /**
  * @file region_preemption.h
  * @brief The preemption region interface.
@@ -11,6 +7,8 @@
  * `--region-preemption-default-off`). I.e., if the flag is unset, the regions
  * behave atomically, otherwise tasks may preempt only inside regions.
  */
+#ifndef LOTTO_REGION_PREEMPTION_H
+#define LOTTO_REGION_PREEMPTION_H
 
 #include <stdbool.h>
 #include <stdint.h>

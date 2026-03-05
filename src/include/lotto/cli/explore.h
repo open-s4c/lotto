@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_CLI_EXPLORE_H
 #define LOTTO_CLI_EXPLORE_H
 

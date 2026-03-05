@@ -1,5 +1,3 @@
-/*
- */
 #ifndef STRING_HASH_TABLE_H
 #define STRING_HASH_TABLE_H
 

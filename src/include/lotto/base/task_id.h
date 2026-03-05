@@ -1,7 +1,6 @@
-/*
- */
 #ifndef LOTTO_TASK_ID_H
 #define LOTTO_TASK_ID_H
+
 #include <stdint.h>
 
 typedef uint64_t task_id;

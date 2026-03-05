@@ -1,5 +1,3 @@
-/*
- */
 
 #include <pthread.h>
 #include <stdbool.h>

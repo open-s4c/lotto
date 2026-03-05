@@ -1,5 +1,3 @@
-/*
- */
 #ifndef ADDRESS_BDD_H
 #define ADDRESS_BDD_H
 

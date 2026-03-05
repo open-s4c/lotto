@@ -1,8 +1,5 @@
-/*
- */
-
-#ifndef LOTTO_GDB_STOP_REASON
-#define LOTTO_GDB_STOP_REASON
+#ifndef LOTTO_GDB_STOP_REASON_H
+#define LOTTO_GDB_STOP_REASON_H
 
 #define FOR_EACH_STOP_REASON                                                   \
     GEN_STOP_REASON(watch)                                                     \
@@ -37,4 +34,4 @@ const char *stop_reason_str(stop_reason_t t);
 
 const char *stop_reason_str(stop_reason_t sr);
 
-#endif // LOTTO_GDB_STOP_REASON
+#endif // LOTTO_GDB_STOP_REASON_H

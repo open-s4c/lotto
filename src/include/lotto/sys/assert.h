@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_ASSERT_H
-#define LOTTO_ASSERT_H
 /**
  * @file assert.h
  * @brief Defines `ASSERT` macro.
@@ -10,6 +6,9 @@
  * checked if `ASSERT_DISABLE` is not set. To check for error conditions, use if
  * statement and `logger_fatalf`.
  */
+#ifndef LOTTO_ASSERT_H
+#define LOTTO_ASSERT_H
+
 #include <lotto/sys/abort.h>
 #include <lotto/util/macros.h>
 #include <lotto/util/unused.h>

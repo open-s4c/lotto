@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_FRONTEND_PERF_H
 #define LOTTO_FRONTEND_PERF_H
 

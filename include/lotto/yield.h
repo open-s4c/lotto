@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_YIELD_H
-#define LOTTO_YIELD_H
 /**
  * @file yield.h
  * @brief The yield interface.
@@ -9,6 +5,8 @@
  * The yield interface can be used for either enforcing preemptions or adding
  * change points.
  */
+#ifndef LOTTO_YIELD_H
+#define LOTTO_YIELD_H
 
 #include <stdbool.h>
 

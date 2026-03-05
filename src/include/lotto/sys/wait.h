@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_WAIT_H
 #define LOTTO_WAIT_H
 

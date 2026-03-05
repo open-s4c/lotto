@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_ITERATOR_H
 #define LOTTO_ITERATOR_H
 

@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_QEMU_PLUGIN_UTIL_H
 #define LOTTO_QEMU_PLUGIN_UTIL_H
 

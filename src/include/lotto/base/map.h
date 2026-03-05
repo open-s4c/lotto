@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_MAP_H
 #define LOTTO_MAP_H
 

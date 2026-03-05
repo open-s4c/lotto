@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_BAG_H
-#define LOTTO_BAG_H
 /*******************************************************************************
  * @file bag.h
  * @brief Marshabled bag of fixed-size items
@@ -9,6 +5,9 @@
  * Bag manages the memory allocation of the fixed-size items and can be
  * marshaled/unmarshaled.
  ******************************************************************************/
+#ifndef LOTTO_BAG_H
+#define LOTTO_BAG_H
+
 #include <stdbool.h>
 
 #include <lotto/base/marshable.h>

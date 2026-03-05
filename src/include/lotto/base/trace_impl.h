@@ -1,5 +1,3 @@
-/*
- */
 /**
  * Definitions for implementing a trace. The implementation should provide
  * function pointers packed in struct trace.

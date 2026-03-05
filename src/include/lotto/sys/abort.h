@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_ABORT_H
 #define LOTTO_ABORT_H
 

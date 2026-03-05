@@ -1,5 +1,3 @@
-/*
- */
 #include <lotto/base/envvar.h>
 #include <lotto/base/record.h>
 #include <lotto/sys/assert.h>

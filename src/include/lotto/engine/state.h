@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_ENGINE_STATE_H
 #define LOTTO_ENGINE_STATE_H
 

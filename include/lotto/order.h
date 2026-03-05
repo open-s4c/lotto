@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_ORDER_H
-#define LOTTO_ORDER_H
 /**
  * @file order.h
  * @brief The ordering points interface.
@@ -11,6 +7,8 @@
  * gaps. When an out of order point is about to be executed, the task is blocked
  * until the previous point is executed.
  */
+#ifndef LOTTO_ORDER_H
+#define LOTTO_ORDER_H
 
 #include <stdbool.h>
 #include <stdint.h>

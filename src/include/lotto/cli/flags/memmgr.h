@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_FLAG_MEMMGR_H
 #define LOTTO_FLAG_MEMMGR_H
 

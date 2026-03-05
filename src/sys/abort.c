@@ -1,5 +1,3 @@
-/*
- */
 #include <dlfcn.h>
 #include <signal.h>
 #include <stdarg.h>

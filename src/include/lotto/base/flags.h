@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_RUNTIME_FLAGS_H
 #define LOTTO_RUNTIME_FLAGS_H
 

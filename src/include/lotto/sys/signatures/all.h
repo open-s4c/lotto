@@ -1,6 +1,3 @@
-/*
- */
-
 #ifndef LOTTO_SIG_ALL_H
 #define LOTTO_SIG_ALL_H
 

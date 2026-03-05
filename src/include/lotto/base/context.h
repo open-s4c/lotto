@@ -1,7 +1,6 @@
-/*
- */
 #ifndef LOTTO_CONTEXT_H
 #define LOTTO_CONTEXT_H
+
 #include <stdint.h>
 
 #include <lotto/base/arg.h>

@@ -1,5 +1,3 @@
-/*
- */
 #include <string.h>
 
 #include <lotto/base/stable_address.h>

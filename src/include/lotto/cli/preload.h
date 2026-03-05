@@ -1,7 +1,6 @@
-/*
- */
 #ifndef LOTTO_CLI_PRELOAD_H
 #define LOTTO_CLI_PRELOAD_H
+
 #include <stdbool.h>
 
 #include <lotto/base/libraries.h>

@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_SWITCHER_H
 #define LOTTO_SWITCHER_H
 

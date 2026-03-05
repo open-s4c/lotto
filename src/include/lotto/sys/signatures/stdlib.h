@@ -1,6 +1,3 @@
-/*
- */
-
 #ifndef LOTTO_SIGNATURES_STDLIB_H
 #define LOTTO_SIGNATURES_STDLIB_H
 

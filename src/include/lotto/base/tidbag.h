@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_TIDBAG_H
 #define LOTTO_TIDBAG_H
 

@@ -1,5 +1,3 @@
-/*
- */
 #ifndef LOTTO_PLUGIN_H
 #define LOTTO_PLUGIN_H
 

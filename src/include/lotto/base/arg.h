@@ -1,7 +1,6 @@
-/*
- */
 #ifndef LOTTO_ARG_H
 #define LOTTO_ARG_H
+
 #include <stdint.h>
 
 #include <lotto/base/category.h>

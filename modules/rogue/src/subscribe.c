@@ -1,5 +1,3 @@
-/*
- */
 #include <lotto/base/context.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/unsafe/rogue.h>

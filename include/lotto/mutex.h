@@ -1,13 +1,11 @@
-/*
- */
-#ifndef LOTTO_MUTEX_H
-#define LOTTO_MUTEX_H
 /**
  * @file mutex.h
  * @brief Lotto-based mutex implementation
  *
  * Mutex provides no FIFO guarantees on the order of the waiters being awaken.
  */
+#ifndef LOTTO_MUTEX_H
+#define LOTTO_MUTEX_H
 
 #include <stddef.h>
 

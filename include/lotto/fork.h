@@ -1,13 +1,11 @@
-/*
- */
-#ifndef LOTTO_FORK_H
-#define LOTTO_FORK_H
 /**
  * @file fork.h
  * @brief The fork interface.
  *
  * Support of different implementations of fork depending on active plugin.
  */
+#ifndef LOTTO_FORK_H
+#define LOTTO_FORK_H
 
 #include <stdint.h>
 

@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_PRIORITY_H
-#define LOTTO_PRIORITY_H
 /**
  * @file priority.h
  * @brief The priority interface.
@@ -9,6 +5,8 @@
  * User priorities override strategy decision: the strategy applies to available
  * tasks with the highest user priority. Initially, all priorities are zero.
  */
+#ifndef LOTTO_PRIORITY_H
+#define LOTTO_PRIORITY_H
 
 #include <stdbool.h>
 #include <stdint.h>

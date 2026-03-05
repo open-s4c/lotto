@@ -1,7 +1,3 @@
-/*
- */
-#ifndef LOTTO_REGION_ATOMIC_H
-#define LOTTO_REGION_ATOMIC_H
 /**
  * @file region_atomic.h
  * @brief The atomic region interface.
@@ -12,6 +8,8 @@
  * nonatomic regions make a difference by allowing them. Otherwise, atomic
  * regions can be used to disable preemptions locally.
  */
+#ifndef LOTTO_REGION_ATOMIC_H
+#define LOTTO_REGION_ATOMIC_H
 
 #include <stdbool.h>
 #include <stdint.h>

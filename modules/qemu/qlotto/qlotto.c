@@ -1,5 +1,3 @@
-/*
- */
 
 #include <lotto/engine/prng.h>
 #include <lotto/qemu/lotto_qemu_syscall.h>

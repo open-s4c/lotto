@@ -97,6 +97,11 @@
 
 use as_any::Downcast;
 use category_macro::CategoryMacro;
+use lotto::base::Value;
+use lotto::brokers::Marshable;
+use lotto::brokers::{Decode, Encode};
+use lotto::cli::flags::STR_CONVERTER_BOOL;
+use lotto::cli::FlagKey;
 use lotto::collections::FxHashMap;
 use lotto::collections::FxHashSet;
 use lotto::engine::handler::ContextInfo;
@@ -183,13 +188,21 @@ impl SpinEndContextHandler for SpinLoopHandler {
     }
 }
 
+#[derive(lotto::Stateful)]
 pub struct SpinLoopHandler {
     handler_state: InternalState,
+    #[config]
+    cfg: SpinLoopHandlerConfig,
 }
 
-impl Default for SpinLoopHandler {
-    fn default() -> Self {
-        Self::new()
+#[derive(Encode, Decode, Debug)]
+pub struct SpinLoopHandlerConfig {
+    pub enabled: AtomicBool,
+}
+
+impl Marshable for SpinLoopHandlerConfig {
+    fn print(&self) {
+        info!("enabled = {}", self.enabled.load(Ordering::Relaxed));
     }
 }
 
@@ -197,6 +210,9 @@ impl SpinLoopHandler {
     pub fn new() -> Self {
         Self {
             handler_state: InternalState::default(),
+            cfg: SpinLoopHandlerConfig {
+                enabled: false.into(),
+            },
         }
     }
     /// Clears the reading_address of the tuple (tid, depth) and removes it
@@ -620,6 +636,10 @@ impl ExecuteHandler for SpinLoopHandler {
 
         self.handler_state.last_write_changed_blocked_list = chpt;
     }
+
+    fn enabled(&self) -> bool {
+        HANDLER.cfg.enabled.load(Ordering::Relaxed)
+    }
 }
 
 use lotto::engine::handler::EventResult;
@@ -648,12 +668,13 @@ impl ExecuteArrivalHandler for SpinLoopHandler {
     }
 }
 
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::sync::LazyLock;
 
 static HANDLER: LazyLock<SpinLoopHandler> = LazyLock::new(SpinLoopHandler::new);
 
 pub fn register() {
-    // TODO: add a flag to turn this ON or OFF
     {
         let _ = spin_start_cat();
         let _ = spin_end_cat();
@@ -667,4 +688,28 @@ pub fn register() {
         table.insert(spin_end_cat_num, parse_spin_end_context());
     }
     lotto::engine::pubsub::subscribe_arrival_or_execute(&*HANDLER);
+    lotto::brokers::statemgr::register(&*HANDLER);
+}
+
+pub fn register_flags() {
+    let _ = FLAG_HANDLER_SPIN_LOOP_ENABLED.get();
+}
+
+static FLAG_HANDLER_SPIN_LOOP_ENABLED: FlagKey = FlagKey::new(
+    c"FLAG_HANDLER_SPIN_LOOP_ENABLED",
+    c"",
+    c"handler-spin-loop",
+    c"",
+    c"enable the spin-loop handler",
+    Value::Bool(false),
+    &STR_CONVERTER_BOOL,
+    Some(_handler_spin_loop_enabled_callback),
+);
+
+unsafe extern "C" fn _handler_spin_loop_enabled_callback(
+    v: lotto::raw::value,
+    _: *mut std::ffi::c_void,
+) {
+    let enabled = Value::from(v).is_on();
+    HANDLER.cfg.enabled.store(enabled, Ordering::Relaxed);
 }

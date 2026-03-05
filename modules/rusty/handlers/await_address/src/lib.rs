@@ -8,14 +8,19 @@
 
 use as_any::Downcast;
 use category_macro::CategoryMacro;
+use lotto::base::Value;
+use lotto::brokers::{Decode, Encode, Marshable};
+use lotto::cli::{flags::STR_CONVERTER_BOOL, FlagKey};
 use lotto::collections::FxHashMap;
 use lotto::engine::handler::EventResult;
 use lotto::engine::handler::{Address, ContextInfo, TaskId};
 use lotto::engine::handler::{ExecuteArrivalHandler, ExecuteHandler};
 use lotto::engine::pubsub::CustomCatTrait;
+use lotto::log::info;
 use lotto::log::{debug, trace, warn};
 use lotto::raw::task_id;
 use std::num::NonZeroUsize;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::LazyLock;
 
 static HANDLER: LazyLock<SwitchWaitingThread> = LazyLock::new(SwitchWaitingThread::new);
@@ -59,8 +64,22 @@ impl AwaitContextHandler for SwitchWaitingThread {
     }
 }
 
+#[derive(lotto::Stateful)]
 struct SwitchWaitingThread {
     state: InternalState,
+    #[config]
+    cfg: SwitchWaitingThreadConfig,
+}
+
+#[derive(Encode, Decode)]
+struct SwitchWaitingThreadConfig {
+    enabled: AtomicBool,
+}
+
+impl Marshable for SwitchWaitingThreadConfig {
+    fn print(&self) {
+        info!("enabled = {}", self.enabled.load(Ordering::Relaxed));
+    }
 }
 
 impl SwitchWaitingThread {
@@ -110,6 +129,9 @@ impl SwitchWaitingThread {
     fn new() -> Self {
         Self {
             state: InternalState::new(),
+            cfg: SwitchWaitingThreadConfig {
+                enabled: false.into(),
+            },
         }
     }
 }
@@ -157,10 +179,13 @@ impl ExecuteHandler for SwitchWaitingThread {
             _ => { /* nothing or done at arrival */ }
         }
     }
+
+    fn enabled(&self) -> bool {
+        self.cfg.enabled.load(Ordering::Relaxed)
+    }
 }
 
 pub fn register() {
-    trace!("Hello this is the lotto await address handler written in Rust initializing");
     {
         let _ = await_cat();
         let await_cat_num = await_cat().0;
@@ -171,4 +196,28 @@ pub fn register() {
         table.insert(await_cat_num, parse_await_context());
     }
     lotto::engine::pubsub::subscribe_arrival_or_execute(&*HANDLER);
+    lotto::brokers::statemgr::register(&*HANDLER);
+}
+
+pub fn register_flags() {
+    let _ = FLAG_HANDLER_AWAIT_ADDRESS_ENABLED.get();
+}
+
+static FLAG_HANDLER_AWAIT_ADDRESS_ENABLED: FlagKey = FlagKey::new(
+    c"FLAG_HANDLER_AWAIT_ADDRESS_ENABLED",
+    c"",
+    c"handler-await-address",
+    c"",
+    c"enable the await-address handler",
+    Value::Bool(false),
+    &STR_CONVERTER_BOOL,
+    Some(_handler_await_address_enabled_callback),
+);
+
+unsafe extern "C" fn _handler_await_address_enabled_callback(
+    v: lotto::raw::value,
+    _: *mut std::ffi::c_void,
+) {
+    let enabled = Value::from(v).is_on();
+    HANDLER.cfg.enabled.store(enabled, Ordering::Relaxed);
 }

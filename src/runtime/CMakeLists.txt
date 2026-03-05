@@ -37,6 +37,7 @@ set(LIBS
     dice-pthread_create.o
     dice-pthread_mutex.o
     dice-pthread_cond.o
+    dice-pthread_rwlock.o
     dice-tsan.o
     dice-stacktrace.o
 )

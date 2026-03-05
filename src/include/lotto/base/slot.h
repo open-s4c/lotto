@@ -7,6 +7,7 @@
     GEN_SLOT(BLOCKING)                                                         \
     GEN_SLOT(JOIN)                                                             \
     GEN_SLOT(MUTEX)                                                            \
+    GEN_SLOT(RWLOCK)                                                           \
     GEN_SLOT(EVEC)                                                             \
     GEN_SLOT(POLL)                                                             \
     GEN_SLOT(TIMEOUT)                                                          \

@@ -88,6 +88,8 @@ _rwlock_handle(const context_t *ctx, event_t *e)
         } else if (_rwlock_is_write_locked(it)) {
             tidset_subtract(&e->tset, &it->read_waiters);
             tidset_subtract(&e->tset, &it->write_waiters);
+        } else if (tidset_size(&it->write_waiters)) {
+            tidset_subtract(&e->tset, &it->read_waiters);
         }
     }
 }
@@ -170,6 +172,10 @@ _should_wait(task_id id)
             if (tidset_has(&it->write_waiters, id)) {
                 return true;
             }
+        } else if (tidset_size(&it->write_waiters) > 0) {
+            if (tidset_has(&it->read_waiters, id)) {
+                return true;
+            }
         }
     }
     return false;
@@ -235,16 +241,18 @@ _posthandle_tryrdlock(task_id id, uintptr_t addr)
             return EDEADLK;
         }
         return EBUSY;
-    } else {
-        struct reader *reader = (struct reader *)tidmap_find(&lock->readers, id);
-        if (!reader) {
-            reader = (struct reader *)tidmap_register(&lock->readers, id);
-            reader->cnt = 0;
-        }
-        reader->cnt++;
-        logger_debugf("rwlock 0x%lx is (try)read locked by %lu (cnt=%d)\n", addr, id, reader->cnt);
-        return 0;
     }
+    if (tidset_size(&lock->write_waiters) > 0) {
+        return EBUSY;
+    }
+    struct reader *reader = (struct reader *)tidmap_find(&lock->readers, id);
+    if (!reader) {
+        reader = (struct reader *)tidmap_register(&lock->readers, id);
+        reader->cnt = 0;
+    }
+    reader->cnt++;
+    logger_debugf("rwlock 0x%lx is (try)read locked by %lu (cnt=%d)\n", addr, id, reader->cnt);
+        return 0;
 }
 
 STATIC void

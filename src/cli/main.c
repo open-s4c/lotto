@@ -37,7 +37,16 @@ main(int argc, char **argv)
     const int old_personality = personality(ADDR_NO_RANDOMIZE);
     if (!(old_personality & ADDR_NO_RANDOMIZE)) {
         personality(ADDR_NO_RANDOMIZE);
-        return execv(argv[0], argv);
+#ifdef __linux__
+        execv("/proc/self/exe", argv);
+#else
+        char *abs_path = realpath(argv[0], NULL);
+        const char *path = abs_path ? abs_path : argv[0];
+        execv(path, argv);
+        free(abs_path);
+#endif
+        perror("failed to exec");
+        return 1;
     }
 
     const char *plugin_dir  = NULL;

@@ -194,7 +194,7 @@ engine_get_cur_ns()
 void
 test_main_task()
 {
-    PS_PUBLISH_INTERFACE(TOPIC_ENGINE_START, nil);
+    LOTTO_PUBLISH(TOPIC_ENGINE_START, nil);
     printf("Test: %s\n", __FUNCTION__);
     task_id tid = 1;
 
@@ -214,7 +214,7 @@ test_main_task()
 static void
 test_replay()
 {
-    PS_PUBLISH_INTERFACE(TOPIC_ENGINE_START, nil);
+    LOTTO_PUBLISH(TOPIC_ENGINE_START, nil);
     logger(LOGGER_DEBUG, stderr);
     printf("Test: %s\n", __FUNCTION__);
     task_id tid          = 1;
@@ -229,7 +229,7 @@ test_replay()
     sequencer_reset();
     recorder_init(t, NULL);
     // struct value val = flag_uval(3);
-    // PS_PUBLISH_INTERFACE(FLAG_CLI_REPLAY_GOAL, val);
+    // LOTTO_PUBLISH(FLAG_CLI_REPLAY_GOAL, val);
 
     /* at capture point 2, continue with tid */
     r         = record_alloc(0);
@@ -310,7 +310,7 @@ test_replay()
 static void
 test_record()
 {
-    PS_PUBLISH_INTERFACE(TOPIC_ENGINE_START, nil);
+    LOTTO_PUBLISH(TOPIC_ENGINE_START, nil);
     printf("Test: %s\n", __FUNCTION__);
     task_id tid    = 1;
     task_id other  = 2;
@@ -323,7 +323,7 @@ test_record()
     sequencer_reset();
     recorder_init(NULL, t);
     // struct value val = flag_uval(0);
-    // PS_PUBLISH_INTERFACE(FLAG_CLI_REPLAY_GOAL, val);
+    // LOTTO_PUBLISH(FLAG_CLI_REPLAY_GOAL, val);
 
     /* send last event */
     ctx = new_ctx(.id = tid, .cat = CAT_TASK_FINI);

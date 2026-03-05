@@ -5,7 +5,7 @@ include(ExternalProject)
 # ------------------------------------------------------------------------------
 # Dice
 # ------------------------------------------------------------------------------
-add_subdirectory(dice)
+v_add_submodule(dice)
 
 # ------------------------------------------------------------------------------
 # tsano
@@ -29,7 +29,7 @@ if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
     set(CAPSTONE_ARM64_SUPPORT ON)
     set(CAPSTONE_DIET ON)
 
-    add_subdirectory(capstone)
+    v_add_submodule(capstone)
     target_compile_options(capstone PRIVATE -Wno-switch-default)
     target_compile_options(capstone PRIVATE -Wno-pointer-arith)
     target_compile_options(capstone PRIVATE -Wno-implicit-fallthrough)

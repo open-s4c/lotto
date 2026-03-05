@@ -2,7 +2,6 @@ add_subdirectory(include)
 
 # make the inclusion of ensure.h an error. add_compile_options(-DENSURE_DISABLE)
 
-gen_pubsub_headers("${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}")
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
 include_directories(include)

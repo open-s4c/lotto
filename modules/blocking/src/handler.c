@@ -29,7 +29,7 @@ REGISTER_EPHEMERAL(_state, {
     tidset_init(&_state.blocked_actual);
     tidset_init(&_state.blocked_replay);
 })
-PS_SUBSCRIBE_INTERFACE(TOPIC_AFTER_UNMARSHAL_PERSISTENT,
+LOTTO_SUBSCRIBE(TOPIC_AFTER_UNMARSHAL_PERSISTENT,
                        { _state.consumed = false; })
 
 /*******************************************************************************

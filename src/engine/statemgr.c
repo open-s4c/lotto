@@ -151,13 +151,13 @@ statemgr_unmarshal(const void *buf, state_type_t type, bool publish)
 
     switch (type) {
         case STATE_TYPE_CONFIG:
-            PS_PUBLISH_INTERFACE(TOPIC_AFTER_UNMARSHAL_CONFIG, nil);
+            LOTTO_PUBLISH(TOPIC_AFTER_UNMARSHAL_CONFIG, nil);
             break;
         case STATE_TYPE_PERSISTENT:
-            PS_PUBLISH_INTERFACE(TOPIC_AFTER_UNMARSHAL_PERSISTENT, nil);
+            LOTTO_PUBLISH(TOPIC_AFTER_UNMARSHAL_PERSISTENT, nil);
             break;
         case STATE_TYPE_FINAL:
-            PS_PUBLISH_INTERFACE(TOPIC_AFTER_UNMARSHAL_FINAL, nil);
+            LOTTO_PUBLISH(TOPIC_AFTER_UNMARSHAL_FINAL, nil);
             break;
         default:
             break;
@@ -202,13 +202,13 @@ statemgr_marshal(void *buf, state_type_t type)
 
     switch (type) {
         case STATE_TYPE_CONFIG:
-            PS_PUBLISH_INTERFACE(TOPIC_BEFORE_MARSHAL_CONFIG, nil);
+            LOTTO_PUBLISH(TOPIC_BEFORE_MARSHAL_CONFIG, nil);
             break;
         case STATE_TYPE_PERSISTENT:
-            PS_PUBLISH_INTERFACE(TOPIC_BEFORE_MARSHAL_PERSISTENT, nil);
+            LOTTO_PUBLISH(TOPIC_BEFORE_MARSHAL_PERSISTENT, nil);
             break;
         case STATE_TYPE_FINAL:
-            PS_PUBLISH_INTERFACE(TOPIC_BEFORE_MARSHAL_FINAL, nil);
+            LOTTO_PUBLISH(TOPIC_BEFORE_MARSHAL_FINAL, nil);
             break;
         default:
             break;

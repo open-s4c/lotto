@@ -12,6 +12,8 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
+extern marshable_t *catmgr_state(void) __attribute__((weak));
+
 struct engine_state {
     prng_t prng;
     sequencer_config_t sequencer;
@@ -56,7 +58,7 @@ state_register_sequencer(void)
                       STATE_TYPE_CONFIG);
 }
 
-PS_SUBSCRIBE_INTERFACE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
+LOTTO_SUBSCRIBE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
     logger_debugf("seed = %u\n", _engine_state.prng.seed);
     const char *var = getenv("LOTTO_SEED");
     if (var) {

@@ -153,5 +153,5 @@ gdb_execution_has_halted()
     return GDB_EXECUTION_HALTED == vatomic32_read(&_state.gdb_execution_state);
 }
 
-PS_SUBSCRIBE_INTERFACE(TOPIC_DEADLOCK_DETECTED,
+LOTTO_SUBSCRIBE(TOPIC_DEADLOCK_DETECTED,
                        { gdb_execution_halt(_state.gdb_execution_tid); })

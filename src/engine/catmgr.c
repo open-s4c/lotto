@@ -102,9 +102,15 @@ new_category(const char *name)
 const char *
 category_str(category_t category)
 {
-    ASSERT(category < _next);
     if (category < CAT_END_) {
         return base_category_str(category);
     }
-    return _categories[category - INIT_NEXT];
+    if (category < _next) {
+        const char *name = _categories[category - INIT_NEXT];
+        if (name != NULL) {
+            return name;
+        }
+    }
+    logger_warnf("unknown category id: %u (next: %u)\n", category, _next);
+    return "CAT_UNKNOWN";
 }

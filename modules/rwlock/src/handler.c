@@ -288,7 +288,7 @@ _posthandle_unlock(task_id id, uintptr_t addr)
         ASSERT(lock->writer == id);
         lock->writer = NO_TASK;
         logger_debugf("rwlock 0x%lx is unlocked by writer %lu\n", addr, id);
-    } else {
+    } else if (_rwlock_is_read_locked_by(lock, id)) {
         struct reader *reader = (struct reader *)tidmap_find(&lock->readers, id);
         ASSERT(reader && reader->cnt >= 0);
         reader->cnt--;
@@ -296,5 +296,7 @@ _posthandle_unlock(task_id id, uintptr_t addr)
         if (reader->cnt == 0) {
             tidmap_deregister(&lock->readers, id);
         }
+    } else {
+        logger_warnf("undefined behavior: task %lu tries to unlock an unacquired rwlock 0x%lx\n", id, addr);
     }
 }

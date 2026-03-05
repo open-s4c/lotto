@@ -16,9 +16,9 @@
 //add_interceptor sleep
 
 // pthreads
-add_interceptor pthread_rwlock_wrlock
-add_interceptor pthread_rwlock_rdlock
-add_interceptor pthread_rwlock_unlock
+//add_interceptor pthread_rwlock_wrlock
+//add_interceptor pthread_rwlock_rdlock
+//add_interceptor pthread_rwlock_unlock
 add_interceptor pthread_yield
 //add_interceptor pthread_once
 // pthread create and join

@@ -33,6 +33,11 @@
     GEN_CAT(MUTEX_ACQUIRE)                                                     \
     GEN_CAT(MUTEX_TRYACQUIRE)                                                  \
     GEN_CAT(MUTEX_RELEASE)                                                     \
+    GEN_CAT(RWLOCK_RDLOCK)                                                     \
+    GEN_CAT(RWLOCK_TRYRDLOCK)                                                  \
+    GEN_CAT(RWLOCK_WRLOCK)                                                     \
+    GEN_CAT(RWLOCK_TRYWRLOCK)                                                  \
+    GEN_CAT(RWLOCK_UNLOCK)                                                     \
     GEN_CAT(RSRC_ACQUIRING)                                                    \
     GEN_CAT(RSRC_RELEASED)                                                     \
     GEN_CAT(SYS_YIELD)                                                         \

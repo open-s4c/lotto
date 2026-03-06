@@ -36,14 +36,18 @@ set(LIBS
     subscribers.o
     lotto-runtime-engine.o
     dice.o
-    dice-self.o
+    dice-cxa.o
+    dice-malloc.o
+    dice-mman.o
+    dice-pthread_cond.o
     dice-pthread_create.o
     dice-pthread_mutex.o
-    dice-pthread_cond.o
     dice-pthread_rwlock.o
-    dice-tsan.o
+    dice-pthread_spinlock.o
+    dice-self.o
+    dice-sem.o
     dice-stacktrace.o
-)
+    dice-tsan.o)
 
 macro(add_runtime TARGET)
     add_library(${TARGET} SHARED ${SRCS})

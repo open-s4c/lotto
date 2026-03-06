@@ -6,6 +6,10 @@ macro(add_runtime_module)
     if(DEFINED RUNTIME_MODULE_TYPE_${MODULE_NAME})
         set(RUNTIME_MODULE_TYPE ${RUNTIME_MODULE_TYPE_${MODULE_NAME}})
     endif()
+    set(RUNTIME_MODULE_LTO ON)
+    if(DEFINED RUNTIME_MODULE_LTO_${MODULE_NAME})
+        set(RUNTIME_MODULE_LTO ${RUNTIME_MODULE_LTO_${MODULE_NAME}})
+	endif()
     set(RUNTIME_MODULE_SOURCES ${ARGV})
     set(RUNTIME_MODULE_TARGET lotto-runtime-${MODULE_NAME})
     message(STATUS "Module ${MODULE_SLOT} (runtime): ${MODULE_NAME}")
@@ -13,6 +17,18 @@ macro(add_runtime_module)
     add_library(${RUNTIME_MODULE_TARGET} ${RUNTIME_MODULE_TYPE}
                                          ${RUNTIME_MODULE_SOURCES})
     target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto.h dice.h)
+                                                           dice.h)
+
+    # enable LTO for this module?
+    set(LTO FALSE)
+	if (${LOTTO_LTO})
+		if(${RUNTIME_MODULE_LTO})
+			set(LTO TRUE)
+		endif()
+	endif()
+	set_property(TARGET ${RUNTIME_MODULE_TARGET}
+		PROPERTY INTERPROCEDURAL_OPTIMIZATION ${LTO})
+
     target_compile_definitions(
         ${RUNTIME_MODULE_TARGET}
         PRIVATE DICE_MULTIFILE_MODULE #

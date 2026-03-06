@@ -5,6 +5,10 @@ file(GLOB SRCS *_test.c)
 foreach(SRC ${SRCS})
     get_filename_component(TARGET ${SRC} NAME_WLE)
     add_executable(${TARGET} ${SRC})
+    if(${LOTTO_LTO})
+        set_property(
+            TARGET ${TARGET} PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
+    endif()
     target_link_libraries(
         ${TARGET}
         lotto-runtime-${MODULE_NAME}

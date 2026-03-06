@@ -17,6 +17,10 @@ add_binding(
     EXCLUDE sys/types.h)
 
 add_library(mocked_recorder SHARED)
+if(${LOTTO_LTO})
+    set_property(
+        TARGET mocked_recorder PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
+endif()
 target_link_libraries(
     mocked_recorder
     engine_component
@@ -28,6 +32,10 @@ target_link_libraries(
     memmgr_user_libc.o)
 
 add_library(replay_component SHARED)
+if(${LOTTO_LTO})
+    set_property(
+        TARGET replay_component PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
+endif()
 set_target_properties(
     replay_component PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                 "${CMAKE_BINARY_DIR}/components")

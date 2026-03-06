@@ -68,6 +68,7 @@ add_compile_definitions(LOG_LEVEL=${DICE_LOG_LEVEL})
 
 add_subdirectory(deps)
 link_libraries(dice.h)
+set_property(TARGET dice.h PROPERTY INTERPROCEDURAL_OPTIMIZATION OFF)
 
 find_package(libvsync 4.2 CONFIG REQUIRED)
 link_libraries(libvsync::vsync)

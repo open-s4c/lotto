@@ -1,8 +1,8 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
 #include <dice/module.h>
-#include <lotto/brokers/pubsub.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/clock.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/modules/timeout.h>

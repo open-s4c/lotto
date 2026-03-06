@@ -8,8 +8,8 @@
 #include <lotto/base/context.h>
 #include <lotto/base/plan.h>
 #include <lotto/base/record.h>
-#include <lotto/brokers/catmgr.h>
-#include <lotto/brokers/pubsub.h>
+#include <lotto/engine/catmgr.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/runtime/mediator.h>

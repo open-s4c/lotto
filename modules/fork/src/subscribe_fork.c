@@ -3,7 +3,7 @@
 #include <state.h>
 
 #include <lotto/base/tidmap.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/assert.h>

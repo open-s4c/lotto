@@ -8,7 +8,7 @@
 #include <lotto/base/record.h>
 #include <lotto/base/topic.h>
 #include <lotto/base/trace.h>
-#include <lotto/brokers/pubsub.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/cli/trace_utils.h>
 #include <lotto/engine/clock.h>
 #include <lotto/engine/prng.h>

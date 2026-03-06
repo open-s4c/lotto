@@ -1,7 +1,7 @@
 #include <errno.h>
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/brokers/pubsub.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
 #include <lotto/modules/mutex/state.h>

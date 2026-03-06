@@ -11,8 +11,8 @@
 #include <lotto/base/context.h>
 #include <lotto/base/envvar.h>
 #include <lotto/base/trace.h>
-#include <lotto/brokers/pubsub.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>

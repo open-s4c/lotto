@@ -9,8 +9,8 @@
 #include <lotto/base/trace_chunked.h>
 #include <lotto/base/trace_file.h>
 #include <lotto/base/trace_flat.h>
-#include <lotto/brokers/catmgr.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/catmgr.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/cli/exec_info.h>
 #include <lotto/cli/flagmgr.h>
 #include <lotto/cli/trace_utils.h>

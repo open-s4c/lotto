@@ -10,7 +10,7 @@
 #include <lotto/base/marshable.h>
 #include <lotto/base/trace_chunked.h>
 #include <lotto/base/trace_flat.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/cli/args.h>
 #include <lotto/cli/flagmgr.h>
 #include <lotto/cli/flags/sequencer.h>

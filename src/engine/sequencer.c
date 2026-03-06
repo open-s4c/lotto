@@ -16,8 +16,8 @@
 #include <lotto/base/reason.h>
 #include <lotto/base/record.h>
 #include <lotto/base/topic.h>
-#include <lotto/brokers/pubsub.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/clock.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>

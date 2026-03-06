@@ -4,8 +4,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <lotto/brokers/pubsub.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/modules/inactivity_timeout/state.h>
 #include <lotto/sys/logger_block.h>

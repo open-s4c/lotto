@@ -6,7 +6,7 @@
 
 #include <math.h>
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
 #include <lotto/modules/pct/state.h>

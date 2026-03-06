@@ -37,7 +37,6 @@ set(LIBS
     lotto-runtime-engine.o
     dice.o
     dice-cxa.o
-    dice-malloc.o
     dice-mman.o
     dice-pthread_cond.o
     dice-pthread_create.o

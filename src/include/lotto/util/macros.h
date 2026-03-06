@@ -23,6 +23,7 @@
 #define LOTTO_CONSTRUCTOR_PRIO 101
 #define LOTTO_CONSTRUCTOR      __attribute__((constructor(LOTTO_CONSTRUCTOR_PRIO)))
 #define LOTTO_DESTRUCTOR       __attribute__((destructor))
+#define LOTTO_USED             __attribute__((used))
 
 #define NUM_TO_BIT(num) ((num) ? 1ULL << ((num)-1) : 0ULL)
 #define IS_BIT(bit)     (!((bit) & ((bit)-1)))

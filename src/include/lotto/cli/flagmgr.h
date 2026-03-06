@@ -116,7 +116,7 @@ flags_t *flags_default();
 #define NEW_PRETTY_CALLBACK_FLAG(name, opt, long_opt, desc, val,               \
                                  str_converter, CALLBACK)                      \
     _FLAGMGR_CALLBACK(name, CALLBACK)                                          \
-    static void LOTTO_CONSTRUCTOR _flagmgr_constructor_##name(void)            \
+    static void LOTTO_CONSTRUCTOR LOTTO_USED _flagmgr_constructor_##name(void) \
     {                                                                          \
         new_flag(#name, (opt), (long_opt), "", (desc), (val), (str_converter), \
                  _flagmgr_callback_##name);                                    \
@@ -126,7 +126,7 @@ flags_t *flags_default();
                                         str_converter, CALLBACK)               \
     static flag_t FLAG_##var;                                                  \
     _FLAGMGR_CALLBACK(var, CALLBACK)                                           \
-    static void LOTTO_CONSTRUCTOR _flagmgr_constructor_##var(void)             \
+    static void LOTTO_CONSTRUCTOR LOTTO_USED _flagmgr_constructor_##var(void)  \
     {                                                                          \
         FLAG_##var = new_flag(#var, (opt), (long_opt), "", (desc), (val),      \
                               (str_converter), _flagmgr_callback_##var);       \
@@ -134,7 +134,7 @@ flags_t *flags_default();
 
 #define NEW_CALLBACK_FLAG(name, opt, long_opt, help, desc, val, CALLBACK)      \
     _FLAGMGR_CALLBACK(name, CALLBACK)                                          \
-    static void LOTTO_CONSTRUCTOR _flagmgr_constructor_##name(void)            \
+    static void LOTTO_CONSTRUCTOR LOTTO_USED _flagmgr_constructor_##name(void) \
     {                                                                          \
         new_flag(#name, (opt), (long_opt), (help), (desc), (val),              \
                  (str_converter_t){}, CONCAT(_flagmgr_callback_, name));       \
@@ -144,7 +144,7 @@ flags_t *flags_default();
                                  CALLBACK)                                     \
     static flag_t FLAG_##var;                                                  \
     _FLAGMGR_CALLBACK(var, CALLBACK)                                           \
-    static void LOTTO_CONSTRUCTOR _flagmgr_constructor_##var(void)             \
+    static void LOTTO_CONSTRUCTOR LOTTO_USED _flagmgr_constructor_##var(void)  \
     {                                                                          \
         FLAG_##var = new_flag(#var, (opt), (long_opt), (help), (desc), (val),  \
                               (str_converter_t){}, _flagmgr_callback_##var);   \
@@ -152,7 +152,7 @@ flags_t *flags_default();
 
 #define NEW_PUBLIC_PRETTY_COMMAND_FLAG(var, opt, long_opt, help, desc, val,    \
                                        str_converter)                          \
-    static void LOTTO_CONSTRUCTOR _flagmgr_constructor_##var(void)             \
+    static void LOTTO_CONSTRUCTOR LOTTO_USED _flagmgr_constructor_##var(void)  \
     {                                                                          \
         var = new_flag(#var, (opt), (long_opt), (help), (desc), (val),         \
                        (str_converter), NULL);                                 \

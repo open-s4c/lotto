@@ -5,7 +5,7 @@ lotto       = timeout -s 9 110s stdbuf -i0 -o0 -e0 %emulator %builddir/lotto
 tmpdir      = --temporary-directory %T
 output      = -o %t.trace
 input       = -i %t.trace
-filter      = libvsync
+filter      = vsync
 
 # lotto subcommands
 debug          = debug %tmpdir %input --file-filter="%filter"
@@ -22,7 +22,7 @@ trace          = trace %tmpdir %output
 
 # tikl flags
 -q
--v
+-vv
 -j 1
 # -j @TIKL_WORKERS@
 -t @TIKL_TIMEOUT@

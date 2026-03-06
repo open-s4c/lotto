@@ -18,6 +18,14 @@ jobs:
           cc: clang
           cxx: clang++
           opts: -DLOTTO_RUST=ON -DLOTTO_RACKET_TESTS=ON
+        - build: x86-gcc-lto
+          cc: gcc
+          cxx: g++
+          opts: -DLOTTO_RUST=OFF -DLOTTO_LTO=ON -DCMAKE_BUILD_TYPE=Release
+        - build: x86-clang-lto
+          cc: clang
+          cxx: clang++
+          opts: -DLOTTO_RUST=OFF -DLOTTO_LTO=ON -DLOTTO_RACKET_TESTS=ON -DCMAKE_BUILD_TYPE=Release
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

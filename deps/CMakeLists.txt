@@ -62,7 +62,7 @@ ExternalProject_Add(
     DEPENDS "")
 
 set(TIKL_PROGRAM
-    ${PREFIX}/bin/tikl
+    env TIKL_SHELL=/bin/bash ${PREFIX}/bin/tikl
     PARENT_SCOPE)
 
 set(TIKL_CHECK_PROGRAM

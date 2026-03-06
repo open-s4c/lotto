@@ -33,8 +33,13 @@ set(DICE_MEMSET
     OFF
     CACHE BOOL "" FORCE)
 
+set(LTO OFF)
+if (${CMAKE_INTERPROCEDURAL_OPTIMIZATION})
+	set(LTO ON)
+endif()
+
 set(DICE_LTO
-    OFF
+    ${LTO}
     CACHE BOOL "" FORCE)
 
 set(DICE_MAIN_HOOKS

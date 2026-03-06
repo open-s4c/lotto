@@ -26,6 +26,7 @@ add_module(evec)
 add_module(poll)
 add_module(timeout)
 add_module(impasse)
+add_module(cxa)
 
 # hard filters                                                                 #
 # GEN_SLOT(USER_FILTER)                                                        #

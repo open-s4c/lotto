@@ -32,7 +32,7 @@ add_interceptor ioctl
 #ifdef LOTTO_INTERCEPT_SYSCALL
 add_interceptor syscall
 #endif
-add_interceptor __cxa_guard_acquire
+// add_interceptor __cxa_guard_acquire
 
 // C++ std::thread create and join
 // add_interceptor _ZNSt6thread15_M_start_threadESt10unique_ptrINS_6_StateESt14default_deleteIS1_EEPFvvE

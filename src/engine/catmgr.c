@@ -1,8 +1,8 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/marshable.h>
-#include <lotto/brokers/catmgr.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/catmgr.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/string.h>

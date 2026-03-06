@@ -2,8 +2,8 @@
 
 #include <dice/module.h>
 #include <lotto/base/marshable.h>
-#include <lotto/brokers/pubsub.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/state.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>

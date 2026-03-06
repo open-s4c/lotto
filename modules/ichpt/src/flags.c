@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
-#include <lotto/brokers/pubsub.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/cli/flagmgr.h>
 #include <lotto/modules/ichpt/state.h>
 

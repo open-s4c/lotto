@@ -2,8 +2,8 @@
 #include <lotto/base/marshable.h>
 #include <lotto/base/stable_address.h>
 #include <lotto/base/string.h>
-#include <lotto/brokers/catmgr.h>
-#include <lotto/brokers/pubsub.h>
+#include <lotto/engine/catmgr.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
 #include <lotto/modules/enforce/state.h>

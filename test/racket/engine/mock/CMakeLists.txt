@@ -5,8 +5,8 @@ add_mock(
     TARGET engine_mock.c
     INCLUDE lotto/engine/engine.h #
             lotto/base/context.h #
-            lotto/brokers/pubsub.h #
-            lotto/brokers/statemgr.h #
+            lotto/engine/pubsub.h #
+            lotto/engine/statemgr.h #
             lotto/engine/sequencer.h #
             lotto/engine/prng.h #
             lotto/engine/dispatcher.h #

@@ -9,7 +9,7 @@
 
 #include <lotto/base/envvar.h>
 #include <lotto/base/record_granularity.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/cli/exec.h>
 #include <lotto/cli/exec_info.h>
 #include <lotto/cli/flagmgr.h>

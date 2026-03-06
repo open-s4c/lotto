@@ -6,8 +6,8 @@
 #include <lotto/base/cappt.h>
 #include <lotto/base/context.h>
 #include <lotto/base/trace_flat.h>
-#include <lotto/brokers/pubsub.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>

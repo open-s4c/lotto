@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/brokers/pubsub.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/modules/blocking.h>
 #include <lotto/modules/blocking/state.h>

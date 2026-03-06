@@ -11,8 +11,8 @@
 #include <lotto/base/record_granularity.h>
 #include <lotto/base/stable_address.h>
 #include <lotto/base/topic.h>
-#include <lotto/brokers/pubsub.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/cli/flagmgr.h>
 #include <lotto/cli/flags/prng.h>
 #include <lotto/cli/subcmd.h>

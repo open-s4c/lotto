@@ -8,7 +8,7 @@
 #include <dice/self.h>
 #include <lotto/base/clk.h>
 #include <lotto/base/trace_file.h>
-#include <lotto/brokers/pubsub.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/engine.h> // for engine_init
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/assert.h>

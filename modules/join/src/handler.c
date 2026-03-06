@@ -3,7 +3,7 @@
 
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>

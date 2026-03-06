@@ -21,7 +21,7 @@
 #include <lotto/base/marshable.h>
 #include <lotto/base/topic.h>
 #include <lotto/base/value.h>
-#include <lotto/brokers/pubsub.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/clock.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/casts.h>

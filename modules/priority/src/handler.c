@@ -12,7 +12,7 @@
 #include "state.h"
 #include <dice/module.h>
 #include <lotto/base/tidmap.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>

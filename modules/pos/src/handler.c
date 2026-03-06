@@ -5,7 +5,7 @@
  ******************************************************************************/
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/tidmap.h>
-#include <lotto/brokers/statemgr.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
 #include <lotto/modules/pos/state.h>

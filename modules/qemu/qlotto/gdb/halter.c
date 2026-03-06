@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 #include <lotto/base/task_id.h>
-#include <lotto/brokers/pubsub.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/qlotto/gdb/gdb_connection.h>
 #include <lotto/qlotto/gdb/halter.h>
 #include <lotto/qlotto/gdb/handling/execute.h>

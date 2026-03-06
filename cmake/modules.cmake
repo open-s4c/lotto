@@ -17,7 +17,6 @@ macro(add_runtime_module)
     add_library(${RUNTIME_MODULE_TARGET} ${RUNTIME_MODULE_TYPE}
                                          ${RUNTIME_MODULE_SOURCES})
     target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto.h dice.h)
-                                                           dice.h)
 
     # enable LTO for this module?
     set(LTO FALSE)

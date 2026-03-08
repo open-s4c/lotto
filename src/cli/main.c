@@ -12,7 +12,7 @@
 #include <lotto/cmake_variables.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
-#include <lotto/sys/plugin.h>
+#include <lotto/sys/modules.h>
 #include <lotto/sys/stdio.h>
 #include <sys/personality.h>
 

@@ -14,6 +14,7 @@ set(CLI_UTILS_SRCS
     subcmd.c
     args.c
     flagmgr.c
+    explore.c
     exec.c
     exec_info.c
     trace_utils.c
@@ -62,9 +63,6 @@ add_cli_dependencies(cli_testing.o)
 file(COPY python DESTINATION ${CMAKE_BINARY_DIR})
 
 file(GLOB CLI_SRCS "commands/*.c")
-if(NOT "${LOTTO_DRUM}")
-    list(REMOVE_ITEM CLI_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/commands/cli_drum.c)
-endif()
 
 foreach(HANDLER ${LOTTO_DISABLE_HANDLERS})
     list(REMOVE_ITEM CLI_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/cli_${HANDLER}.c")
@@ -86,10 +84,6 @@ target_link_libraries(lotto-driver PRIVATE lotto-driver-available)
 target_compile_options(lotto-driver PRIVATE -g)
 target_compile_definitions(lotto-driver
                            PRIVATE LOTTO_VERSION="${PROJECT_VERSION}")
-
-if("${LOTTO_DRUM}")
-    target_link_libraries(lotto-driver PRIVATE curses)
-endif()
 
 add_executable(lotto-cli main.c)
 target_compile_options(lotto-cli PRIVATE -g)

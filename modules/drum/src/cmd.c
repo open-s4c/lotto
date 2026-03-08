@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #include <lotto/cli/flagmgr.h>
@@ -112,10 +113,11 @@ char *frames[][HEIGHT] = {
 #define LOTTO_SCREEN_LEN 11
 #define LOTTO_SCREEN_POS 18
 
-
 static int
 drum(args_t *args, flags_t *flags)
 {
+    (void)args;
+    (void)flags;
     initscr();
     curs_set(0);
     int row, col;

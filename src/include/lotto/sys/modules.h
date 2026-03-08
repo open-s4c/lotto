@@ -1,5 +1,5 @@
-#ifndef LOTTO_PLUGIN_H
-#define LOTTO_PLUGIN_H
+#ifndef LOTTO_MODULES_H
+#define LOTTO_MODULES_H
 
 #include <stdbool.h>
 
@@ -37,12 +37,14 @@ void lotto_plugin_clear();
 
 /** Print the plugin registry to stdout. */
 void lotto_plugin_print();
+const char *lotto_plugin_kind_str(plugin_kind_t kind);
 
 /** Do something on each plugin.
  * If some f returns a non-zero value, the function returns immediately that
  * value. If all f's return zero, the function returns zero.
  */
 int lotto_plugin_foreach(plugin_foreach_f f, void *arg);
+int lotto_plugin_foreach_all(plugin_foreach_f f, void *arg);
 
 /** Similar to lotto_plugin_foreach but in the reverse order. */
 int lotto_plugin_foreach_reverse(plugin_foreach_f f, void *arg);

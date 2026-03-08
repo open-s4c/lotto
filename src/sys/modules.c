@@ -7,7 +7,7 @@
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/memory.h>
-#include <lotto/sys/plugin.h>
+#include <lotto/sys/modules.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/string.h>
 #include <lotto/util/iterator.h>
@@ -243,6 +243,18 @@ lotto_plugin_foreach(plugin_foreach_f f, void *arg)
 }
 
 int
+lotto_plugin_foreach_all(plugin_foreach_f f, void *arg)
+{
+    for (size_t i = 0; i < _next; ++i) {
+        plugin_t *plugin = &_plugins[i];
+        int val          = f(plugin, arg);
+        if (val != 0)
+            return val;
+    }
+    return 0;
+}
+
+int
 lotto_plugin_foreach_reverse(plugin_foreach_f f, void *arg)
 {
     for (size_t i = _next; i; --i) {
@@ -258,22 +270,35 @@ lotto_plugin_foreach_reverse(plugin_foreach_f f, void *arg)
     return 0;
 }
 
-static const char *
-_plugin_kind_str(plugin_kind_t kind)
+const char *
+lotto_plugin_kind_str(plugin_kind_t kind)
 {
-    switch (kind) {
-        case PLUGIN_KIND_NONE:
-            return "NONE";
-        case PLUGIN_KIND_CLI:
-            return "CLI";
-        case PLUGIN_KIND_ENGINE:
-            return "ENGINE";
-        case PLUGIN_KIND_RUNTIME:
-            return "RUNTIME";
-        default:
-            logger_fatalf("Unknown plugin kind value %u\n", kind);
-            return "";
+    static char buf[64];
+    if (kind == PLUGIN_KIND_NONE) {
+        return "NONE";
     }
+
+    size_t off = 0;
+    if (kind & PLUGIN_KIND_CLI) {
+        off += sys_snprintf(buf + off, sizeof(buf) - off, "%sCLI",
+                            off ? "|" : "");
+    }
+    if (kind & PLUGIN_KIND_ENGINE) {
+        off += sys_snprintf(buf + off, sizeof(buf) - off, "%sENGINE",
+                            off ? "|" : "");
+    }
+    if (kind & PLUGIN_KIND_RUNTIME) {
+        off += sys_snprintf(buf + off, sizeof(buf) - off, "%sRUNTIME",
+                            off ? "|" : "");
+    }
+    if (kind & PLUGIN_KIND_MEMMGR) {
+        off += sys_snprintf(buf + off, sizeof(buf) - off, "%sMEMMGR",
+                            off ? "|" : "");
+    }
+    if (off == 0) {
+        return "UNKNOWN";
+    }
+    return buf;
 }
 
 void
@@ -283,7 +308,7 @@ lotto_plugin_print()
     for (size_t i = 0; i < _next; ++i) {
         logger_infof(
             "Plugin '%s' %s found at '%s', shadowed = %s, disabled = %s\n",
-            _plugins[i].name, _plugin_kind_str(_plugins[i].kind),
+            _plugins[i].name, lotto_plugin_kind_str(_plugins[i].kind),
             _plugins[i].path, _plugins[i].shadowed ? "yes" : "no",
             _plugins[i].disabled ? "yes" : "no");
     }

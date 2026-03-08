@@ -29,7 +29,7 @@
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/logger_block.h>
-#include <lotto/sys/plugin.h>
+#include <lotto/sys/modules.h>
 #include <lotto/sys/stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>

@@ -150,19 +150,3 @@ _default_flags()
     return flags;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
-    flag_t sel[] = {FLAG_OUTPUT,
-                    FLAG_INPUT,
-                    FLAG_VERBOSE,
-                    FLAG_TEMPORARY_DIRECTORY,
-                    FLAG_NO_PRELOAD,
-                    FLAG_LOGGER_BLOCK,
-                    FLAG_EXPLORE_EXPECT_FAILURE,
-                    FLAG_EXPLORE_MIN,
-                    FLAG_LOGGER_FILE,
-                    0};
-    subcmd_register(explore, "explore", "", "Exhaustively explore a trace",
-                    true, sel, _default_flags, SUBCMD_GROUP_TRACE);
-}

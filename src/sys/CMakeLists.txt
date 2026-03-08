@@ -9,7 +9,7 @@ set(SRCS
     memory.c
     mempool.c
     string.c
-    plugin.c
+    modules.c
     stream_chunked_file.c
     stream_chunked_impl.c
     stream_ffile.c

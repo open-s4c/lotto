@@ -4,7 +4,7 @@
 
 #include <lotto/base/context.h>
 #include <lotto/base/reason.h>
-#include <lotto/perf/perf.h>
+#include <lotto/modules/qemu/perf.h>
 #include <lotto/qemu/lotto_udf.h>
 #include <lotto/qlotto/frontend/event.h>
 #include <lotto/qlotto/frontend/intercept_translation.h>

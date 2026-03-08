@@ -5,7 +5,7 @@
 
 #include <capstone/arm64.h>
 #include <lotto/base/category.h>
-#include <lotto/qlotto/qemu/util.h>
+#include <lotto/modules/qemu/util.h>
 
 /* Enables (1) or disables (0) instrumentation for a group of instructions */
 

@@ -10,7 +10,7 @@ add_subdirectory(snapshot)
 # ##############################################################################
 # set(QEMU_URL http://download.qemu.org/qemu-9.1.3.tar.xz)
 set(QEMU_URL https://github.com/qemu/qemu/archive/refs/tags/v9.1.3.tar.gz)
-set(QEMU_HASH 480a77a0ed13a9b39415f639aa020b4eb0d7cc5a52569510dfd830b3af1bac89)
+set(QEMU_HASH 79f97e8ba4a19d2b5fa9fd080379abc061466d66b12300a7fc5b5fa345ae3ac2)
 
 # Build QEmu
 
@@ -22,6 +22,7 @@ if((CMAKE_COMPILER_IS_GNUCC AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL
     set(EXTRA_CFLAGS "${EXTRA_CFLAGS} -Wno-dangling-pointer")
 endif()
 set(EXTRA_CFLAGS "${EXTRA_CFLAGS} -I${PROJECT_SOURCE_DIR}/include")
+set(EXTRA_CFLAGS "${EXTRA_CFLAGS} -I${PROJECT_SOURCE_DIR}/modules/qemu/include")
 set(EXTRA_CFLAGS "${EXTRA_CFLAGS} -Wl,--export-dynamic")
 
 ExternalProject_Add(

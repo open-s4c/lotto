@@ -1,6 +1,6 @@
 
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE
+    #define _GNU_SOURCE
 #endif
 #include <dlfcn.h>
 
@@ -22,12 +22,12 @@
 #include <qemu-plugin.h>
 
 // lotto
-#include <lotto/qlotto/qemu/stubs.h>
+#include <lotto/modules/qemu/stubs.h>
 #include <lotto/unsafe/_sys.h>
 #include <lotto/unsafe/disable.h>
 #include <lotto/unsafe/rogue.h>
 
-#define LOGGER_FILE     "qemu_inst_measure.log"
+#define LOGGER_FILE  "qemu_inst_measure.log"
 #define MAX_MEASURES 10000000ULL
 
 #define USEC_IN_SEC      1000000ULL
@@ -216,7 +216,7 @@ qemu_plugin_install(qemu_plugin_id_t id, const qemu_info_t *info, int argc,
     qemu_plugin_register_atexit_cb(id, plugin_exit, NULL);
     icounter_init(&_state.inst_count);
 
-    _state.logger_file    = NULL;
+    _state.logger_file = NULL;
     _state.num_samples = 0;
 
     rl_gettimeofday(&_state.tv_start, NULL);

@@ -5,8 +5,8 @@
 #include <lotto/base/context.h>
 #include <lotto/base/reason.h>
 #include <lotto/check.h>
+#include <lotto/modules/qemu/callbacks.h>
 #include <lotto/qlotto/frontend/intercept_translation.h>
-#include <lotto/qlotto/qemu/callbacks.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/runtime/runtime.h>
 #include <lotto/sys/ensure.h>

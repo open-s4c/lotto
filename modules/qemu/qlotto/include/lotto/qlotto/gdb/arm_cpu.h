@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include <lotto/qlotto/qemu/armcpu.h>
+#include <lotto/modules/qemu/armcpu.h>
 
 void arm_cpu_init(void);
 

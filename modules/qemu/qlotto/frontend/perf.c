@@ -3,12 +3,12 @@
 #include <stdint.h>
 
 #include <lotto/base/task_id.h>
-#include <lotto/perf/perf.h>
+#include <lotto/modules/qemu/armcpu.h>
+#include <lotto/modules/qemu/callbacks.h>
+#include <lotto/modules/qemu/perf.h>
 #include <lotto/qemu/lotto_udf.h>
 #include <lotto/qlotto/frontend/interceptor.h>
 #include <lotto/qlotto/frontend/perf.h>
-#include <lotto/qlotto/qemu/armcpu.h>
-#include <lotto/qlotto/qemu/callbacks.h>
 #include <lotto/runtime/intercept.h>
 
 #define MAX_CPUS 1024
@@ -371,17 +371,17 @@ vcpu_trace_end_capture(unsigned int cpu_index, void *udata)
         }
         logger_infof("  Uniq TB executed:      %11lu\n", uniq_num);
         logger_infof("  WFE executed:          %11lu (%lu)\n", wfe_diff,
-                  wfe_count);
+                     wfe_count);
         logger_infof("  WFI executed:          %11lu (%lu)\n", wfi_diff,
-                  wfi_count);
+                     wfi_count);
         logger_infof("  Instructions executed: %11lu\n", icount_diff);
         logger_infof("  Wall clock progress:   %11lu (ns)\n", wclock_diff);
         logger_infof("  Watchdog triggers:     %11lu (%lu)\n", watchdog_diff,
-                  watchdog_count);
+                     watchdog_count);
         logger_infof("  vCPU Kick count:       %11lu (%lu)\n", kick_diff,
-                  kick_count);
+                     kick_count);
         logger_infof("  lotto entry count:     %11lu (%lu)\n", lotto_entry_diff,
-                  lotto_entry_count);
+                     lotto_entry_count);
     }
 
     if (1) {
@@ -543,9 +543,10 @@ frontend_perf_exit(void)
     uint64_t iic = icounter_get(get_instruction_counter());
     logger_infof("\n");
     logger_infof("Inst / sec: %.3f (total time)\n",
-              (double)iic / ((double)time_diff / (double)NOW_SECOND));
+                 (double)iic / ((double)time_diff / (double)NOW_SECOND));
     logger_infof("Inst / sec: %.3f (guest time)\n",
-              (double)iic / ((double)global_time_guest / (double)NOW_SECOND));
+                 (double)iic /
+                     ((double)global_time_guest / (double)NOW_SECOND));
     logger_infof("### global time usage: ###\n");
     logger_infof("   Time spent in  QEmu: %6.3f%%\n", global_percent_qemu);
     logger_infof("   Time spent in Lotto: %6.3f%%\n", global_percent_lotto);
@@ -569,11 +570,11 @@ frontend_perf_exit(void)
             100.0 * (double)local_time_lotto / (double)local_time_total;
 
         logger_infof("   [%lu] Time spent in     QEmu: %6.3f%%\n", i,
-                  local_percent_qemu);
+                     local_percent_qemu);
         logger_infof("   [%lu] Time spent in    Lotto: %6.3f%%\n", i,
-                  local_percent_lotto);
+                     local_percent_lotto);
         logger_infof("   [%lu] Time spent in    guest: %6.3f%%\n", i,
-                  local_percent_guest);
+                     local_percent_guest);
         logger_infof("\n");
     }
     __perf_print_results();

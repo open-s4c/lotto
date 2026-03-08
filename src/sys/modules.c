@@ -13,25 +13,25 @@
 #include <lotto/util/iterator.h>
 #include <lotto/util/strings.h>
 
-#define MAX_PLUGINS            100
-#define MAX_PLUGIN_NAME_LENGTH 1023
-#define PLUGIN_PREFIX          "lotto-"
-#define PLUGIN_PREFIX_LEN      (sizeof(PLUGIN_PREFIX) - 1)
+#define MAX_MODULES            100
+#define MAX_MODULE_NAME_LENGTH 1023
+#define MODULE_PREFIX          "lotto-"
+#define MODULE_PREFIX_LEN      (sizeof(MODULE_PREFIX) - 1)
 
 #define SO_SUFFIX     ".so"
 #define SO_SUFFIX_LEN (sizeof(SO_SUFFIX) - 1)
 
-#define DRIVER_PLUGIN_PREFIX     "lotto-driver-"
-#define DRIVER_PLUGIN_PREFIX_LEN (sizeof(DRIVER_PLUGIN_PREFIX) - 1)
-#define RUNTIME_PLUGIN_PREFIX     "lotto-runtime-"
-#define RUNTIME_PLUGIN_PREFIX_LEN (sizeof(DRIVER_PLUGIN_PREFIX) - 1)
+#define DRIVER_MODULE_PREFIX     "lotto-driver-"
+#define DRIVER_MODULE_PREFIX_LEN (sizeof(DRIVER_MODULE_PREFIX) - 1)
+#define RUNTIME_MODULE_PREFIX     "lotto-runtime-"
+#define RUNTIME_MODULE_PREFIX_LEN (sizeof(DRIVER_MODULE_PREFIX) - 1)
 
 #define STARTS_WITH(s, LITERAL_NAME) (sys_strncmp((s), LITERAL_NAME, LITERAL_NAME##_LEN)  == 0)
 
-static plugin_t _plugins[MAX_PLUGINS];
+static module_t _modules[MAX_MODULES];
 static size_t _next = 0;
 
-static char *_plugin_name(const char *filename);
+static char *_module_name(const char *filename);
 static int _scandir(const char *dir);
 static int _compar(const void *, const void *);
 static bool _ends_with(const char *, const char *);
@@ -41,27 +41,27 @@ typedef struct name_dist_s {
     uint64_t dist;
 } name_dist_t;
 
-static void map_dist(plugin_t *plugin, iter_args_t *map_arg);
+static void map_dist(module_t *module, iter_args_t *map_arg);
 static void reduce_dist(iter_args_t *map_returns, uint64_t size,
                         iter_args_t *reduce_arg);
 
-#define ITERATE_PLUGINS(MAP, MAP_ARG, TYPE_MAT_RET, REDUCE, REDUCE_ARG,        \
+#define ITERATE_MODULES(MAP, MAP_ARG, TYPE_MAT_RET, REDUCE, REDUCE_ARG,        \
                         REDUCE_RET)                                            \
-    ITERATE_ARRAY(_plugins, plugin_t, _next, MAP, MAP_ARG, TYPE_MAT_RET,       \
+    ITERATE_ARRAY(_modules, module_t, _next, MAP, MAP_ARG, TYPE_MAT_RET,       \
                   REDUCE, REDUCE_ARG, REDUCE_RET)
 
-#define ITERATE_PLUGINS_CLOSEST_NAME(MAP_ARG, REDUCE_RET)                      \
-    ITERATE_PLUGINS(map_dist, MAP_ARG, name_dist_t, reduce_dist, NULL,         \
+#define ITERATE_MODULES_CLOSEST_NAME(MAP_ARG, REDUCE_RET)                      \
+    ITERATE_MODULES(map_dist, MAP_ARG, name_dist_t, reduce_dist, NULL,         \
                     REDUCE_RET)
 
-// closest plugin name map fun
+// closest module name map fun
 static void
-map_dist(plugin_t *plugin, iter_args_t *map_arg)
+map_dist(module_t *module, iter_args_t *map_arg)
 {
     name_dist_t *arg = (name_dist_t *)map_arg->arg;
     name_dist_t *ret = (name_dist_t *)map_arg->ret;
-    ret->dist        = levenshtein(plugin->name, arg->name);
-    ret->name        = plugin->name;
+    ret->dist        = levenshtein(module->name, arg->name);
+    ret->name        = module->name;
 }
 
 static void
@@ -80,41 +80,41 @@ reduce_dist(iter_args_t *map_returns, uint64_t size, iter_args_t *reduce_arg)
 }
 
 void
-lotto_plugin_scan(const char *build_dir, const char *install_dir,
-                  const char *plugin_dir)
+lotto_module_scan(const char *build_dir, const char *install_dir,
+                  const char *module_dir)
 {
-    lotto_plugin_clear();
+    lotto_module_clear();
     if (install_dir)
         _scandir(install_dir);
     if (build_dir)
         _scandir(build_dir);
-    if (plugin_dir && plugin_dir[0] != '\0') {
-        logger_infof("Using external plugins directory: %s\n", plugin_dir);
-        _scandir(plugin_dir);
+    if (module_dir && module_dir[0] != '\0') {
+        logger_infof("Using external modules directory: %s\n", module_dir);
+        _scandir(module_dir);
     }
-    qsort(_plugins, _next, sizeof(plugin_t), _compar);
+    qsort(_modules, _next, sizeof(module_t), _compar);
 }
 
 static int
-_plugin_disable(plugin_t *plugin, void *arg)
+_disable_module(module_t *module, void *arg)
 {
     (void)arg;
-    plugin->disabled = true;
+    module->disabled = true;
     return 0;
 }
 
 static int
-_plugin_enable_by_name(const char *plugin_name)
+_module_enable_by_name(const char *module_name)
 {
     int not_found = 1;
     for (size_t i = 0; i < _next; ++i) {
-        plugin_t *plugin = &_plugins[i];
-        if (plugin->shadowed)
+        module_t *module = &_modules[i];
+        if (module->shadowed)
             continue;
-        if (!(plugin->disabled))
+        if (!(module->disabled))
             continue;
-        if (strcmp(plugin->name, plugin_name) == 0) {
-            plugin->disabled = false;
+        if (strcmp(module->name, module_name) == 0) {
+            module->disabled = false;
             not_found        = 0;
         }
     }
@@ -122,13 +122,13 @@ _plugin_enable_by_name(const char *plugin_name)
 }
 
 static const char *
-_plugin_find_name_closest(const char *plugin_name)
+_module_find_name_closest(const char *module_name)
 {
     name_dist_t map_dist_arg;
     name_dist_t reduce_dist_ret = {.name = ""};
-    map_dist_arg.name           = plugin_name;
+    map_dist_arg.name           = module_name;
 
-    ITERATE_PLUGINS_CLOSEST_NAME(&map_dist_arg, &reduce_dist_ret)
+    ITERATE_MODULES_CLOSEST_NAME(&map_dist_arg, &reduce_dist_ret)
 
     if (reduce_dist_ret.dist <= 4) {
         return reduce_dist_ret.name;
@@ -136,26 +136,26 @@ _plugin_find_name_closest(const char *plugin_name)
     return NULL;
 }
 
-// relies on plugins being sorted by name
+// relies on modules being sorted by name
 static void
-_plugin_print_names_unique()
+_module_print_names_unique()
 {
-    uint32_t num_plugins_unique     = 0;
-    uint32_t cur_num_plugins_unique = 0;
-    // count number of unique plugin names
+    uint32_t num_modules_unique     = 0;
+    uint32_t cur_num_modules_unique = 0;
+    // count number of unique module names
     for (size_t i = 0; i < _next; ++i) {
-        if (i > 0 && strcmp(_plugins[i].name, _plugins[i - 1].name) == 0)
+        if (i > 0 && strcmp(_modules[i].name, _modules[i - 1].name) == 0)
             continue;
-        num_plugins_unique++;
+        num_modules_unique++;
     }
 
-    logger_infof("Found %u plugin names: ", num_plugins_unique);
+    logger_infof("Found %u module names: ", num_modules_unique);
     for (size_t i = 0; i < _next; ++i) {
-        if (i > 0 && strcmp(_plugins[i].name, _plugins[i - 1].name) == 0)
+        if (i > 0 && strcmp(_modules[i].name, _modules[i - 1].name) == 0)
             continue;
-        logger_infof("%s", _plugins[i].name);
-        cur_num_plugins_unique++;
-        if (cur_num_plugins_unique < num_plugins_unique)
+        logger_infof("%s", _modules[i].name);
+        cur_num_modules_unique++;
+        if (cur_num_modules_unique < num_modules_unique)
             logger_infof(",");
         else
             logger_infof("\n");
@@ -163,79 +163,79 @@ _plugin_print_names_unique()
 }
 
 int
-lotto_plugin_enable_only(const char *plugin_list)
+lotto_module_enable_only(const char *module_list)
 {
-    char cur_plugin_name[MAX_PLUGIN_NAME_LENGTH + 1];
-    const char *cur_plugin_ptr = plugin_list;
+    char cur_module_name[MAX_MODULE_NAME_LENGTH + 1];
+    const char *cur_module_ptr = module_list;
     const char *next_sep_ptr   = NULL;
-    uint64_t cur_plugin_len    = 0;
+    uint64_t cur_module_len    = 0;
 
     // just to be explicit, but actually unnecessary as
-    // while(NULL != cur_plugin_ptr) captures it also
-    if (plugin_list == NULL)
+    // while(NULL != cur_module_ptr) captures it also
+    if (module_list == NULL)
         return 0;
 
-    lotto_plugin_foreach(_plugin_disable, NULL);
+    lotto_module_foreach(_disable_module, NULL);
 
-    // go over plugin_list
-    while (NULL != cur_plugin_ptr) {
-        next_sep_ptr = strstr(cur_plugin_ptr, ",");
+    // go over module_list
+    while (NULL != cur_module_ptr) {
+        next_sep_ptr = strstr(cur_module_ptr, ",");
 
         if (NULL != next_sep_ptr)
-            cur_plugin_len = next_sep_ptr - cur_plugin_ptr;
+            cur_module_len = next_sep_ptr - cur_module_ptr;
         else
-            cur_plugin_len = sys_strlen(cur_plugin_ptr);
+            cur_module_len = sys_strlen(cur_module_ptr);
 
-        ASSERT(cur_plugin_len > 0 && cur_plugin_len <= MAX_PLUGIN_NAME_LENGTH);
-        strncpy(cur_plugin_name, cur_plugin_ptr, cur_plugin_len);
-        cur_plugin_name[cur_plugin_len] = '\0';
+        ASSERT(cur_module_len > 0 && cur_module_len <= MAX_MODULE_NAME_LENGTH);
+        strncpy(cur_module_name, cur_module_ptr, cur_module_len);
+        cur_module_name[cur_module_len] = '\0';
 
-        // do something with current plugin name from plugin_list
+        // do something with current module name from module_list
 
-        bool plugin_found               = false;
-        const char *closest_plugin_name = NULL;
-        if (0 == _plugin_enable_by_name(cur_plugin_name))
-            plugin_found = true;
-        if (!plugin_found) {
-            closest_plugin_name = _plugin_find_name_closest(cur_plugin_name);
-            logger_infof("Could not find plugin %s\n", cur_plugin_name);
-            if (NULL != closest_plugin_name) {
-                logger_infof("Did you mean: %s ?\n", closest_plugin_name);
+        bool module_found               = false;
+        const char *closest_module_name = NULL;
+        if (0 == _module_enable_by_name(cur_module_name))
+            module_found = true;
+        if (!module_found) {
+            closest_module_name = _module_find_name_closest(cur_module_name);
+            logger_infof("Could not find module %s\n", cur_module_name);
+            if (NULL != closest_module_name) {
+                logger_infof("Did you mean: %s ?\n", closest_module_name);
             }
-            _plugin_print_names_unique();
+            _module_print_names_unique();
             return 1;
         }
 
-        // go to next plugin in list
+        // go to next module in list
         if (NULL != next_sep_ptr)
-            cur_plugin_ptr = next_sep_ptr + 1;
+            cur_module_ptr = next_sep_ptr + 1;
         else
-            cur_plugin_ptr = NULL;
+            cur_module_ptr = NULL;
     }
     return 0;
 }
 
 void
-lotto_plugin_clear()
+lotto_module_clear()
 {
     for (size_t i = 0; i < _next; ++i) {
-        sys_free(_plugins[i].name);
-        sys_free(_plugins[i].path);
-        _plugins[i].name = _plugins[i].path = NULL;
+        sys_free(_modules[i].name);
+        sys_free(_modules[i].path);
+        _modules[i].name = _modules[i].path = NULL;
     }
     _next = 0;
 }
 
 int
-lotto_plugin_foreach(plugin_foreach_f f, void *arg)
+lotto_module_foreach(module_foreach_f f, void *arg)
 {
     for (size_t i = 0; i < _next; ++i) {
-        plugin_t *plugin = &_plugins[i];
-        if (plugin->shadowed)
+        module_t *module = &_modules[i];
+        if (module->shadowed)
             continue;
-        if (plugin->disabled)
+        if (module->disabled)
             continue;
-        int val = f(plugin, arg);
+        int val = f(module, arg);
         if (val != 0)
             return val;
     }
@@ -243,11 +243,11 @@ lotto_plugin_foreach(plugin_foreach_f f, void *arg)
 }
 
 int
-lotto_plugin_foreach_all(plugin_foreach_f f, void *arg)
+lotto_module_foreach_all(module_foreach_f f, void *arg)
 {
     for (size_t i = 0; i < _next; ++i) {
-        plugin_t *plugin = &_plugins[i];
-        int val          = f(plugin, arg);
+        module_t *module = &_modules[i];
+        int val          = f(module, arg);
         if (val != 0)
             return val;
     }
@@ -255,15 +255,15 @@ lotto_plugin_foreach_all(plugin_foreach_f f, void *arg)
 }
 
 int
-lotto_plugin_foreach_reverse(plugin_foreach_f f, void *arg)
+lotto_module_foreach_reverse(module_foreach_f f, void *arg)
 {
     for (size_t i = _next; i; --i) {
-        plugin_t *plugin = &_plugins[i - 1];
-        if (plugin->shadowed)
+        module_t *module = &_modules[i - 1];
+        if (module->shadowed)
             continue;
-        if (plugin->disabled)
+        if (module->disabled)
             continue;
-        int val = f(plugin, arg);
+        int val = f(module, arg);
         if (val != 0)
             return val;
     }
@@ -271,27 +271,27 @@ lotto_plugin_foreach_reverse(plugin_foreach_f f, void *arg)
 }
 
 const char *
-lotto_plugin_kind_str(plugin_kind_t kind)
+lotto_module_kind_str(module_kind_t kind)
 {
     static char buf[64];
-    if (kind == PLUGIN_KIND_NONE) {
+    if (kind == MODULE_KIND_NONE) {
         return "NONE";
     }
 
     size_t off = 0;
-    if (kind & PLUGIN_KIND_CLI) {
+    if (kind & MODULE_KIND_CLI) {
         off += sys_snprintf(buf + off, sizeof(buf) - off, "%sCLI",
                             off ? "|" : "");
     }
-    if (kind & PLUGIN_KIND_ENGINE) {
+    if (kind & MODULE_KIND_ENGINE) {
         off += sys_snprintf(buf + off, sizeof(buf) - off, "%sENGINE",
                             off ? "|" : "");
     }
-    if (kind & PLUGIN_KIND_RUNTIME) {
+    if (kind & MODULE_KIND_RUNTIME) {
         off += sys_snprintf(buf + off, sizeof(buf) - off, "%sRUNTIME",
                             off ? "|" : "");
     }
-    if (kind & PLUGIN_KIND_MEMMGR) {
+    if (kind & MODULE_KIND_MEMMGR) {
         off += sys_snprintf(buf + off, sizeof(buf) - off, "%sMEMMGR",
                             off ? "|" : "");
     }
@@ -302,22 +302,22 @@ lotto_plugin_kind_str(plugin_kind_t kind)
 }
 
 void
-lotto_plugin_print()
+lotto_module_print()
 {
-    logger_infof("Found %lu plugins\n", _next);
+    logger_infof("Found %lu modules\n", _next);
     for (size_t i = 0; i < _next; ++i) {
         logger_infof(
-            "Plugin '%s' %s found at '%s', shadowed = %s, disabled = %s\n",
-            _plugins[i].name, lotto_plugin_kind_str(_plugins[i].kind),
-            _plugins[i].path, _plugins[i].shadowed ? "yes" : "no",
-            _plugins[i].disabled ? "yes" : "no");
+            "Module '%s' %s found at '%s', shadowed = %s, disabled = %s\n",
+            _modules[i].name, lotto_module_kind_str(_modules[i].kind),
+            _modules[i].path, _modules[i].shadowed ? "yes" : "no",
+            _modules[i].disabled ? "yes" : "no");
     }
 }
 
 static char *
-_plugin_name(const char *filename)
+_module_name(const char *filename)
 {
-    filename += PLUGIN_PREFIX_LEN;
+    filename += MODULE_PREFIX_LEN;
     size_t len = strrchr(filename, '.') - filename;
     return sys_strndup(filename, len);
 }
@@ -345,36 +345,36 @@ _scandir(const char *scan_dir)
         if (!_ends_with(entry->d_name, SO_SUFFIX)) {
             continue;
         }
-        char *name         = _plugin_name(entry->d_name);
-        plugin_kind_t kind = PLUGIN_KIND_NONE;
-        if (STARTS_WITH(entry->d_name, DRIVER_PLUGIN_PREFIX)) {
-            kind |= PLUGIN_KIND_CLI;
+        char *name         = _module_name(entry->d_name);
+        module_kind_t kind = MODULE_KIND_NONE;
+        if (STARTS_WITH(entry->d_name, DRIVER_MODULE_PREFIX)) {
+            kind |= MODULE_KIND_CLI;
         }
-        if (STARTS_WITH(entry->d_name, RUNTIME_PLUGIN_PREFIX)) {
-            kind |= PLUGIN_KIND_RUNTIME;
+        if (STARTS_WITH(entry->d_name, RUNTIME_MODULE_PREFIX)) {
+            kind |= MODULE_KIND_RUNTIME;
         }
         if (strstr(entry->d_name, "user_mempool") != NULL ||
             strstr(entry->d_name, "uafcheck") != NULL ||
             strstr(entry->d_name, "leakcheck") != NULL) {
-            kind |= PLUGIN_KIND_MEMMGR;
+            kind |= MODULE_KIND_MEMMGR;
         }
-        if (kind == PLUGIN_KIND_NONE) {
-            logger_fatalf("unknown kind of plugin %s\n", entry->d_name);
+        if (kind == MODULE_KIND_NONE) {
+            logger_fatalf("unknown kind of module %s\n", entry->d_name);
         }
         for (size_t i = 0; i < _next; ++i) {
-            if (!strcmp(name, _plugins[i].name) && kind == _plugins[i].kind) {
-                _plugins[i].shadowed = true;
-                _plugins[i].disabled = true;
+            if (!strcmp(name, _modules[i].name) && kind == _modules[i].kind) {
+                _modules[i].shadowed = true;
+                _modules[i].disabled = true;
             }
         }
         sys_snprintf(path, PATH_MAX, "%s/%s", scan_dir, entry->d_name);
-        plugin_t plugin = {.name     = name,
+        module_t module = {.name     = name,
                            .path     = sys_strdup(path),
                            .kind     = kind,
                            .shadowed = false,
                            .disabled = false};
-        logger_debugf("Found new plugin '%s'\n", plugin.path);
-        _plugins[_next++] = plugin;
+        logger_debugf("Found new module '%s'\n", module.path);
+        _modules[_next++] = module;
     }
     closedir(dir);
     return 0;
@@ -383,8 +383,8 @@ _scandir(const char *scan_dir)
 static int
 _compar(const void *_p, const void *_q)
 {
-    const plugin_t *p = (const plugin_t *)_p;
-    const plugin_t *q = (const plugin_t *)_q;
+    const module_t *p = (const module_t *)_p;
+    const module_t *q = (const module_t *)_q;
     int val;
     if (strstr(p->name, "rust")) {
         return 1;

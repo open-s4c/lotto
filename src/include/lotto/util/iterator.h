@@ -20,7 +20,7 @@ typedef struct iter_args_s {
  *
  * If the array and size are globals, you can define a shorter and more
  *decriptive macro locally #define ITERATE_PLUGINS(MAP, MAP_ARGS, REDUCE,
- *REDUCE_ARGS, REDUCE_RET) ITERATE_ARRAY(_plugins, plugin_t, _next, MAP,
+ *REDUCE_ARGS, REDUCE_RET) ITERATE_ARRAY(_plugins, module_t, _next, MAP,
  *MAP_ARG, REDUCE, REDUCE_ARG, REDUCE_RET)
  *
  * MAP and REDUCE are function pointers with the following signature

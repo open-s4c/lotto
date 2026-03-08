@@ -22,9 +22,9 @@ typedef struct {
 #define MAX_MODULES 128
 
 static const char *
-_module_basename(const char *plugin_name)
+_module_basename(const char *module_name)
 {
-    const char *p = plugin_name;
+    const char *p = module_name;
     if (sys_strncmp(p, "driver-", 7) == 0) {
         return p + 7;
     }
@@ -52,22 +52,22 @@ _find_or_add(module_info_t mods[], size_t *nmods, const char *name)
 }
 
 static int
-_collect_module(plugin_t *plugin, void *arg)
+_collect_module(module_t *module, void *arg)
 {
     modules_ctx_t *ctx = arg;
     module_info_t *mods = (module_info_t *)(ctx + 1);
-    const char *name    = _module_basename(plugin->name);
+    const char *name    = _module_basename(module->name);
     module_info_t *m    = _find_or_add(mods, (size_t *)&ctx->count, name);
     if (m == NULL) {
         return 1;
     }
-    m->shadowed |= plugin->shadowed;
-    if ((plugin->kind & PLUGIN_KIND_CLI) && (!plugin->shadowed || !m->driver_path)) {
-        m->driver_path = plugin->path;
+    m->shadowed |= module->shadowed;
+    if ((module->kind & MODULE_KIND_CLI) && (!module->shadowed || !m->driver_path)) {
+        m->driver_path = module->path;
     }
-    if ((plugin->kind & PLUGIN_KIND_RUNTIME) &&
-        (!plugin->shadowed || !m->runtime_path)) {
-        m->runtime_path = plugin->path;
+    if ((module->kind & MODULE_KIND_RUNTIME) &&
+        (!module->shadowed || !m->runtime_path)) {
+        m->runtime_path = module->path;
     }
     return 0;
 }
@@ -123,7 +123,7 @@ modules(args_t *args, flags_t *flags)
         module_info_t mods[MAX_MODULES];
     } state = {0};
 
-    lotto_plugin_foreach_all(_collect_module, &state.ctx);
+    lotto_module_foreach_all(_collect_module, &state.ctx);
 
     for (uint64_t i = 0; i < state.ctx.count; i++) {
         module_info_t *m = &state.mods[i];

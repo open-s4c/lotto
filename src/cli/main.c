@@ -19,7 +19,7 @@
 #define MAX_COMMAND_ARGS 2
 #define ERROR_MAX_LEN    2048
 
-static int _load_plugin(plugin_t *plugin, void *arg);
+static int _load_module(module_t *module, void *arg);
 
 static void
 describe(subcmd_t *scmd)
@@ -49,8 +49,8 @@ main(int argc, char **argv)
         return 1;
     }
 
-    const char *plugin_dir  = NULL;
-    const char *plugin_list = NULL;
+    const char *module_dir  = NULL;
+    const char *module_list = NULL;
     int subcmd_pos          = 0;
     char *arg0              = argv[0];
 
@@ -62,23 +62,23 @@ main(int argc, char **argv)
     for (int argv_idx = 1; argv_idx <= max_command_args_idx; argv_idx += 2) {
         if (argc > argv_idx + 2) {
             if (strcmp(argv[argv_idx], "--plugin-dir") == 0) {
-                plugin_dir = argv[argv_idx + 1];
+                module_dir = argv[argv_idx + 1];
                 // subcmd array index - 1
                 subcmd_pos = argv_idx + 1;
             }
             if (strcmp(argv[argv_idx], "--plugins") == 0) {
-                plugin_list = argv[argv_idx + 1];
+                module_list = argv[argv_idx + 1];
                 // subcmd array index - 1
                 subcmd_pos = argv_idx + 1;
             }
         }
     }
 
-    lotto_plugin_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
-                  plugin_dir);
-    if (0 != lotto_plugin_enable_only(plugin_list))
+    lotto_module_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
+                  module_dir);
+    if (0 != lotto_module_enable_only(module_list))
         exit(1);
-    lotto_plugin_foreach(_load_plugin, NULL);
+    lotto_module_foreach(_load_module, NULL);
 
 
 #if defined(LOTTO_EMBED_LIB) && LOTTO_EMBED_LIB == 0
@@ -148,17 +148,17 @@ main(int argc, char **argv)
 }
 
 static int
-_load_plugin(plugin_t *plugin, void *arg)
+_load_module(module_t *module, void *arg)
 {
     (void)arg;
-    if (!(plugin->kind & PLUGIN_KIND_CLI))
+    if (!(module->kind & MODULE_KIND_CLI))
         return 0;
-    void *handle = dlopen(plugin->path, RTLD_NOW | RTLD_GLOBAL);
+    void *handle = dlopen(module->path, RTLD_NOW | RTLD_GLOBAL);
     if (!handle) {
         char error[ERROR_MAX_LEN];
         strcpy(error, dlerror());
-        logger_errorf("error loading plugin '%s': %s\n", plugin->path, error);
-        plugin->disabled = true;
+        logger_errorf("error loading module '%s': %s\n", module->path, error);
+        module->disabled = true;
     }
     return 0;
 }

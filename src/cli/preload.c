@@ -54,17 +54,17 @@ typedef struct libspec {
     bool preload;
 } libspec_t;
 
-typedef bool (*plugin_predicate_f)(const plugin_t *, void *);
+typedef bool (*module_predicate_f)(const module_t *, void *);
 
-typedef struct preload_plugin_arg_s {
-    plugin_predicate_f plugin_predicate;
-    void *plugin_predicate_arg;
-} preload_plugin_arg_t;
+typedef struct preload_module_arg_s {
+    module_predicate_f module_predicate;
+    void *module_predicate_arg;
+} preload_module_arg_t;
 
-typedef struct plugin_preloadable_memory_arg_s {
+typedef struct module_preloadable_memory_arg_s {
     const char *name;
     uint64_t counter;
-} plugin_preloadable_memory_arg_t;
+} module_preloadable_memory_arg_t;
 
 static const char *_libpath;
 void
@@ -190,21 +190,21 @@ _preload_lib(const char *filename, bool preload_flag)
 }
 
 static bool
-plugin_preloadable_not_memory(const plugin_t *plugin, void *arg)
+module_preloadable_not_memory(const module_t *module, void *arg)
 {
     (void)arg;
-    return plugin->kind & (PLUGIN_KIND_RUNTIME | PLUGIN_KIND_ENGINE) &&
-           !(plugin->kind & PLUGIN_KIND_MEMMGR);
+    return module->kind & (MODULE_KIND_RUNTIME | MODULE_KIND_ENGINE) &&
+           !(module->kind & MODULE_KIND_MEMMGR);
 }
 
 static bool
-plugin_preloadable_memory(const plugin_t *plugin, void *arg)
+module_preloadable_memory(const module_t *module, void *arg)
 {
-    plugin_preloadable_memory_arg_t *args =
-        (plugin_preloadable_memory_arg_t *)arg;
-    if (!(plugin->kind & (PLUGIN_KIND_RUNTIME | PLUGIN_KIND_ENGINE) &&
-          plugin->kind & PLUGIN_KIND_MEMMGR) ||
-        strstr(plugin->name, args->name) == NULL) {
+    module_preloadable_memory_arg_t *args =
+        (module_preloadable_memory_arg_t *)arg;
+    if (!(module->kind & (MODULE_KIND_RUNTIME | MODULE_KIND_ENGINE) &&
+          module->kind & MODULE_KIND_MEMMGR) ||
+        strstr(module->name, args->name) == NULL) {
         return false;
     }
     args->counter++;
@@ -212,14 +212,14 @@ plugin_preloadable_memory(const plugin_t *plugin, void *arg)
 }
 
 static int
-_preload_plugin(plugin_t *plugin, void *arg)
+_preload_module(module_t *module, void *arg)
 {
-    preload_plugin_arg_t *args          = (preload_plugin_arg_t *)arg;
-    plugin_predicate_f plugin_predicate = args->plugin_predicate;
-    void *plugin_predicate_arg          = args->plugin_predicate_arg;
-    if (plugin_predicate == NULL ||
-        plugin_predicate(plugin, plugin_predicate_arg)) {
-        _preload_lib(plugin->path, true);
+    preload_module_arg_t *args          = (preload_module_arg_t *)arg;
+    module_predicate_f module_predicate = args->module_predicate;
+    void *module_predicate_arg          = args->module_predicate_arg;
+    if (module_predicate == NULL ||
+        module_predicate(module, module_predicate_arg)) {
+        _preload_lib(module->path, true);
     }
     return 0;
 }
@@ -252,12 +252,12 @@ _preload_memmgr_plugins(const char *chain, bool runtime)
          i             = strtok(NULL, ":")) {
         char name[MAX_LIST_STR];
         sys_sprintf(name, "%s_%s", i, runtime ? "runtime" : "user");
-        plugin_preloadable_memory_arg_t arg =
-            (plugin_preloadable_memory_arg_t){.name = name};
-        lotto_plugin_foreach_reverse(
-            _preload_plugin, &(preload_plugin_arg_t){
-                                 .plugin_predicate = plugin_preloadable_memory,
-                                 .plugin_predicate_arg = &arg});
+        module_preloadable_memory_arg_t arg =
+            (module_preloadable_memory_arg_t){.name = name};
+        lotto_module_foreach_reverse(
+            _preload_module, &(preload_module_arg_t){
+                                 .module_predicate = module_preloadable_memory,
+                                 .module_predicate_arg = &arg});
         //        ENSURE(arg.counter == 1 && "could not load a memory plugin");
     }
 }
@@ -312,10 +312,10 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
     _preload_memmgr_plugins(memmgr_chain_runtime, true);
     _preload_memmgr_plugins(memmgr_chain_user, false);
     if (do_preload_plotto) {
-        lotto_plugin_foreach_reverse(
-            _preload_plugin,
-            &(preload_plugin_arg_t){.plugin_predicate =
-                                        plugin_preloadable_not_memory});
+        lotto_module_foreach_reverse(
+            _preload_module,
+            &(preload_module_arg_t){.module_predicate =
+                                        module_preloadable_not_memory});
     }
 
     exec_info_store_envvars();

@@ -303,7 +303,10 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
 #ifdef __SANITIZE_ADDRESS__
     _preload_lib(LIBASAN, true);
 #endif
+    /* inform dice the name of liblotto */
+    setenv("DICE_DSO", LIBLOTTO, true);
 
+    /* preload liblotto */
     _preload_libs(dir, (libspec_t[]){
                            {LIBLOTTO, do_preload_plotto},
                            {NULL},

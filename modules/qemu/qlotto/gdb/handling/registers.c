@@ -1,11 +1,11 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <lotto/modules/qemu/armcpu.h>
 #include <lotto/qlotto/gdb/arm_cpu.h>
 #include <lotto/qlotto/gdb/gdb_base.h>
 #include <lotto/qlotto/gdb/gdb_send.h>
 #include <lotto/qlotto/gdb/rsp_util.h>
-#include <lotto/qlotto/qemu/armcpu.h>
 #include <lotto/unsafe/_sys.h>
 
 static int64_t

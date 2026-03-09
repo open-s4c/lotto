@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include <lotto/base/task_id.h>
-#include <lotto/qlotto/qemu/callbacks.h>
+#include <lotto/modules/qemu/callbacks.h>
 
 void vcpu_trace_start_capture(unsigned int cpu_index, void *udata);
 void vcpu_trace_end_capture(unsigned int cpu_index, void *udata);

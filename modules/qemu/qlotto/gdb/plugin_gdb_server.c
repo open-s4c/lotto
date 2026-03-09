@@ -8,6 +8,7 @@
 
 // lotto
 #include <lotto/check.h>
+#include <lotto/modules/qemu/callbacks.h>
 #include <lotto/qlotto/gdb/arm_cpu.h>
 #include <lotto/qlotto/gdb/fd_stub.h>
 #include <lotto/qlotto/gdb/gdb_connection.h>
@@ -17,7 +18,6 @@
 #include <lotto/qlotto/gdb/handling/break.h>
 #include <lotto/qlotto/gdb/interceptor.h>
 #include <lotto/qlotto/mapping.h>
-#include <lotto/qlotto/qemu/callbacks.h>
 #include <lotto/sys/ensure.h>
 
 // qemu

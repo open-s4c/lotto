@@ -6,7 +6,7 @@
 
 #include <lotto/base/context.h>
 // Qemu ARMCPU helper
-#include <lotto/qlotto/qemu/armcpu.h>
+#include <lotto/modules/qemu/armcpu.h>
 
 void vcpu_mem_capture(unsigned int cpu_index, qemu_plugin_meminfo_t info,
                       uint64_t vaddr, void *udata);
@@ -84,7 +84,7 @@ register_wfi_cb(context_t *ctx, struct qemu_plugin_insn *insn)
 }
 
 // QLotto wrappers for Qemu plugins
-#include <lotto/qlotto/qemu/stubs.h>
+#include <lotto/modules/qemu/stubs.h>
 
 
 inline void icounter_init(icounter_t *cnt);

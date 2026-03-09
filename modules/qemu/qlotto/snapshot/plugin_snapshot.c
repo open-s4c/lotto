@@ -18,8 +18,8 @@
 
 #define ASSERT_DISABLE
 
+#include <lotto/modules/qemu/stubs.h>
 #include <lotto/qemu/lotto_udf.h>
-#include <lotto/qlotto/qemu/stubs.h>
 #include <lotto/util/casts.h>
 
 #define MAX_SNAPSHOTS 10

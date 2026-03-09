@@ -25,8 +25,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+#include "armcpu-internals.h"
 #include <lotto/util/casts.h>
-#include <lotto/qlotto/qemu/armcpu-internals.h>
 
 typedef __int128_t int128_t;
 typedef __uint128_t uint128_t;

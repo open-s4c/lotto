@@ -1,7 +1,7 @@
 #ifndef LOTTO_QEMU_INTERCEPTOR_H
 #define LOTTO_QEMU_INTERCEPTOR_H
 
-#include <lotto/qlotto/qemu/util.h>
+#include <lotto/modules/qemu/util.h>
 
 void frontend_init(void);
 void frontend_exit(void);

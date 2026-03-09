@@ -320,7 +320,7 @@ index b0db9e0654f..c3d1d8f2c3b 100644
  #include "internal-common.h"
  #include "internal-target.h"
  
-+#include <lotto/qlotto/qemu/callbacks.h>
++#include <lotto//qemu/callbacks.h>
 +
  /* -icount align implementation. */
  
@@ -381,7 +381,7 @@ index 085cb7e6fea..304c1dfb2ef 100644
  #include "tcg-accel-ops.h"
  #include "tcg-accel-ops-mttcg.h"
  
-+#include <lotto/qlotto/qemu/callbacks.h>
++#include <lotto/modules/qemu/callbacks.h>
 +
  typedef struct MttcgForceRcuNotifier {
      Notifier notifier;

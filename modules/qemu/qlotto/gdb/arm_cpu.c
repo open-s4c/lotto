@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <lotto/qlotto/qemu/armcpu.h>
+#include <lotto/modules/qemu/armcpu.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 

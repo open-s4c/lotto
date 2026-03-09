@@ -99,7 +99,7 @@ describe_usage(FILE *fp)
 static int
 lotto(args_t *args, flags_t *flags)
 {
-    logger(LOGGER_INFO, stdout);
+    logger(LOGGER_INFO, STDOUT_FILENO);
 
     if (flags_is_on(flags, FLAG_VERSION)) {
         show_version();

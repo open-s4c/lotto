@@ -1,6 +1,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #define DICE_XTOR_PRIO 101
 #define LOGGER_PREFIX  LOGGER_CUR_FILE
@@ -26,7 +27,7 @@
 static nanosec_t _start;
 static trace_t *_recorder;
 static trace_t *_replayer;
-static FILE *_logger_fp;
+static int _logger_fd;
 
 void sighandler_init(void);
 void lotto_set_interceptor_initialized(void);
@@ -77,7 +78,6 @@ _logger_init()
     const char *var = getenv("LOTTO_LOGGER_LEVEL");
 
     enum logger_level level = LOGGER_ERROR;
-    FILE *null              = sys_fopen("/dev/null", "a+");
     if (var) {
         if (strcmp(var, "debug") == 0)
             level = LOGGER_DEBUG;
@@ -86,7 +86,7 @@ _logger_init()
         else if (strcmp(var, "warn") == 0)
             level = LOGGER_WARN;
         else if (strcmp(var, "silent") == 0) {
-            logger(level, null);
+            logger(level, -1);
             return;
         }
     }
@@ -94,16 +94,16 @@ _logger_init()
     var = getenv("LOTTO_LOGGER_FILE");
     if (var) {
         if (strcmp(var, "stdout") == 0)
-            logger(level, stdout);
+            logger(level, STDOUT_FILENO);
         else if (strcmp(var, "stderr") == 0)
-            logger(level, stderr);
+            logger(level, STDIN_FILENO);
         else {
-            _logger_fp = sys_fopen(var, "a+");
-            ASSERT(NULL != _logger_fp);
-            logger(level, _logger_fp);
+            _logger_fd = open(var, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            ASSERT(_logger_fd >= 0);
+            logger(level, _logger_fd);
         }
     } else {
-        logger(level, NULL);
+        logger(level, STDOUT_FILENO);
     }
 
     var = getenv("LOTTO_LOGGER_BLOCK");
@@ -177,9 +177,9 @@ lotto_exit(context_t *ctx, reason_t reason)
 static void DICE_DTOR
 _runtime_fini()
 {
-    if (_logger_fp) {
-        sys_fclose(_logger_fp);
-        _logger_fp = NULL;
+    if (_logger_fd >= 0) {
+        close(_logger_fd);
+        _logger_fd = -1;
     }
 
     context_t ctx = {

@@ -10,16 +10,14 @@
 #include <lotto/sys/stdio.h>
 
 static enum logger_level _level = LOGGER_INFO;
-static FILE *_fp             = NULL;
+static int _fd = -1;
 
-#define LOGGER_PRINTF                                                             \
+#define LOGGER_PRINTF                                                          \
     do {                                                                       \
         va_list args;                                                          \
         va_start(args, fmt);                                                   \
-        if (_fp)                                                               \
-            sys_vfprintf(_fp, fmt, args);                                      \
-        else                                                                   \
-            sys_vdprintf(STDOUT_FILENO, fmt, args);                            \
+        if (_fd >= 0)                                                          \
+            sys_vdprintf(_fd, fmt, args);                                      \
         va_end(args);                                                          \
     } while (0)
 
@@ -29,17 +27,17 @@ logger_set_level(enum logger_level l)
     _level = l;
 }
 
-FILE *
-logger_fp(void)
+int
+logger_fd(void)
 {
-    return _fp;
+    return _fd;
 }
 
 void
-logger(enum logger_level l, FILE *fp)
+logger(enum logger_level l, int fd)
 {
     _level = l;
-    _fp    = fp;
+    _fd    = fd;
 }
 
 __attribute__((format(printf, 1, 2))) void
@@ -52,7 +50,6 @@ __attribute__((format(printf, 1, 2))) void
 logger_fatalf(const char *fmt, ...)
 {
     LOGGER_PRINTF;
-    fflush(_fp);
     sys_abort();
 }
 
@@ -60,7 +57,6 @@ __attribute__((format(printf, 1, 2))) void
 logger_errorf(const char *fmt, ...)
 {
     LOGGER_PRINTF;
-    fflush(_fp);
 }
 
 __attribute__((format(printf, 1, 2))) void

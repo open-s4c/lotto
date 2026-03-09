@@ -26,7 +26,7 @@ DECLARE_FLAG_VERBOSE;
 int
 show(args_t *args, flags_t *flags)
 {
-    logger(LOGGER_INFO, stdout);
+    logger(LOGGER_INFO, STDOUT_FILENO);
 
     const char *fn = flags_get_sval(flags, FLAG_INPUT);
     sys_fprintf(stdout, "trace file: %s\n", fn);

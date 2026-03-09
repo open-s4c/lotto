@@ -20,6 +20,7 @@ pub static HANDLER: LazyLock<StackTraceHandler> = LazyLock::new(|| StackTraceHan
         enabled: AtomicBool::new(false),
     },
     tasks: FxHashMap::default(),
+    cache: FxHashMap::default(),
 });
 
 #[derive(Stateful)]
@@ -27,6 +28,7 @@ pub struct StackTraceHandler {
     #[config]
     pub cfg: Config,
 
+    pub cache: FxHashMap<u64, PCInfo>,
     pub tasks: FxHashMap<TaskId, StackTrace>,
 }
 
@@ -39,7 +41,7 @@ impl handler::Handler for StackTraceHandler {
         match ctx.cat {
             raw::base_category::CAT_FUNC_ENTRY => {
                 let caller_pc = get_arg_ptr(&ctx.args[0]) - call_insn_len();
-                let (sname, fname) = get_pc_info(caller_pc as *const c_void);
+                let (sname, fname) = self.get_pc_info(caller_pc as *const c_void);
                 let caller_pc = StableAddress::with_default_method(caller_pc);
                 let frame_id = StackFrameId {
                     caller_pc,
@@ -61,6 +63,23 @@ impl handler::Handler for StackTraceHandler {
             }
             _ => {}
         }
+    }
+}
+
+/// Information about a PC.
+///
+/// - The first element is dli_sname, or offset if it's unavailable.
+/// - The second element is dli_fname
+type PCInfo = (Either<String, u64>, String);
+
+impl StackTraceHandler {
+    /// Given a PC, find its symbol and the file.
+    fn get_pc_info(&mut self, pc: *const c_void) -> PCInfo {
+        let key = pc as u64;
+        self.cache
+            .entry(key)
+            .or_insert_with(|| get_pc_info1(pc))
+            .clone()
     }
 }
 
@@ -89,8 +108,7 @@ struct link_map {
     l_addr: libc::Elf32_Addr,
 }
 
-/// Given a PC, find its symbol and the file.
-fn get_pc_info(pc: *const c_void) -> (Either<String, u64>, String) {
+fn get_pc_info1(pc: *const c_void) -> PCInfo {
     unsafe {
         let mut info = MaybeUninit::uninit();
         let mut map = MaybeUninit::uninit();

@@ -54,7 +54,7 @@ ${BUSYBOX}/.config: ${BUSYBOX}.config
 
 get: ${LINUX} ${BUSYBOX}
 
-scx: ${LINUX}/.config
+scx: ${LINUX}/.config ${ROOTFS}/bin
 	patch --silent --forward -p 1 -d ${LINUX} -i ../patches/0001-Adds-scx_sched_rand-scheduler.patch || true
 	patch --silent --forward -p 1 -d ${LINUX} -i ../patches/scx_cross_compile.patch || true
 	make -C ${LINUX}/tools/sched_ext ARCH=arm64 CROSS_COMPILE=${CROSS_PRE}

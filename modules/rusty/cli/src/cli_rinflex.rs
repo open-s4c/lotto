@@ -28,7 +28,7 @@ use rinflex::*;
     ],
     group=raw::subcmd_group::SUBCMD_GROUP_TRACE,
     defaults=|flags: &mut Flags| {
-        flags.set_default(&flag_strategy(), Value::Sval(c"random"));
+        flags.set_default(&flag_strategy(), Value::Sval(c"pos"));
         flags.set_default(&flag_stable_address_method(),
                           Value::U64(StableAddressMethod::STABLE_ADDRESS_METHOD_MAP as u64));
         flags.set_default(&FLAG_HANDLER_ADDRESS_ENABLED, Value::Bool(true));

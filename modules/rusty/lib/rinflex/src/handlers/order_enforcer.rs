@@ -62,6 +62,12 @@ pub struct OrderEnforcer {
 
 impl Handler for OrderEnforcer {
     fn handle(&mut self, ctx: &raw::context_t, cappt: &mut raw::event_t) {
+        if U64OrInf::from(cappt.clk) > self.max_clock {
+            self.shutdown = true;
+            cappt.reason = REASON_IGNORE;
+            return;
+        }
+
         if ctx.cat == Category::CAT_NONE || self.fin.constraints.len() == 0 {
             return;
         }
@@ -77,12 +83,6 @@ impl Handler for OrderEnforcer {
         if self.fin.should_discard {
             cappt.reason = REASON_IGNORE;
             self.shutdown = true;
-            return;
-        }
-
-        if U64OrInf::from(cappt.clk) > self.max_clock {
-            self.shutdown = true;
-            cappt.reason = REASON_IGNORE;
             return;
         }
 

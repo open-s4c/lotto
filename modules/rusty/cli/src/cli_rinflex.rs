@@ -63,31 +63,33 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
     );
 
     loop {
-        println!(
+        eprintln!(
             "Currently there are {} constraints",
             rinflex.constraints.len()
         );
         for (i, c) in rinflex.constraints.iter().enumerate() {
-            println!(
+            eprintln!(
                 "=== Constraint {}{}",
                 i + 1,
                 if c.virt { " [virtual]" } else { "" }
             );
-            println!("{}", c.c.display().unwrap());
+            eprintln!("{}", c.c.display().unwrap());
         }
 
         let pair = match rinflex.find_next_pair() {
             Ok(Some(pair)) => pair,
             Ok(None) => {
-                println!("The current constraint set is sufficient to reproduce the bug, stopping");
+                eprintln!(
+                    "The current constraint set is sufficient to reproduce the bug, stopping"
+                );
                 break;
             }
             Err(Error::ExecutionNotFound) => {
-                println!("Cannot find an execution that satisfied the given constraints. This is likely due to circular constraints or control dependence.");
+                eprintln!("Cannot find an execution that satisfied the given constraints. This is likely due to circular constraints or control dependence.");
                 break;
             }
             Err(e) => {
-                println!("Unhandled error: {}", e);
+                eprintln!("Unhandled error: {}", e);
                 break;
             }
         };
@@ -99,22 +101,22 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
 
     let mut num_ocs = 0;
     let mut num_virt_ocs = 0;
-    println!("");
+    eprintln!("");
     for c in &rinflex.constraints {
-        println!(
+        eprintln!(
             "------ . ------ . ------ . ------ . ------ {}",
             if c.virt { "[virtual]" } else { "" }
         );
-        println!("{}", c.c.display().unwrap());
+        eprintln!("{}", c.c.display().unwrap());
         num_ocs += 1;
         if c.virt {
             num_virt_ocs += 1;
         }
     }
 
-    println!("");
-    println!("#total OCs = {}", num_ocs);
-    println!("#virtual OCs = {}", num_virt_ocs);
+    eprintln!("");
+    eprintln!("#total OCs = {}", num_ocs);
+    eprintln!("#virtual OCs = {}", num_virt_ocs);
     STATS.report();
 
     Ok(())

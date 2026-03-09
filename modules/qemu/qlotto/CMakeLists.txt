@@ -23,6 +23,8 @@ if((CMAKE_COMPILER_IS_GNUCC AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL
 endif()
 set(EXTRA_CFLAGS "${EXTRA_CFLAGS} -I${PROJECT_SOURCE_DIR}/include")
 set(EXTRA_CFLAGS "${EXTRA_CFLAGS} -I${PROJECT_SOURCE_DIR}/modules/qemu/include")
+set(EXTRA_CFLAGS "${EXTRA_CFLAGS} -I${PROJECT_SOURCE_DIR}/modules/evec/include")
+set(EXTRA_CFLAGS "${EXTRA_CFLAGS} -I${PROJECT_SOURCE_DIR}/modules/mutex/include")
 set(EXTRA_CFLAGS "${EXTRA_CFLAGS} -Wl,--export-dynamic")
 
 ExternalProject_Add(

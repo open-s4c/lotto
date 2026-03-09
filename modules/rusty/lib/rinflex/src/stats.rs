@@ -33,14 +33,14 @@ impl Stats {
 
     pub fn report(&self) {
         let duration = self.duration.try_lock().expect("single threaded");
-        println!(
+        eprintln!(
             "#Executions:           {}",
             self.num_runs.load(Ordering::Relaxed)
         );
-        println!(
+        eprintln!(
             "#Discarded executions: {}",
             self.num_discarded_runs.load(Ordering::Relaxed)
         );
-        println!("Total time inside SUT: {} ms", duration.as_millis());
+        eprintln!("Total time inside SUT: {} ms", duration.as_millis());
     }
 }

@@ -34,7 +34,7 @@ impl Instruction {
         if self.offset == 0 {
             return Ok(format!("NO ASSEMBLY FOR INVALID OFFSET {}", self.offset));
         }
-        let objdump = Command::new("objdump")
+        let mut objdump = Command::new("objdump")
             .arg("-d")
             .arg("-Mintel")
             .arg(&self.path)
@@ -44,9 +44,11 @@ impl Instruction {
             .arg("-A1")
             .arg("-B1")
             .arg(&format!("{:x}", self.offset))
-            .stdin(objdump.stdout.unwrap())
+            .stdin(objdump.stdout.take().unwrap())
             .output()?;
-        output_to_string(grep)
+        let result = output_to_string(grep);
+        let _ = objdump.wait();
+        result
     }
 
     fn with_lotto_disabled(f: impl FnOnce() -> Result<String, Error>) -> Result<String, Error> {

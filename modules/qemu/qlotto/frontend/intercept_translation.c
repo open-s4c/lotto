@@ -99,7 +99,11 @@ loop_check(int32_t opcount, int32_t opnum, uint64_t pc, context_t *ctx,
 {
     int64_t b_insn_diff = 0;
 
+    if (opcount != insn_cs->detail->arm64.op_count)
+        return;
+
     ASSERT(opcount == insn_cs->detail->arm64.op_count);
+
     ASSERT(ARM64_OP_IMM == insn_cs->detail->arm64.operands[opnum].type);
     if (_state.skip_loop_instrumentation) {
         _state.skip_loop_instrumentation = false;

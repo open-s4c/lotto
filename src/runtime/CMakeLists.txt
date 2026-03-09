@@ -46,6 +46,7 @@ set(LIBS
     dice-self.o
     dice-sem.o
     dice-stacktrace.o
+    dice-malloc.o
     dice-tsan.o)
 
 macro(add_runtime TARGET)

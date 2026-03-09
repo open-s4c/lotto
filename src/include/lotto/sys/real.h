@@ -30,46 +30,21 @@
 static inline void *
 real_func_impl(const char *fname, const char *lib, bool try)
 {
+    (void) lib;                 /* Do not call dlopen to avoid malloc */
     Dl_info info;
-    const size_t pthread_strlen = strlen("pthread_");
-
     ASSERT(NULL != fname);
-
-    if (strlen(fname) > pthread_strlen &&
-        strncmp(fname, "pthread_", pthread_strlen) == 0) {
-        lib = REAL_PTHREAD;
-    }
-    if (lib == NULL) {
-        void *func = dlsym(RTLD_NEXT, fname);
-
-        if (func == NULL) {
-            if (try)
-                return NULL;
-            logger_fatalf("could not find: %s",
-                       dlerror()); // TODO: avoid infinite loop by not using
-                                   // sys_ functions
-        }
-
-        if (0 == dladdr(func, &info)) {
-            logger_fatalf("could not get DL_info struct for %s :%s", fname,
-                       dlerror());
-        }
-
-        return func;
-    }
-
-    void *handle = dlopen(lib, RTLD_LAZY);
-    if (handle == NULL) {
+    void *func = dlsym(RTLD_NEXT, fname);
+    if (func == NULL) {
         if (try)
             return NULL;
-        logger_fatalf("dlopen failed:%s", dlerror());
+        logger_fatalf("could not find: %s",
+        dlerror()); // TODO: avoid infinite loop by not using
+                    // sys_ functions
     }
-
-    void *func = dlsym(handle, fname);
-    if (func == NULL && !try) {
-        logger_fatalf("could not find:%s", dlerror());
+    if (0 == dladdr(func, &info)) {
+        logger_fatalf("could not get DL_info struct for %s :%s", fname,
+        dlerror());
     }
-
     return func;
 }
 

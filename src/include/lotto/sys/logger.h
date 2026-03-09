@@ -19,8 +19,8 @@ enum logger_level {
 };
 
 void logger_set_level(enum logger_level l);
-FILE *logger_fp(void);
-void logger(enum logger_level l, FILE *fp);
+int logger_fd(void);
+void logger(enum logger_level l, int fd);
 
 #define PRINTFLIKE __attribute__((format(printf, 1, 2)))
 

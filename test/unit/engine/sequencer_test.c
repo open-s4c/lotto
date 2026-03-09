@@ -217,7 +217,7 @@ static void
 test_replay()
 {
     LOTTO_PUBLISH(TOPIC_ENGINE_START, nil);
-    logger(LOGGER_DEBUG, stderr);
+    logger(LOGGER_DEBUG, STDERR_FILENO);
     printf("Test: %s\n", __FUNCTION__);
     task_id tid          = 1;
     task_id other        = 2;

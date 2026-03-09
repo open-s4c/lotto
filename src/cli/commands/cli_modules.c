@@ -1,6 +1,7 @@
 /*******************************************************************************
  * modules
  ******************************************************************************/
+#include <unistd.h>
 #include <lotto/cli/subcmd.h>
 #include <lotto/cli/flagmgr.h>
 #include <lotto/sys/logger.h>
@@ -117,7 +118,7 @@ modules(args_t *args, flags_t *flags)
 {
     (void)args;
     (void)flags;
-    logger(LOGGER_INFO, stdout);
+    logger(LOGGER_INFO, STDOUT_FILENO);
     struct {
         modules_ctx_t ctx;
         module_info_t mods[MAX_MODULES];

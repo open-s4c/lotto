@@ -131,6 +131,19 @@ ensure_ps_intialized_(void)
 }
 
 inline mediator_t *
+mediator_get_existing_data()
+{
+    once_init_key();
+    struct metadata *md = self_md();
+    if (md == NULL) {
+        ensure_ps_intialized_();
+        md = self_md();
+    }
+    ASSERT(md != NULL);
+    return self_tls_get(self_md(), (uintptr_t)&mediator_key_);
+}
+
+inline mediator_t *
 mediator_get_data(bool new_task)
 {
     once_init_key();

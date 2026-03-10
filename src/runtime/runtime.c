@@ -131,7 +131,7 @@ _fini_cb(void *arg)
     ASSERT(dat != NULL);
     int err = 0;
     if (vatomic_xchg(&_only_once, 1) == 0) {
-        mediator_t *m = get_mediator(false);
+        mediator_t *m = get_existing_mediator();
         if (m)
             mediator_fini(m);
 
@@ -188,3 +188,15 @@ _runtime_fini()
     };
     lotto_exit(&ctx, REASON_SUCCESS);
 }
+
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_WAIT, {
+    static uint64_t cnt = 0;
+    struct self_wait_event *ev = EVENT_PAYLOAD(event);
+
+    /* Self-wait can happen when some threads exited but were never
+     * joined due to various reaons.  In Lotto, we don't really care
+     * about this.  */
+    if (++cnt > 10) {
+        ev->stop = true;
+    }
+})

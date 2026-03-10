@@ -48,7 +48,7 @@ lotto_set_interceptor_initialized(void)
 void
 interceptor_fini(const context_t *ctx)
 {
-    mediator_fini(get_mediator(false));
+    mediator_fini(get_existing_mediator());
 }
 
 #define MATCH_NAME(A, B) (strcmp(A, #B) == 0)
@@ -84,6 +84,12 @@ get_mediator(bool new_task)
     }
     m->registration_status = MEDIATOR_REGISTRATION_DONE;
     return m;
+}
+
+mediator_t *
+get_existing_mediator(void)
+{
+    return mediator_get_existing_data();
 }
 
 static void

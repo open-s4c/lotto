@@ -25,7 +25,8 @@ DECLARE_COMMAND_FLAG(PLUGIN_DIRECTORY, "", "plugin-directory", "DIR",
                      "plugin directory to load Lotto plugins", flag_sval(""))
 DECLARE_COMMAND_FLAG(PLUGIN_LIST, "", "plugins", "P1[,P2]",
                      "list of plugins to load, comma seperated", flag_sval(""))
-DECLARE_COMMAND_FLAG(LIST_COMMANDS, "", "list-commands", "", "", flag_sval(""))
+DECLARE_COMMAND_FLAG(LIST_COMMANDS, "", "list-commands", "",
+                     "list available commands", flag_off())
 
 static void
 print_block_fp(FILE *fp, const char *s, size_t len)
@@ -42,13 +43,14 @@ show_version()
 }
 
 static void
-list_commands(enum subcmd_group group)
+list_commands_all(void)
 {
     subcmd_t *s = NULL;
     while ((s = subcmd_next(s))) {
-        if (s->group == group) {
-            sys_fprintf(stdout, "%s\n", s->name);
+        if (s->name[0] == '-') {
+            continue;
         }
+        sys_fprintf(stdout, "%s\t%s\n", s->name, s->desc);
     }
 }
 
@@ -106,14 +108,8 @@ lotto(args_t *args, flags_t *flags)
         return 0;
     }
 
-    const char *cmds = flags_get_sval(flags, FLAG_LIST_COMMANDS);
-
-    if (strcmp(cmds, "run") == 0) {
-        list_commands(SUBCMD_GROUP_RUN);
-        return 0;
-    }
-    if (strcmp(cmds, "trace") == 0) {
-        list_commands(SUBCMD_GROUP_TRACE);
+    if (flags_is_on(flags, FLAG_LIST_COMMANDS)) {
+        list_commands_all();
         return 0;
     }
 

@@ -235,6 +235,11 @@ flags_t *flags_default();
     DECLARE_COMMAND_FLAG(HELP, "h", "help", "", "help message for flags",      \
                          flag_off())
 
+#define DECLARE_FLAG_LIST_FLAGS                                                \
+    DECLARE_COMMAND_FLAG(LIST_FLAGS, "", "list-flags", "",                    \
+                         "list available flags",                               \
+                         flag_off())
+
 /**
  * CLI parsing and printing
  */
@@ -242,6 +247,7 @@ flags_t *flags_default();
 #define FLAGS_PARSE_OK    0
 #define FLAGS_PARSE_ERROR 1
 #define FLAGS_PARSE_HELP  -1
+#define FLAGS_PARSE_LIST_FLAGS -2
 
 void flags_print(const flags_t *flags);
 
@@ -255,6 +261,7 @@ int flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
 void flags_opts(char *opts, bool runtime_sel, const flag_t sel[MAX_FLAGS],
                 struct option long_opts[]);
 void flags_help(const flags_t *flags, bool runtime_sel, flag_t sel[MAX_FLAGS]);
+void flags_list(bool runtime_sel, flag_t sel[MAX_FLAGS]);
 flags_t *flagmgr_flags_alloc();
 
 typedef struct {

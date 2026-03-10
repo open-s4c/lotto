@@ -1,31 +1,50 @@
-# Bash completion support for Lotto
+# Dynamic Bash completion for lotto.
 #
-#
-# To enable completion:
-#   1) Copy this file to somewhere (e.g. ~/.lotto-completion.bash)
-#   2) Add the following line to your .bashrc:
-#       source ~/.lotto-completion.bash
+# This script discovers commands and flags at runtime:
+#   - commands: `lotto commands`
+#   - flags:    `lotto [<cmd>] -F`
+
+_lotto__commands()
+{
+    local bin="$1"
+    "$bin" --list-commands 2>/dev/null | cut -f1
+}
+
+_lotto__flags()
+{
+    local bin="$1"
+    shift
+    "$bin" "$@" --list-flags 2>/dev/null | cut -f1
+}
+
+_lotto__selected_subcmd()
+{
+    local bin="$1"
+    local i token
+    local commands
+    commands="$(_lotto__commands "$bin")"
+
+    for ((i = 1; i < cword; i++)); do
+        token="${words[i]}"
+        [[ "$token" == -* ]] && continue
+        if grep -Fxq -- "$token" <<<"$commands"; then
+            printf '%s' "$token"
+            return 0
+        fi
+    done
+    return 1
+}
 
 _lotto()
 {
     local cur prev words cword
     _init_completion || return
 
-    if [[ $cur == -* && "$prev" == "$1" ]]; then
-        COMPREPLY=( $( compgen -W "--help --version" -- "$cur" ) )
-        return
-    fi
+    local bin="$1"
+    local subcmd
+    subcmd="$(_lotto__selected_subcmd "$bin")"
 
-    if [[ "$prev" == "$1" ]]; then
-        COMPREPLY=( $( compgen -W "$( $1 --list-commands )" -- "$cur" ) )
-        LOTTO_CHOSEN_CMD=$COMPREPLY
-        return
-    fi
-
-    case $prev in
-        -h|--help|--version)
-            return
-            ;;
+    case "$prev" in
         -i|--input-trace|-o|--output-trace)
             _filedir trace
             return
@@ -38,22 +57,17 @@ _lotto()
             _filedir -d
             return
             ;;
-        -s|--strategy)
-            COMPREPLY=( $( compgen -W "pct pos random" -- "$cur" ) )
-            return
-            ;;
     esac
 
-    if [[ $cur == -* && "${LOTTO_CHOSEN_CMD}" != "" ]]; then
-        COMPREPLY=( $( compgen -W '$( _parse_help "$1" "${LOTTO_CHOSEN_CMD} --help" )' -- "$cur" ) )
+    if [[ -z "$subcmd" ]]; then
+        COMPREPLY=( $(compgen -W "$(_lotto__flags "$bin") $(_lotto__commands "$bin")" -- "$cur") )
         return
     fi
 
-    $1 --list-commands run | grep -wq "${LOTTO_CHOSEN_CMD}"
-    if [[ $? -eq 0 ]]; then
+    COMPREPLY=( $(compgen -W "$(_lotto__flags "$bin" "$subcmd")" -- "$cur") )
+    if [[ ${#COMPREPLY[@]} -eq 0 && "$cur" != -* ]]; then
         _filedir
-        return
     fi
+}
 
-} &&
-complete -F _lotto lotto ./lotto
+complete -F _lotto lotto ./lotto build/lotto

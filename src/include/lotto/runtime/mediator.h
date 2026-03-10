@@ -94,6 +94,9 @@ bool mediator_in_capture(const mediator_t *m);
 /* return per-thread mediator data memory pointer */
 mediator_t *mediator_get_data(bool new_task);
 
+/* return per-thread mediator data memory pointer, not creating one if it doesn't exist */
+mediator_t *mediator_get_existing_data();
+
 /* disallows new tasks to register */
 void mediator_disable_registration();
 

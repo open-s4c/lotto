@@ -24,6 +24,11 @@ get_task_id(void)
  */
 mediator_t *get_mediator(bool new_task);
 
+/*
+ * Like get_mediator but does not initialize mediator if not yet.
+ */
+mediator_t *get_existing_mediator();
+
 /*******************************************************************************
  * guarded lotto_step
  ******************************************************************************/

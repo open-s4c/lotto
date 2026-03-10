@@ -49,6 +49,7 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
         "LOTTO_MODIFY_RETURN_CODE" => 1 as u64,
         "LOTTO_LOGGER_BLOCK" => flags.get_sval(&FLAG_LOGGER_BLOCK),
     };
+    cli::logger();
 
     info!("rinflex trace: {}", flags.get_sval(&FLAG_INPUT));
 

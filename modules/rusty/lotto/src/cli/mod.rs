@@ -11,6 +11,13 @@ use std::ffi::CString;
 use std::num::NonZeroI32;
 use std::path::Path;
 
+/// Default initialization of the logger.
+pub fn logger() {
+    unsafe {
+        raw::logger(raw::logger_level_LOGGER_INFO, libc::STDOUT_FILENO);
+    }
+}
+
 pub fn preload<P: AsRef<Path>>(
     tempdir: P,
     verbose: bool,

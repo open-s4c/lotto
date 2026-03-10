@@ -1,7 +1,5 @@
 //
 
-#![allow(clippy::result_unit_err)]
-
 // Re-export lotto_macros and supporting symbols
 pub use lotto_macros::*;
 pub mod reexport {

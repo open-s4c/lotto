@@ -34,6 +34,7 @@ use rinflex::error::Error;
 )]
 fn inflex(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
     envvar_set!("LOTTO_LOGGER_FILE" => flags.get_sval(&FLAG_LOGGER_FILE));
+    cli::logger();
 
     let input = flags.get_sval(&FLAG_INPUT).to_string();
     let output = flags.get_sval(&FLAG_INPUT).to_string();

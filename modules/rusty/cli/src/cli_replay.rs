@@ -28,6 +28,7 @@ fn replay(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
     envvar_set! {
         "LOTTO_LOGGER_FILE" => flags.get_sval(&FLAG_LOGGER_FILE),
     };
+    cli::logger();
 
     println!("trace file: {}", flags.get_sval(&FLAG_INPUT));
 

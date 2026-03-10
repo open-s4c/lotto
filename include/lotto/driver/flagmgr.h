@@ -4,7 +4,7 @@
 #include <getopt.h>
 
 #include <lotto/base/flags.h>
-#include <lotto/cli/args.h>
+#include <lotto/driver/args.h>
 
 /**
  * Pretty printers

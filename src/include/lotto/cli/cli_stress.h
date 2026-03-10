@@ -1,8 +1,8 @@
 #ifndef LOTTO_CLI_STRESS_H
 #define LOTTO_CLI_STRESS_H
 
-#include <lotto/cli/args.h>
-#include <lotto/cli/flagmgr.h>
+#include <lotto/driver/args.h>
+#include <lotto/driver/flagmgr.h>
 
 DECLARE_FLAG_OUTPUT;
 DECLARE_FLAG_INPUT;

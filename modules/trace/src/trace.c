@@ -10,13 +10,13 @@
 #include <unistd.h>
 
 #include <lotto/base/envvar.h>
-#include <lotto/cli/args.h>
-#include <lotto/cli/flagmgr.h>
-#include <lotto/cli/flags/memmgr.h>
-#include <lotto/cli/flags/prng.h>
+#include <lotto/driver/args.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/flags/memmgr.h>
+#include <lotto/driver/flags/prng.h>
 #include <lotto/cli/preload.h>
-#include <lotto/cli/subcmd.h>
-#include <lotto/cli/trace_utils.h>
+#include <lotto/driver/subcmd.h>
+#include <lotto/driver/trace_prepare.h>
 #include <lotto/sys/now.h>
 #include <lotto/sys/stdio.h>
 
@@ -28,9 +28,6 @@ DECLARE_FLAG_NO_PRELOAD;
 DECLARE_FLAG_LOGGER_BLOCK;
 DECLARE_FLAG_REPLAY_GOAL;
 
-/**
- * generate initial trace
- */
 int
 trace(args_t *args, flags_t *flags)
 {

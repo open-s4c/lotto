@@ -1,12 +1,14 @@
+py import os
+py import sys
 set verbose off
 set breakpoint pending on
 set pagination off
 set follow-exec-mode new
 set follow-fork-mode child
-py lotto_dir = r'%s' # format: python script dir
+py lotto_dir = os.environ['LOTTO_DEBUG_DIR']
 py sys.path.append(lotto_dir)
 py from pylotto.util import init
-py init(lotto_dir, r'%s', r'%s', r'%s', r'%s', r'%s') # format: file_filter, function_filter, addr2line, symbol_file, plugin_paths
+py init(lotto_dir, os.getenv('LOTTO_DEBUG_FILE_FILTER', ''), os.getenv('LOTTO_DEBUG_FUNCTION_FILTER', ''), os.getenv('LOTTO_DEBUG_ADDR2LINE', ''), os.getenv('LOTTO_DEBUG_SYMBOL_FILE', ''), os.getenv('LOTTO_DEBUG_PLUGIN_PATHS', ''))
 
 #break main
 #commands

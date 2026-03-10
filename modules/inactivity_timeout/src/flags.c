@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
-#include <lotto/cli/flagmgr.h>
+#include <lotto/driver/flagmgr.h>
 #include <lotto/modules/inactivity_timeout/state.h>
 
 NEW_CALLBACK_FLAG(INACTIVITY_TIMEOUT, "", "inactivity-timeout", "",

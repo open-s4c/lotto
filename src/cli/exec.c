@@ -5,9 +5,9 @@
 #include <errno.h>
 #include <spawn.h>
 
-#include <lotto/cli/exec.h>
-#include <lotto/cli/flagmgr.h>
-#include <lotto/cli/trace_utils.h>
+#include <lotto/driver/exec.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/trace_prepare.h>
 #include <lotto/sys/poll.h>
 #include <lotto/sys/signal.h>
 #include <lotto/sys/spawn.h>

@@ -1,5 +1,5 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/cli/flagmgr.h>
+#include <lotto/driver/flagmgr.h>
 #include <lotto/modules/yield/state.h>
 
 NEW_CALLBACK_FLAG(ADVISORY_YIELD, "", "advisory-yield", "",

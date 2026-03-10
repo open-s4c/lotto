@@ -1,5 +1,5 @@
 /*******************************************************************************
- * @file cli_inflex.c
+ * @file cmd.c
  * @brief Finds the inflection point of a trace.
  *
  * The inflection point hypothesis is that there is one point in the trace after
@@ -18,18 +18,19 @@
 #include <lotto/base/envvar.h>
 #include <lotto/base/record_granularity.h>
 #include <lotto/base/trace_flat.h>
-#include <lotto/cli/exec.h>
-#include <lotto/cli/exec_info.h>
-#include <lotto/cli/explore.h>
-#include <lotto/cli/flagmgr.h>
-#include <lotto/cli/flags/memmgr.h>
-#include <lotto/cli/flags/prng.h>
-#include <lotto/cli/flags/sequencer.h>
+#include <lotto/driver/exec.h>
+#include <lotto/driver/exec_info.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/flags/memmgr.h>
+#include <lotto/driver/flags/prng.h>
+#include <lotto/driver/flags/sequencer.h>
 #include <lotto/cli/preload.h>
-#include <lotto/cli/replay.h>
-#include <lotto/cli/subcmd.h>
-#include <lotto/cli/trace_utils.h>
-#include <lotto/cli/utils.h>
+#include <lotto/driver/record.h>
+#include <lotto/driver/replay.h>
+#include <lotto/driver/subcmd.h>
+#include <lotto/driver/trace.h>
+#include <lotto/driver/utils.h>
+#include <lotto/modules/explore.h>
 #include <lotto/sys/now.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/stream_file.h>

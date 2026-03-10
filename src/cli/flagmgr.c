@@ -13,9 +13,9 @@
 #include <lotto/base/topic.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/cli/flagmgr.h>
-#include <lotto/cli/flags/prng.h>
-#include <lotto/cli/subcmd.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/flags/prng.h>
+#include <lotto/driver/subcmd.h>
 #include <lotto/modules/enforce/state.h>
 #include <lotto/modules/termination/state.h>
 #include <lotto/sys/assert.h>

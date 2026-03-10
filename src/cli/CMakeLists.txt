@@ -1,8 +1,6 @@
 sanitize()
 add_compile_definitions(_GNU_SOURCE DICE_MODULE_SLOT=9)
-add_subdirectory(gdb)
 add_subdirectory(flags)
-add_subdirectory(python)
 # ##############################################################################
 # CLI static library of utils
 # ##############################################################################
@@ -11,10 +9,10 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 
 set(CLI_UTILS_SRCS
     utils.c
+    files.c
     subcmd.c
     args.c
     flagmgr.c
-    explore.c
     exec.c
     exec_info.c
     trace_utils.c
@@ -32,14 +30,6 @@ macro(add_cli_dependencies TARGET)
     add_dependencies(
         "${TARGET}"
         blob-tsano
-        blob-util
-        blob-debug
-        blob-command
-        blob-decorator
-        blob-filter
-        blob-iterator
-        blob-matcher
-        blob-handler
         blob-lotto
         blob-lotto-verbose
         ${ARGN})
@@ -60,8 +50,6 @@ add_cli_dependencies(cli_testing.o)
 # ##############################################################################
 # CLI lotto command
 # ##############################################################################
-file(COPY python DESTINATION ${CMAKE_BINARY_DIR})
-
 file(GLOB CLI_SRCS "commands/*.c")
 
 foreach(HANDLER ${LOTTO_DISABLE_HANDLERS})

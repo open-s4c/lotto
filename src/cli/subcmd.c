@@ -1,7 +1,7 @@
 #include <string.h>
 
-#include <lotto/cli/flagmgr.h>
-#include <lotto/cli/subcmd.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/subcmd.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/string.h>

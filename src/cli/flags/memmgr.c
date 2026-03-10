@@ -1,6 +1,6 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
-#include <lotto/cli/flagmgr.h>
+#include <lotto/driver/flagmgr.h>
 #include <lotto/sys/assert.h>
 
 NEW_PUBLIC_CALLBACK_FLAG(MEMMGR_RUNTIME, "", "memmgr-runtime",

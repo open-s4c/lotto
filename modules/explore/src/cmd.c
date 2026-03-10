@@ -1,7 +1,7 @@
-#include <lotto/cli/explore.h>
-#include <lotto/cli/flagmgr.h>
-#include <lotto/cli/flags/sequencer.h>
-#include <lotto/cli/subcmd.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/flags/sequencer.h>
+#include <lotto/driver/subcmd.h>
+#include <lotto/modules/explore.h>
 
 DECLARE_FLAG_OUTPUT;
 DECLARE_FLAG_INPUT;

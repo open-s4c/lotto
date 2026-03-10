@@ -1,11 +1,11 @@
-#ifndef LOTTO_CLI_EXEC_INFO_H
-#define LOTTO_CLI_EXEC_INFO_H
+#ifndef LOTTO_DRIVER_EXEC_INFO_H
+#define LOTTO_DRIVER_EXEC_INFO_H
 
 #include <stdbool.h>
 #include <stdint.h>
 
 #include <lotto/base/marshable.h>
-#include <lotto/cli/args.h>
+#include <lotto/driver/args.h>
 
 #define REPLAYED_ENVVARS 1
 

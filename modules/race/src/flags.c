@@ -1,5 +1,5 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/cli/flagmgr.h>
+#include <lotto/driver/flagmgr.h>
 #include <lotto/modules/race/state.h>
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_RACE_ENABLED, "", "handler-race",

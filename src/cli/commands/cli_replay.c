@@ -10,15 +10,16 @@
 #include <lotto/base/envvar.h>
 #include <lotto/base/record_granularity.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/cli/exec.h>
-#include <lotto/cli/exec_info.h>
-#include <lotto/cli/flagmgr.h>
-#include <lotto/cli/flags/memmgr.h>
-#include <lotto/cli/flags/sequencer.h>
+#include <lotto/driver/exec.h>
+#include <lotto/driver/exec_info.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/flags/memmgr.h>
+#include <lotto/driver/flags/sequencer.h>
 #include <lotto/cli/preload.h>
-#include <lotto/cli/subcmd.h>
-#include <lotto/cli/trace_utils.h>
-#include <lotto/cli/utils.h>
+#include <lotto/driver/record.h>
+#include <lotto/driver/subcmd.h>
+#include <lotto/driver/trace.h>
+#include <lotto/driver/utils.h>
 #include <lotto/sys/stdio.h>
 
 DECLARE_FLAG_INPUT;

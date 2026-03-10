@@ -1,5 +1,5 @@
-#ifndef LOTTO_CLI_UTILS_H
-#define LOTTO_CLI_UTILS_H
+#ifndef LOTTO_DRIVER_UTILS_H
+#define LOTTO_DRIVER_UTILS_H
 
 #include <stdbool.h>
 #include <stdint.h>

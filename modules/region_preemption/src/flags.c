@@ -1,5 +1,5 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/cli/flagmgr.h>
+#include <lotto/driver/flagmgr.h>
 #include <lotto/modules/region_preemption/state.h>
 
 NEW_PRETTY_CALLBACK_FLAG(

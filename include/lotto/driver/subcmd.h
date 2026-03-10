@@ -1,8 +1,8 @@
-#ifndef LOTTO_CLI_SUBCMD_H
-#define LOTTO_CLI_SUBCMD_H
+#ifndef LOTTO_DRIVER_SUBCMD_H
+#define LOTTO_DRIVER_SUBCMD_H
 
-#include <lotto/cli/args.h>
-#include <lotto/cli/flagmgr.h>
+#include <lotto/driver/args.h>
+#include <lotto/driver/flagmgr.h>
 
 typedef int(subcmd_f)(args_t *args, flags_t *flags);
 typedef flags_t *(defaults_f)();

@@ -1,5 +1,5 @@
-#ifndef LOTTO_CLI_ARGS_H
-#define LOTTO_CLI_ARGS_H
+#ifndef LOTTO_DRIVER_ARGS_H
+#define LOTTO_DRIVER_ARGS_H
 
 #define ARGS(C, V)                                                             \
     (args_t)                                                                   \

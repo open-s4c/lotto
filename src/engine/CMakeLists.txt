@@ -20,6 +20,7 @@ set(ENGINE_RUNTIME_SRCS
     module.c)
 
 set(ENGINE_DRIVER_SRCS
+    flags.c
     state.c
     catmgr.c
     statemgr.c

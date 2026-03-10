@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#include <lotto/cli/flagmgr.h>
-#include <lotto/cli/subcmd.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/subcmd.h>
 
 #define HEIGHT 13
 #define WIDTH  31

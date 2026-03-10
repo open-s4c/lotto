@@ -1,7 +1,7 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
 #include <lotto/engine/pubsub.h>
-#include <lotto/cli/flagmgr.h>
+#include <lotto/driver/flagmgr.h>
 #include <lotto/modules/ichpt/state.h>
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_ICHPT_ENABLED, "", "handler-ichpt",

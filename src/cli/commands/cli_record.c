@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include <lotto/cli/cli_stress.h>
-#include <lotto/cli/subcmd.h>
+#include <lotto/driver/subcmd.h>
 
 int
 record(args_t *args, flags_t *flags)

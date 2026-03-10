@@ -5,14 +5,24 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <lotto/cli/flagmgr.h>
+#include <lotto/driver/flagmgr.h>
 #include <lotto/cli/preload.h>
-#include <lotto/cli/subcmd.h>
+#include <lotto/driver/subcmd.h>
 #include <lotto/cmake_variables.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
+#include "debug.h"
+
+#define DEBUG_GDB_SCRIPT "debug.gdb"
+#define DEBUG_ADDR2LINE  "aarch64-linux-gnu-addr2line"
+#define DEBUG_PLUGIN_PATHS                                                     \
+    LOTTO_MODULE_BUILD_DIR                                                     \
+    ":" LOTTO_MODULE_INSTALL_DIR ":" QLOTTO_MODULE_BUILD_DIR                   \
+    ":" QLOTTO_MODULE_INSTALL_DIR ":" CMAKE_INSTALL_PREFIX                     \
+    "/share/lotto"                                                             \
+    ":" CMAKE_BINARY_DIR
 
 DECLARE_FLAG_INPUT;
 DECLARE_FLAG_VERBOSE;
@@ -46,8 +56,20 @@ debug(args_t *args, flags_t *flags)
     const char *gdb   = flags_get_sval(flags, FLAG_GDB_COMMAND);
     const char *input = flags_get_sval(flags, FLAG_INPUT);
     char filename[PATH_MAX];
-    sys_sprintf(filename, "%s/%s",
-                flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY), GDB);
+    const char *debug_dir = flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY);
+    ASSERT(debug_dump_assets(debug_dir) &&
+           "could not dump debug assets, try specifying a different "
+           "--temporary-directory CLI option");
+    sys_sprintf(filename, "%s/%s", debug_dir, DEBUG_GDB_SCRIPT);
+    sys_setenv("LOTTO_DEBUG_DIR", debug_dir, true);
+    sys_setenv("LOTTO_DEBUG_FILE_FILTER",
+               flags_get_sval(flags, FLAG_FILE_FILTER), true);
+    sys_setenv("LOTTO_DEBUG_FUNCTION_FILTER",
+               flags_get_sval(flags, FLAG_FUNCTION_FILTER), true);
+    sys_setenv("LOTTO_DEBUG_ADDR2LINE", DEBUG_ADDR2LINE, true);
+    sys_setenv("LOTTO_DEBUG_SYMBOL_FILE",
+               flags_get_sval(flags, FLAG_SYMBOL_FILE), true);
+    sys_setenv("LOTTO_DEBUG_PLUGIN_PATHS", DEBUG_PLUGIN_PATHS, true);
     const char *argv[] = {gdb,
                           "-x",
                           filename,
@@ -72,12 +94,6 @@ debug(args_t *args, flags_t *flags)
             "Unable to find gdb. Please install gdb or add it to PATH.\n");
         return res;
     }
-
-    debug_preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
-                  flags_get_sval(flags, FLAG_FILE_FILTER),
-                  flags_get_sval(flags, FLAG_FUNCTION_FILTER),
-                  "aarch64-linux-gnu-addr2line",
-                  flags_get_sval(flags, FLAG_SYMBOL_FILE));
 
     res = execvpe(argv[0], (char *const *)argv, environ);
     if (res != 0) {

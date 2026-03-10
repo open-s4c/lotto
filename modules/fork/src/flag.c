@@ -1,7 +1,7 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <state.h>
 
-#include <lotto/cli/flagmgr.h>
+#include <lotto/driver/flagmgr.h>
 
 NEW_PRETTY_CALLBACK_FLAG(
     HANDLER_FORK_EXECVE_ENABLED, "", "handler-fork-execve",

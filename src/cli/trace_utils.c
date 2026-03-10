@@ -11,9 +11,11 @@
 #include <lotto/base/trace_flat.h>
 #include <lotto/engine/catmgr.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/cli/exec_info.h>
-#include <lotto/cli/flagmgr.h>
-#include <lotto/cli/trace_utils.h>
+#include <lotto/driver/exec_info.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/record.h>
+#include <lotto/driver/trace.h>
+#include <lotto/driver/trace_prepare.h>
 #include <lotto/modules/available/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>

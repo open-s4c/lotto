@@ -6,18 +6,19 @@
 #include <lotto/base/trace.h>
 #include <lotto/base/trace_flat.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/cli/args.h>
-#include <lotto/cli/exec.h>
-#include <lotto/cli/exec_info.h>
-#include <lotto/cli/explore.h>
-#include <lotto/cli/flagmgr.h>
-#include <lotto/cli/flags/memmgr.h>
-#include <lotto/cli/flags/sequencer.h>
+#include <lotto/driver/args.h>
+#include <lotto/driver/exec.h>
+#include <lotto/driver/exec_info.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/flags/memmgr.h>
+#include <lotto/driver/flags/sequencer.h>
+#include <lotto/driver/record.h>
+#include <lotto/driver/subcmd.h>
+#include <lotto/driver/trace.h>
+#include <lotto/driver/utils.h>
 #include <lotto/cli/preload.h>
-#include <lotto/cli/subcmd.h>
-#include <lotto/cli/trace_utils.h>
-#include <lotto/cli/utils.h>
 #include <lotto/modules/available/state.h>
+#include <lotto/modules/explore.h>
 #include <lotto/sys/stdio.h>
 
 DECLARE_FLAG_OUTPUT;
@@ -100,9 +101,6 @@ _explore_interval(args_t *args, flags_t *flags, trace_t *input, uint64_t from,
     return err;
 }
 
-/**
- * explore
- */
 int
 explore(args_t *args, flags_t *flags)
 {
@@ -140,13 +138,3 @@ explore(args_t *args, flags_t *flags)
     trace_destroy(trace);
     return err;
 }
-
-static flags_t *
-_default_flags()
-{
-    flags_t *flags = flagmgr_flags_alloc();
-    flags_cpy(flags, flags_default());
-    flags_set_default(flags, flag_strategy(), sval("random"));
-    return flags;
-}
-

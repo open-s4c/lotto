@@ -1,4 +1,4 @@
-#include <lotto/cli/args.h>
+#include <lotto/driver/args.h>
 #include <lotto/sys/stdio.h>
 
 void

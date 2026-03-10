@@ -11,16 +11,16 @@
 #include <unistd.h>
 
 #include <lotto/base/envvar.h>
-#include <lotto/cli/args.h>
+#include <lotto/driver/args.h>
 #include <lotto/cli/cli_stress.h>
-#include <lotto/cli/exec.h>
-#include <lotto/cli/flagmgr.h>
-#include <lotto/cli/flags/memmgr.h>
-#include <lotto/cli/flags/prng.h>
+#include <lotto/driver/exec.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/flags/memmgr.h>
+#include <lotto/driver/flags/prng.h>
 #include <lotto/cli/preload.h>
-#include <lotto/cli/subcmd.h>
-#include <lotto/cli/trace_utils.h>
-#include <lotto/cli/utils.h>
+#include <lotto/driver/subcmd.h>
+#include <lotto/driver/trace.h>
+#include <lotto/driver/utils.h>
 #include <lotto/sys/now.h>
 #include <lotto/sys/stdio.h>
 

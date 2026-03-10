@@ -1,15 +1,6 @@
-#include <blob-command.h>
-#include <blob-debug.h>
-#include <blob-decorator.h>
-#include <blob-filter.h>
-#include <blob-handler.h>
-#include <blob-iterator.h>
-#include <blob-matcher.h>
 #include <blob-tsano.h>
-#include <blob-util.h>
 #include <dirent.h>
 #include <limits.h>
-#include <stdarg.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -23,9 +14,11 @@
 #endif
 
 #include <lotto/base/envvar.h>
-#include <lotto/cli/exec_info.h>
+#include <lotto/base/libraries.h>
+#include <lotto/driver/exec_info.h>
 #include <lotto/cli/preload.h>
 #include <lotto/cmake_variables.h>
+#include <lotto/driver/files.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/logger_block.h>
@@ -43,12 +36,10 @@
 
 #define MAX_LIST_STR ((size_t)(32 * 1024))
 
-typedef struct blob_s {
-    const char *path;
-    const unsigned char *content;
-    unsigned int len;
-} blob_t;
-
+#define LIBTSANO         "libtsano.so"
+#define LIBTSAN0         "libtsan.so.0"
+#define LIBTSAN2         "libtsan.so.2"
+#define LIBCLANG_RT_TSAN "libclang_rt.tsan-x86_64.so"
 typedef struct libspec {
     const char *filename;
     bool preload;
@@ -87,51 +78,6 @@ _create_dir(const char *dir)
     }
     sys_fprintf(stdout, "%d != 0, could not create %s dir", r, dir);
     sys_abort();
-}
-
-static void
-_fwrite_blob(const char *dir, const char *filename,
-             const unsigned char content[], unsigned int content_len, ...)
-{
-    ASSERT(content[content_len - 1] == '\0' &&
-           "format blob must terminate with null character");
-    ASSERT(dir && "blob dir must be set");
-    ASSERT(dir[0] == '/' && "blob dir path must be absolute");
-    _create_dir(dir);
-    char filepath[PATH_MAX];
-    sys_sprintf(filepath, "%s/%s", dir, filename);
-    FILE *fp = sys_fopen(filepath, "w");
-    ASSERT(fp &&
-           "could not open a file for writing a blob, try "
-           "specifying a different --temporary-directory CLI option");
-    va_list args;
-    va_start(args, content_len);
-    sys_vfprintf(fp, (char *)content, args);
-    sys_fclose(fp);
-}
-
-static void
-_write_blobs(const char *dir, const blob_t blobs[])
-{
-    ASSERT(dir && "blob dir must be set");
-    ASSERT(dir[0] == '/' && "blob dir path must be absolute");
-    _create_dir(dir);
-    for (int i = 0; blobs[i].path; i++) {
-        ASSERT(blobs[i].content);
-        char filename[PATH_MAX];
-        sys_sprintf(filename, "%s/%s", dir, blobs[i].path);
-        FILE *fp = sys_fopen(filename, "w");
-        ASSERT(fp &&
-               "could not open a file for writing a blob, try "
-               "specifying a different --temporary-directory CLI option");
-        ENSURE(sys_fwrite(blobs[i].content, sizeof(unsigned char), blobs[i].len,
-                          fp) == blobs[i].len &&
-               "could not write blob to the file, try specifying a different "
-               "--temporary-directory CLI option");
-        ENSURE(sys_fclose(fp) == 0 &&
-               "could not close the blob file, try specifying a different "
-               "--temporary-directory CLI option");
-    }
 }
 
 static void
@@ -268,18 +214,18 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
 {
     /* make libraries available */
     // clang-format off
-    _write_blobs(dir, (blob_t[]) {
+    driver_dump_files(dir, (driver_file_t[]) {
         {.path    = LIBTSANO,
          .content = libtsano_so,
          .len     = libtsano_so_len},
 #if !defined(LOTTO_EMBED_LIB) || LOTTO_EMBED_LIB == 1
         verbose ?
-        (blob_t){.path    = LIBLOTTO,
-                 .content = liblotto_verbose_so,
-                 .len     = liblotto_verbose_so_len} :
-        (blob_t){.path    = LIBLOTTO,
-                 .content = liblotto_so,
-                 .len     = liblotto_so_len},
+        (driver_file_t){.path    = LIBLOTTO,
+                        .content = liblotto_verbose_so,
+                        .len     = liblotto_verbose_so_len} :
+        (driver_file_t){.path    = LIBLOTTO,
+                        .content = liblotto_so,
+                        .len     = liblotto_so_len},
 #endif
         {NULL}});
     // clang-format on
@@ -322,37 +268,4 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
     }
 
     exec_info_store_envvars();
-}
-
-void
-debug_preload(const char *dir, const char *file_filter,
-              const char *function_filter, const char *addr2line,
-              const char *symbol_file)
-{
-    _fwrite_blob(dir, "debug.gdb", debug_gdb, debug_gdb_len, dir, file_filter,
-                 function_filter, addr2line, symbol_file, PLUGIN_PATHS);
-    char python_dir[PATH_MAX];
-    sys_sprintf(python_dir, "%s/%s", dir, GDB_PYTHON_DIR);
-    _write_blobs(
-        python_dir,
-        (blob_t[]){
-            {.path    = "command.py",
-             .content = command_py,
-             .len     = command_py_len},
-            {.path    = "decorator.py",
-             .content = decorator_py,
-             .len     = decorator_py_len},
-            {.path = "filter.py", .content = filter_py, .len = filter_py_len},
-            {.path    = "iterator.py",
-             .content = iterator_py,
-             .len     = iterator_py_len},
-            {.path = "util.py", .content = util_py, .len = util_py_len},
-            {.path    = "matcher.py",
-             .content = matcher_py,
-             .len     = matcher_py_len},
-            {.path    = "handler.py",
-             .content = handler_py,
-             .len     = handler_py_len},
-            {NULL},
-        });
 }

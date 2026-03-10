@@ -7,7 +7,7 @@
 #include <lotto/base/envvar.h>
 #include <lotto/base/flags.h>
 #include <lotto/base/record.h>
-#include <lotto/cli/args.h>
+#include <lotto/driver/args.h>
 
 bool get_event(event_c *result, const record_t *record, const char *trace);
 

@@ -2,8 +2,9 @@
  * modules
  ******************************************************************************/
 #include <unistd.h>
-#include <lotto/cli/subcmd.h>
-#include <lotto/cli/flagmgr.h>
+
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/subcmd.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/modules.h>
 #include <lotto/sys/stdio.h>
@@ -55,7 +56,7 @@ _find_or_add(module_info_t mods[], size_t *nmods, const char *name)
 static int
 _collect_module(module_t *module, void *arg)
 {
-    modules_ctx_t *ctx = arg;
+    modules_ctx_t *ctx  = arg;
     module_info_t *mods = (module_info_t *)(ctx + 1);
     const char *name    = _module_basename(module->name);
     module_info_t *m    = _find_or_add(mods, (size_t *)&ctx->count, name);
@@ -63,7 +64,8 @@ _collect_module(module_t *module, void *arg)
         return 1;
     }
     m->shadowed |= module->shadowed;
-    if ((module->kind & MODULE_KIND_CLI) && (!module->shadowed || !m->driver_path)) {
+    if ((module->kind & MODULE_KIND_CLI) &&
+        (!module->shadowed || !m->driver_path)) {
         m->driver_path = module->path;
     }
     if ((module->kind & MODULE_KIND_RUNTIME) &&

@@ -140,6 +140,9 @@ main(int argc, char **argv)
             else
                 scmd->func(&exec_info->args, flags);
             return -1;
+        case FLAGS_PARSE_LIST_FLAGS:
+            flags_list(scmd->runtime_sel, scmd->sel);
+            return 0;
         case FLAGS_PARSE_ERROR:
             return -1;
         default:

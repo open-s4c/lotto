@@ -28,6 +28,7 @@
 #define STR_CONVERTER_IS_PRESENT(conv) ((conv)._type != STR_CONVERTER_TYPE_NONE)
 
 DECLARE_FLAG_HELP;
+DECLARE_FLAG_LIST_FLAGS;
 
 static void
 _bits_str(str_converter_t *str_converter, uint64_t bits, char *dst)
@@ -366,6 +367,41 @@ flags_help(const flags_t *flags, bool runtime_sel, flag_t sel[MAX_FLAGS])
     sys_free(default_values);
 }
 
+static void
+_flag_list_print(flag_t b)
+{
+    const option_t *e = &_options[b];
+    if (_entry_has_short_opt(e)) {
+        sys_fprintf(stdout, "-%c\t%s\n", e->opt[0], e->desc);
+    }
+    if (_entry_has_long_opt(e)) {
+        sys_fprintf(stdout, "--%s\t%s\n", e->long_opt, e->desc);
+    }
+}
+
+void
+flags_list(bool runtime_sel, flag_t sel[MAX_FLAGS])
+{
+    bool listed[MAX_OPTIONS + 1] = {0};
+    for (int i = 0; sel[i] != FLAG_SEL_SENTINEL; i++) {
+        flag_t f = sel[i];
+        if (!listed[f]) {
+            _flag_list_print(f);
+            listed[f] = true;
+        }
+    }
+    if (!runtime_sel) {
+        return;
+    }
+    for (flag_t f = FLAG_NONE + 1; f < _next_option; f++) {
+        if (_options[f].callback == NULL || listed[f]) {
+            continue;
+        }
+        _flag_list_print(f);
+        listed[f] = true;
+    }
+}
+
 static flag_t
 _flags_with_opt(int64_t o)
 {
@@ -416,6 +452,7 @@ flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
             flag_t sel[MAX_FLAGS])
 {
     flag_sel_add(sel, FLAG_HELP);
+    flag_sel_add(sel, FLAG_LIST_FLAGS);
     char opts[BUFFER_LEN]    = {0};
     struct option *long_opts = sys_calloc(sizeof(struct option), _next_option);
     ;
@@ -447,6 +484,9 @@ flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
 
         if (fnum == FLAG_HELP) {
             return FLAGS_PARSE_HELP;
+        }
+        if (fnum == FLAG_LIST_FLAGS) {
+            return FLAGS_PARSE_LIST_FLAGS;
         }
 
         switch (flags_get_type(flags, fnum)) {

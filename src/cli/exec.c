@@ -98,8 +98,7 @@ read_pipes()
             bytes_read = sys_read(pfds[i].fd, buffer, BUFFER_SIZE - 1);
             if (bytes_read > 0) {
                 buffer[bytes_read] = '\0';
-                sys_fprintf(pfds[i].fd == p_out[0] ? stdout : stderr, "%s",
-                            buffer);
+                sys_dprintf(pfds[i].fd == p_out[0] ? STDOUT_FILENO : STDERR_FILENO, "%s", buffer);
             }
             data_read = true;
         }

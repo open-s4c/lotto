@@ -96,7 +96,7 @@ _logger_init()
         if (strcmp(var, "stdout") == 0)
             logger(level, STDOUT_FILENO);
         else if (strcmp(var, "stderr") == 0)
-            logger(level, STDIN_FILENO);
+            logger(level, STDERR_FILENO);
         else {
             _logger_fd = open(var, O_WRONLY | O_CREAT | O_APPEND, 0644);
             ASSERT(_logger_fd >= 0);

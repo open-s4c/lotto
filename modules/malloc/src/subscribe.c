@@ -1,6 +1,5 @@
 #include <dice/chains/capture.h>
 #include <dice/events/malloc.h>
-#include <dice/intercept.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>
 #include <lotto/sys/string.h>

@@ -4,12 +4,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <lotto/cli/preload.h>
+#include <lotto/cmake_variables.h>
 #include <lotto/driver/args.h>
 #include <lotto/driver/exec_info.h>
-#include <lotto/cli/preload.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/utils.h>
-#include <lotto/cmake_variables.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/modules.h>
@@ -40,7 +41,7 @@ main(int argc, char **argv)
 #ifdef __linux__
         execv("/proc/self/exe", argv);
 #else
-        char *abs_path = realpath(argv[0], NULL);
+        char *abs_path   = realpath(argv[0], NULL);
         const char *path = abs_path ? abs_path : argv[0];
         execv(path, argv);
         free(abs_path);
@@ -75,10 +76,12 @@ main(int argc, char **argv)
     }
 
     lotto_module_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
-                  module_dir);
+                      module_dir);
     if (0 != lotto_module_enable_only(module_list))
         exit(1);
     lotto_module_foreach(_load_module, NULL);
+    LOTTO_PUBLISH_CONTROL(EVENT_DRIVER__REGISTER_FLAGS);
+    LOTTO_PUBLISH_CONTROL(EVENT_DRIVER__INIT);
 
 
 #if defined(LOTTO_EMBED_LIB) && LOTTO_EMBED_LIB == 0
@@ -106,11 +109,11 @@ main(int argc, char **argv)
         return 1;
     }
 
-    exec_info_t *exec_info  = get_exec_info();
-    exec_info->hash_actual  = get_lotto_hash(arg0);
-    exec_info->args = (scmd->group != SUBCMD_GROUP_OTHER) ?
-                          ARGS(argc - subcmd_pos - 1, argv + subcmd_pos + 1) :
-                          ARGS(argc - subcmd_pos, argv + subcmd_pos);
+    exec_info_t *exec_info = get_exec_info();
+    exec_info->hash_actual = get_lotto_hash(arg0);
+    exec_info->args        = (scmd->group != SUBCMD_GROUP_OTHER) ?
+                                 ARGS(argc - subcmd_pos - 1, argv + subcmd_pos + 1) :
+                                 ARGS(argc - subcmd_pos, argv + subcmd_pos);
 
     exec_info->args.arg0 = arg0;
     flags_t *flags       = scmd->defaults();

@@ -196,7 +196,7 @@ engine_get_cur_ns()
 void
 test_main_task()
 {
-    LOTTO_PUBLISH(TOPIC_ENGINE_START, nil);
+    LOTTO_PUBLISH(EVENT_ENGINE__START, nil);
     printf("Test: %s\n", __FUNCTION__);
     task_id tid = 1;
 
@@ -216,7 +216,7 @@ test_main_task()
 static void
 test_replay()
 {
-    LOTTO_PUBLISH(TOPIC_ENGINE_START, nil);
+    LOTTO_PUBLISH(EVENT_ENGINE__START, nil);
     logger(LOGGER_DEBUG, STDERR_FILENO);
     printf("Test: %s\n", __FUNCTION__);
     task_id tid          = 1;
@@ -312,7 +312,7 @@ test_replay()
 static void
 test_record()
 {
-    LOTTO_PUBLISH(TOPIC_ENGINE_START, nil);
+    LOTTO_PUBLISH(EVENT_ENGINE__START, nil);
     printf("Test: %s\n", __FUNCTION__);
     task_id tid    = 1;
     task_id other  = 2;

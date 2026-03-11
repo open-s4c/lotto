@@ -3,10 +3,11 @@
 #include <unistd.h>
 
 #include <lotto/base/flag.h>
+#include <lotto/cli/preload.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
-#include <lotto/cli/preload.h>
 #include <lotto/driver/subcmd.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/string.h>
@@ -118,12 +119,10 @@ lotto(args_t *args, flags_t *flags)
     return 0;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
     flag_t sel[] = {FLAG_VERSION,       FLAG_TEMPORARY_DIRECTORY,
                     FLAG_LIST_COMMANDS, FLAG_PLUGIN_DIRECTORY,
                     FLAG_PLUGIN_LIST,   0};
     subcmd_register(lotto, "-", "", "Show details of lotto itself", false, sel,
                     flags_default, SUBCMD_GROUP_OTHER);
-}
+})

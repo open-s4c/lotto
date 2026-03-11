@@ -223,9 +223,7 @@ qemu(args_t *args, flags_t *flags)
     return res;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
+LOTTO_ON_DRIVER_INIT({
     flag_t sel[] = {FLAG_VERBOSE,
                     FLAG_QEMU_BIN,
                     FLAG_QEMU_PLUGIN_DIR,
@@ -240,4 +238,4 @@ init()
     subcmd_register(qemu, "qemu", "[<options>] [--] [qemu_args...]",
                     "Run Lotto-built qemu-system-aarch64 with qlotto plugins",
                     true, sel, flags_default, SUBCMD_GROUP_OTHER);
-}
+})

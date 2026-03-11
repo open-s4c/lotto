@@ -41,7 +41,7 @@ REGISTER_STATE(EPHEMERAL, _state, {
 })
 
 static void _check_timeouts(bool should_publish);
-LOTTO_SUBSCRIBE(TOPIC_TRIGGER_TIMEOUT, {
+LOTTO_SUBSCRIBE(EVENT_TIMEOUT__TRIGGER, {
     if (_state.received_timeout || !tidset_has(&_state.waiters, as_uval(v))) {
         return PS_OK;
     }
@@ -308,7 +308,7 @@ _evec_handle(const context_t *ctx, event_t *e)
 }
 REGISTER_HANDLER(SLOT_EVEC, _evec_handle);
 
-LOTTO_SUBSCRIBE(TOPIC_NEXT_TASK, {
+LOTTO_SUBSCRIBE(EVENT_ENGINE__NEXT_TASK, {
     const context_t *ctx = (context_t *)as_any(v);
     ASSERT(ctx);
 

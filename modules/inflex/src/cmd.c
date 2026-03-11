@@ -18,13 +18,13 @@
 #include <lotto/base/envvar.h>
 #include <lotto/base/record_granularity.h>
 #include <lotto/base/trace_flat.h>
+#include <lotto/cli/preload.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
 #include <lotto/driver/flags/prng.h>
 #include <lotto/driver/flags/sequencer.h>
-#include <lotto/cli/preload.h>
 #include <lotto/driver/record.h>
 #include <lotto/driver/replay.h>
 #include <lotto/driver/subcmd.h>
@@ -466,9 +466,7 @@ _default_flags()
     return flags;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
     flag_t sel[] = {FLAG_OUTPUT,
                     FLAG_INPUT,
                     FLAG_VERBOSE,
@@ -484,4 +482,4 @@ init()
                     0};
     subcmd_register(inflex, "inflex", "", "Find an inflection point of a trace",
                     true, sel, _default_flags, SUBCMD_GROUP_TRACE);
-}
+})

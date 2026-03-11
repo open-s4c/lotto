@@ -3,6 +3,7 @@
 
 #include <lotto/base/task_id.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/modules/deadlock/events.h>
 #include <lotto/qlotto/gdb/gdb_connection.h>
 #include <lotto/qlotto/gdb/halter.h>
 #include <lotto/qlotto/gdb/handling/execute.h>
@@ -153,5 +154,5 @@ gdb_execution_has_halted()
     return GDB_EXECUTION_HALTED == vatomic32_read(&_state.gdb_execution_state);
 }
 
-LOTTO_SUBSCRIBE(TOPIC_DEADLOCK_DETECTED,
+LOTTO_SUBSCRIBE(EVENT_DEADLOCK__DETECTED,
                        { gdb_execution_halt(_state.gdb_execution_tid); })

@@ -5,6 +5,7 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
+#include <lotto/modules/deadlock/events.h>
 #include <lotto/modules/deadlock/state.h>
 #include <lotto/modules/mutex.h>
 #include <lotto/sys/assert.h>
@@ -271,7 +272,7 @@ _deadlock_handle(const context_t *ctx, event_t *e)
     }
     if (e->reason == REASON_RSRC_DEADLOCK) {
         struct value val = bval(true);
-        LOTTO_PUBLISH(TOPIC_DEADLOCK_DETECTED, val);
+        LOTTO_PUBLISH(EVENT_DEADLOCK__DETECTED, val);
     }
 }
 REGISTER_HANDLER(SLOT_DEADLOCK, _deadlock_handle)

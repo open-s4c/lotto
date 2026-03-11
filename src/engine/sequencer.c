@@ -15,15 +15,14 @@
 #include <lotto/base/envvar.h>
 #include <lotto/base/reason.h>
 #include <lotto/base/record.h>
-#include <lotto/base/topic.h>
-#include <lotto/engine/pubsub.h>
-#include <lotto/engine/statemgr.h>
 #include <lotto/engine/clock.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/state.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/real.h>
@@ -33,8 +32,8 @@
 #include <vsync/spinlock/caslock.h>
 
 #define log(ctx, fmt, ...)                                                     \
-    logger_debugf("[t:%lu, clk:%lu, pc:0x%lx] " fmt "\n", ctx->id, _seq.clk,      \
-               ctx->pc & 0xfff, ##__VA_ARGS__)
+    logger_debugf("[t:%lu, clk:%lu, pc:0x%lx] " fmt "\n", ctx->id, _seq.clk,   \
+                  ctx->pc & 0xfff, ##__VA_ARGS__)
 
 typedef struct {
     _Atomic(clk_t) clk;
@@ -59,7 +58,8 @@ static sequencer_t _seq;
 clk_t clk_bound;
 uint64_t time_bound_ns;
 
-LOTTO_SUBSCRIBE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
+LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
+    (void)v;
     const char *var;
     if ((var = getenv("LOTTO_RECORD_GRANULARITY"))) {
         record_granularities_t gran;
@@ -80,6 +80,7 @@ sequencer_reset(void)
     _seq.should_record = false;
     _seq.prev_task     = NO_TASK;
     _seq.next_task     = NO_TASK;
+    _seq.prev_cat      = CAT_NONE;
     const char *var    = getenv("LOTTO_DEBUG_CLK_BOUND");
     if (var) {
         clk_bound = atoll(var);
@@ -217,7 +218,9 @@ void
 sequencer_resume(const context_t *ctx)
 {
     struct value val = any(ctx);
-    LOTTO_PUBLISH(TOPIC_NEXT_TASK, val);
+    LOTTO_PUBLISH(EVENT_ENGINE__NEXT_TASK, val);
+    if (_seq.clk == 0)
+        return;
     if (ctx->id == 1 && ctx->cat == CAT_NONE)
         return;
 
@@ -245,7 +248,7 @@ sequencer_fini(const context_t *ctx, reason_t reason)
 {
     recorder_fini(_seq.clk, ctx->id, reason);
     logger_debugf("[lotto] chpts: %lu, switches: %lu, clks: %lu\n",
-               _seq.chpt_count, _seq.switch_count, _seq.clk);
+                  _seq.chpt_count, _seq.switch_count, _seq.clk);
 }
 
 clk_t

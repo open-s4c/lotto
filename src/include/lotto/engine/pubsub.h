@@ -1,23 +1,68 @@
 #ifndef LOTTO_PUBSUB_H
 #define LOTTO_PUBSUB_H
 
-#include <lotto/base/topic.h>
-#include <lotto/base/value.h>
-#include <lotto/util/macros.h>
 #include <dice/module.h>
+#include <lotto/base/value.h>
+#include <lotto/core/driver/events.h>
+#include <lotto/core/engine/events.h>
+#include <lotto/core/runtime/events.h>
+#include <lotto/util/macros.h>
 
-#ifndef CHAIN_LOTTO
-    #define CHAIN_LOTTO 7
-#endif
+#define CHAIN_LOTTO_CONTROL 7
+#define CHAIN_LOTTO_DEFAULT 8
 
-#define LOTTO_SUBSCRIBE(topic, CALLBACK)                                \
-    PS_SUBSCRIBE(CHAIN_LOTTO, topic, {                                         \
-        struct value v = *(struct value *)event;                               \
+#define LOTTO_SLOT0 9999
+#define LOTTO_SLOT1 10000
+#define LOTTO_SLOT2 10001
+#define LOTTO_SLOT3 10002
+
+#define LOTTO_UNWRAP(...) __VA_ARGS__
+#define LOTTO_BODY(...)   __VA_ARGS__
+
+#define LOTTO_SLOT_MAP(k) V_PASTE(1000, k)
+
+#define LOTTO_SUBSCRIBE_CB_(CHAIN, TYPE, SLOT, ...)                            \
+    PS_HANDLER_DEF(CHAIN, TYPE, SLOT, {                                        \
+        struct value v = event ? *(struct value *)event : nil;                 \
         (void)v;                                                               \
-        CALLBACK                                                               \
-    })
+        __VA_ARGS__                                                            \
+    })                                                                         \
+    static void __attribute__((constructor(1000)))                             \
+    V_JOIN(V_JOIN(ps_subscribe, __COUNTER__), )(void)                          \
+    {                                                                          \
+        int err =                                                              \
+            ps_subscribe(CHAIN, TYPE, PS_HANDLER(CHAIN, TYPE, SLOT), SLOT);    \
+        if (err != PS_OK)                                                      \
+            log_fatal("could not subscribe %s_%s_%u: %d", ps_chain_str(CHAIN), \
+                      ps_type_str(TYPE), SLOT, err);                           \
+    }
 
-#define LOTTO_PUBLISH(topic, val)                                       \
-    PS_PUBLISH(CHAIN_LOTTO, topic, (void *)&(val), 0);
+#define LOTTO_SUBSCRIBE_ONCE(TYPE, ...)                                        \
+    PS_SUBSCRIBE(CHAIN_LOTTO_DEFAULT, TYPE, LOTTO_BODY({                       \
+                     ps_register_type(TYPE, #TYPE);                            \
+                     struct value v = event ? *(struct value *)event : nil;    \
+                     (void)v;                                                  \
+                     __VA_ARGS__                                               \
+                 }))
+
+#define LOTTO_SUBSCRIBE(TYPE, ...)                                             \
+    LOTTO_SUBSCRIBE_CB_(CHAIN_LOTTO_DEFAULT, TYPE,                             \
+                        LOTTO_SLOT_MAP(__COUNTER__), LOTTO_BODY({              \
+                            ps_register_type(TYPE, #TYPE);                     \
+                            __VA_ARGS__                                        \
+                        }))
+
+#define LOTTO_SUBSCRIBE_CONTROL(TYPE, ...)                                     \
+    LOTTO_SUBSCRIBE_CB_(CHAIN_LOTTO_CONTROL, TYPE,                             \
+                        LOTTO_SLOT_MAP(__COUNTER__), LOTTO_BODY({              \
+                            ps_register_type(TYPE, #TYPE);                     \
+                            __VA_ARGS__                                        \
+                        }))
+
+#define LOTTO_PUBLISH_CONTROL(evtype)                                          \
+    PS_PUBLISH(CHAIN_LOTTO_CONTROL, evtype, 0, 0)
+
+#define LOTTO_PUBLISH(evtype, val)                                             \
+    PS_PUBLISH(CHAIN_LOTTO_DEFAULT, evtype, (void *)&(val), 0)
 
 #endif

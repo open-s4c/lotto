@@ -14,6 +14,8 @@ macro(add_runtime_module)
     target_compile_definitions(
         ${RUNTIME_MODULE_TARGET}
         PRIVATE DICE_MULTIFILE_MODULE #
+                LOTTO_RUNTIME_MODULE=1 #
+                LOTTO_DRIVER_MODULE=0 #
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
     if("${RUNTIME_MODULE_TYPE}" STREQUAL "SHARED")
@@ -42,6 +44,8 @@ macro(add_driver_module)
     target_compile_definitions(
         ${DRIVER_MODULE_TARGET}
         PRIVATE DICE_MULTIFILE_MODULE #
+                LOTTO_RUNTIME_MODULE=0 #
+                LOTTO_DRIVER_MODULE=1 #
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
     if("${DRIVER_MODULE_TYPE}" STREQUAL "SHARED")

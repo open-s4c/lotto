@@ -4,6 +4,7 @@
 #include <dice/self.h>
 #include <lotto/base/context.h>
 #include <lotto/base/task_id.h>
+#include <lotto/core/runtime/events.h>
 #include <lotto/engine/engine.h>
 #include <lotto/engine/prng.h>
 #include <lotto/runtime/mediator.h>
@@ -122,12 +123,11 @@ dtor_free(void *arg, void *ptr)
     mempool_free(ptr);
 }
 
-#define EVENT_NOP 8
-PS_ADVERTISE_TYPE(EVENT_NOP)
+PS_ADVERTISE_TYPE(EVENT_RUNTIME__NOP)
 static void
 ensure_ps_intialized_(void)
 {
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_NOP, 0, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_RUNTIME__NOP, 0, 0);
 }
 
 inline mediator_t *

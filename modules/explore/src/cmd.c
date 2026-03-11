@@ -20,9 +20,7 @@ _default_flags()
     return flags;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
     flag_t sel[] = {FLAG_OUTPUT,
                     FLAG_INPUT,
                     FLAG_VERBOSE,
@@ -35,4 +33,4 @@ init()
                     0};
     subcmd_register(explore, "explore", "", "Exhaustively explore a trace",
                     true, sel, _default_flags, SUBCMD_GROUP_TRACE);
-}
+})

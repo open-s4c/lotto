@@ -31,7 +31,9 @@ target_link_libraries(
 
 add_binding(
     TARGET engine.rkt
-    INCLUDE lotto/base/topic.h #
+    INCLUDE lotto/core/engine/events.h #
+            lotto/core/runtime/events.h #
+            lotto/core/driver/events.h #
             lotto/engine/engine.h #
             lotto/engine/sequencer.h #
     EXCLUDE sys/types.h)

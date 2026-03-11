@@ -31,7 +31,7 @@ void __attribute__((noinline)) recorder_end_trace()
 void __attribute__((noinline)) recorder_end_replay()
 {
     logger_debugf("end of replay\n");
-    LOTTO_PUBLISH(TOPIC_REPLAY_END, nil);
+    LOTTO_PUBLISH(EVENT_ENGINE__REPLAY_END, nil);
 }
 
 static struct {
@@ -54,19 +54,17 @@ CONTRACT_GHOST({
     bool finito;
 })
 
-CONTRACT_SUBSCRIBE(TOPIC_ENGINE_START, {
+CONTRACT_SUBSCRIBE(EVENT_ENGINE__START, {
     _ghost.record_clk = 0;
     _ghost.replay_clk = 0;
     _ghost.finito     = false;
 })
 
-static void LOTTO_CONSTRUCTOR
-_init_finalr()
-{
+STATEMGR_REGISTER(FINAL, {
     /* this has to be called after the constructors to find the right size of
      * the FINAL record. */
     _recorder.finalr = record_alloc(statemgr_size(STATE_TYPE_FINAL));
-}
+})
 
 static void
 _recorder_out(record_t *r)
@@ -133,7 +131,7 @@ _recorder_replay_next(clk_t clk)
         switch (r->kind) {
             case RECORD_INFO: {
                 struct value val = any(r);
-                LOTTO_PUBLISH(TOPIC_INFO_RECORD_LOAD, val);
+                LOTTO_PUBLISH(EVENT_ENGINE__INFO_RECORD_LOAD, val);
                 break;
             }
             case RECORD_FORCE:
@@ -222,7 +220,7 @@ recorder_record(const context_t *ctx, clk_t clk)
         once(recorder_end_replay());
 }
 
-LOTTO_SUBSCRIBE(TOPIC_INFO_RECORD_SAVE, {
+LOTTO_SUBSCRIBE(EVENT_ENGINE__INFO_RECORD_SAVE, {
     const record_t *r = (const record_t *)as_any(v);
     ASSERT(r->kind == RECORD_INFO);
     _recorder_out_clone(r);

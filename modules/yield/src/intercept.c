@@ -2,8 +2,7 @@
 #include <dice/interpose.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>
-
-#define EVENT_SCHED_YIELD 105
+#include <lotto/modules/yield/events.h>
 
 PS_ADVERTISE_TYPE(EVENT_SCHED_YIELD)
 INTERPOSE(int, sched_yield, void)

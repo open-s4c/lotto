@@ -10,11 +10,11 @@
 #include <unistd.h>
 
 #include <lotto/base/envvar.h>
+#include <lotto/cli/preload.h>
 #include <lotto/driver/args.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
 #include <lotto/driver/flags/prng.h>
-#include <lotto/cli/preload.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/trace_prepare.h>
 #include <lotto/sys/now.h>
@@ -76,9 +76,7 @@ _default_flags()
     return flags;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
     flag_t sel[] = {FLAG_INPUT,       FLAG_OUTPUT,
                     FLAG_VERBOSE,     FLAG_TEMPORARY_DIRECTORY,
                     FLAG_NO_PRELOAD,  FLAG_LOGGER_BLOCK,
@@ -86,4 +84,4 @@ init()
     subcmd_register(trace, "trace", "[--] <command line>",
                     "Create an initial trace for running Lotto without CLI",
                     true, sel, _default_flags, SUBCMD_GROUP_RUN);
-}
+})

@@ -45,11 +45,9 @@ show(args_t *args, flags_t *flags)
     return 0;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
     flag_t sel[] = {FLAG_INPUT, FLAG_TEMPORARY_DIRECTORY, FLAG_NO_PRELOAD,
                     FLAG_VERBOSE, 0};
     subcmd_register(show, "show", "", "Show details of a trace", false, sel,
                     flags_default, SUBCMD_GROUP_TRACE);
-}
+})

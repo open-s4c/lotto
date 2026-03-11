@@ -9,17 +9,18 @@
 
 #include <lotto/base/envvar.h>
 #include <lotto/base/record_granularity.h>
-#include <lotto/engine/statemgr.h>
+#include <lotto/cli/preload.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
 #include <lotto/driver/flags/sequencer.h>
-#include <lotto/cli/preload.h>
 #include <lotto/driver/record.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/trace.h>
 #include <lotto/driver/utils.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/sys/stdio.h>
 
 DECLARE_FLAG_INPUT;
@@ -101,9 +102,7 @@ _default_flags()
     return flags;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
     flag_t sel[] = {FLAG_INPUT,
                     FLAG_OUTPUT,
                     FLAG_VERBOSE,
@@ -117,4 +116,4 @@ init()
                     0};
     subcmd_register(replay, "replay", "", "Replay a trace", true, sel,
                     _default_flags, SUBCMD_GROUP_TRACE);
-}
+})

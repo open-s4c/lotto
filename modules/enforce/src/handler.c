@@ -135,7 +135,7 @@ _report(const context_t *ctx)
 
     if (ctx->cat == CAT_ENFORCE && !EQUAL_DATA) {
         struct value val = on();
-        LOTTO_PUBLISH(TOPIC_ENFORCE_VIOLATED, val);
+        LOTTO_PUBLISH(EVENT_ENFORCE__VIOLATED, val);
         logger_errorf("MISMATCH [field: enforce, expected: ");
         for (size_t i = 0; i < ENFORCE_DATA_SIZE; i++) {
             logger_errorf("%2.2x", enforce_state()->data[i]);

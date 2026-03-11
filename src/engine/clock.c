@@ -1,6 +1,6 @@
 /*
  * TODO:
- * - implement TOPIC for capture and clock increment
+ * - implement EVENT for capture and clock increment
  * - implement FLAGS for start_time (base == start_time?)
  * - migrate code from engine
  * - consolidate _seq.clk with _clock.ticks
@@ -19,10 +19,9 @@
 #include <lotto/base/clk.h>
 #include <lotto/base/context.h>
 #include <lotto/base/marshable.h>
-#include <lotto/base/topic.h>
 #include <lotto/base/value.h>
-#include <lotto/engine/pubsub.h>
 #include <lotto/engine/clock.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/casts.h>
 #include <lotto/util/contract.h>
@@ -47,16 +46,18 @@ static struct clock _clock;
 
 static void _clock_tick(uint64_t icount);
 
-LOTTO_SUBSCRIBE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
+LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
+    (void)v;
     marshable_print_m(&_config);
     _clock.icount_no_offset_count_max = 10;
 })
 
-LOTTO_SUBSCRIBE(TOPIC_BEFORE_CAPTURE, {
+LOTTO_SUBSCRIBE_ONCE(EVENT_ENGINE__BEFORE_CAPTURE, {
 #if defined(QLOTTO_ENABLED)
     const context_t *ctx = (const context_t *)as_any(v);
     _clock_tick(ctx->icount);
 #else
+    (void)v;
     _clock_tick(0);
 #endif
 })

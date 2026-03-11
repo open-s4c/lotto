@@ -8,6 +8,7 @@ add_subdirectory(flags)
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
 set(CLI_UTILS_SRCS
+	module.c
     utils.c
     files.c
     subcmd.c

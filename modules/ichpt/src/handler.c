@@ -20,7 +20,7 @@
  * ends, we save the addresses in _final. When running/stressing, we load the
  * final addresses of the previous run into the intial of the current run.
  * ****************************************************************************/
-LOTTO_SUBSCRIBE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
+LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
     vec_union(ichpt_final(), ichpt_initial(), ichpt_item_compare);
 })
 

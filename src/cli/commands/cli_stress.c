@@ -11,16 +11,17 @@
 #include <unistd.h>
 
 #include <lotto/base/envvar.h>
-#include <lotto/driver/args.h>
 #include <lotto/cli/cli_stress.h>
+#include <lotto/cli/preload.h>
+#include <lotto/driver/args.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
 #include <lotto/driver/flags/prng.h>
-#include <lotto/cli/preload.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/trace.h>
 #include <lotto/driver/utils.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/sys/now.h>
 #include <lotto/sys/stdio.h>
 
@@ -90,9 +91,7 @@ stress(args_t *args, flags_t *flags)
     return 0;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
     flag_t sel[] = {FLAG_OUTPUT,
                     FLAG_INPUT,
                     FLAG_VERBOSE,
@@ -107,4 +106,4 @@ init()
     subcmd_register(stress, "stress", "[--] <command line>",
                     "Stress test a program until a desired execution is found",
                     true, sel, _stress_default_flags, SUBCMD_GROUP_RUN);
-}
+})

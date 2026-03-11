@@ -6,6 +6,7 @@
 
 #include <lotto/cli/cli_stress.h>
 #include <lotto/driver/subcmd.h>
+#include <lotto/engine/pubsub.h>
 
 int
 run(args_t *args, flags_t *flags)
@@ -15,9 +16,7 @@ run(args_t *args, flags_t *flags)
     return stress(args, flags);
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
     flag_t sel[] = {FLAG_VERBOSE,
                     FLAG_TEMPORARY_DIRECTORY,
                     FLAG_NO_PRELOAD,
@@ -29,4 +28,4 @@ init()
                     0};
     subcmd_register(run, "run", "[--] <command line>", "Run a program once",
                     true, sel, _stress_default_flags, SUBCMD_GROUP_RUN);
-}
+})

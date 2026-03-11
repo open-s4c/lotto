@@ -5,15 +5,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <lotto/driver/flagmgr.h>
+#include "debug.h"
 #include <lotto/cli/preload.h>
-#include <lotto/driver/subcmd.h>
 #include <lotto/cmake_variables.h>
+#include <lotto/driver/flagmgr.h>
+#include <lotto/driver/subcmd.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
-#include "debug.h"
 
 #define DEBUG_GDB_SCRIPT "debug.gdb"
 #define DEBUG_ADDR2LINE  "aarch64-linux-gnu-addr2line"
@@ -111,9 +111,7 @@ debug(args_t *args, flags_t *flags)
     return res;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
     flag_t sel[] = {FLAG_INPUT,
                     FLAG_VERBOSE,
                     FLAG_TEMPORARY_DIRECTORY,
@@ -129,4 +127,4 @@ init()
                     0};
     subcmd_register(debug, "debug", "", "Debug a trace", true, sel,
                     flags_default, SUBCMD_GROUP_TRACE);
-}
+})

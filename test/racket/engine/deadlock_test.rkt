@@ -102,11 +102,11 @@
 
 (define deadlock-detected #f)
 
-(define (deadlock-cb chain topic event md)
+(define (deadlock-cb chain event event md)
   (set! deadlock-detected #t)
   0)
 
-(call ps_subscribe CHAIN_LOTTO 'TOPIC_DEADLOCK_DETECTED
+(call ps_subscribe CHAIN_LOTTO 'EVENT_DEADLOCK__DETECTED
      (cast deadlock-cb _ps_subscribe_f _pointer) DICE_SLOT)
 
 (void (call engine_init NULL NULL))

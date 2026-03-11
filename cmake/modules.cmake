@@ -54,10 +54,14 @@ macro(add_driver_module)
     endif()
 endmacro()
 
-macro(add_module NAME)
+macro(new_module NAME)
     math(EXPR SLOT "${SLOT}+1")
     set(MODULE_NAME ${NAME})
     set(MODULE_SLOT ${SLOT})
+endmacro()
+
+macro(add_module NAME)
+    new_module(${NAME})
     add_subdirectory(${NAME})
 endmacro()
 

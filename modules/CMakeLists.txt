@@ -1,7 +1,4 @@
 set(SLOT 16) # we pick runtime
-set(RUNTIME_MODULE_TYPE_uafcheck SHARED)
-set(RUNTIME_MODULE_TYPE_leakcheck SHARED)
-set(RUNTIME_MODULE_TYPE_user_mempool SHARED)
 
 enable_language(CXX)
 # disable clang tidy for this folder
@@ -85,12 +82,15 @@ if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
     add_module(qemu)
 endif()
 add_module(fork)
-add_module(uafcheck)
-add_module(leakcheck)
-add_module(user_mempool)
 if(${LOTTO_RUST})
     add_module(rusty)
 endif()
+
+# memmgr modules
+add_module(malloc)
+add_subdirectory(uafcheck)
+add_subdirectory(leakcheck)
+add_subdirectory(user_mempool)
 
 # GEN_SLOT(PRNG)                                                            #
 # GEN_SLOT(CONFIG)                                                          #

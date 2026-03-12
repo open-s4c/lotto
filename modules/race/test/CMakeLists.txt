@@ -11,8 +11,8 @@ foreach(SRC ${SRCS})
         # brokers_pubsub_testing.o
         base_testing.o
         states_sequencer_testing.o
-        memmgr_runtime.o
-        memmgr_user.o
+        memmgr_runtime_libc.o
+        memmgr_user_libc.o
         dice)
     add_test(NAME ${TARGET} COMMAND ${TARGET})
 endforeach()

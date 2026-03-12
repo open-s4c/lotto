@@ -14,8 +14,8 @@ target_link_libraries(
     engine_handler_creation_testing.o
     engine_handler_deadlock_testing.o
     states_handler_deadlock_testing.o
-    memmgr_runtime.o
-    memmgr_user.o
+    memmgr_runtime_libc.o
+    memmgr_user_libc.o
     dice.o
     dice-self.o)
 

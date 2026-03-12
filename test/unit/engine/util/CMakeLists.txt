@@ -6,7 +6,7 @@ foreach(SRC ${SRCS})
         continue()
     endif()
     add_executable(${TARGET} ${SRC})
-    target_link_libraries(${TARGET} base.o util sys.o memmgr_runtime.o
-                          memmgr_user.o)
+    target_link_libraries(${TARGET} base.o util sys.o memmgr_runtime_libc.o
+                          memmgr_user_libc.o)
     add_test(NAME ${TARGET} COMMAND ${TARGET})
 endforeach()

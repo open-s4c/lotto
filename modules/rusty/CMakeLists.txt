@@ -97,6 +97,6 @@ target_link_libraries(
             states.o
             flags_prng_testing.o
             flags_sequencer_testing.o
-            memmgr_runtime.o
-            memmgr_user.o)
+            memmgr_runtime_libc.o
+            memmgr_user_libc.o)
 add_dependencies(rust-test lotto_rust_testing)

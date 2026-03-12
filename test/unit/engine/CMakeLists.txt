@@ -10,7 +10,7 @@ target_link_libraries(
             sys_testing.o
             engine_prng_testing.o
             engine_state_testing.o
-            memmgr_runtime.o
-            memmgr_user.o
+            memmgr_runtime_libc.o
+            memmgr_user_libc.o
             dice)
 add_test(NAME sequencer_test COMMAND sequencer_test)

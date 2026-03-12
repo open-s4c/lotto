@@ -5,8 +5,8 @@ target_link_libraries(
     base_testing.o
     switcher_testing.o
     pthread
-    memmgr_runtime.o
-    memmgr_user.o)
+    memmgr_runtime_libc.o
+    memmgr_user_libc.o)
 add_test(NAME anytask_test COMMAND anytask_test)
 
 add_executable(yield_continue_test yield_continue_test.c)
@@ -16,8 +16,8 @@ target_link_libraries(
     base_testing.o
     switcher_testing.o
     pthread
-    memmgr_runtime.o
-    memmgr_user.o)
+    memmgr_runtime_libc.o
+    memmgr_user_libc.o)
 add_test(NAME yield_continue_test COMMAND yield_continue_test)
 
 add_executable(abort_test abort_test.c)
@@ -27,8 +27,8 @@ target_link_libraries(
     base_testing.o
     switcher_testing.o
     pthread
-    memmgr_runtime.o
-    memmgr_user.o)
+    memmgr_runtime_libc.o
+    memmgr_user_libc.o)
 add_test(NAME abort_test COMMAND abort_test)
 
 add_executable(slack_test slack_test.c)
@@ -38,8 +38,8 @@ target_link_libraries(
     base_testing.o
     switcher_testing.o
     pthread
-    memmgr_runtime.o
-    memmgr_user.o)
+    memmgr_runtime_libc.o
+    memmgr_user_libc.o)
 add_test(NAME slack_test COMMAND slack_test)
 
 file(GLOB SRCS *.c)

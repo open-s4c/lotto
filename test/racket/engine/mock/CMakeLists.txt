@@ -26,8 +26,8 @@ target_link_libraries(
     base_testing.o
     sys_testing.o
     brokers_testing.o
-    memmgr_runtime.o
-    memmgr_user.o)
+    memmgr_runtime_libc.o
+    memmgr_user_libc.o)
 
 add_binding(
     TARGET engine.rkt
@@ -50,5 +50,5 @@ target_link_libraries(
     brokers_statemgr_testing.o
     base_testing.o
     sys_testing.o
-    memmgr_runtime.o
-    memmgr_user.o)
+    memmgr_runtime_libc.o
+    memmgr_user_libc.o)

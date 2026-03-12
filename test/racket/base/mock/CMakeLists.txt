@@ -1,7 +1,7 @@
 # prepare base component add_library(base_component SHARED base_mock.c)
 add_library(base_component SHARED)
 target_link_libraries(base_component base_testing.o sys_testing.o
-                      memmgr_runtime.o memmgr_user.o)
+                      memmgr_runtime_libc.o memmgr_user_libc.o)
 
 add_binding(
     TARGET tidmap.rkt

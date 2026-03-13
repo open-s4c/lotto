@@ -32,10 +32,10 @@ foreach(SRC ${SRCS})
                                                  "${CMAKE_BINARY_DIR}/tikl")
     add_dependencies(tikl-test ${TARGET})
 
-    #if(${TSAN_${TARGET}})
+    if(${TSAN_${TARGET}})
         target_compile_options(${TARGET} PRIVATE -fsanitize=thread)
         target_link_options(${TARGET} PRIVATE -fsanitize=thread)
-    #endif()
+    endif()
 
     if("${LOTTO_TESTS_WITH_TSAN}")
         set(SANITIZE -fsanitize=thread)

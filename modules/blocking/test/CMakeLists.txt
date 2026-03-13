@@ -19,8 +19,8 @@ target_link_libraries(
     brokers_statemgr_testing.o
     base_testing.o
     sys_testing.o
-    memmgr_runtime.o
-    memmgr_user.o)
+    memmgr_runtime_libc.o
+    memmgr_user_libc.o)
 
 add_library(replay_component SHARED)
 target_link_libraries(
@@ -33,8 +33,8 @@ target_link_libraries(
     engine_recorder_testing.o
     engine_sequencer_testing.o
     lotto-blocking.o
-    memmgr_runtime.o
-    memmgr_user.o
+    memmgr_runtime_libc.o
+    memmgr_user_libc.o
     states_prng_testing.o
     states_sequencer_testing.o
     sys_testing.o

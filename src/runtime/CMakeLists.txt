@@ -20,6 +20,10 @@ target_compile_definitions(interceptor_testing.o PRIVATE -DLOTTO_TEST)
 set(SRCS subscribe.c)
 add_library(subscribers.o OBJECT ${SRCS})
 
+set(SRCS memmgr_dice.c)
+add_library(memmgr_runtime_dice.o OBJECT ${SRCS})
+target_compile_definitions(memmgr_runtime_dice.o PRIVATE LOTTO_MEMMGR_RUNTIME)
+
 # ##############################################################################
 # libruntime
 # ##############################################################################
@@ -31,8 +35,8 @@ set(LIBS
     switcher.o
     sys.o
     base.o
-    memmgr_runtime.o
-    memmgr_user.o
+    memmgr_runtime_dice.o
+    memmgr_user_libc.o
     subscribers.o
     lotto-runtime-engine.o
     dice.o

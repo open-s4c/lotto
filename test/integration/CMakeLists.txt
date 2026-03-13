@@ -18,7 +18,6 @@ set(TSAN_0006-racy-message-passing ON)
 
 # TODO: some sources are still failing
 set(FAILING_SRCS
-    double_free.c # needs memmgr-user=uaf, the error must not RUNTIME_...
     inflex_abc_nocli.c # test script needs correct preloading on necessary
                        # libraries
     notsan_mediator_null.c # the error must not RUNTIME_...

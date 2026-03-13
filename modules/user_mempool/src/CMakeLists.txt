@@ -1,3 +1,7 @@
+set(RUNTIME_MODULE_TYPE_memmgr_user_mempool SHARED)
+set(RUNTIME_MODULE_TYPE_memmgr_runtime_mempool SHARED)
+
+new_module(memmgr_user_mempool)
 add_runtime_module(mempool_memmgr.c)
 target_compile_definitions(${RUNTIME_MODULE_TARGET} PRIVATE LOTTO_MEMMGR_USER)
 

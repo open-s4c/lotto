@@ -7,6 +7,7 @@
 #include <lotto/sys/memmgr_impl.h>
 #include <lotto/sys/real.h>
 #include <lotto/sys/string.h>
+#include <lotto/sys/stdlib.h>
 #include <vsync/spinlock/caslock.h>
 
 #define MAX_FRAMES 10
@@ -21,6 +22,7 @@ struct alloc {
 
 typedef struct leakcheck {
     caslock_t lock;
+    bool fini;
     struct alloc list;
 } leakcheck_t;
 
@@ -47,6 +49,7 @@ memmgr_init()
     ASSERT(REAL_NAME(memmgr_free) != NULL);
 
     caslock_init(&_lc.lock);
+    _lc.fini = false;
     _lc.list = (struct alloc){};
 }
 
@@ -54,6 +57,8 @@ void *
 memmgr_alloc(size_t size)
 {
     memmgr_init();
+    if (_lc.fini)
+        return sys_malloc(size);
     struct alloc *a = FORWARD(memmgr_alloc, size + sizeof(struct alloc));
     ASSERT(a);
 
@@ -81,7 +86,13 @@ memmgr_aligned_alloc(size_t alignment, size_t size)
 void
 memmgr_free(void *ptr)
 {
+    if (!ptr)
+        return;
     memmgr_init();
+    if (_lc.fini) {
+        sys_free(ptr);
+        return;
+    }
 
     size_t sz          = sizeof(struct alloc);
     struct alloc *a    = (struct alloc *)((char *)ptr - sz);
@@ -101,6 +112,10 @@ memmgr_free(void *ptr)
 void *
 memmgr_realloc(void *ptr, size_t size)
 {
+    memmgr_init();
+    if (_lc.fini)
+        return sys_realloc(ptr, size);
+
     struct alloc *a = memmgr_alloc(size);
     if (!ptr || !a)
         return a->data;
@@ -119,6 +134,7 @@ memmgr_fini()
 {
     struct alloc *n = &_lc.list;
 
+    _lc.fini = true;
     caslock_acquire(&_lc.lock);
 
     if (_lc.list.next)

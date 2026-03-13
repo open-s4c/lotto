@@ -197,7 +197,7 @@ _preload_memmgr_plugins(const char *chain, bool runtime)
     for (const char *i = strtok(chain_cpy, ":"); i != NULL;
          i             = strtok(NULL, ":")) {
         char name[MAX_LIST_STR];
-        sys_sprintf(name, "%s_%s", i, runtime ? "runtime" : "user");
+        sys_sprintf(name, "%s_%s", runtime ? "runtime" : "user", i);
         module_preloadable_memory_arg_t arg =
             (module_preloadable_memory_arg_t){.name = name};
         lotto_module_foreach_reverse(
@@ -252,14 +252,17 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
     /* inform dice the name of liblotto */
     setenv("DICE_DSO", LIBLOTTO, true);
 
+    /* preload memmgr chains */
+    _preload_memmgr_plugins(memmgr_chain_runtime, true);
+    _preload_memmgr_plugins(memmgr_chain_user, false);
+
     /* preload liblotto */
     _preload_libs(dir, (libspec_t[]){
                            {LIBLOTTO, do_preload_plotto},
                            {NULL},
                        });
-    /* Load three dirs in order. */
-    _preload_memmgr_plugins(memmgr_chain_runtime, true);
-    _preload_memmgr_plugins(memmgr_chain_user, false);
+
+    /* preload other dynamic modules */
     if (do_preload_plotto) {
         lotto_module_foreach_reverse(
             _preload_module,

@@ -2,12 +2,15 @@
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/memmgr_runtime.h>
+#include <lotto/sys/memmgr_user.h>
 #include <lotto/sys/string.h>
 
 void
 sys_memory_fini(void)
 {
     logger_debugf("Finalize sys_memory\n");
+    if (memmgr_user_fini)
+        memmgr_user_fini();
     memmgr_runtime_fini();
 }
 

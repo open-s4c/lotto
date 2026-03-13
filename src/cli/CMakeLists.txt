@@ -64,8 +64,8 @@ target_link_libraries(
     PRIVATE cli.o
             base.o
             sys.o
-            memmgr_runtime.o
-            memmgr_user.o
+            memmgr_runtime_dice.o
+            memmgr_user_libc.o
             lotto-driver-engine.o
             dice.o)
 target_link_libraries(lotto-driver PRIVATE lotto-driver-available)

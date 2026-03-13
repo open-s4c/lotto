@@ -1,2 +1,10 @@
+set(RUNTIME_MODULE_TYPE_memmgr_user_leakcheck SHARED)
+set(RUNTIME_MODULE_TYPE_memmgr_runtime_leakcheck SHARED)
+
+new_module(memmgr_user_leakcheck)
 add_runtime_module(leakcheck.c)
 target_compile_definitions(${RUNTIME_MODULE_TARGET} PRIVATE LOTTO_MEMMGR_USER)
+
+new_module(memmgr_runtime_leakcheck)
+add_runtime_module(leakcheck.c)
+target_compile_definitions(${RUNTIME_MODULE_TARGET} PRIVATE LOTTO_MEMMGR_RUNTIME)

@@ -25,12 +25,12 @@
                                           [save_to_f _trace_save_to]))
 
 (define (alloc-trace_s)
-  (cast (malloc (ctype-sizeof _trace_s)) _pointer _trace-pointer))
+  (cast (malloc 'raw (ctype-sizeof _trace_s)) _pointer _trace-pointer))
 
 (define-cstruct _stream_s ([write_f _stream_write] [read_f _stream_read] [close_f _stream_close]))
 
 (define (alloc-stream_s)
-  (cast (malloc (ctype-sizeof _stream_s)) _pointer _stream_s-pointer))
+  (cast (malloc 'raw (ctype-sizeof _stream_s)) _pointer _stream_s-pointer))
 ;; -----------------------------------------------------------------------------
 ;; test cases
 ;; -----------------------------------------------------------------------------

@@ -3,7 +3,7 @@
 // REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress4rinflex -- %b)
-// RUN: %lotto %rinflex -r 30 2>&1 | iconv -f utf-8 -t utf-8 -c > %s.out
+// RUN: %lotto %rinflex -r 50 2>&1 | iconv -f utf-8 -t utf-8 -c > %s.out
 
 // RUN: ( %check %s --check-prefix=FIRST < %s.out ) || ( %check %s --check-prefix=SECOND < %s.out )
 

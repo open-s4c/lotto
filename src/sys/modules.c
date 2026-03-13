@@ -353,9 +353,7 @@ _scandir(const char *scan_dir)
         if (STARTS_WITH(entry->d_name, RUNTIME_MODULE_PREFIX)) {
             kind |= MODULE_KIND_RUNTIME;
         }
-        if (strstr(entry->d_name, "user_mempool") != NULL ||
-            strstr(entry->d_name, "uafcheck") != NULL ||
-            strstr(entry->d_name, "leakcheck") != NULL) {
+        if (strstr(entry->d_name, "memmgr")) {
             kind |= MODULE_KIND_MEMMGR;
         }
         if (kind == MODULE_KIND_NONE) {

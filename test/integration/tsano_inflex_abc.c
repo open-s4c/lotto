@@ -1,7 +1,7 @@
 // clang-format off
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | %check %s --check-prefix=BUG
-// RUN: %lotto %inflex -r 50 &>/dev/null
+// RUN: %lotto %inflex --stable-address-method MASK -r 20 &>/dev/null
 // RUN: %lotto %debug <<< $'\n'run-replay-lotto | %check %s --check-prefix=LOC
 // BUG: assert failed {{.*}}/tsano_inflex_abc.c:{{[0-9]+}}: recv_from[i] == true
 // LOC: uint32_t id = vatomic32_read(&next_id);

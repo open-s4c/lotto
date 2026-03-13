@@ -24,17 +24,17 @@ endif()
 
 add_library(abort.o OBJECT abort.c)
 
-add_library(memmgr_runtime.o OBJECT memmgr.c)
-target_compile_definitions(memmgr_runtime.o PRIVATE LOTTO_MEMMGR_RUNTIME)
+add_library(memmgr_runtime_libc.o OBJECT memmgr_libc.c)
+target_compile_definitions(memmgr_runtime_libc.o PRIVATE LOTTO_MEMMGR_RUNTIME)
 
-add_library(memmgr_user.o OBJECT memmgr.c)
-target_compile_definitions(memmgr_user.o PRIVATE LOTTO_MEMMGR_USER)
+add_library(memmgr_user_libc.o OBJECT memmgr_libc.c)
+target_compile_definitions(memmgr_user_libc.o PRIVATE LOTTO_MEMMGR_USER)
 
 add_library(sys.o OBJECT ${SRCS})
-target_link_libraries(sys.o PRIVATE dl memmgr_runtime.o memmgr_user.o)
+target_link_libraries(sys.o PRIVATE dl)
 
 add_library(sys SHARED ${SRCS})
-target_link_libraries(sys PRIVATE dl memmgr_runtime.o memmgr_user.o)
+target_link_libraries(sys PRIVATE dl)
 
 foreach(SRC ${SRCS})
     get_filename_component(BASE ${SRC} NAME_WLE)
@@ -42,7 +42,7 @@ foreach(SRC ${SRCS})
     add_library(${TARGET} OBJECT ${SRC})
 endforeach()
 
-file(GLOB EXCLUDES memmgr.c)
+file(GLOB EXCLUDES memmgr_libc.c)
 make_units(sys ${EXCLUDES})
 
 add_library(sys_testing.o OBJECT ${SRCS})

@@ -37,12 +37,10 @@ unsafe impl alloc::GlobalAlloc for LottoAllocator {
         }
 
         // ptr is ok, but alignment is lost. Restore it.
-        let aligned_ptr = self.alloc(alloc::Layout::from_size_align_unchecked(
-            new_size,
-            layout.align(),
-        ));
+        let new_layout = alloc::Layout::from_size_align_unchecked(new_size, layout.align());
+        let aligned_ptr = self.alloc(new_layout);
         if aligned_ptr.is_null() {
-            self.dealloc(ptr, layout);
+            self.dealloc(ptr, new_layout);
             return ptr::null_mut();
         }
         let copy_size = cmp::min(layout.size(), new_size);

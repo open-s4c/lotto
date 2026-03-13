@@ -9,6 +9,6 @@ void *memmgr_user_alloc(size_t size);
 void *memmgr_user_aligned_alloc(size_t alignment, size_t size);
 void *memmgr_user_realloc(void *ptr, size_t size);
 void memmgr_user_free(void *ptr);
-void memmgr_user_fini();
+void memmgr_user_fini() WEAK;
 
 #endif

@@ -88,16 +88,14 @@ out_error:
     return -1;
 }
 
-DECLARE_FLAG_ROUNDS;
-
 void
 round_print(const flags_t *flags, uint64_t round)
 {
     char max[256];
-    if (flags_get_uval(flags, FLAG_ROUNDS) == ~0UL)
+    if (flags_get_uval(flags, flag_rounds()) == ~0UL)
         sys_sprintf(max, "inf");
     else
-        sys_snprintf(max, 256, "%lu", flags_get_uval(flags, FLAG_ROUNDS));
+        sys_snprintf(max, 256, "%lu", flags_get_uval(flags, flag_rounds()));
 
     sys_fprintf(stdout, "[lotto] round: %lu/%s, %s\n", round, max,
                 flags_get_sval(flags, flag_strategy()));

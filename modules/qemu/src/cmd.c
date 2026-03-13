@@ -10,7 +10,6 @@
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
 
-DECLARE_FLAG_VERBOSE;
 DECLARE_COMMAND_FLAG(QEMU_BIN, "", "qemu-bin", "PATH",
                      "path to qemu-system-aarch64", flag_sval(""))
 DECLARE_COMMAND_FLAG(QEMU_PLUGIN_DIR, "", "qemu-plugin-dir", "DIR",
@@ -205,7 +204,7 @@ qemu(args_t *args, flags_t *flags)
     }
     argv[i] = NULL;
 
-    if (flags_is_on(flags, FLAG_VERBOSE)) {
+    if (flags_is_on(flags, flag_verbose())) {
         sys_fprintf(stdout, "[lotto] exec:");
         for (int j = 0; argv[j] != NULL; j++) {
             sys_fprintf(stdout, " %s", argv[j]);
@@ -224,7 +223,7 @@ qemu(args_t *args, flags_t *flags)
 }
 
 LOTTO_ON_DRIVER_INIT({
-    flag_t sel[] = {FLAG_VERBOSE,
+    flag_t sel[] = {flag_verbose(),
                     FLAG_QEMU_BIN,
                     FLAG_QEMU_PLUGIN_DIR,
                     FLAG_QEMU_WITH_GDB_SERVER,

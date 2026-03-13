@@ -192,8 +192,8 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_WAIT, {
     /* Self-wait can happen when some threads exited but were never
      * joined due to various reaons.  In Lotto, we don't really care
      * about this.  */
-    if (++cnt > 10) {
-        ev->stop = true;
+    if (++cnt < 10) {
+        ev->wait = true;
     }
 })
 

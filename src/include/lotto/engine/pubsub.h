@@ -1,6 +1,10 @@
 #ifndef LOTTO_PUBSUB_H
 #define LOTTO_PUBSUB_H
 
+#ifndef LOTTO_XTOR_PRIO
+    #define LOTTO_XTOR_PRIO (DICE_XTOR_PRIO - 0)
+#endif
+
 #include <dice/module.h>
 #include <lotto/base/value.h>
 #include <lotto/core/driver/events.h>
@@ -21,14 +25,20 @@
 
 #define LOTTO_SLOT_MAP(k) V_PASTE(1000, k)
 
+#define LOTTO_ADVERTISE_TYPE(TYPE)                                             \
+    static void __attribute__((constructor(LOTTO_XTOR_PRIO)))                  \
+    lotto_advertise_type_##TYPE##_(void)                                       \
+    {                                                                          \
+        ps_register_type(TYPE, #TYPE);                                         \
+    }
+
 #define LOTTO_SUBSCRIBE_CB_(CHAIN, TYPE, SLOT, ...)                            \
     PS_HANDLER_DEF(CHAIN, TYPE, SLOT, {                                        \
         struct value v = event ? *(struct value *)event : nil;                 \
         (void)v;                                                               \
         __VA_ARGS__                                                            \
     })                                                                         \
-    static void __attribute__((constructor(1000)))                             \
-    V_JOIN(V_JOIN(ps_subscribe, __COUNTER__), )(void)                          \
+    static void DICE_CTOR V_JOIN(V_JOIN(ps_subscribe, SLOT), )(void)           \
     {                                                                          \
         int err =                                                              \
             ps_subscribe(CHAIN, TYPE, PS_HANDLER(CHAIN, TYPE, SLOT), SLOT);    \
@@ -39,7 +49,6 @@
 
 #define LOTTO_SUBSCRIBE_ONCE(TYPE, ...)                                        \
     PS_SUBSCRIBE(CHAIN_LOTTO_DEFAULT, TYPE, LOTTO_BODY({                       \
-                     ps_register_type(TYPE, #TYPE);                            \
                      struct value v = event ? *(struct value *)event : nil;    \
                      (void)v;                                                  \
                      __VA_ARGS__                                               \
@@ -47,17 +56,13 @@
 
 #define LOTTO_SUBSCRIBE(TYPE, ...)                                             \
     LOTTO_SUBSCRIBE_CB_(CHAIN_LOTTO_DEFAULT, TYPE,                             \
-                        LOTTO_SLOT_MAP(__COUNTER__), LOTTO_BODY({              \
-                            ps_register_type(TYPE, #TYPE);                     \
-                            __VA_ARGS__                                        \
-                        }))
+                        LOTTO_SLOT_MAP(__COUNTER__),                           \
+                        LOTTO_BODY({__VA_ARGS__}))
 
 #define LOTTO_SUBSCRIBE_CONTROL(TYPE, ...)                                     \
     LOTTO_SUBSCRIBE_CB_(CHAIN_LOTTO_CONTROL, TYPE,                             \
-                        LOTTO_SLOT_MAP(__COUNTER__), LOTTO_BODY({              \
-                            ps_register_type(TYPE, #TYPE);                     \
-                            __VA_ARGS__                                        \
-                        }))
+                        LOTTO_SLOT_MAP(__COUNTER__),                           \
+                        LOTTO_BODY({__VA_ARGS__}))
 
 #define LOTTO_PUBLISH_CONTROL(evtype)                                          \
     PS_PUBLISH(CHAIN_LOTTO_CONTROL, evtype, 0, 0)

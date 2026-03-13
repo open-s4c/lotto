@@ -35,6 +35,7 @@
     ":" CMAKE_BINARY_DIR
 
 #define MAX_LIST_STR ((size_t)(32 * 1024))
+#define LOTTO_CLI_PRELOAD "LOTTO_CLI_PRELOAD"
 
 #define LIBTSANO         "libtsano.so"
 #define LIBTSAN0         "libtsan.so.0"
@@ -212,6 +213,8 @@ void
 preload(const char *dir, bool verbose, bool do_preload_plotto,
         const char *memmgr_chain_runtime, const char *memmgr_chain_user)
 {
+    const char *cli_preload = getenv(LOTTO_CLI_PRELOAD);
+
     /* make libraries available */
     // clang-format off
     driver_dump_files(dir, (driver_file_t[]) {
@@ -244,6 +247,12 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
 
     if (exec_info_replay_envvars()) {
         return;
+    }
+
+    if (cli_preload && cli_preload[0]) {
+        setenv("LD_PRELOAD", cli_preload, true);
+    } else {
+        unsetenv("LD_PRELOAD");
     }
 
 #ifdef __SANITIZE_ADDRESS__

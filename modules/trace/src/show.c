@@ -16,17 +16,12 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-DECLARE_FLAG_INPUT;
-DECLARE_FLAG_TEMPORARY_DIRECTORY;
-DECLARE_FLAG_NO_PRELOAD;
-DECLARE_FLAG_VERBOSE;
-
 int
 show(args_t *args, flags_t *flags)
 {
     logger(LOGGER_INFO, STDOUT_FILENO);
 
-    const char *fn = flags_get_sval(flags, FLAG_INPUT);
+    const char *fn = flags_get_sval(flags, flag_input());
     sys_fprintf(stdout, "trace file: %s\n", fn);
 
     trace_t *rec = cli_trace_load(fn);
@@ -46,8 +41,8 @@ show(args_t *args, flags_t *flags)
 }
 
 LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
-    flag_t sel[] = {FLAG_INPUT, FLAG_TEMPORARY_DIRECTORY, FLAG_NO_PRELOAD,
-                    FLAG_VERBOSE, 0};
+    flag_t sel[] = {flag_input(), flag_temporary_directory(),
+                    flag_no_preload(), flag_verbose(), 0};
     subcmd_register(show, "show", "", "Show details of a trace", false, sel,
                     flags_default, SUBCMD_GROUP_TRACE);
 })

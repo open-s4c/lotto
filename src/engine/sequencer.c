@@ -58,6 +58,8 @@ static sequencer_t _seq;
 clk_t clk_bound;
 uint64_t time_bound_ns;
 
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__NEXT_TASK)
+
 LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
     (void)v;
     const char *var;

@@ -108,6 +108,17 @@ flag_t new_flag(const char *name, const char *opt, const char *long_opt,
 void flags_publish(const flags_t *flags);
 const char *get_default_temporary_directory();
 flags_t *flags_default();
+flag_t flag_input();
+flag_t flag_output();
+flag_t flag_rounds();
+flag_t flag_verbose();
+flag_t flag_replay_goal();
+flag_t flag_temporary_directory();
+flag_t flag_no_preload();
+flag_t flag_logger_block();
+flag_t flag_before_run();
+flag_t flag_after_run();
+flag_t flag_logger_file();
 
 #define _FLAGMGR_CALLBACK(name, CALLBACK)                                      \
     static void _flagmgr_callback_##name(struct value v, void *__)             \

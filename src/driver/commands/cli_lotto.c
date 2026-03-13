@@ -8,6 +8,7 @@
 #include <lotto/driver/flags/memmgr.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/string.h>
@@ -20,7 +21,28 @@
 static const char *lotto_version = LOTTO_VERSION;
 
 DECLARE_FLAG_VERSION;
+DECLARE_FLAG_INPUT;
+DECLARE_FLAG_OUTPUT;
+DECLARE_FLAG_ROUNDS;
+DECLARE_FLAG_VERBOSE;
+DECLARE_FLAG_REPLAY_GOAL;
 DECLARE_FLAG_TEMPORARY_DIRECTORY;
+DECLARE_FLAG_NO_PRELOAD;
+DECLARE_FLAG_LOGGER_BLOCK;
+DECLARE_FLAG_BEFORE_RUN;
+DECLARE_FLAG_AFTER_RUN;
+DECLARE_FLAG_LOGGER_FILE;
+FLAG_GETTER(input, INPUT)
+FLAG_GETTER(output, OUTPUT)
+FLAG_GETTER(rounds, ROUNDS)
+FLAG_GETTER(verbose, VERBOSE)
+FLAG_GETTER(replay_goal, REPLAY_GOAL)
+FLAG_GETTER(temporary_directory, TEMPORARY_DIRECTORY)
+FLAG_GETTER(no_preload, NO_PRELOAD)
+FLAG_GETTER(logger_block, LOGGER_BLOCK)
+FLAG_GETTER(before_run, BEFORE_RUN)
+FLAG_GETTER(after_run, AFTER_RUN)
+FLAG_GETTER(logger_file, LOGGER_FILE)
 
 DECLARE_COMMAND_FLAG(PLUGIN_DIRECTORY, "", "plugin-directory", "DIR",
                      "plugin directory to load Lotto plugins", flag_sval(""))
@@ -120,7 +142,7 @@ lotto(args_t *args, flags_t *flags)
 }
 
 LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
-    flag_t sel[] = {FLAG_VERSION,       FLAG_TEMPORARY_DIRECTORY,
+    flag_t sel[] = {FLAG_VERSION,       flag_temporary_directory(),
                     FLAG_LIST_COMMANDS, FLAG_PLUGIN_DIRECTORY,
                     FLAG_PLUGIN_LIST,   0};
     subcmd_register(lotto, "-", "", "Show details of lotto itself", false, sel,

@@ -53,6 +53,9 @@ CONTRACT_INIT({
     _ghost.clk        = 0;
 })
 
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__START)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__BEFORE_CAPTURE)
+
 /*******************************************************************************
  * contract checker using ghost state
  ******************************************************************************/

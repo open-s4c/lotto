@@ -16,8 +16,6 @@ set(TSAN_0003-await-increment ON)
 set(TSAN_0005-atomic-message-passing ON)
 set(TSAN_0006-racy-message-passing ON)
 
-file(GLOB SRCS *.c)
-
 add_custom_target(
     tikl-integration-test
     COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRCS}
@@ -34,10 +32,10 @@ foreach(SRC ${SRCS})
                                                  "${CMAKE_BINARY_DIR}/tikl")
     add_dependencies(tikl-test ${TARGET})
 
-    if(${TSAN_${TARGET}})
+    #if(${TSAN_${TARGET}})
         target_compile_options(${TARGET} PRIVATE -fsanitize=thread)
         target_link_options(${TARGET} PRIVATE -fsanitize=thread)
-    endif()
+    #endif()
 
     if("${LOTTO_TESTS_WITH_TSAN}")
         set(SANITIZE -fsanitize=thread)

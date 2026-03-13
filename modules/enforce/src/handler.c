@@ -153,6 +153,8 @@ _report(const context_t *ctx)
     }
 }
 
+LOTTO_ADVERTISE_TYPE(EVENT_ENFORCE__VIOLATED)
+
 void
 _save(const context_t *ctx, const event_t *e)
 {

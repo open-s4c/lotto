@@ -85,18 +85,3 @@ add_module(fork)
 if(${LOTTO_RUST})
     add_module(rusty)
 endif()
-
-# memmgr modules
-add_module(malloc)
-add_subdirectory(uafcheck)
-add_subdirectory(leakcheck)
-add_subdirectory(user_mempool)
-
-# GEN_SLOT(PRNG)                                                            #
-# GEN_SLOT(CONFIG)                                                          #
-# GEN_SLOT(CONTRACT)                                                        #
-# GEN_SLOT(SEQUENCER)                                                       #
-# GEN_SLOT(RECORDER)                                                        #
-
-# GEN_SLOT(CATMGR)                                                          #
-# GEN_SLOT(ANYSTALL)

@@ -7,6 +7,7 @@
 #include <lotto/core/runtime/events.h>
 #include <lotto/engine/engine.h>
 #include <lotto/engine/prng.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/runtime/mediator.h>
 #include <lotto/runtime/runtime.h>
 #include <lotto/runtime/switcher.h>
@@ -123,7 +124,7 @@ dtor_free(void *arg, void *ptr)
     mempool_free(ptr);
 }
 
-PS_ADVERTISE_TYPE(EVENT_RUNTIME__NOP)
+LOTTO_ADVERTISE_TYPE(EVENT_RUNTIME__NOP)
 static void
 ensure_ps_intialized_(void)
 {

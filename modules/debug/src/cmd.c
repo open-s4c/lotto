@@ -24,13 +24,6 @@
     "/share/lotto"                                                             \
     ":" CMAKE_BINARY_DIR
 
-DECLARE_FLAG_INPUT;
-DECLARE_FLAG_VERBOSE;
-DECLARE_FLAG_TEMPORARY_DIRECTORY;
-DECLARE_FLAG_NO_PRELOAD;
-DECLARE_FLAG_REPLAY_GOAL;
-DECLARE_FLAG_BEFORE_RUN;
-DECLARE_FLAG_AFTER_RUN;
 DECLARE_COMMAND_FLAG(SYMBOL_FILE, "", "symbol-files", "FILE[:FILE]",
                      "files containing symbols", flag_sval(""))
 DECLARE_COMMAND_FLAG(GDB_USE_MI, "", "use-mi", "", "use GDB/MI interface",
@@ -45,7 +38,7 @@ DECLARE_COMMAND_FLAG(GDB_COMMAND, "", "gdb-command", "",
 int
 debug(args_t *args, flags_t *flags)
 {
-    const char *cmd = flags_get_sval(flags, FLAG_BEFORE_RUN);
+    const char *cmd = flags_get_sval(flags, flag_before_run());
     if (cmd && cmd[0]) {
         sys_setenv("LOTTO_DISABLE", "true", true);
         int ret = sys_system(cmd);
@@ -54,9 +47,9 @@ debug(args_t *args, flags_t *flags)
     }
 
     const char *gdb   = flags_get_sval(flags, FLAG_GDB_COMMAND);
-    const char *input = flags_get_sval(flags, FLAG_INPUT);
+    const char *input = flags_get_sval(flags, flag_input());
     char filename[PATH_MAX];
-    const char *debug_dir = flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY);
+    const char *debug_dir = flags_get_sval(flags, flag_temporary_directory());
     ASSERT(debug_dump_assets(debug_dir) &&
            "could not dump debug assets, try specifying a different "
            "--temporary-directory CLI option");
@@ -79,8 +72,8 @@ debug(args_t *args, flags_t *flags)
                           "-i",
                           input,
                           "--temporary-directory",
-                          flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
-                          flags_is_on(flags, FLAG_VERBOSE) ? "-v" : NULL,
+                          flags_get_sval(flags, flag_temporary_directory()),
+                          flags_is_on(flags, flag_verbose()) ? "-v" : NULL,
                           NULL,
                           NULL};
     if (flags_is_on(flags, FLAG_GDB_USE_MI)) {
@@ -100,7 +93,7 @@ debug(args_t *args, flags_t *flags)
         sys_fprintf(stderr, "gdb unexpectedly quit with: %d\n", res);
     }
 
-    cmd = flags_get_sval(flags, FLAG_AFTER_RUN);
+    cmd = flags_get_sval(flags, flag_after_run());
     if (cmd && cmd[0]) {
         sys_setenv("LOTTO_DISABLE", "true", true);
         int ret = sys_system(cmd);
@@ -112,13 +105,13 @@ debug(args_t *args, flags_t *flags)
 }
 
 LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
-    flag_t sel[] = {FLAG_INPUT,
-                    FLAG_VERBOSE,
-                    FLAG_TEMPORARY_DIRECTORY,
-                    FLAG_NO_PRELOAD,
-                    FLAG_REPLAY_GOAL,
-                    FLAG_BEFORE_RUN,
-                    FLAG_AFTER_RUN,
+    flag_t sel[] = {flag_input(),
+                    flag_verbose(),
+                    flag_temporary_directory(),
+                    flag_no_preload(),
+                    flag_replay_goal(),
+                    flag_before_run(),
+                    flag_after_run(),
                     FLAG_SYMBOL_FILE,
                     FLAG_GDB_USE_MI,
                     FLAG_FUNCTION_FILTER,

@@ -11,21 +11,21 @@
 int
 run(args_t *args, flags_t *flags)
 {
-    flags_set_by_opt(flags, FLAG_ROUNDS, uval(1));
-    flags_set_by_opt(flags, FLAG_OUTPUT, sval(""));
+    flags_set_by_opt(flags, flag_rounds(), uval(1));
+    flags_set_by_opt(flags, flag_output(), sval(""));
     return stress(args, flags);
 }
 
 LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
-    flag_t sel[] = {FLAG_VERBOSE,
-                    FLAG_TEMPORARY_DIRECTORY,
-                    FLAG_NO_PRELOAD,
-                    FLAG_LOGGER_BLOCK,
-                    FLAG_BEFORE_RUN,
-                    FLAG_AFTER_RUN,
-                    FLAG_LOGGER_FILE,
-                    FLAG_INPUT,
+    flag_t sel[] = {flag_verbose(),
+                    flag_temporary_directory(),
+                    flag_no_preload(),
+                    flag_logger_block(),
+                    flag_before_run(),
+                    flag_after_run(),
+                    flag_logger_file(),
+                    flag_input(),
                     0};
     subcmd_register(run, "run", "[--] <command line>", "Run a program once",
-                    true, sel, _stress_default_flags, SUBCMD_GROUP_RUN);
+                    true, sel, stress_default_flags, SUBCMD_GROUP_RUN);
 })

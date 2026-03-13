@@ -27,28 +27,38 @@
 
 void round_print(flags_t *flags, uint64_t round);
 
+flags_t *
+stress_default_flags()
+{
+    flags_t *flags = flagmgr_flags_alloc();
+    flags_cpy(flags, flags_default());
+    flags_set_default(flags, flag_input(), sval(""));
+    return flags;
+}
+
 /**
  * stress test
  */
 int
 stress(args_t *args, flags_t *flags)
 {
-    setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, FLAG_LOGGER_FILE), true);
+    setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, flag_logger_file()),
+           true);
 
-    preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
-            flags_is_on(flags, FLAG_VERBOSE),
-            !flags_is_on(flags, FLAG_NO_PRELOAD),
+    preload(flags_get_sval(flags, flag_temporary_directory()),
+            flags_is_on(flags, flag_verbose()),
+            !flags_is_on(flags, flag_no_preload()),
             flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
 
     envvar_t vars[] = {
-        {"LOTTO_RECORD", .sval = flags_get_sval(flags, FLAG_OUTPUT)},
+        {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
         {"LOTTO_LOGGER_BLOCK",
-         .sval = flags_get_sval(flags, FLAG_LOGGER_BLOCK)},
+         .sval = flags_get_sval(flags, flag_logger_block())},
         {NULL}};
     envvar_set(vars, true);
 
-    if (flags_is_on(flags, FLAG_VERBOSE)) {
+    if (flags_is_on(flags, flag_verbose())) {
         sys_fprintf(stdout, "[lotto] starting: ");
         args_print(args);
         sys_fprintf(stdout, "\n");
@@ -58,7 +68,7 @@ stress(args_t *args, flags_t *flags)
      *
      * Note that 'stress -i trace' does not guarantee the same output
      * trace on a second invocation. */
-    const char *input = flags_get_sval(flags, FLAG_INPUT);
+    const char *input = flags_get_sval(flags, flag_input());
     if (input && input[0] != '\0') {
         adjust(input);
     }
@@ -66,7 +76,7 @@ stress(args_t *args, flags_t *flags)
     struct flag_val seed = flags_get(flags, flag_seed());
 
     int err         = 0;
-    uint64_t rounds = flags_get_uval(flags, FLAG_ROUNDS);
+    uint64_t rounds = flags_get_uval(flags, flag_rounds());
     for (uint64_t i = 0; i < rounds; i++) {
         round_print(flags, i);
 
@@ -74,7 +84,7 @@ stress(args_t *args, flags_t *flags)
             return err;
 
         if (rounds > 1) {
-            adjust(flags_get_sval(flags, FLAG_OUTPUT));
+            adjust(flags_get_sval(flags, flag_output()));
         }
 
         /* if no seed is given as argument, we use time as seed for the next
@@ -92,18 +102,18 @@ stress(args_t *args, flags_t *flags)
 }
 
 LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
-    flag_t sel[] = {FLAG_OUTPUT,
-                    FLAG_INPUT,
-                    FLAG_VERBOSE,
-                    FLAG_ROUNDS,
-                    FLAG_TEMPORARY_DIRECTORY,
-                    FLAG_NO_PRELOAD,
-                    FLAG_LOGGER_BLOCK,
-                    FLAG_BEFORE_RUN,
-                    FLAG_AFTER_RUN,
-                    FLAG_LOGGER_FILE,
+    flag_t sel[] = {flag_output(),
+                    flag_input(),
+                    flag_verbose(),
+                    flag_rounds(),
+                    flag_temporary_directory(),
+                    flag_no_preload(),
+                    flag_logger_block(),
+                    flag_before_run(),
+                    flag_after_run(),
+                    flag_logger_file(),
                     0};
     subcmd_register(stress, "stress", "[--] <command line>",
                     "Stress test a program until a desired execution is found",
-                    true, sel, _stress_default_flags, SUBCMD_GROUP_RUN);
+                    true, sel, stress_default_flags, SUBCMD_GROUP_RUN);
 })

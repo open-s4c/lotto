@@ -18,6 +18,7 @@
 #include <lotto/base/category.h>
 #include <lotto/base/context.h>
 #include <lotto/core/runtime/events.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/rsrc_deadlock.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/logger.h>
@@ -116,7 +117,7 @@ struct pthread_detach_event {
     int ret;
 };
 
-PS_ADVERTISE_TYPE(EVENT_PTHREAD_DETACH)
+LOTTO_ADVERTISE_TYPE(EVENT_PTHREAD_DETACH)
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_DETACH, {
     struct pthread_detach_event *ev = EVENT_PAYLOAD(event);

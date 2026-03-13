@@ -22,6 +22,9 @@
 
 #define IS_AFTER_KIND(x) (((x) & (RECORD_START | RECORD_CONFIG)) != 0)
 
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__REPLAY_END)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__INFO_RECORD_LOAD)
+
 void __attribute__((noinline)) recorder_end_trace()
 {
     logger_debugf("trace fully loaded\n");

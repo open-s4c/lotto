@@ -1,6 +1,7 @@
 #include <lotto/core/module.h>
 #include <lotto/engine/pubsub.h>
 
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__INIT)
 LOTTO_MODULE_INIT()
 
 /* The CLI/driver and runtime needs the engine state registration pass before it

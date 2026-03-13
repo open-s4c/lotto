@@ -1,6 +1,6 @@
 // clang-format off
 // UNSUPPORTED: aarch64
-// RUN: (! timeout 3s %lotto %stress --inactivity-timeout 1 -r 1 -- %b 2>&1) | %check %s
+// RUN: (! timeout -k 4s 3s %ntlotto %stress --inactivity-timeout 1 -r 1 -- %b 2>&1) | %check %s
 // CHECK: Task [2] has no capture point received after 1 seconds
 // clang-format on
 

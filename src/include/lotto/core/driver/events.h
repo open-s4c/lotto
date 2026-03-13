@@ -3,6 +3,5 @@
 
 #define EVENT_DRIVER__MEMMGR_INIT     133
 #define EVENT_DRIVER__REGISTER_FLAGS  134
-#define EVENT_DRIVER__INIT            135
 
 #endif

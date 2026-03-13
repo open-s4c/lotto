@@ -144,7 +144,7 @@ modules(args_t *args, flags_t *flags)
     return 0;
 }
 
-LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
+LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_INIT, {
     flag_t sel[] = {0};
     subcmd_register(modules, "modules", "", "List available Lotto modules",
                     false, sel, flags_default, SUBCMD_GROUP_TRACE);

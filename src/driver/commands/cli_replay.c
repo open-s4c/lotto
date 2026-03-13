@@ -92,7 +92,7 @@ _default_flags()
     return flags;
 }
 
-LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
+LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_INIT, {
     flag_t sel[] = {flag_input(),
                     flag_output(),
                     flag_verbose(),

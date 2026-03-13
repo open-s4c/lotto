@@ -1,0 +1,7 @@
+#ifndef LOTTO_CORE_EVENTS_H
+#define LOTTO_CORE_EVENTS_H
+
+#define EVENT_LOTTO_REGISTER 140
+#define EVENT_LOTTO_INIT     141
+
+#endif

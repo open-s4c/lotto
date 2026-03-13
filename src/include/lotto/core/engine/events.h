@@ -1,7 +1,6 @@
 #ifndef LOTTO_CORE_ENGINE_EVENTS_H
 #define LOTTO_CORE_ENGINE_EVENTS_H
 
-#define EVENT_ENGINE__INIT                       109
 #define EVENT_ENGINE__START                      110
 #define EVENT_ENGINE__REPLAY_END                 111
 #define EVENT_ENGINE__BEFORE_CAPTURE             112

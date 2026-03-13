@@ -101,7 +101,7 @@ stress(args_t *args, flags_t *flags)
     return 0;
 }
 
-LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
+LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_INIT, {
     flag_t sel[] = {flag_output(),
                     flag_input(),
                     flag_verbose(),

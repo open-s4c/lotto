@@ -145,7 +145,7 @@ drum(args_t *args, flags_t *flags)
     return 0;
 }
 
-LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
+LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_INIT, {
     subcmd_register(drum, "drum", "", "Lotto drum", false, (flag_t[]){0},
                     flags_default, SUBCMD_GROUP_OTHER);
 })

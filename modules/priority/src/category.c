@@ -8,10 +8,7 @@
 
 static category_t _cat;
 
-LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT,
-                        { _cat = new_category("CAT_PRIORITY"); })
-LOTTO_SUBSCRIBE_CONTROL(EVENT_RUNTIME__INIT,
-                        { _cat = new_category("CAT_PRIORITY"); })
+LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_REGISTER, { _cat = new_category("CAT_PRIORITY"); })
 
 category_t
 priority_category()

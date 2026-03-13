@@ -7,6 +7,7 @@
 
 #include <dice/module.h>
 #include <lotto/base/value.h>
+#include <lotto/core/events.h>
 #include <lotto/core/driver/events.h>
 #include <lotto/core/engine/events.h>
 #include <lotto/core/runtime/events.h>
@@ -15,15 +16,14 @@
 #define CHAIN_LOTTO_CONTROL 7
 #define CHAIN_LOTTO_DEFAULT 8
 
-#define LOTTO_SLOT0 9999
-#define LOTTO_SLOT1 10000
-#define LOTTO_SLOT2 10001
-#define LOTTO_SLOT3 10002
-
 #define LOTTO_UNWRAP(...) __VA_ARGS__
 #define LOTTO_BODY(...)   __VA_ARGS__
 
-#define LOTTO_SLOT_MAP(k) V_PASTE(1000, k)
+#define LOTTO_SLOT_PASTE_(a, b) a##b
+#define LOTTO_SLOT_PASTE(a, b)  LOTTO_SLOT_PASTE_(a, b)
+#define LOTTO_SLOT_MAP(k) \
+    LOTTO_SLOT_PASTE(DICE_MODULE_SLOT, LOTTO_SLOT_PASTE(00, k))
+
 
 #define LOTTO_ADVERTISE_TYPE(TYPE)                                             \
     static void __attribute__((constructor(LOTTO_XTOR_PRIO)))                  \

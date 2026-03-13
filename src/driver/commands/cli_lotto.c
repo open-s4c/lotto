@@ -141,7 +141,7 @@ lotto(args_t *args, flags_t *flags)
     return 0;
 }
 
-LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT, {
+LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_INIT, {
     flag_t sel[] = {FLAG_VERSION,       flag_temporary_directory(),
                     FLAG_LIST_COMMANDS, FLAG_PLUGIN_DIRECTORY,
                     FLAG_PLUGIN_LIST,   0};

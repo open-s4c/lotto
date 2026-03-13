@@ -127,7 +127,7 @@ flag_t flag_logger_file();
     }
 
 #define _FLAGMGR_SUBSCRIBE(...)                                                \
-    LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_FLAGS, __VA_ARGS__)
+    LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_REGISTER, __VA_ARGS__)
 
 #define NEW_PRETTY_CALLBACK_FLAG(name, opt, long_opt, desc, val,               \
                                  str_converter, CALLBACK)                      \

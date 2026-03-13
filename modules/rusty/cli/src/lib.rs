@@ -13,12 +13,17 @@ pub mod cli_rinflex;
 static GLOBAL: loccolator::LottoAllocator = loccolator::LottoAllocator;
 
 #[no_mangle]
+pub extern "C" fn lotto_rust_cli_register_flags() {
+    lotto::log::init();
+    lotto::cli::flags::init();
+    rusty_handlers::register_flags();
+}
+
+#[no_mangle]
 pub extern "C" fn lotto_rust_cli_init() {
     lotto::log::init();
     lotto::brokers::statemgr::init();
-    lotto::cli::flags::init();
     rusty_handlers::register();
-    rusty_handlers::register_flags();
 
     #[cfg(feature = "demo")]
     {

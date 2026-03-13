@@ -1,15 +1,17 @@
 #include "category.h"
+#include "lotto/core/driver/events.h"
+#include <lotto/core/module.h>
 #include <lotto/engine/catmgr.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/sys/assert.h>
 #include <lotto/util/macros.h>
 
 static category_t _cat;
 
-static void LOTTO_CONSTRUCTOR
-_init(void)
-{
-    _cat = new_category("CAT_PRIORITY");
-}
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__INIT,
+                        { _cat = new_category("CAT_PRIORITY"); })
+LOTTO_SUBSCRIBE_CONTROL(EVENT_RUNTIME__INIT,
+                        { _cat = new_category("CAT_PRIORITY"); })
 
 category_t
 priority_category()

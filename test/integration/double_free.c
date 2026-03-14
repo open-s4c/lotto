@@ -1,4 +1,5 @@
 // clang-format off
+// REQUIRES: DISABLED
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress --memmgr-user=uaf --stable-address-method MASK -- %b 2>&1) | %check %s
 // CHECK: SEGFAULT

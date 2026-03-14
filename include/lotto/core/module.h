@@ -11,7 +11,7 @@
         } while (0);                                                           \
     })
 
-#if 0
+#if 1
     #define LOTTO_MODULE_INIT_(...)                                            \
         PS_SUBSCRIBE(CHAIN_CONTROL, EVENT_DICE_READY, __VA_ARGS__)
 #else

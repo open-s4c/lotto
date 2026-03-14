@@ -44,30 +44,15 @@ fn assert_initialized() {
     assert!(INITIALIZED.load(Ordering::SeqCst));
 }
 
-/// Initialize the Rust state manager.
+/// Register the Rust state manager itself.
 ///
-/// This must be called once to register for the slot `RUSTY_ENGINE`.
-pub fn init() {
+/// This must be called once during Rust registration to publish Rust's
+/// state groups into Lotto and subscribe to marshal/unmarshal topics.
+/// Individual Rust handlers then append their own state pointers through
+/// [`register`], still within the registration phase.
+pub fn register_system() {
     assert!(!INITIALIZED.load(Ordering::SeqCst));
     unsafe {
-        raw::ps_subscribe(
-            lotto_sys::CHAIN_LOTTO_CONTROL as u16,
-            lotto_sys::EVENT_ENGINE__REGISTER_STATE_PERSISTENT as u16,
-            Some(_rust_statemgr_register_persistent),
-            lotto_sys::DICE_MODULE_SLOT as i32,
-        );
-        raw::ps_subscribe(
-            lotto_sys::CHAIN_LOTTO_CONTROL as u16,
-            lotto_sys::EVENT_ENGINE__REGISTER_STATE_CONFIG as u16,
-            Some(_rust_statemgr_register_config),
-            lotto_sys::DICE_MODULE_SLOT as i32,
-        );
-        raw::ps_subscribe(
-            lotto_sys::CHAIN_LOTTO_CONTROL as u16,
-            lotto_sys::EVENT_ENGINE__REGISTER_STATE_FINAL as u16,
-            Some(_rust_statemgr_register_final),
-            lotto_sys::DICE_MODULE_SLOT as i32,
-        );
         raw::ps_subscribe(
             lotto_sys::CHAIN_LOTTO_DEFAULT as u16,
             lotto_sys::EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG as u16,
@@ -105,37 +90,10 @@ pub fn init() {
             lotto_sys::DICE_MODULE_SLOT as i32,
         );
     }
-    INITIALIZED.store(true, Ordering::SeqCst);
-}
-
-unsafe extern "C" fn _rust_statemgr_register_persistent(
-    _chain: raw::chain_id,
-    _type_: raw::type_id,
-    _event: *mut c_void,
-    _md: *mut raw::metadata,
-) -> raw::ps_err {
     PERSISTENT.register();
-    raw::ps_err_PS_OK
-}
-
-unsafe extern "C" fn _rust_statemgr_register_config(
-    _chain: raw::chain_id,
-    _type_: raw::type_id,
-    _event: *mut c_void,
-    _md: *mut raw::metadata,
-) -> raw::ps_err {
     CONFIG.register();
-    raw::ps_err_PS_OK
-}
-
-unsafe extern "C" fn _rust_statemgr_register_final(
-    _chain: raw::chain_id,
-    _type_: raw::type_id,
-    _event: *mut c_void,
-    _md: *mut raw::metadata,
-) -> raw::ps_err {
     FINAL.register();
-    raw::ps_err_PS_OK
+    INITIALIZED.store(true, Ordering::SeqCst);
 }
 
 /// Serialize and deserialize data.

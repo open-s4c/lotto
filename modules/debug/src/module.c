@@ -11,6 +11,7 @@
 #include <dice/module.h>
 #include <lotto/driver/files.h>
 #include <lotto/driver/flagmgr.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/sys/stdio.h>
 #include "debug.h"
 
@@ -48,4 +49,6 @@ debug_dump_assets(const char *dir)
     return ok;
 }
 
-DICE_MODULE_INIT({ (void)debug_dump_assets(get_default_temporary_directory()); })
+LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_INIT, {
+    (void)debug_dump_assets(get_default_temporary_directory());
+})

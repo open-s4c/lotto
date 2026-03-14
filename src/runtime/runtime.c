@@ -197,9 +197,7 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_WAIT, {
     }
 })
 
-DICE_HIDE void
-runtime_init()
-{
+LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_INIT, {
     _runtime_init();
     _logger_init();
-}
+})

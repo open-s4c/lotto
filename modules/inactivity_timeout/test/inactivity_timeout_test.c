@@ -10,8 +10,9 @@
 #include <unistd.h>
 
 void *
-thread_long_enough()
+thread_long_enough(void *arg)
 {
+    (void)arg;
     while (1)
         ;
     return NULL;

@@ -34,30 +34,34 @@ atomic_int x = 0;
 atomic_int y = 0;
 
 void *
-t1()
+t1(void *arg)
 {
+    (void)arg;
     x++;
     x++;
     assert(x != 0b11);
     return NULL;
 }
 void *
-t2()
+t2(void *arg)
 {
+    (void)arg;
     x *= 2;
     return NULL;
 }
 void *
-t3()
+t3(void *arg)
 {
+    (void)arg;
     y++;
     y++;
     assert(y != 0b11);
     return NULL;
 }
 void *
-t4()
+t4(void *arg)
 {
+    (void)arg;
     y *= 2;
     return NULL;
 }

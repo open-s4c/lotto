@@ -20,8 +20,9 @@
 atomic_int x = 1;
 
 void *
-t1()
+t1(void *arg)
 {
+    (void)arg;
     for (int i = 0; i < N_LOOPS; ++i) {
         x *= 2;
     }
@@ -29,8 +30,9 @@ t1()
 }
 
 void *
-t2()
+t2(void *arg)
 {
+    (void)arg;
     x += 1;
     assert(x != (1 << N_LOOPS) + 1);
     return NULL;

@@ -12,15 +12,17 @@
 atomic_int x = 0;
 
 void *
-adder()
+adder(void *arg)
 {
+    (void)arg;
     x++;
     return NULL;
 }
 
 void *
-checker()
+checker(void *arg)
 {
+    (void)arg;
     // inflection point: after adder incremented
     assert(x == 0);
     return NULL;

@@ -14,16 +14,18 @@
 atomic_int x = 0;
 
 void *
-t1()
+t1(void *arg)
 {
+    (void)arg;
     x++;
     x++;
     return NULL;
 }
 
 void *
-t2()
+t2(void *arg)
 {
+    (void)arg;
     x *= 2;
     assert(x != 0b11);
     return NULL;

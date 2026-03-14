@@ -12,8 +12,9 @@
 atomic_int x = 0;
 
 void *
-adder()
+adder(void *arg)
 {
+    (void)arg;
     x++;
     x++;
     assert(x != 0b11);
@@ -21,8 +22,9 @@ adder()
 }
 
 void *
-multiplier()
+multiplier(void *arg)
 {
+    (void)arg;
     x *= 2;
     return NULL;
 }

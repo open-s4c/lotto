@@ -59,10 +59,7 @@
  */
 #if !defined(CONTRACT_DISABLE)
     #define CONTRACT_INIT(...)                                                 \
-        static LOTTO_CONSTRUCTOR void _lotto_contract_init(void)               \
-        {                                                                      \
-            __VA_ARGS__                                                        \
-        }
+        LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_INIT, { __VA_ARGS__ })
 #else
     #define CONTRACT_INIT(...)
 #endif

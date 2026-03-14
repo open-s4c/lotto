@@ -31,7 +31,7 @@ target_compile_definitions(memmgr_runtime_dice.o PRIVATE LOTTO_MEMMGR_RUNTIME)
 # ##############################################################################
 # libruntime
 # ##############################################################################
-set(SRCS runtime.c sighandler.c module.c)
+set(SRCS runtime.c sighandler.c module.c malloc.c)
 set(LIBS
     m
     mediator.o
@@ -54,7 +54,6 @@ set(LIBS
     dice-self.o
     dice-sem.o
     dice-stacktrace.o
-    dice-malloc.o
     dice-tsan.o)
 
 macro(add_runtime TARGET)

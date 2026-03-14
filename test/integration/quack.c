@@ -1,7 +1,6 @@
 // clang-format off
-// XFAIL: *
-// RUN: exit 1
-// RUN: echo Disable ASLR and remove lines 2-4 to make this test pass
+// REQUIRES: DISABLED
+// Disable ASLR to make this test pass.
 // RUN: %lotto %sc --delayed-functions quack_push:1:1,quack_popall:1:1 --delayed-calls 2 --sc-exploration-rounds 100 -r 100 --stable-address-method MAP -- %b
 // clang-format on
 

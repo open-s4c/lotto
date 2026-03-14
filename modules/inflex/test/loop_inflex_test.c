@@ -1,7 +1,6 @@
 // clang-format off
-// XFAIL: *
-// RUN: exit 1
-// RUN: echo Loops not yet supported for rinflex
+// REQUIRES: DISABLED
+// Loops not yet supported for rinflex.
 // clang-format on
 
 #include <assert.h>

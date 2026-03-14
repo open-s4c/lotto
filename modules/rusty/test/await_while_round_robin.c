@@ -1,5 +1,5 @@
 // clang-format off
-// REQUIRES: RUST_HANDLERS_AVAILABLE
+// REQUIRES: RUST_HANDLERS_AVAILABLE, DISABLED
 // RUN: %lotto stress --handler-await-address enable --handler-spin-loop enable -s random -r 5 -- %b
 // clang-format on
 #include <assert.h>

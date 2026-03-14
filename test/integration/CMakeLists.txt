@@ -16,25 +16,7 @@ set(TSAN_0003-await-increment ON)
 set(TSAN_0005-atomic-message-passing ON)
 set(TSAN_0006-racy-message-passing ON)
 
-# TODO: some sources are still failing
-set(FAILING_SRCS
-    inflex_abc_nocli.c # test script needs correct preloading on necessary
-                       # libraries
-    notsan_mediator_null.c # the error must not RUNTIME_...
-    wait.c # time leap is not performed, maybe there is an undesired CAT_CALL
-)
-# rinflex.c # gets stuck during essentiality check rinflex_3oc.c rinflex_cas.c
-# rinflex_essentiality.c rinflex_flaky_events.c rinflex_loop.c rinflex_mutex.c
-# rinflex_spinlock.c rinflex_symmetry.c rinflex_two_disjoint_bugs.c
-
-file(GLOB ALL_SRCS *.c)
-set(SRCS)
-foreach(SRC ${ALL_SRCS})
-    get_filename_component(SRC ${SRC} NAME)
-    if(NOT "${SRC}" IN_LIST FAILING_SRCS)
-        set(SRCS ${SRCS} ${SRC})
-    endif()
-endforeach()
+file(GLOB SRCS *.c)
 
 add_custom_target(
     tikl-integration-test

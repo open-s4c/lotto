@@ -1,5 +1,5 @@
-#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/modules/race.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/string.h>
@@ -25,15 +25,6 @@ dispatcher_register(slot_t slot, handle_f handle)
 void
 add_ichpt(uintptr_t addr)
 {
-}
-
-#undef statemgr_register
-void
-statemgr_register(int slot, marshable_t *m, state_type_t type)
-{
-    (void)slot;
-    (void)m;
-    (void)type;
 }
 
 /*******************************************************************************

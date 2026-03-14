@@ -45,7 +45,7 @@ set(LIBS
     lotto-runtime-engine.o
     dice.o
     dice-cxa.o
-    #dice-mman.o
+    dice-mman.o
     dice-pthread_cond.o
     dice-pthread_create.o
     dice-pthread_mutex.o
@@ -54,7 +54,7 @@ set(LIBS
     dice-self.o
     dice-sem.o
     dice-stacktrace.o
-    #dice-malloc.o
+    dice-malloc.o
     dice-tsan.o)
 
 macro(add_runtime TARGET)
@@ -70,6 +70,8 @@ endmacro()
 add_runtime(lotto)
 add_runtime(lotto-verbose)
 target_compile_definitions(lotto-verbose PRIVATE -DLOTTO_VERBOSE)
+
+add_library(runtime-module.o OBJECT module.c)
 
 function(add_lotto_builtin LIB)
     target_link_libraries(lotto PRIVATE ${LIB})

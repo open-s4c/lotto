@@ -10,9 +10,12 @@ foreach(SRC ${SRCS})
         lotto-runtime-${MODULE_NAME}
         sys_testing.o
         base_testing.o
+		statemgr_testing.o
         memmgr_runtime_libc.o
         memmgr_user_libc.o
-        dice)
+		runtime-module.o
+		dice)
+    target_link_options(${TARGET} PUBLIC -rdynamic)
     add_test(NAME ${TARGET} COMMAND ${TARGET})
 endforeach()
 

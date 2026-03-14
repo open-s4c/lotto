@@ -44,3 +44,6 @@ target_compile_definitions(brokers_testing.o PUBLIC -DLOTTO_TEST)
 
 add_library(brokers_statemgr_testing.o OBJECT statemgr.c)
 target_compile_definitions(brokers_statemgr_testing.o PUBLIC -DLOTTO_TEST)
+
+add_library(statemgr_testing.o OBJECT statemgr.c)
+target_compile_definitions(statemgr_testing.o PUBLIC -DLOTTO_TEST)

@@ -1,10 +1,9 @@
 #include <lotto/engine/dispatcher.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/race.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/string.h>
-
-void race_reset();
 race_t race_check(const context_t *ctx, clk_t clk);
 
 #define A(V) ((uintptr_t)(V))
@@ -151,6 +150,7 @@ test_save_load()
 int
 main()
 {
+    LOTTO_PUBLISH_CONTROL(EVENT_ENGINE__REGISTER_STATE_EPHEMERAL);
     test_add();
     // test_save_load();
     return 0;

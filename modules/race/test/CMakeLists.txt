@@ -13,7 +13,6 @@ foreach(SRC ${SRCS})
 		statemgr_testing.o
         memmgr_runtime_libc.o
         memmgr_user_libc.o
-		runtime-module.o
 		dice)
     target_link_options(${TARGET} PUBLIC -rdynamic)
     add_test(NAME ${TARGET} COMMAND ${TARGET})

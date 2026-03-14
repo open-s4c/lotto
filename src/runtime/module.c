@@ -17,7 +17,7 @@ lotto_runtime_intercepts_ready(void)
 DICE_WEAK int
 ps_subscribe_(chain_id chain, type_id type, ps_callback_f cb, int slot)
 {
-    return PS_ERROR;
+    return PS_OK;
 }
 int
 ps_subscribe(chain_id chain, type_id type, ps_callback_f cb, int slot)

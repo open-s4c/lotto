@@ -24,9 +24,14 @@ foreach(SRC ${SRCS})
     target_link_libraries(${TARGET} PRIVATE vsync pthread)
     set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TEST})
 
-    if(${TSAN_${TARGET}})
+    if(DEFINED TSAN_${TEST} AND "${TSAN_${TEST}}")
         target_compile_options(${TARGET} PRIVATE -fsanitize=thread)
         target_link_options(${TARGET} PRIVATE -fsanitize=thread)
+        if(CMAKE_C_COMPILER_ID MATCHES "Clang"
+           OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            target_compile_options(${TARGET} PRIVATE -shared-libsan)
+            target_link_options(${TARGET} PRIVATE -shared-libsan)
+        endif()
     endif()
 
     add_custom_target(

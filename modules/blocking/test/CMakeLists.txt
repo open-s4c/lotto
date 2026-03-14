@@ -23,20 +23,23 @@ target_link_libraries(
     memmgr_user_libc.o)
 
 add_library(replay_component SHARED)
+set_target_properties(
+    replay_component PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                "${CMAKE_BINARY_DIR}/components")
 target_link_libraries(
     replay_component
     base_testing.o
-    brokers_testing.o
+    brokers_statemgr_testing.o
     engine_creation_testing.o
     engine_dispatcher_testing.o
     engine_engine_testing.o
     engine_recorder_testing.o
     engine_sequencer_testing.o
-    lotto-blocking.o
+    lotto-runtime-blocking
     memmgr_runtime_libc.o
     memmgr_user_libc.o
-    states_prng_testing.o
-    states_sequencer_testing.o
+    engine_prng_testing.o
+    engine_state_testing.o
     sys_testing.o
     dice.o)
 

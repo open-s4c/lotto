@@ -1,10 +1,6 @@
 #ifndef LOTTO_PUBSUB_H
 #define LOTTO_PUBSUB_H
 
-#ifndef LOTTO_XTOR_PRIO
-    #define LOTTO_XTOR_PRIO (DICE_XTOR_PRIO - 0)
-#endif
-
 #include <dice/module.h>
 #include <lotto/base/value.h>
 #include <lotto/core/events.h>
@@ -26,7 +22,7 @@
 
 
 #define LOTTO_ADVERTISE_TYPE(TYPE)                                             \
-    static void __attribute__((constructor(LOTTO_XTOR_PRIO)))                  \
+    static void __attribute__((constructor(DICE_XTOR_PRIO)))                   \
     lotto_advertise_type_##TYPE##_(void)                                       \
     {                                                                          \
         ps_register_type(TYPE, #TYPE);                                         \

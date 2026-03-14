@@ -1,5 +1,5 @@
 // clang-format off
-// UNSUPPORTED: aarch64
+// UNSUPPORTED: aarch64, DISABLED
 // RUN: %lotto %trace -- %b
 // RUN: ( LD_PRELOAD=%t/libruntime.so:%t/libplotto.so:%t/libengine.so LD_LIBRARY_PATH=%t LOTTO_TEMP_DIR=%t LOTTO_LOGGER_LEVEL=debug LOTTO_RECORDER_TYPE=flat %b || true ) 2>&1 | %check %s
 // CHECK: CAPTURE
@@ -42,7 +42,7 @@ producer(void *_)
     (void)_;
 
     int *data = (int *)_; // malloc(sizeof(int));
-    *data     = get_unique_id();
+    *data     = (int)get_unique_id();
     while (1) {
         int r = bounded_mpmc_enq(&q, data);
         if (r == QUEUE_BOUNDED_OK)

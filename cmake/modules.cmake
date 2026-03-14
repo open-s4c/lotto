@@ -81,7 +81,8 @@ endmacro()
 macro(add_module_object TARGET SLOT)
     add_library(${TARGET} OBJECT ${ARGN})
     target_compile_definitions(
-        ${TARGET} PRIVATE DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${SLOT})
+        ${TARGET}
+        PRIVATE DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${SLOT})
 endmacro()
 
 function(add_module_tikl_test SRC)

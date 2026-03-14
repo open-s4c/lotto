@@ -62,6 +62,7 @@ set(DICE_MAX_TYPES
     150
     CACHE STRING "" FORCE)
 
+add_compile_definitions(DICE_XTOR_PRIO=1000)
 add_compile_definitions(LOG_PREFIX="[ dice] ")
 add_compile_definitions(LOG_LEVEL=${DICE_LOG_LEVEL})
 
@@ -179,7 +180,6 @@ set(LOTTO_MODULE_BUILD_DIR "${CMAKE_BINARY_DIR}/modules")
 set(QLOTTO_MODULE_INSTALL_DIR "share/lotto/qlotto/modules")
 set(QLOTTO_MODULE_BUILD_DIR "${CMAKE_BINARY_DIR}/qlotto/modules")
 
-add_compile_definitions(DICE_XTOR_PRIO=1000)
 include_directories(include)
 add_subdirectory(include)
 add_subdirectory(src)

@@ -10,16 +10,18 @@
 int x = 0;
 
 void *
-writer()
+writer(void *arg)
 {
+    (void)arg;
     x = 1;
     lotto_order(1);
     return NULL;
 }
 
 void *
-reader()
+reader(void *arg)
 {
+    (void)arg;
     lotto_order(2);
     assert(x == 1);
     return NULL;

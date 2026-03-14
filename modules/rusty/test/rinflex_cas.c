@@ -38,16 +38,18 @@ atomic_int y = 0;
  */
 
 void *
-t1()
+t1(void *arg)
 {
+    (void)arg;
     atomic_fetch_add(&x, 1); // A
     atomic_fetch_sub(&x, 1); // B
     return NULL;
 }
 
 void *
-t2()
+t2(void *arg)
 {
+    (void)arg;
     int old = atomic_load(&x); // C
     int new = 100;
     if (!atomic_compare_exchange_strong(&x, &old, new)) { // D

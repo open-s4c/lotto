@@ -32,28 +32,32 @@ atomic_int x = 0;
 atomic_int z = 0;
 
 void *
-t1()
+t1(void *arg)
 {
+    (void)arg;
     x++;
     return NULL;
 }
 void *
-t2()
+t2(void *arg)
 {
+    (void)arg;
     x *= 2;
     return NULL;
 }
 void *
-t3()
+t3(void *arg)
 {
+    (void)arg;
     if (x == 2) {
         z++;
     }
     return NULL;
 }
 void *
-t4()
+t4(void *arg)
 {
+    (void)arg;
     z *= 2;
     return NULL;
 }

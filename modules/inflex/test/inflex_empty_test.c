@@ -12,8 +12,9 @@
 int x = 0;
 
 void *
-adder()
+adder(void *arg)
 {
+    (void)arg;
     x++;
     return NULL;
 }

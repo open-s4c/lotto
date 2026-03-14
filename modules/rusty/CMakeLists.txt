@@ -48,6 +48,7 @@ corrosion_import_crate(
 # ##############################################################################
 add_subdirectory(runtime)
 add_subdirectory(cli)
+add_subdirectory(test)
 
 # ##############################################################################
 # Cargo commands

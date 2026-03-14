@@ -21,7 +21,9 @@ function(add_racket_test)
 
     add_test(
         NAME ${TARGET}
-        COMMAND env LD_LIBRARY_PATH=${CMAKE_CURRENT_BINARY_DIR}/mock raco test
+        COMMAND env
+                LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/components:${CMAKE_CURRENT_BINARY_DIR}/mock
+                raco test
                 ${ARG_CMD} ${__ARG} ${CMAKE_CURRENT_SOURCE_DIR}/${__FILENAME})
     if(DEFINED __BINDING)
         get_filename_component(NAME ${__BINDING} NAME_WLE)

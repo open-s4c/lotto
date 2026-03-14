@@ -60,8 +60,17 @@ macro(new_module NAME)
     set(MODULE_SLOT ${SLOT})
 endmacro()
 
+add_custom_target(tikl-modules)
+
+function(add_tikl_module_target NAME)
+    add_custom_target(tikl-module-${NAME})
+    add_dependencies(tikl-test tikl-module-${NAME})
+    add_dependencies(tikl-modules tikl-module-${NAME})
+endfunction()
+
 macro(add_module NAME)
     new_module(${NAME})
+	add_tikl_module_target(${NAME})
     add_subdirectory(${NAME})
 endmacro()
 
@@ -70,3 +79,34 @@ macro(add_module_object TARGET SLOT)
     target_compile_definitions(
         ${TARGET} PRIVATE DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${SLOT})
 endmacro()
+
+function(add_module_tikl_test SRC)
+    get_filename_component(TEST ${SRC} NAME_WLE)
+    set(TARGET bin-${TEST})
+
+    add_executable(${TARGET} ${SRC})
+    set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TEST})
+    add_dependencies(tikl-module-${MODULE_NAME} ${TARGET})
+    target_include_directories(
+        ${TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/modules/qemu/include)
+
+    if(NOT DEFINED TSAN_${TEST} OR "${TSAN_${TEST}}")
+        target_compile_options(${TARGET} PRIVATE -fsanitize=thread)
+        target_link_options(${TARGET} PRIVATE -fsanitize=thread)
+        if(CMAKE_C_COMPILER_ID MATCHES "Clang"
+           OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            target_compile_options(${TARGET} PRIVATE -shared-libsan)
+            target_link_options(${TARGET} PRIVATE -shared-libsan)
+        endif()
+    endif()
+    target_compile_options(${TARGET} PUBLIC -O0 -g -DVATOMIC_BUILTINS)
+    target_link_options(${TARGET} PUBLIC -rdynamic)
+    target_link_libraries(${TARGET} PRIVATE vsync pthread)
+
+    add_custom_target(
+        tikl-${TEST}
+        COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRC}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    add_dependencies(tikl-${TEST} ${TARGET} tikl-build lotto-cli)
+    add_dependencies(tikl-module-${MODULE_NAME} tikl-${TEST})
+endfunction()

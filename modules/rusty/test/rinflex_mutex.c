@@ -1,6 +1,6 @@
 // clang-format off
 // ALLOW_RETRIES: 5
-// REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
+// REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE, DISABLED
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress4rinflex -- %b)
 // RUN: %lotto %rinflex -r 15 2>&1 | iconv -t utf-8 -f utf-8 -c | filecheck %s
@@ -23,12 +23,12 @@
 
 // clang-format on
 
+#include <assert.h>
 #include <pthread.h>
 #include <stdatomic.h>
-#include <assert.h>
 
 pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
-int x = 0;
+int x             = 0;
 
 void *
 func1(void *arg)

@@ -26,7 +26,7 @@ include(cmake/submodule.cmake)
 # ##############################################################################
 
 set(DICE_LOG_LEVEL
-    "FATAL"
+    "DEBUG"
     CACHE STRING "" FORCE)
 
 set(DICE_MEMSET
@@ -59,7 +59,7 @@ set(DICE_MAX_BUILTIN_SLOTS
     CACHE STRING "" FORCE)
 
 set(DICE_MAX_TYPES
-    140
+    150
     CACHE STRING "" FORCE)
 
 add_compile_definitions(LOG_PREFIX="[ dice] ")

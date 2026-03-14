@@ -15,8 +15,9 @@ const unsigned NUM_THREADS = 5;
 
 
 void *
-run_1()
+run_1(void *arg)
 {
+    (void)arg;
     x = 0;
     await_while (x <= 3) {
         x += 1;
@@ -25,8 +26,9 @@ run_1()
     return NULL;
 }
 void *
-run_2()
+run_2(void *arg)
 {
+    (void)arg;
     y = 0;
     await_while (y == 0) {
         y = z;
@@ -43,8 +45,9 @@ run_2()
  * to be aware of.
  */
 void *
-run_3()
+run_3(void *arg)
 {
+    (void)arg;
     int local = 0;
     await_while (local <= 3) {
         local += 1;
@@ -54,8 +57,9 @@ run_3()
 }
 
 void *
-run_alice()
+run_alice(void *arg)
 {
+    (void)arg;
     a = 0;
     await_while (b == 0) {
         a = 1;
@@ -64,8 +68,9 @@ run_alice()
     return NULL;
 }
 void *
-run_bob()
+run_bob(void *arg)
 {
+    (void)arg;
     a = 0;
     await_while (a == 0)
         ;
@@ -75,8 +80,9 @@ run_bob()
 }
 
 void *
-run_nested()
+run_nested(void *arg)
 {
+    (void)arg;
     await_while (nested2 <= 4) {
         nested1 = 0;
         await_while (nested1 <= 1) {

@@ -17,15 +17,17 @@
 atomic_int x = 0;
 
 void *
-t1()
+t1(void *arg)
 {
+    (void)arg;
     x++;
     return NULL;
 }
 
 void *
-t2()
+t2(void *arg)
 {
+    (void)arg;
     assert(x != 0b1);
     return NULL;
 }

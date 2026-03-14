@@ -11,8 +11,9 @@
 int x = 0;
 
 void *
-adder()
+adder(void *arg)
 {
+    (void)arg;
     lotto_order(2);
     x++;
     lotto_order(3);
@@ -32,8 +33,9 @@ adder()
 }
 
 void *
-multiplier()
+multiplier(void *arg)
 {
+    (void)arg;
     x *= 2;
     lotto_order(1);
     lotto_order(4);

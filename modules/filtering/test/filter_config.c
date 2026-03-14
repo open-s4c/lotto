@@ -12,16 +12,18 @@
 atomic_int x;
 
 void *
-thread1()
+thread1(void *arg)
 {
+    (void)arg;
     x++;
     x++;
     return 0;
 }
 
 void *
-thread2()
+thread2(void *arg)
 {
+    (void)arg;
     assert(x != 1);
     return 0;
 }

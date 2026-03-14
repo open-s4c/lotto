@@ -1,11 +1,14 @@
 file(GLOB SRCS *.c)
 
+add_custom_target(tikl-${MODULE_NAME})
+add_dependencies(tikl-test tikl-${MODULE_NAME})
+
 foreach(SRC ${SRCS})
     get_filename_component(TEST ${SRC} NAME_WLE)
     set(TARGET bin-${TEST})
     add_executable(${TARGET} ${SRC})
     set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TEST})
-    add_dependencies(tikl-test ${TARGET})
+    add_dependencies(tikl-${MODULE_NAME} ${TARGET})
 
     if(${TSAN_${TARGET}})
         target_compile_options(${TARGET} PRIVATE -fsanitize=thread)

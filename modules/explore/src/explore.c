@@ -21,14 +21,6 @@
 #include <lotto/modules/explore.h>
 #include <lotto/sys/stdio.h>
 
-DECLARE_FLAG_OUTPUT;
-DECLARE_FLAG_INPUT;
-DECLARE_FLAG_VERBOSE;
-DECLARE_FLAG_TEMPORARY_DIRECTORY;
-DECLARE_FLAG_NO_PRELOAD;
-DECLARE_FLAG_LOGGER_BLOCK;
-DECLARE_FLAG_LOGGER_FILE;
-
 static uint64_t round_index;
 static const category_t cats[] = {CAT_TASK_CREATE, CAT_NONE};
 
@@ -90,7 +82,8 @@ _explore_interval(args_t *args, flags_t *flags, trace_t *input, uint64_t from,
             is_error = (err = execute(args, flags, false)) != 0;
             if ((expect_failure != is_error) || (expect_failure && err == 130))
                 break;
-            trace_t *trace = cli_trace_load(flags_get_sval(flags, FLAG_OUTPUT));
+            trace_t *trace =
+                cli_trace_load(flags_get_sval(flags, flag_output()));
             int sub        = _explore_interval(args, flags, trace, clk + 1, to,
                                                expect_failure);
             is_error       = (err = sub) != 0;
@@ -104,28 +97,28 @@ _explore_interval(args_t *args, flags_t *flags, trace_t *input, uint64_t from,
 int
 explore(args_t *args, flags_t *flags)
 {
-    preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
-            flags_is_on(flags, FLAG_VERBOSE),
-            !flags_is_on(flags, FLAG_NO_PRELOAD),
+    preload(flags_get_sval(flags, flag_temporary_directory()),
+            flags_is_on(flags, flag_verbose()),
+            !flags_is_on(flags, flag_no_preload()),
             flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
 
     envvar_t vars[] = {
-        {"LOTTO_LOGGER_FILE", .sval = flags_get_sval(flags, FLAG_LOGGER_FILE)},
-        {"LOTTO_RECORD", .sval = flags_get_sval(flags, FLAG_OUTPUT)},
+        {"LOTTO_LOGGER_FILE", .sval = flags_get_sval(flags, flag_logger_file())},
+        {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
         {"LOTTO_REPLAY", .sval = "temp.trace"},
         {"LOTTO_LOGGER_BLOCK",
-         .sval = flags_get_sval(flags, FLAG_LOGGER_BLOCK)},
+         .sval = flags_get_sval(flags, flag_logger_block())},
         NULL};
     envvar_set(vars, true);
 
-    if (flags_is_on(flags, FLAG_VERBOSE)) {
+    if (flags_is_on(flags, flag_verbose())) {
         sys_fprintf(stdout, "[lotto] starting:");
         args_print(args);
         sys_fprintf(stdout, "\n");
     }
 
-    trace_t *trace  = cli_trace_load(flags_get_sval(flags, FLAG_INPUT));
+    trace_t *trace  = cli_trace_load(flags_get_sval(flags, flag_input()));
     record_t *first = trace_next(trace, RECORD_START);
 
     args = record_args(first);

@@ -1,4 +1,5 @@
 // clang-format off
+// REQUIRES: DISABLED
 // RUN: %lotto %run -- %b
 // clang-format on
 

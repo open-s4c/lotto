@@ -15,6 +15,26 @@
 #define CANARY    0xbadfeed
 #define MAX_SLOTS 1024
 
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__REGISTER_STATE_EPHEMERAL)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__REGISTER_STATE_START)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__REGISTER_STATE_CONFIG)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__REGISTER_STATE_PERSISTENT)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__REGISTER_STATE_FINAL)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__AFTER_UNMARSHAL_PERSISTENT)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__AFTER_UNMARSHAL_FINAL)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__BEFORE_MARSHAL_CONFIG)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__BEFORE_MARSHAL_PERSISTENT)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__BEFORE_MARSHAL_FINAL)
+
+LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_REGISTER, {
+    LOTTO_PUBLISH_CONTROL(EVENT_ENGINE__REGISTER_STATE_EPHEMERAL);
+    LOTTO_PUBLISH_CONTROL(EVENT_ENGINE__REGISTER_STATE_START);
+    LOTTO_PUBLISH_CONTROL(EVENT_ENGINE__REGISTER_STATE_CONFIG);
+    LOTTO_PUBLISH_CONTROL(EVENT_ENGINE__REGISTER_STATE_PERSISTENT);
+    LOTTO_PUBLISH_CONTROL(EVENT_ENGINE__REGISTER_STATE_FINAL);
+})
+
 typedef struct {
     marshable_t *m;
     int slot;
@@ -62,6 +82,27 @@ _header_unmarshal(const void *buf)
     return h;
 }
 
+static const char *
+_state_type_str(state_type_t type)
+{
+    switch (type) {
+        case STATE_TYPE_EPHEMERAL:
+            return "EPHEMERAL";
+        case STATE_TYPE_START:
+            return "START";
+        case STATE_TYPE_CONFIG:
+            return "CONFIG";
+        case STATE_TYPE_PERSISTENT:
+            return "PERSISTENT";
+        case STATE_TYPE_FINAL:
+            return "FINAL";
+        case STATE_TYPE_EMPTY:
+            return "EMPTY";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 static void
 _statemgr_register(statemgr_t *mgr, int slot, marshable_t *m)
 {
@@ -86,8 +127,11 @@ void
 statemgr_register(int slot, marshable_t *m, state_type_t type)
 {
     ASSERT(slot < MAX_SLOTS);
-    if (type != STATE_TYPE_EPHEMERAL)
+    if (type != STATE_TYPE_EPHEMERAL) {
+        logger_debugf("registering slot %d type %s\n", slot,
+                      _state_type_str(type));
         _statemgr_register(&_groups[type], slot, m);
+    }
 }
 
 static size_t
@@ -155,13 +199,13 @@ statemgr_unmarshal(const void *buf, state_type_t type, bool publish)
 
     switch (type) {
         case STATE_TYPE_CONFIG:
-            LOTTO_PUBLISH(TOPIC_AFTER_UNMARSHAL_CONFIG, nil);
+            LOTTO_PUBLISH(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, nil);
             break;
         case STATE_TYPE_PERSISTENT:
-            LOTTO_PUBLISH(TOPIC_AFTER_UNMARSHAL_PERSISTENT, nil);
+            LOTTO_PUBLISH(EVENT_ENGINE__AFTER_UNMARSHAL_PERSISTENT, nil);
             break;
         case STATE_TYPE_FINAL:
-            LOTTO_PUBLISH(TOPIC_AFTER_UNMARSHAL_FINAL, nil);
+            LOTTO_PUBLISH(EVENT_ENGINE__AFTER_UNMARSHAL_FINAL, nil);
             break;
         default:
             break;
@@ -206,13 +250,13 @@ statemgr_marshal(void *buf, state_type_t type)
 
     switch (type) {
         case STATE_TYPE_CONFIG:
-            LOTTO_PUBLISH(TOPIC_BEFORE_MARSHAL_CONFIG, nil);
+            LOTTO_PUBLISH(EVENT_ENGINE__BEFORE_MARSHAL_CONFIG, nil);
             break;
         case STATE_TYPE_PERSISTENT:
-            LOTTO_PUBLISH(TOPIC_BEFORE_MARSHAL_PERSISTENT, nil);
+            LOTTO_PUBLISH(EVENT_ENGINE__BEFORE_MARSHAL_PERSISTENT, nil);
             break;
         case STATE_TYPE_FINAL:
-            LOTTO_PUBLISH(TOPIC_BEFORE_MARSHAL_FINAL, nil);
+            LOTTO_PUBLISH(EVENT_ENGINE__BEFORE_MARSHAL_FINAL, nil);
             break;
         default:
             break;

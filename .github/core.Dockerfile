@@ -31,3 +31,5 @@ RUN git clone https://github.com/db7/mockoto.git
 RUN cmake -Smockoto -Bmockoto/build
 RUN make -j -C mockoto/build
 ENV PATH="${PATH}:/mockoto/build"
+
+RUN apt update && apt install -y libclang-rt-18-dev

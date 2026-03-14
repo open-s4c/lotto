@@ -7,6 +7,7 @@
 #include <lotto/base/clk.h>
 #include <lotto/base/context.h>
 #include <lotto/base/stable_address.h>
+#include <lotto/modules/enforce/events.h>
 #include <lotto/util/macros.h>
 
 #define FOR_EACH_ENFORCE_MODE                                                  \

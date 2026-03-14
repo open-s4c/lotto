@@ -31,12 +31,10 @@ STATIC void *_catmgr_marshal(const marshable_t *m, void *buf);
 STATIC const void *_catmgr_unmarshal(marshable_t *m, const void *buf);
 STATIC void _catmgr_print(const marshable_t *m);
 static marshable_t _m;
-static void LOTTO_CONSTRUCTOR
-_catmgr_register(void)
-{
+STATEMGR_REGISTER(CONFIG, {
     _m = MARSHABLE_STATE;
     statemgr_register(DICE_MODULE_SLOT, &_m, STATE_TYPE_CONFIG);
-}
+})
 
 STATIC size_t
 _catmgr_size(const marshable_t *m)

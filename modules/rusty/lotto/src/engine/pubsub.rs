@@ -352,7 +352,7 @@ pub unsafe extern "C" fn publish_execute(
     raw::ps_err_PS_OK
 }
 
-/// Register the capture point handler and subscribe to `TOPIC_NEXT_TASK`.
+/// Register the capture point handler and subscribe to `EVENT_ENGINE__NEXT_TASK`.
 pub fn init() {
     use raw::slot_t::SLOT_RUSTY_ENGINE;
     trace!("Hello this is the lotto rusty pubsub handler initializing");
@@ -364,8 +364,8 @@ pub fn init() {
         // Subscribes to call from the sequencer_resume with the task-id to run.
         unsafe {
             raw::ps_subscribe(
-                lotto_sys::CHAIN_LOTTO as u16,
-                lotto_sys::TOPIC_NEXT_TASK as u16,
+                lotto_sys::CHAIN_LOTTO_DEFAULT as u16,
+                lotto_sys::EVENT_ENGINE__NEXT_TASK as u16,
                 Some(publish_execute),
                 lotto_sys::DICE_MODULE_SLOT as i32,
             );

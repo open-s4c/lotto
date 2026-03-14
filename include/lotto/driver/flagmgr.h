@@ -5,6 +5,8 @@
 
 #include <lotto/base/flags.h>
 #include <lotto/driver/args.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/util/macros.h>
 
 /**
  * Pretty printers
@@ -106,6 +108,17 @@ flag_t new_flag(const char *name, const char *opt, const char *long_opt,
 void flags_publish(const flags_t *flags);
 const char *get_default_temporary_directory();
 flags_t *flags_default();
+flag_t flag_input();
+flag_t flag_output();
+flag_t flag_rounds();
+flag_t flag_verbose();
+flag_t flag_replay_goal();
+flag_t flag_temporary_directory();
+flag_t flag_no_preload();
+flag_t flag_logger_block();
+flag_t flag_before_run();
+flag_t flag_after_run();
+flag_t flag_logger_file();
 
 #define _FLAGMGR_CALLBACK(name, CALLBACK)                                      \
     static void _flagmgr_callback_##name(struct value v, void *__)             \
@@ -113,50 +126,48 @@ flags_t *flags_default();
         (CALLBACK);                                                            \
     }
 
+#define _FLAGMGR_SUBSCRIBE(...)                                                \
+    LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_FLAGS, __VA_ARGS__)
+
 #define NEW_PRETTY_CALLBACK_FLAG(name, opt, long_opt, desc, val,               \
                                  str_converter, CALLBACK)                      \
     _FLAGMGR_CALLBACK(name, CALLBACK)                                          \
-    static void LOTTO_CONSTRUCTOR LOTTO_USED _flagmgr_constructor_##name(void) \
-    {                                                                          \
+    _FLAGMGR_SUBSCRIBE({                                                       \
         new_flag(#name, (opt), (long_opt), "", (desc), (val), (str_converter), \
                  _flagmgr_callback_##name);                                    \
-    }
+    })
 
 #define NEW_PUBLIC_PRETTY_CALLBACK_FLAG(var, opt, long_opt, desc, val,         \
                                         str_converter, CALLBACK)               \
     static flag_t FLAG_##var;                                                  \
     _FLAGMGR_CALLBACK(var, CALLBACK)                                           \
-    static void LOTTO_CONSTRUCTOR LOTTO_USED _flagmgr_constructor_##var(void)  \
-    {                                                                          \
+    _FLAGMGR_SUBSCRIBE({                                                       \
         FLAG_##var = new_flag(#var, (opt), (long_opt), "", (desc), (val),      \
                               (str_converter), _flagmgr_callback_##var);       \
-    }
+    })
 
 #define NEW_CALLBACK_FLAG(name, opt, long_opt, help, desc, val, CALLBACK)      \
     _FLAGMGR_CALLBACK(name, CALLBACK)                                          \
-    static void LOTTO_CONSTRUCTOR LOTTO_USED _flagmgr_constructor_##name(void) \
-    {                                                                          \
+    _FLAGMGR_SUBSCRIBE({                                                       \
         new_flag(#name, (opt), (long_opt), (help), (desc), (val),              \
                  (str_converter_t){}, CONCAT(_flagmgr_callback_, name));       \
-    }
+    })
 
 #define NEW_PUBLIC_CALLBACK_FLAG(var, opt, long_opt, help, desc, val,          \
                                  CALLBACK)                                     \
     static flag_t FLAG_##var;                                                  \
     _FLAGMGR_CALLBACK(var, CALLBACK)                                           \
-    static void LOTTO_CONSTRUCTOR LOTTO_USED _flagmgr_constructor_##var(void)  \
-    {                                                                          \
+    _FLAGMGR_SUBSCRIBE({                                                       \
         FLAG_##var = new_flag(#var, (opt), (long_opt), (help), (desc), (val),  \
                               (str_converter_t){}, _flagmgr_callback_##var);   \
-    }
+    })
 
 #define NEW_PUBLIC_PRETTY_COMMAND_FLAG(var, opt, long_opt, help, desc, val,    \
                                        str_converter)                          \
-    static void LOTTO_CONSTRUCTOR LOTTO_USED _flagmgr_constructor_##var(void)  \
-    {                                                                          \
+    _FLAGMGR_SUBSCRIBE({                                                       \
         var = new_flag(#var, (opt), (long_opt), (help), (desc), (val),         \
                        (str_converter), NULL);                                 \
-    }
+    })
 
 #define NEW_PUBLIC_COMMAND_FLAG(var, opt, long_opt, help, desc, val)           \
     static flag_t FLAG_##var;                                                  \
@@ -236,17 +247,16 @@ flags_t *flags_default();
                          flag_off())
 
 #define DECLARE_FLAG_LIST_FLAGS                                                \
-    DECLARE_COMMAND_FLAG(LIST_FLAGS, "", "list-flags", "",                    \
-                         "list available flags",                               \
-                         flag_off())
+    DECLARE_COMMAND_FLAG(LIST_FLAGS, "", "list-flags", "",                     \
+                         "list available flags", flag_off())
 
 /**
  * CLI parsing and printing
  */
 
-#define FLAGS_PARSE_OK    0
-#define FLAGS_PARSE_ERROR 1
-#define FLAGS_PARSE_HELP  -1
+#define FLAGS_PARSE_OK         0
+#define FLAGS_PARSE_ERROR      1
+#define FLAGS_PARSE_HELP       -1
 #define FLAGS_PARSE_LIST_FLAGS -2
 
 void flags_print(const flags_t *flags);

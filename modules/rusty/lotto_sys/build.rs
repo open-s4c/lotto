@@ -108,7 +108,7 @@ fn main() -> Result<()> {
         .newtype_enum("base_category")
         .rustified_enum("reason")
         .rustified_enum("slot")
-        .rustified_enum("topic")
+        .rustified_enum("event")
         .rustified_enum("enforece_mode")
         .rustified_enum("termination_mode")
         .rustified_enum("stable_address_method")

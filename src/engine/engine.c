@@ -14,9 +14,9 @@
 #include <lotto/base/reason.h>
 #include <lotto/engine/catmgr.h>
 #include <lotto/engine/pubsub.h>
-#include <lotto/engine/statemgr.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/now.h>
 #include <lotto/util/contract.h>
@@ -52,6 +52,9 @@ CONTRACT_INIT({
     _ghost.running_id = NO_TASK;
     _ghost.clk        = 0;
 })
+
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__START)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__BEFORE_CAPTURE)
 
 /*******************************************************************************
  * contract checker using ghost state
@@ -105,7 +108,7 @@ engine_init(trace_t *input, trace_t *output)
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
     logger_debugf("starting...\n");
-    LOTTO_PUBLISH(TOPIC_ENGINE_START, nil);
+    LOTTO_PUBLISH(EVENT_ENGINE__START, nil);
     recorder_init(input, output);
 }
 
@@ -153,15 +156,15 @@ engine_capture(const context_t *ctx)
     log(ctx, "CAPTURE  %s\t%s", category_str(ctx->cat), ctx->func);
 
     struct value val = any(ctx);
-    LOTTO_PUBLISH(TOPIC_BEFORE_CAPTURE, val);
+    LOTTO_PUBLISH(EVENT_ENGINE__BEFORE_CAPTURE, val);
     plan_t p = sequencer_capture(ctx);
 
     CONTRACT({
         ASSERT(p.clk == _ghost.clk);
 
         if (plan_next(p) != ACTION_CONTINUE) {
-            /* ACTION_CONTINUE: the plan is basically empty, there is no reason
-             * to call engine_resume.
+            /* ACTION_CONTINUE: the plan is basically empty, there is no
+             * reason to call engine_resume.
              */
             vatomic_write(&_ghost.state, CAPTURED);
         }

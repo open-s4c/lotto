@@ -1,2 +1,2 @@
-#include <dice/module.h>
-DICE_MODULE_INIT()
+#include <lotto/core/module.h>
+LOTTO_MODULE_INIT()

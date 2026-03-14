@@ -12,29 +12,7 @@ add_subdirectory(basic)
 # tikl integration tests
 # ------------------------------------------------------------------------------
 
-set(TSAN_0003-await-increment ON)
-set(TSAN_0005-atomic-message-passing ON)
-set(TSAN_0006-racy-message-passing ON)
-
-# TODO: some sources are still failing
-set(FAILING_SRCS
-    inflex_abc_nocli.c # test script needs correct preloading on necessary
-                       # libraries
-    notsan_mediator_null.c # the error must not RUNTIME_...
-    wait.c # time leap is not performed, maybe there is an undesired CAT_CALL
-)
-# rinflex.c # gets stuck during essentiality check rinflex_3oc.c rinflex_cas.c
-# rinflex_essentiality.c rinflex_flaky_events.c rinflex_loop.c rinflex_mutex.c
-# rinflex_spinlock.c rinflex_symmetry.c rinflex_two_disjoint_bugs.c
-
-file(GLOB ALL_SRCS *.c)
-set(SRCS)
-foreach(SRC ${ALL_SRCS})
-    get_filename_component(SRC ${SRC} NAME)
-    if(NOT "${SRC}" IN_LIST FAILING_SRCS)
-        set(SRCS ${SRCS} ${SRC})
-    endif()
-endforeach()
+file(GLOB SRCS *.c)
 
 add_custom_target(
     tikl-integration-test
@@ -52,9 +30,14 @@ foreach(SRC ${SRCS})
                                                  "${CMAKE_BINARY_DIR}/tikl")
     add_dependencies(tikl-test ${TARGET})
 
-    if(${TSAN_${TARGET}})
+    if(NOT DEFINED TSAN_${TEST} OR "${TSAN_${TEST}}")
         target_compile_options(${TARGET} PRIVATE -fsanitize=thread)
         target_link_options(${TARGET} PRIVATE -fsanitize=thread)
+        if(CMAKE_C_COMPILER_ID MATCHES "Clang"
+           OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            target_compile_options(${TARGET} PRIVATE -shared-libsan)
+            target_link_options(${TARGET} PRIVATE -shared-libsan)
+        endif()
     endif()
 
     if("${LOTTO_TESTS_WITH_TSAN}")
@@ -74,6 +57,7 @@ foreach(SRC ${SRCS})
         COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRC}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     add_dependencies(tikl-${TEST} ${TARGET} tikl-build lotto-cli)
+    add_dependencies(tikl-integration-test tikl-${TEST})
 endforeach()
 
 # ##############################################################################

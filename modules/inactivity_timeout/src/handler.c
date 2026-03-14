@@ -14,7 +14,7 @@ static struct event_data {
     task_id id;
     uint64_t alarm;
 } _event_data;
-LOTTO_SUBSCRIBE(TOPIC_NEXT_TASK, {
+LOTTO_SUBSCRIBE(EVENT_ENGINE__NEXT_TASK, {
     const context_t *ctx = as_any(v);
     if (ctx) {
         _event_data.id = ctx->id;

@@ -5,9 +5,11 @@ use std::ffi::CString;
 use std::fs::{File, OpenOptions};
 use std::io::{BufWriter, Write};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Mutex;
+use std::sync::{Mutex, Once};
 
 fn init_full(level: LevelFilter, redirect: Redirect) {
+    static INIT_LOGGER: Once = Once::new();
+
     LEVEL.store(level as usize, Ordering::Relaxed);
 
     // Bypass the default logging level check if we want trace
@@ -22,7 +24,9 @@ fn init_full(level: LevelFilter, redirect: Redirect) {
         let mut g = TRACE_REDIRECT.try_lock().expect("single thread");
         *g = redirect;
     }
-    log::set_logger(&LOGGER).expect("lotto_log init");
+    INIT_LOGGER.call_once(|| {
+        let _ = log::set_logger(&LOGGER);
+    });
 }
 
 /// Default initialization of the Lotto logging system.

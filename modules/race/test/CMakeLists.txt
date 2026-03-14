@@ -1,18 +1,26 @@
+include_directories(${PROJECT_SOURCE_DIR}/src/include)
+include_directories(${PROJECT_SOURCE_DIR}/src)
+
 file(GLOB SRCS *_test.c)
 foreach(SRC ${SRCS})
     get_filename_component(TARGET ${SRC} NAME_WLE)
-    string(REGEX REPLACE "_test" "_testing" SRC_LIB ${TARGET})
     add_executable(${TARGET} ${SRC})
     target_link_libraries(
         ${TARGET}
-        engine_${SRC_LIB}.o
-        states_${SRC_LIB}.o
+        lotto-runtime-${MODULE_NAME}
         sys_testing.o
-        # brokers_pubsub_testing.o
         base_testing.o
-        states_sequencer_testing.o
+		statemgr_testing.o
         memmgr_runtime_libc.o
         memmgr_user_libc.o
-        dice)
+		dice)
+    target_link_options(${TARGET} PUBLIC -rdynamic)
     add_test(NAME ${TARGET} COMMAND ${TARGET})
+endforeach()
+
+file(GLOB TIKL_SRCS *.c)
+list(FILTER TIKL_SRCS EXCLUDE REGEX "_test\\.c$")
+
+foreach(SRC ${TIKL_SRCS})
+    add_module_tikl_test(${SRC})
 endforeach()

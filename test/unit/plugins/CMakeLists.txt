@@ -10,7 +10,8 @@ foreach(SRC ${SRCS})
     get_filename_component(TARGET ${SRC} NAME_WLE)
     add_executable(${TARGET} ${SRC})
     target_link_libraries(${TARGET} base_testing.o sys_testing.o
-                          engine_component memmgr_runtime.o memmgr_user.o)
+                          engine_component memmgr_runtime_libc.o
+                          memmgr_user_libc.o)
     if(${TARGET} STREQUAL leakcheck_test)
         target_link_libraries(${TARGET} lotto_leakcheck_user_engine)
     elseif(${TARGET} STREQUAL uafcheck_test)

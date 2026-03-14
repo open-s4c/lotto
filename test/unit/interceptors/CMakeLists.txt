@@ -19,8 +19,8 @@ foreach(SRC ${SRCS})
         pthread
         interceptor_testing.o
         posix_interceptors.o
-        memmgr_runtime.o
-        memmgr_user.o
+        memmgr_runtime_libc.o
+        memmgr_user_libc.o
         dice
         dice-self)
     # add_test(NAME ${TEST} COMMAND ${TEST})

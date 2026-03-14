@@ -152,6 +152,255 @@ Constructor priorities should be treated as a wiring detail, not as the main
 initialization mechanism. The semantic phase ordering must come from pubsub
 events, not from constructor timing.
 
+## Registration Kinds In Lotto
+
+This section lists the registration mechanisms used by Lotto itself, excluding
+the separate QEMU callback layer.
+
+The word "registration" is overloaded in the tree. There are two large groups:
+
+- startup registrations, which build Lotto's global registries and behavior
+- ordinary runtime container inserts, which use names like `map_register(...)`
+  but are not part of module initialization
+
+### Startup registrations
+
+These are the registration kinds that shape Lotto as a system.
+
+#### 1. Pubsub chain advertisement
+
+Purpose:
+
+- register a numeric chain id with a human-readable name for pubsub
+
+Main APIs:
+
+- `PS_ADVERTISE_CHAIN(...)`
+
+Examples:
+
+- `CHAIN_LOTTO_CONTROL`
+- `CHAIN_LOTTO_DEFAULT`
+
+This is a constructor-time wiring step.
+
+#### 2. Pubsub event-type advertisement
+
+Purpose:
+
+- register a numeric event type with a human-readable name
+
+Main APIs:
+
+- `PS_ADVERTISE_TYPE(...)`
+- `LOTTO_ADVERTISE_TYPE(...)`
+
+Examples:
+
+- `EVENT_LOTTO_REGISTER`
+- `EVENT_LOTTO_INIT`
+- `EVENT_ENGINE__REGISTER_STATE_*`
+
+This is also a constructor-time wiring step.
+
+#### 3. Pubsub subscription registration
+
+Purpose:
+
+- install event handlers into Dice or Lotto pubsub chains
+
+Main APIs:
+
+- `PS_SUBSCRIBE(...)`
+- `LOTTO_SUBSCRIBE(...)`
+- `LOTTO_SUBSCRIBE_CONTROL(...)`
+- `CONTRACT_SUBSCRIBE(...)`
+
+Used for:
+
+- Dice capture/intercept subscribers
+- Lotto control-phase subscribers
+- normal Lotto event subscribers
+- contract-only subscribers
+
+This is Phase 1 wiring. The handler body may later perform registration or init
+when the corresponding event is published.
+
+#### 4. Lotto phase registration
+
+Purpose:
+
+- trigger the semantic Lotto startup phases
+
+Main events:
+
+- `EVENT_LOTTO_REGISTER`
+- `EVENT_LOTTO_INIT`
+
+These are not "registries" themselves, but they are the control points through
+which the other semantic registrations are supposed to happen.
+
+#### 5. State-manager registration
+
+Purpose:
+
+- register marshaled state objects into the engine state manager
+
+Main API:
+
+- `statemgr_register(...)`
+
+Main helper macros:
+
+- `REGISTER_PRINTABLE_STATE(...)`
+- `REGISTER_CONFIG(...)`
+- `REGISTER_CONFIG_NONSTATIC(...)`
+- `REGISTER_STATIC_STATE(...)`
+- `REGISTER_STATE(...)`
+- `REGISTER_PERSISTENT(...)`
+- `REGISTER_EPHEMERAL(...)`
+- `STATEMGR_REGISTER(...)`
+
+State kinds:
+
+- `START`
+- `CONFIG`
+- `PERSISTENT`
+- `FINAL`
+- `EPHEMERAL`
+
+Most state registration is triggered from `EVENT_ENGINE__REGISTER_STATE_*`,
+which is itself fanned out from `EVENT_LOTTO_REGISTER`.
+
+Rust support:
+
+- Rust brokers also call the same `statemgr_register(...)` interface through
+  FFI.
+
+#### 6. Category registration
+
+Purpose:
+
+- allocate dynamic category ids beyond the built-in category range
+
+Main API:
+
+- `new_category(...)`
+
+Typical use:
+
+- modules register their custom categories during `EVENT_LOTTO_REGISTER`
+
+Rust support:
+
+- Rust code uses the same category registry through `new_category(...)` FFI.
+- Rust registration is split by phase as well:
+  `lotto_rust_register()` performs category and other registration work, and
+  `lotto_rust_init()` performs post-registration init.
+
+#### 7. CLI flag registration
+
+Purpose:
+
+- register command-line flags and their metadata into the global flag registry
+
+Main API:
+
+- `new_flag(...)`
+
+Main helper macros:
+
+- `DECLARE_COMMAND_FLAG(...)`
+- `DECLARE_FLAG_*`
+- `NEW_*FLAG(...)`
+
+Typical timing:
+
+- done from `EVENT_LOTTO_REGISTER`
+
+Rust support:
+
+- Rust CLI code can also call `new_flag(...)` through FFI.
+
+#### 8. CLI subcommand registration
+
+Purpose:
+
+- register driver commands into the CLI subcommand table
+
+Main API:
+
+- `subcmd_register(...)`
+
+Typical timing:
+
+- done from `EVENT_LOTTO_INIT`
+
+Examples:
+
+- `record`
+- `replay`
+- `stress`
+- `run`
+- plugin-provided commands such as `debug`, `trace`, `explore`, `inflex`
+
+Rust support:
+
+- Rust CLI macros eventually call `subcmd_register(...)` through FFI.
+- On the driver side, Rust command registration happens from
+  `lotto_rust_init()`, after `lotto_rust_register()` has already handled
+  categories, flags, and other registration work.
+
+#### 9. Engine dispatcher handler registration
+
+Purpose:
+
+- install engine event handlers into ordered dispatcher slots
+
+Main API:
+
+- `dispatcher_register(...)`
+
+Main helper macros:
+
+- `REGISTER_HANDLER(...)`
+- `REGISTER_HANDLER_EXTERNAL(...)`
+
+This is currently constructor-based, not `EVENT_LOTTO_REGISTER`-based. It is a
+registration mechanism, but not yet aligned with the phase strategy.
+
+Rust support:
+
+- Rust handler code also registers into the same dispatcher through FFI.
+
+#### 10. Module registry population
+
+Purpose:
+
+- discover available driver/runtime modules and populate the module registry
+
+Main APIs:
+
+- `lotto_module_scan(...)`
+- `lotto_module_enable_only(...)`
+
+This is a driver/bootstrap registration mechanism, not an engine event
+registration. It determines which modules will be preloaded and therefore which
+constructors and phase subscribers will exist in a process.
+
+### Ordinary runtime container inserts
+
+The following APIs also say "register", but they are not startup registration
+mechanisms:
+
+- `map_register(...)`
+- `tidmap_register(...)`
+- `tidmap_find_or_register(...)`
+
+These are runtime data-structure operations used by handlers and state logic.
+They should not be confused with Lotto module initialization or phase-based
+registration.
+
 ## Current Deviations
 
 The intended strategy is not yet fully enforced everywhere.

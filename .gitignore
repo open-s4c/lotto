@@ -7,11 +7,13 @@
 # build and generated files
 build/
 build_*/
+build-*/
 local/
 *.rs.bk
 .cache
 deps/target
 **~
+debug.gdb
 
 # lotto traces
 *.trace

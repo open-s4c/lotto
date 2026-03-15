@@ -3,14 +3,6 @@
 #include <lotto/driver/subcmd.h>
 #include <lotto/modules/explore.h>
 
-DECLARE_FLAG_OUTPUT;
-DECLARE_FLAG_INPUT;
-DECLARE_FLAG_VERBOSE;
-DECLARE_FLAG_TEMPORARY_DIRECTORY;
-DECLARE_FLAG_NO_PRELOAD;
-DECLARE_FLAG_LOGGER_BLOCK;
-DECLARE_FLAG_LOGGER_FILE;
-
 static flags_t *
 _default_flags()
 {
@@ -20,19 +12,17 @@ _default_flags()
     return flags;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
-    flag_t sel[] = {FLAG_OUTPUT,
-                    FLAG_INPUT,
-                    FLAG_VERBOSE,
-                    FLAG_TEMPORARY_DIRECTORY,
-                    FLAG_NO_PRELOAD,
-                    FLAG_LOGGER_BLOCK,
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_COMMANDS, {
+    flag_t sel[] = {flag_output(),
+                    flag_input(),
+                    flag_verbose(),
+                    flag_temporary_directory(),
+                    flag_no_preload(),
+                    flag_logger_block(),
                     FLAG_EXPLORE_EXPECT_FAILURE,
                     FLAG_EXPLORE_MIN,
-                    FLAG_LOGGER_FILE,
+                    flag_logger_file(),
                     0};
     subcmd_register(explore, "explore", "", "Exhaustively explore a trace",
                     true, sel, _default_flags, SUBCMD_GROUP_TRACE);
-}
+})

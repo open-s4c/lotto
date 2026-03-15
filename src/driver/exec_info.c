@@ -7,7 +7,8 @@
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
 
-static const char *_envvars[REPLAYED_ENVVARS] = {"LD_PRELOAD"};
+static const char *_envvars[REPLAYED_ENVVARS] = {"LD_PRELOAD",
+                                                 "DICE_PLUGIN_MODULES"};
 
 /*******************************************************************************
  * marshaling interface
@@ -81,7 +82,9 @@ exec_info_store_envvars()
 {
     for (size_t i = 0; i < REPLAYED_ENVVARS; i++) {
         _exec_info.envvars[i] = getenv(_envvars[i]);
-        ASSERT(_exec_info.envvars[i] != NULL);
+        if (_exec_info.envvars[i] == NULL) {
+            _exec_info.envvars[i] = "";
+        }
     }
 }
 
@@ -94,7 +97,7 @@ exec_info_replay_envvars()
 {
     uint8_t replay_state = REPLAY_UNDEFINED;
     for (size_t i = 0; i < REPLAYED_ENVVARS; i++) {
-        if (_exec_info.envvars[i] == NULL) {
+        if (_exec_info.envvars[i] == NULL || _exec_info.envvars[i][0] == '\0') {
             ASSERT(replay_state == REPLAY_UNDEFINED ||
                    replay_state == REPLAY_EMPTY);
             replay_state = REPLAY_EMPTY;

@@ -5,6 +5,7 @@
 
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/subcmd.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/modules.h>
 #include <lotto/sys/stdio.h>
@@ -143,10 +144,8 @@ modules(args_t *args, flags_t *flags)
     return 0;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_COMMANDS, {
     flag_t sel[] = {0};
     subcmd_register(modules, "modules", "", "List available Lotto modules",
                     false, sel, flags_default, SUBCMD_GROUP_TRACE);
-}
+})

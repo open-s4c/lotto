@@ -1,5 +1,8 @@
 macro(add_runtime_module)
     set(RUNTIME_MODULE_TYPE OBJECT)
+    if(DEFINED LOTTO_EMBED_LIB AND NOT ${LOTTO_EMBED_LIB})
+        set(RUNTIME_MODULE_TYPE SHARED)
+    endif()
     if(DEFINED RUNTIME_MODULE_TYPE_${MODULE_NAME})
         set(RUNTIME_MODULE_TYPE ${RUNTIME_MODULE_TYPE_${MODULE_NAME}})
     endif()
@@ -14,6 +17,8 @@ macro(add_runtime_module)
     target_compile_definitions(
         ${RUNTIME_MODULE_TARGET}
         PRIVATE DICE_MULTIFILE_MODULE #
+                LOTTO_RUNTIME_MODULE=1 #
+                LOTTO_DRIVER_MODULE=0 #
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
     if("${RUNTIME_MODULE_TYPE}" STREQUAL "SHARED")
@@ -42,6 +47,8 @@ macro(add_driver_module)
     target_compile_definitions(
         ${DRIVER_MODULE_TARGET}
         PRIVATE DICE_MULTIFILE_MODULE #
+                LOTTO_RUNTIME_MODULE=0 #
+                LOTTO_DRIVER_MODULE=1 #
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
     if("${DRIVER_MODULE_TYPE}" STREQUAL "SHARED")
@@ -77,7 +84,8 @@ endmacro()
 macro(add_module_object TARGET SLOT)
     add_library(${TARGET} OBJECT ${ARGN})
     target_compile_definitions(
-        ${TARGET} PRIVATE DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${SLOT})
+        ${TARGET}
+        PRIVATE DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${SLOT})
 endmacro()
 
 function(add_module_tikl_test SRC)

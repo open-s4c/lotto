@@ -20,8 +20,6 @@
 #define LOTTO_NOP                                                              \
     do {                                                                       \
     } while (0)
-#define LOTTO_CONSTRUCTOR_PRIO 101
-#define LOTTO_CONSTRUCTOR      __attribute__((constructor(LOTTO_CONSTRUCTOR_PRIO)))
 #define LOTTO_DESTRUCTOR       __attribute__((destructor))
 #define LOTTO_USED             __attribute__((used))
 

@@ -37,7 +37,7 @@ REGISTER_STATE(EPHEMERAL, _state, {
 static void _cleanup_poll(const poll_t *poll);
 static void _cleanup_fds();
 /* Unblock task when timeout is triggered by the timeout handler */
-LOTTO_SUBSCRIBE(TOPIC_TRIGGER_TIMEOUT, {
+LOTTO_SUBSCRIBE(EVENT_TIMEOUT__TRIGGER, {
     task_id id   = as_uval(v);
     poll_t *poll = (poll_t *)tidmap_find(&_state.polls, id);
     if (poll == NULL) {

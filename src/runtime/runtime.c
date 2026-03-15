@@ -1,16 +1,16 @@
 #include <dlfcn.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <fcntl.h>
 
-#define DICE_XTOR_PRIO 101
-#define LOGGER_PREFIX  LOGGER_CUR_FILE
-#define LOGGER_BLOCK   LOGGER_CUR_BLOCK
+#define LOGGER_PREFIX LOGGER_CUR_FILE
+#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <dice/self.h>
 #include <lotto/base/clk.h>
 #include <lotto/base/trace_file.h>
-#include <lotto/engine/pubsub.h>
+#include <lotto/core/module.h>
 #include <lotto/engine/engine.h> // for engine_init
+#include <lotto/engine/pubsub.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
@@ -112,10 +112,6 @@ _logger_init()
     }
 }
 
-DICE_MODULE_INIT({
-    _runtime_init();
-    _logger_init();
-})
 
 typedef struct {
     const context_t *ctx;
@@ -190,13 +186,18 @@ _runtime_fini()
 }
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_WAIT, {
-    static uint64_t cnt = 0;
+    static uint64_t cnt        = 0;
     struct self_wait_event *ev = EVENT_PAYLOAD(event);
 
     /* Self-wait can happen when some threads exited but were never
      * joined due to various reaons.  In Lotto, we don't really care
      * about this.  */
-    if (++cnt > 10) {
-        ev->stop = true;
+    if (++cnt < 10) {
+        ev->wait = true;
     }
+})
+
+ON_INITIALIZATION_PHASE({
+    _runtime_init();
+    _logger_init();
 })

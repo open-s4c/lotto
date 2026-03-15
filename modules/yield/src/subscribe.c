@@ -10,11 +10,11 @@
 #include <lotto/base/arg.h>
 #include <lotto/base/category.h>
 #include <lotto/base/context.h>
+#include <lotto/modules/yield/events.h>
 #include <lotto/rsrc_deadlock.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/logger.h>
 
-#define EVENT_SCHED_YIELD 105
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SCHED_YIELD, {
     context_t *c = ctx(.func = "sched_yield", .cat = CAT_USER_YIELD);
     intercept_capture(c);

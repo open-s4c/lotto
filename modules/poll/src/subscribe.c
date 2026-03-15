@@ -6,7 +6,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/callrec.h>
 #include <lotto/base/record.h>
-#include <lotto/base/topic.h>
 #include <lotto/base/trace.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/clock.h>

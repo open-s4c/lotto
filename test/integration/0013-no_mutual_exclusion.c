@@ -1,6 +1,6 @@
 // clang-format off
 // RUN: (! %lotto %stress -- %b 2>&1) | %check %s
-// CHECK: assert failed {{.*}}/no_mutual_exclusion.c:{{[0-9]+}}: x == 1
+// CHECK: assert failed {{.*}}/{{[0-9]+}}-no_mutual_exclusion.c:{{[0-9]+}}: x == 1
 // clang-format on
 
 #include <assert.h>

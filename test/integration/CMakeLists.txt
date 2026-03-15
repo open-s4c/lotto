@@ -6,23 +6,17 @@ set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 add_dependencies(tikl-test tikl-build)
 
-add_subdirectory(basic)
-
 # ------------------------------------------------------------------------------
 # tikl integration tests
 # ------------------------------------------------------------------------------
 
-set(TSAN_0003-await-increment ON)
-set(TSAN_0005-atomic-message-passing ON)
-set(TSAN_0006-racy-message-passing ON)
-
 file(GLOB SRCS *.c)
 
 add_custom_target(
-    tikl-integration-test
+    tikl-integration
     COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRCS}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-add_dependencies(tikl-test tikl-integration-test)
+add_dependencies(tikl-test tikl-integration)
 
 foreach(SRC ${SRCS})
     get_filename_component(TEST ${SRC} NAME_WLE)
@@ -34,9 +28,14 @@ foreach(SRC ${SRCS})
                                                  "${CMAKE_BINARY_DIR}/tikl")
     add_dependencies(tikl-test ${TARGET})
 
-    if(${TSAN_${TARGET}})
+    if(NOT DEFINED TSAN_${TEST} OR "${TSAN_${TEST}}")
         target_compile_options(${TARGET} PRIVATE -fsanitize=thread)
         target_link_options(${TARGET} PRIVATE -fsanitize=thread)
+        if(CMAKE_C_COMPILER_ID MATCHES "Clang"
+           OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            target_compile_options(${TARGET} PRIVATE -shared-libsan)
+            target_link_options(${TARGET} PRIVATE -shared-libsan)
+        endif()
     endif()
 
     if("${LOTTO_TESTS_WITH_TSAN}")
@@ -56,6 +55,7 @@ foreach(SRC ${SRCS})
         COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRC}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     add_dependencies(tikl-${TEST} ${TARGET} tikl-build lotto-cli)
+    add_dependencies(tikl-integration tikl-${TEST})
 endforeach()
 
 # ##############################################################################

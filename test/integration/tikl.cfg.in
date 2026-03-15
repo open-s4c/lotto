@@ -28,7 +28,7 @@ trace          = trace %tmpdir %output
 # -j @TIKL_WORKERS@
 -t @TIKL_TIMEOUT@
 -s @CMAKE_CURRENT_SOURCE_DIR@
--b @CMAKE_CURRENT_BINARY_DIR@
+-b @CMAKE_BINARY_DIR@/tikl
 -T @CMAKE_CURRENT_BINARY_DIR@/tmp
 
 # features

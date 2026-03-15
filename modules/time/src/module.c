@@ -1,2 +1,2 @@
-#include <dice/module.h>
-DICE_MODULE_INIT()
+#include <lotto/engine/pubsub.h>
+LOTTO_MODULE_INIT()

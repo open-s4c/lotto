@@ -61,21 +61,6 @@ _bits_from(str_converter_t *str_converter, const char *src)
     }
 }
 
-const char *
-enabled_str(bool b)
-{
-    return b ? "enable" : "disable";
-}
-
-bool
-enabled_from(const char *src)
-{
-    bool is_true  = sys_strcmp(src, "enable") == 0,
-         is_false = sys_strcmp(src, "disable") == 0;
-    ASSERT(is_true != is_false);
-    return is_true;
-}
-
 #define BUFFER_LEN  1024
 #define MAX_OPTIONS 1024
 

@@ -1,6 +1,5 @@
 #include "category.h"
 #include "lotto/core/driver/events.h"
-#include <lotto/core/module.h>
 #include <lotto/engine/catmgr.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/sys/assert.h>

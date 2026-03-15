@@ -26,6 +26,9 @@ macro(add_runtime_module)
             ${RUNTIME_MODULE_TARGET}
             PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
                                  "${LOTTO_MODULE_BUILD_DIR}")
+        if(TARGET lotto-cli)
+            add_dependencies(lotto-cli ${RUNTIME_MODULE_TARGET})
+        endif()
     else()
         add_lotto_builtin(${RUNTIME_MODULE_TARGET})
     endif()
@@ -56,6 +59,9 @@ macro(add_driver_module)
             ${DRIVER_MODULE_TARGET}
             PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
                                  "${LOTTO_MODULE_BUILD_DIR}")
+        if(TARGET lotto-cli)
+            add_dependencies(lotto-cli ${DRIVER_MODULE_TARGET})
+        endif()
     else()
         target_link_libraries(lotto-driver PRIVATE ${DRIVER_MODULE_TARGET})
     endif()

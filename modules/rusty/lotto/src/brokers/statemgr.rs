@@ -44,52 +44,48 @@ fn assert_initialized() {
     assert!(INITIALIZED.load(Ordering::SeqCst));
 }
 
-/// Initialize the Rust state manager.
+/// Install Rust's pubsub subscriptions for state marshal/unmarshal topics.
 ///
-/// This must be called once to register for the slot `RUSTY_ENGINE`.
-pub fn init() {
+/// These are Dice subscriptions and must be established before Lotto's
+/// registration phase starts.
+pub fn subscribe_system() {
+    assert!(!INITIALIZED.load(Ordering::SeqCst));
+    crate::engine::pubsub::subscribe_default(
+        lotto_sys::EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG as u16,
+        Some(_rust_statemgr_after_unmarshal_config),
+    );
+    crate::engine::pubsub::subscribe_default(
+        lotto_sys::EVENT_ENGINE__AFTER_UNMARSHAL_FINAL as u16,
+        Some(_rust_statemgr_after_unmarshal_final),
+    );
+    crate::engine::pubsub::subscribe_default(
+        lotto_sys::EVENT_ENGINE__AFTER_UNMARSHAL_PERSISTENT as u16,
+        Some(_rust_statemgr_after_unmarshal_persistent),
+    );
+    crate::engine::pubsub::subscribe_default(
+        lotto_sys::EVENT_ENGINE__BEFORE_MARSHAL_CONFIG as u16,
+        Some(_rust_statemgr_before_marshal_config),
+    );
+    crate::engine::pubsub::subscribe_default(
+        lotto_sys::EVENT_ENGINE__BEFORE_MARSHAL_FINAL as u16,
+        Some(_rust_statemgr_before_marshal_final),
+    );
+    crate::engine::pubsub::subscribe_default(
+        lotto_sys::EVENT_ENGINE__BEFORE_MARSHAL_PERSISTENT as u16,
+        Some(_rust_statemgr_before_marshal_persistent),
+    );
+}
+
+/// Register the Rust state manager itself.
+///
+/// This must be called once during Rust registration to publish Rust's
+/// state groups into Lotto. Individual Rust handlers then append their own
+/// state pointers through [`register`], still within the registration phase.
+pub fn register_system() {
     assert!(!INITIALIZED.load(Ordering::SeqCst));
     PERSISTENT.register();
     CONFIG.register();
     FINAL.register();
-    unsafe {
-        raw::ps_subscribe(
-            lotto_sys::CHAIN_LOTTO as u16,
-            lotto_sys::TOPIC_AFTER_UNMARSHAL_CONFIG as u16,
-            Some(_rust_statemgr_after_unmarshal_config),
-            lotto_sys::DICE_MODULE_SLOT as i32,
-        );
-        raw::ps_subscribe(
-            lotto_sys::CHAIN_LOTTO as u16,
-            lotto_sys::TOPIC_AFTER_UNMARSHAL_FINAL as u16,
-            Some(_rust_statemgr_after_unmarshal_final),
-            lotto_sys::DICE_MODULE_SLOT as i32,
-        );
-        raw::ps_subscribe(
-            lotto_sys::CHAIN_LOTTO as u16,
-            lotto_sys::TOPIC_AFTER_UNMARSHAL_PERSISTENT as u16,
-            Some(_rust_statemgr_after_unmarshal_persistent),
-            lotto_sys::DICE_MODULE_SLOT as i32,
-        );
-        raw::ps_subscribe(
-            lotto_sys::CHAIN_LOTTO as u16,
-            lotto_sys::TOPIC_BEFORE_MARSHAL_CONFIG as u16,
-            Some(_rust_statemgr_before_marshal_config),
-            lotto_sys::DICE_MODULE_SLOT as i32,
-        );
-        raw::ps_subscribe(
-            lotto_sys::CHAIN_LOTTO as u16,
-            lotto_sys::TOPIC_BEFORE_MARSHAL_FINAL as u16,
-            Some(_rust_statemgr_before_marshal_final),
-            lotto_sys::DICE_MODULE_SLOT as i32,
-        );
-        raw::ps_subscribe(
-            lotto_sys::CHAIN_LOTTO as u16,
-            lotto_sys::TOPIC_BEFORE_MARSHAL_PERSISTENT as u16,
-            Some(_rust_statemgr_before_marshal_persistent),
-            lotto_sys::DICE_MODULE_SLOT as i32,
-        );
-    }
     INITIALIZED.store(true, Ordering::SeqCst);
 }
 
@@ -392,14 +388,14 @@ pub struct StateTopicSubscriberPtr(*mut dyn StateTopicSubscriber);
 // by lotto.
 unsafe impl Send for StateTopicSubscriberPtr {}
 
-pub static STATE_TOPIC_SUBSCRIBERS: Mutex<Vec<StateTopicSubscriberPtr>> = Mutex::new(Vec::new());
+pub static STATE_EVENT_SUBSCRIBERS: Mutex<Vec<StateTopicSubscriberPtr>> = Mutex::new(Vec::new());
 
 pub fn subscribe_to_statemgr_topics<StateOwner: StateTopicSubscriber>(
     state_owner: &'static StateOwner,
 ) {
     let ptr = state_owner as *const dyn StateTopicSubscriber as *mut dyn StateTopicSubscriber;
     let ptr = StateTopicSubscriberPtr(ptr);
-    let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
+    let mut subscribers = STATE_EVENT_SUBSCRIBERS.try_lock().expect("single thread");
     subscribers.push(ptr);
 }
 
@@ -409,7 +405,7 @@ unsafe extern "C" fn _rust_statemgr_after_unmarshal_config(
     _event: *mut ::std::os::raw::c_void,
     _md: *mut raw::metadata,
 ) -> raw::ps_err {
-    let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
+    let mut subscribers = STATE_EVENT_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.after_unmarshal_config();
@@ -423,7 +419,7 @@ unsafe extern "C" fn _rust_statemgr_after_unmarshal_persistent(
     _event: *mut ::std::os::raw::c_void,
     _md: *mut raw::metadata,
 ) -> raw::ps_err {
-    let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
+    let mut subscribers = STATE_EVENT_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.after_unmarshal_persistent();
@@ -437,7 +433,7 @@ unsafe extern "C" fn _rust_statemgr_after_unmarshal_final(
     _event: *mut ::std::os::raw::c_void,
     _md: *mut raw::metadata,
 ) -> raw::ps_err {
-    let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
+    let mut subscribers = STATE_EVENT_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.after_unmarshal_final();
@@ -451,7 +447,7 @@ unsafe extern "C" fn _rust_statemgr_before_marshal_config(
     _event: *mut ::std::os::raw::c_void,
     _md: *mut raw::metadata,
 ) -> raw::ps_err {
-    let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
+    let mut subscribers = STATE_EVENT_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.before_marshal_config();
@@ -465,7 +461,7 @@ unsafe extern "C" fn _rust_statemgr_before_marshal_persistent(
     _event: *mut ::std::os::raw::c_void,
     _md: *mut raw::metadata,
 ) -> raw::ps_err {
-    let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
+    let mut subscribers = STATE_EVENT_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.before_marshal_persistent();
@@ -479,7 +475,7 @@ unsafe extern "C" fn _rust_statemgr_before_marshal_final(
     _event: *mut ::std::os::raw::c_void,
     _md: *mut raw::metadata,
 ) -> raw::ps_err {
-    let mut subscribers = STATE_TOPIC_SUBSCRIBERS.try_lock().expect("single thread");
+    let mut subscribers = STATE_EVENT_SUBSCRIBERS.try_lock().expect("single thread");
     for ptr in &mut *subscribers {
         let subscriber = unsafe { &mut *ptr.0 };
         subscriber.before_marshal_final();

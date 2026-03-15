@@ -2,6 +2,7 @@
 //! from the C side, and publish the events to the subscribed handlers.
 //!
 //!
+use core::ffi::c_void;
 use crate::base::{TaskId, Value};
 use crate::engine::handler::AbortReason::*;
 use crate::engine::handler::ShutdownReason::*;
@@ -28,6 +29,28 @@ pub type CustomCatTable =
 
 pub trait CustomCatTrait {
     fn call_right_handler(&self, handler: &mut (dyn ArrivalOrExecuteHandler + Send + Sync));
+}
+
+pub fn subscribe_default(
+    event_type: u16,
+    callback: Option<
+        unsafe extern "C" fn(
+            raw::chain_id,
+            raw::type_id,
+            *mut c_void,
+            *mut raw::metadata,
+        ) -> raw::ps_err,
+    >,
+) {
+    let err = unsafe {
+        raw::ps_subscribe(
+            lotto_sys::CHAIN_LOTTO_DEFAULT as u16,
+            event_type,
+            callback,
+            lotto_sys::DICE_MODULE_SLOT as i32,
+        )
+    };
+    assert_eq!(err, raw::ps_err_PS_OK, "ps_subscribe failed: {err}");
 }
 
 /// Publish the arrival of an event to all the subscribed handlers.
@@ -352,25 +375,24 @@ pub unsafe extern "C" fn publish_execute(
     raw::ps_err_PS_OK
 }
 
-/// Register the capture point handler and subscribe to `TOPIC_NEXT_TASK`.
-pub fn init() {
+/// Install Dice pubsub subscriptions needed by the Rust engine bridge.
+pub fn subscribe_phase() {
+    // Subscribe to sequencer resume with the task-id to run.
+    subscribe_default(lotto_sys::EVENT_ENGINE__NEXT_TASK as u16, Some(publish_execute));
+}
+
+/// Register the capture point handler with Lotto.
+pub fn register_phase() {
     use raw::slot_t::SLOT_RUSTY_ENGINE;
     trace!("Hello this is the lotto rusty pubsub handler initializing");
     // Safety: We assume no other function will be calling a dispacth for the same slot.
     unsafe {
         dispatcher_register(SLOT_RUSTY_ENGINE, Some(publish_arrival));
     }
-    {
-        // Subscribes to call from the sequencer_resume with the task-id to run.
-        unsafe {
-            raw::ps_subscribe(
-                lotto_sys::CHAIN_LOTTO as u16,
-                lotto_sys::TOPIC_NEXT_TASK as u16,
-                Some(publish_execute),
-                lotto_sys::DICE_MODULE_SLOT as i32,
-            );
-        }
-    }
+}
+
+/// Perform runtime initialization after Lotto registration is complete.
+pub fn initialization_phase() {
 }
 
 /// Get the task ids as a Vec from a tidset.

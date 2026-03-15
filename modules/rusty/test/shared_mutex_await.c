@@ -1,6 +1,6 @@
 // clang-format off
 // REQUIRES: RUST_HANDLERS_AVAILABLE
-// RUN: %lotto stress --handler-await-address enable --handler-spin-loop enable -s pos  -r 5 -- %b
+// RUN: %lotto %stress --handler-await-address enable --handler-spin-loop enable -s pos -r 5 -- %b
 // clang-format on
 #include <assert.h>
 #include <pthread.h>
@@ -73,7 +73,7 @@ main()
     int ids[NUM_THREADS];
     val[0] = 1;
     for (unsigned i = 0; i < NUM_THREADS; i++) {
-        ids[i] = i;
+        ids[i] = (int)i;
         pthread_create(&thr[i], 0, run_loops, (void *)&ids[i]);
     }
     for (unsigned i = 0; i < NUM_THREADS; i++)

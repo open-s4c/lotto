@@ -51,7 +51,7 @@ pub struct OrderEnforcer {
     /// Constraint bookkeeping.
     pub block: BTreeMap<TaskId, u64>,
 
-    /// Handler stopped. Do not respond to `TOPIC_NEXT` anymore.
+    /// Handler stopped. Do not respond to `EVENT_NEXT` anymore.
     pub shutdown: bool,
 
     /// The maximal clock that this execution is allowed to reach.
@@ -130,7 +130,7 @@ impl Handler for OrderEnforcer {
 
         /* It is possible that tset is empty at this point.  In that case,
          * the engine can pick any task, including ones that are already
-         * blocked, which is handled in TOPIC_NEXT_TASK above. */
+         * blocked, which is handled in EVENT_ENGINE__NEXT_TASK above. */
 
         /* Reduce the likelihood by setting any_task_filter. */
         if self.block.len() != 0 {

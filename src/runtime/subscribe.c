@@ -1,12 +1,10 @@
+#include <errno.h>
+#include <pthread.h>
+#include <stdint.h>
+
 #ifdef DICE_MODULE_SLOT
     #undef DICE_MODULE_SLOT
 #endif
-//#define DICE_MODULE_SLOT
-#include <errno.h>
-#include <pthread.h>
-#include <stdbool.h>
-#include <stdint.h>
-
 #include <dice/chains/capture.h>
 #include <dice/chains/intercept.h>
 #include <dice/events/pthread.h>
@@ -19,11 +17,11 @@
 #include <lotto/base/arg.h>
 #include <lotto/base/category.h>
 #include <lotto/base/context.h>
+#include <lotto/core/runtime/events.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/rsrc_deadlock.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/logger.h>
-
-DICE_MODULE_INIT()
 
 #if 0
 int detachstate;
@@ -117,8 +115,7 @@ struct pthread_detach_event {
     int ret;
 };
 
-#define EVENT_PTHREAD_DETACH 7
-PS_ADVERTISE_TYPE(EVENT_PTHREAD_DETACH)
+LOTTO_ADVERTISE_TYPE(EVENT_PTHREAD_DETACH)
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_DETACH, {
     struct pthread_detach_event *ev = EVENT_PAYLOAD(event);

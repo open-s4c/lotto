@@ -7,8 +7,6 @@
 #include <lotto/base/context.h>
 #include <lotto/base/task_id.h>
 #include <lotto/base/trace.h>
-#include <lotto/util/macros.h>
-
 typedef struct replay {
     enum replay_status {
         REPLAY_DONE,  //< replay is over or never started
@@ -77,6 +75,5 @@ void recorder_end_trace();
  * learn when the replay is over.
  */
 void recorder_end_replay();
-
 
 #endif

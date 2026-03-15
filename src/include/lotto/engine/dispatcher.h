@@ -6,6 +6,7 @@
 #include <lotto/base/plan.h>
 #include <lotto/base/slot.h>
 #include <lotto/check.h>
+#include <lotto/engine/pubsub.h>
 
 /**
  * Handles a capture event
@@ -35,16 +36,12 @@ void dispatcher_register(slot_t slot, handle_f handle);
 task_id dispatch_event(const context_t *ctx, event_t *e);
 
 #define REGISTER_HANDLER(slot, handle)                                         \
-    static void LOTTO_CONSTRUCTOR _dispatcher_register_##slot(void)            \
-    {                                                                          \
-        dispatcher_register(slot, handle);                                     \
-    }
+    ON_REGISTRATION_PHASE({ dispatcher_register(slot, handle); })
 
 #define REGISTER_HANDLER_EXTERNAL(slot, handle)                                \
-    static void LOTTO_CONSTRUCTOR _dispatcher_register_##slot(void)            \
-    {                                                                          \
+    ON_REGISTRATION_PHASE({                                                    \
         if (lotto_loaded())                                                    \
             dispatcher_register(slot, handle);                                 \
-    }
+    })
 
 #endif

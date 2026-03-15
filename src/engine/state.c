@@ -3,8 +3,8 @@
 #include <dice/module.h>
 #include <lotto/base/marshable.h>
 #include <lotto/engine/pubsub.h>
-#include <lotto/engine/statemgr.h>
 #include <lotto/engine/state.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
@@ -43,25 +43,22 @@ state_sequencer_print(const marshable_t *m)
  * prng, sequencer, and catmgr all register CONFIG on DICE_MODULE_SLOT.
  * statemgr binds same-slot registrations, so constructor order is irrelevant.
  */
-static void LOTTO_CONSTRUCTOR
-state_register_prng(void)
-{
+STATEMGR_REGISTER(CONFIG, {
     _engine_state.prng.m = MARSHABLE_STATIC_PRINTABLE(
         sizeof(_engine_state.prng), state_prng_print);
     statemgr_register(DICE_MODULE_SLOT, &_engine_state.prng.m,
                       STATE_TYPE_CONFIG);
-}
+})
 
-static void LOTTO_CONSTRUCTOR
-state_register_sequencer(void)
-{
+STATEMGR_REGISTER(CONFIG, {
     _engine_state.sequencer.m = MARSHABLE_STATIC_PRINTABLE(
         sizeof(_engine_state.sequencer), state_sequencer_print);
     statemgr_register(DICE_MODULE_SLOT, &_engine_state.sequencer.m,
                       STATE_TYPE_CONFIG);
-}
+})
 
-LOTTO_SUBSCRIBE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
+LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
+    (void)v;
     logger_debugf("seed = %u\n", _engine_state.prng.seed);
     const char *var = getenv("LOTTO_SEED");
     if (var) {

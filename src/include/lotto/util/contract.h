@@ -7,6 +7,7 @@
 #ifndef LOTTO_CONTRACT_H
 #define LOTTO_CONTRACT_H
 
+#include <lotto/engine/pubsub.h>
 #include <lotto/util/macros.h>
 
 /**
@@ -57,25 +58,21 @@
  * unit. When contracts are disabled, the function is omitted.
  */
 #if !defined(CONTRACT_DISABLE)
-    #define CONTRACT_INIT(code)                                                \
-        static LOTTO_CONSTRUCTOR void _lotto_contract_init(void)               \
-        {                                                                      \
-            code                                                               \
-        }
-
+    #define CONTRACT_INIT(...)                                                 \
+        ON_INITIALIZATION_PHASE({ __VA_ARGS__ })
 #else
     #define CONTRACT_INIT(...)
 #endif
 
 /**
- * @def CONTRACT_SUBSCRIBE(topic, code)
- * @brief Subcribes topic with a callback code.
+ * @def CONTRACT_SUBSCRIBE(event, code)
+ * @brief Subcribes event with a callback code.
  *
  * Uses `PS_SUBSCRIBE` underneath. When contracts are disabled, the subscription
  * is omitted.
  */
 #if !defined(CONTRACT_DISABLE)
-    #define CONTRACT_SUBSCRIBE(topic, code) LOTTO_SUBSCRIBE(topic, code)
+    #define CONTRACT_SUBSCRIBE(event, code) LOTTO_SUBSCRIBE(event, code)
 #else
     #define CONTRACT_SUBSCRIBE(...)
 #endif

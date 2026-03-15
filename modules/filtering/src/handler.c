@@ -44,7 +44,7 @@ _set_default_filtering()
 
 STATIC void _load_state();
 
-LOTTO_SUBSCRIBE(TOPIC_AFTER_UNMARSHAL_CONFIG, {
+LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
     _set_default_filtering();
     *_drop_less = *_drop;
 

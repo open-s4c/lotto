@@ -7,6 +7,8 @@
 #include <lotto/engine/dispatcher.h>
 #include <lotto/modules/timeout.h>
 
+LOTTO_ADVERTISE_TYPE(EVENT_TIMEOUT__TRIGGER)
+
 /*******************************************************************************
  * state
  ******************************************************************************/
@@ -27,7 +29,7 @@ static void
 _trigger_timeout(tidset_t *tset, task_id id)
 {
     struct value val = uval(id);
-    LOTTO_PUBLISH(TOPIC_TRIGGER_TIMEOUT, val);
+    LOTTO_PUBLISH(EVENT_TIMEOUT__TRIGGER, val);
     bool ret = tidset_insert(tset, id);
     ASSERT(ret);
 }

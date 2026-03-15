@@ -227,7 +227,7 @@ _mutex_handle(const context_t *ctx, event_t *e)
 }
 REGISTER_HANDLER(SLOT_MUTEX, _mutex_handle)
 
-LOTTO_SUBSCRIBE(TOPIC_NEXT_TASK, {
+LOTTO_SUBSCRIBE(EVENT_ENGINE__NEXT_TASK, {
     const context_t *ctx = (context_t *)as_any(v);
     ASSERT(ctx);
 

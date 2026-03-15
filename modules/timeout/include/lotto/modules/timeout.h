@@ -3,6 +3,7 @@
 
 #include <lotto/base/task_id.h>
 #include <lotto/engine/clock.h>
+#include <lotto/modules/timeout/events.h>
 
 /**
  * Registers a deadline.

@@ -1,10 +1,9 @@
-#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/modules/race.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/string.h>
-
-void race_reset();
 race_t race_check(const context_t *ctx, clk_t clk);
 
 #define A(V) ((uintptr_t)(V))
@@ -25,15 +24,6 @@ dispatcher_register(slot_t slot, handle_f handle)
 void
 add_ichpt(uintptr_t addr)
 {
-}
-
-#undef statemgr_register
-void
-statemgr_register(int slot, marshable_t *m, state_type_t type)
-{
-    (void)slot;
-    (void)m;
-    (void)type;
 }
 
 /*******************************************************************************
@@ -160,6 +150,7 @@ test_save_load()
 int
 main()
 {
+    START_REGISTRATION_PHASE();
     test_add();
     // test_save_load();
     return 0;

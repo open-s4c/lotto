@@ -9,7 +9,7 @@
 
 #define GEN_UDF_TRACE(udftrace) UDF_TRACE_##udftrace,
 typedef enum udf_trace {
-    TOPIC_NONE = 0,
+    EVENT_NONE = 0,
     FOR_EACH_UDF_TRACE UDF_TRACE_END_
 } udf_trace_t;
 #undef GEN_UDF_TRACE

@@ -1,6 +1,6 @@
 // clang-format off
 // RUN: (! %lotto %stress -r 10 -- %b 2>&1) | %check %s
-// CHECK: assert failed {{.*}}/producer_consumer.c:{{[0-9]+}}: d != NULL && "no data?"
+// CHECK: assert failed {{.*}}/{{[0-9]+}}-producer_consumer.c:{{[0-9]+}}: d != NULL && "no data?"
 // clang-format on
 
 #include <assert.h>

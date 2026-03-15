@@ -1,7 +1,7 @@
 // clang-format off
 // REQUIRES: DISABLED
 // RUN: (! %lotto %stress -r 10 -- %b 2>&1) | %check %s
-// CHECK: assert failed {{.*}}/queue_mpmc.c:{{[0-9]+}}: d->content != 2
+// CHECK: assert failed {{.*}}/{{[0-9]+}}-queue_mpmc.c:{{[0-9]+}}: d->content != 2
 // clang-format on
 
 #include <assert.h>

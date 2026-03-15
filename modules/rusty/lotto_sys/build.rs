@@ -14,9 +14,27 @@ fn get_lotto_dir() -> PathBuf {
     lotto_root_dir.canonicalize().unwrap()
 }
 
+fn get_lotto_build_dir() -> PathBuf {
+    if let Ok(build_dir) = env::var("LOTTO_BUILD_DIR") {
+        return PathBuf::from(build_dir).canonicalize().unwrap();
+    }
+
+    let out_dir =
+        PathBuf::from(env::var("OUT_DIR").expect("Cargo did not provide OUT_DIR for lotto_sys"));
+    for ancestor in out_dir.ancestors() {
+        if ancestor.join("include").exists() && ancestor.join("generated").exists() {
+            return ancestor.to_path_buf();
+        }
+    }
+
+    get_lotto_dir().join("build")
+}
+
 fn main() -> Result<()> {
     let lotto_dir = get_lotto_dir();
+    let lotto_build_dir = get_lotto_build_dir();
     println!("Lotto dir is {}", lotto_dir.display());
+    println!("Lotto build dir is {}", lotto_build_dir.display());
 
     let lotto_user_include_dir = get_lotto_dir().join("include");
     assert!(
@@ -38,7 +56,7 @@ fn main() -> Result<()> {
     let clang_include_arg = format!("-I{}", lotto_include_dir.display());
     println!("Lotto include dir is {}", clang_include_arg);
 
-    let lotto_build_include_dir = get_lotto_dir().join("build").join("include");
+    let lotto_build_include_dir = lotto_build_dir.join("include");
     assert!(
         lotto_build_include_dir.exists(),
         "Could not find lotto build include dir at {:?}",
@@ -48,7 +66,7 @@ fn main() -> Result<()> {
     let clang_build_include_arg = format!("-I{}", lotto_build_include_dir.display());
     println!("Lotto build include dir is {}", clang_build_include_arg);
 
-    let lotto_build_gen_include_dir = get_lotto_dir().join("build").join("generated");
+    let lotto_build_gen_include_dir = lotto_build_dir.join("generated");
     assert!(
         lotto_build_gen_include_dir.exists(),
         "Could not find lotto build generated include dir at {:?}",
@@ -88,11 +106,7 @@ fn main() -> Result<()> {
         .into_iter()
         .map(|m| get_lotto_dir().join("modules").join(m).join("include"))
         .collect();
-    let rusty_include_dir = get_lotto_dir()
-        .join("build")
-        .join("modules")
-        .join("rusty")
-        .join("include");
+    let rusty_include_dir = lotto_build_dir.join("modules").join("rusty").join("include");
     modules_include_dirs.push(rusty_include_dir);
 
     println!("Modules include dir is {:?}", modules_include_dirs);
@@ -108,7 +122,7 @@ fn main() -> Result<()> {
         .newtype_enum("base_category")
         .rustified_enum("reason")
         .rustified_enum("slot")
-        .rustified_enum("topic")
+        .rustified_enum("event")
         .rustified_enum("enforece_mode")
         .rustified_enum("termination_mode")
         .rustified_enum("stable_address_method")

@@ -375,9 +375,26 @@ impl StrConverter {
 
 pub static STR_CONVERTER_NONE: StrConverter = StrConverter::None;
 
+unsafe extern "C" fn enabled_str_rust(b: bool) -> *const c_char {
+    if b {
+        c"enable".as_ptr()
+    } else {
+        c"disable".as_ptr()
+    }
+}
+
+unsafe extern "C" fn enabled_from_rust(src: *const c_char) -> bool {
+    assert!(!src.is_null());
+    let src = unsafe { CStr::from_ptr(src) };
+    let is_true = src == c"enable";
+    let is_false = src == c"disable";
+    assert!(is_true != is_false);
+    is_true
+}
+
 pub static STR_CONVERTER_BOOL: StrConverter = StrConverter::Bool {
-    str_: Some(raw::enabled_str),
-    from_: Some(raw::enabled_from),
+    str_: Some(enabled_str_rust),
+    from_: Some(enabled_from_rust),
     help_: c"enable|disable",
 };
 

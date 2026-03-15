@@ -100,10 +100,12 @@ lotto_spin_end(uint32_t cond)
 }
 
 #if !defined(LOTTO_DISABLE_SPIN_ANNOTATION)
+    #undef await_while
     #define await_while(cond)                                                  \
         for (; (lotto_spin_start(), (cond) ? 1 : (lotto_spin_end(1), 0));      \
              lotto_spin_end(0))
 
+    #undef await_do
     #define await_do                                                           \
         do {                                                                   \
             vbool_t __tmp;                                                     \
@@ -113,6 +115,7 @@ lotto_spin_end(uint32_t cond)
                     lotto_spin_start();                                        \
                 }
 
+    #undef while_await
     #define while_await(cond)                                                  \
         }                                                                      \
         while (__tmp = (cond), lotto_spin_end(!__tmp), __tmp)                  \
@@ -120,6 +123,7 @@ lotto_spin_end(uint32_t cond)
         }                                                                      \
         while (false)
 
+    #undef await_break
     #define await_break                                                        \
         {                                                                      \
             lotto_spin_end(1);                                                 \

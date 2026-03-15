@@ -1,5 +1,9 @@
 sanitize()
 add_compile_definitions(_GNU_SOURCE)
+set(MODULE_NAME runtime)
+set(MODULE_SLOT 9)
+add_compile_definitions(DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${MODULE_SLOT})
+
 set(SRCS mediator.c)
 add_library(mediator.o OBJECT ${SRCS})
 add_library(mediator_testing.o OBJECT ${SRCS})
@@ -27,7 +31,7 @@ target_compile_definitions(memmgr_runtime_dice.o PRIVATE LOTTO_MEMMGR_RUNTIME)
 # ##############################################################################
 # libruntime
 # ##############################################################################
-set(SRCS runtime.c sighandler.c)
+set(SRCS runtime.c sighandler.c module.c malloc.c)
 set(LIBS
     m
     mediator.o
@@ -50,13 +54,11 @@ set(LIBS
     dice-self.o
     dice-sem.o
     dice-stacktrace.o
-    dice-malloc.o
     dice-tsan.o)
 
 macro(add_runtime TARGET)
     add_library(${TARGET} SHARED ${SRCS})
     target_link_libraries(${TARGET} PRIVATE ${LIBS})
-    target_compile_definitions(${TARGET} PRIVATE DICE_MODULE_SLOT=9)
     set_target_properties(${TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                                ${CMAKE_BINARY_DIR})
     install(TARGETS ${TARGET} DESTINATION lib)
@@ -67,6 +69,8 @@ endmacro()
 add_runtime(lotto)
 add_runtime(lotto-verbose)
 target_compile_definitions(lotto-verbose PRIVATE -DLOTTO_VERBOSE)
+
+add_library(runtime-module.o OBJECT module.c)
 
 function(add_lotto_builtin LIB)
     target_link_libraries(lotto PRIVATE ${LIB})

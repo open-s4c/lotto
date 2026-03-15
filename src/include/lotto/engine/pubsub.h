@@ -21,6 +21,9 @@
         ps_register_type(TYPE, #TYPE);                                         \
     }
 
+/* Lotto alias for the standard Dice module constructor helper. */
+#define LOTTO_MODULE_INIT(...) DICE_MODULE_INIT(__VA_ARGS__)
+
 /* Subscribe once on the default Lotto chain using Dice's native helper. */
 #define LOTTO_SUBSCRIBE_ONCE(TYPE, ...)                                        \
     PS_SUBSCRIBE(CHAIN_LOTTO_DEFAULT, TYPE, LOTTO_BODY({                       \

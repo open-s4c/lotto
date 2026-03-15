@@ -88,27 +88,22 @@ exec_info_store_envvars()
     }
 }
 
-#define REPLAY_UNDEFINED 0
-#define REPLAY_EMPTY     1
-#define REPLAY_NONEMPTY  2
-
 bool
 exec_info_replay_envvars()
 {
-    uint8_t replay_state = REPLAY_UNDEFINED;
+    bool replayed_any = false;
     for (size_t i = 0; i < REPLAYED_ENVVARS; i++) {
-        if (_exec_info.envvars[i] == NULL || _exec_info.envvars[i][0] == '\0') {
-            ASSERT(replay_state == REPLAY_UNDEFINED ||
-                   replay_state == REPLAY_EMPTY);
-            replay_state = REPLAY_EMPTY;
+        if (_exec_info.envvars[i] == NULL) {
             continue;
         }
-        ASSERT(replay_state == REPLAY_UNDEFINED ||
-               replay_state == REPLAY_NONEMPTY);
-        replay_state = REPLAY_NONEMPTY;
-        sys_setenv(_envvars[i], _exec_info.envvars[i], true);
+        if (_exec_info.envvars[i][0] == '\0') {
+            sys_unsetenv(_envvars[i]);
+        } else {
+            sys_setenv(_envvars[i], _exec_info.envvars[i], true);
+        }
+        replayed_any = true;
     }
-    return replay_state == REPLAY_NONEMPTY;
+    return replayed_any;
 }
 
 /*******************************************************************************

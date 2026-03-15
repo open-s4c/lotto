@@ -6,6 +6,8 @@
 #include <lotto/base/flags.h>
 #include <lotto/driver/args.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/sys/assert.h>
+#include <lotto/sys/string.h>
 #include <lotto/util/macros.h>
 
 /**
@@ -81,8 +83,20 @@ typedef struct str_converter_s {
         }                                                                      \
     }
 
-const char *enabled_str(bool b);
-bool enabled_from(const char *src);
+static inline const char *
+enabled_str(bool b)
+{
+    return b ? "enable" : "disable";
+}
+
+static inline bool
+enabled_from(const char *src)
+{
+    bool is_true  = sys_strcmp(src, "enable") == 0;
+    bool is_false = sys_strcmp(src, "disable") == 0;
+    ASSERT(is_true != is_false);
+    return is_true;
+}
 
 /**
  * Flag registration

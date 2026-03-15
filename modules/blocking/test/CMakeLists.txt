@@ -1,6 +1,11 @@
 add_binding(
     TARGET blocking-engine.rkt
-    INCLUDE lotto/base/topic.h #
+    INCLUDE lotto/core/engine/events.h #
+            lotto/core/runtime/events.h #
+            lotto/core/driver/events.h #
+            lotto/modules/deadlock/events.h #
+            lotto/modules/enforce/events.h #
+            lotto/modules/timeout/events.h #
             lotto/engine/engine.h #
             lotto/engine/sequencer.h #
     EXCLUDE sys/types.h)

@@ -7,7 +7,7 @@
 #include <lotto/base/marshable.h>
 #include <lotto/driver/args.h>
 
-#define REPLAYED_ENVVARS 1
+#define REPLAYED_ENVVARS 2
 
 typedef struct exec_info_s {
     marshable_t m;

@@ -10,7 +10,6 @@
 #include <lotto/base/flag.h>
 #include <lotto/base/record_granularity.h>
 #include <lotto/base/stable_address.h>
-#include <lotto/base/topic.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/driver/flagmgr.h>

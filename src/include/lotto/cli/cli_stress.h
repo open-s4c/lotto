@@ -4,26 +4,17 @@
 #include <lotto/driver/args.h>
 #include <lotto/driver/flagmgr.h>
 
-DECLARE_FLAG_OUTPUT;
-DECLARE_FLAG_INPUT;
-DECLARE_FLAG_VERBOSE;
-DECLARE_FLAG_ROUNDS;
-DECLARE_FLAG_TEMPORARY_DIRECTORY;
-DECLARE_FLAG_NO_PRELOAD;
-DECLARE_FLAG_LOGGER_BLOCK;
-DECLARE_FLAG_BEFORE_RUN;
-DECLARE_FLAG_AFTER_RUN;
-DECLARE_FLAG_LOGGER_FILE;
-
 int stress(args_t *args, flags_t *flags);
-
-static inline flags_t *
-_stress_default_flags()
-{
-    flags_t *flags = flagmgr_flags_alloc();
-    flags_cpy(flags, flags_default());
-    flags_set_default(flags, FLAG_INPUT, sval(""));
-    return flags;
-}
+flags_t *stress_default_flags();
+flag_t flag_input();
+flag_t flag_output();
+flag_t flag_verbose();
+flag_t flag_rounds();
+flag_t flag_temporary_directory();
+flag_t flag_no_preload();
+flag_t flag_logger_block();
+flag_t flag_before_run();
+flag_t flag_after_run();
+flag_t flag_logger_file();
 
 #endif

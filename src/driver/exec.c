@@ -22,6 +22,9 @@ static pid_t _pid;
 static int p_out[2];
 static int p_err[2];
 
+#define DICE_DSO_ENV "DICE_DSO"
+#define LOTTO_DSO    "liblotto.so"
+
 
 static void
 _handle_sigint(int sig, siginfo_t *si, void *arg)
@@ -171,14 +174,19 @@ wait_child(pid_t pid)
     return retval;
 }
 
-DECLARE_FLAG_BEFORE_RUN;
-DECLARE_FLAG_AFTER_RUN;
-DECLARE_FLAG_REPLAY_GOAL;
-
 int
 execute(const args_t *args, const flags_t *flags, bool config)
 {
-    const char *cmd = flags_get_sval(flags, FLAG_BEFORE_RUN);
+    const char *old_dice_dso = sys_getenv(DICE_DSO_ENV);
+    char *old_dice_dso_copy  = NULL;
+    if (old_dice_dso) {
+        size_t len      = sys_strlen(old_dice_dso);
+        old_dice_dso_copy = sys_malloc(len + 1);
+        sys_strcpy(old_dice_dso_copy, old_dice_dso);
+    }
+    sys_setenv(DICE_DSO_ENV, LOTTO_DSO, true);
+
+    const char *cmd = flags_get_sval(flags, flag_before_run());
     if (cmd && cmd[0]) {
         sys_setenv("LOTTO_DISABLE", "true", true);
         int ret = system(cmd);
@@ -194,7 +202,7 @@ execute(const args_t *args, const flags_t *flags, bool config)
     } else {
         replay_copy = NULL;
     }
-    struct flag_val fgoal = flags_get(flags, FLAG_REPLAY_GOAL);
+    struct flag_val fgoal = flags_get(flags, flag_replay_goal());
     cli_trace_init(sys_getenv("LOTTO_RECORD"), args, sys_getenv("LOTTO_REPLAY"),
                    fgoal, config, flags);
 
@@ -258,6 +266,13 @@ execute(const args_t *args, const flags_t *flags, bool config)
     sys_sigaction(SIGTERM, &term_old, NULL);
     sys_sigaction(SIGKILL, &kill_old, NULL);
 
+    if (old_dice_dso_copy) {
+        sys_setenv(DICE_DSO_ENV, old_dice_dso_copy, true);
+        sys_free(old_dice_dso_copy);
+    } else {
+        sys_unsetenv(DICE_DSO_ENV);
+    }
+
     if (replay_ptr) {
         sys_setenv("LOTTO_REPLAY", replay_copy, true);
         sys_free(replay_copy);
@@ -265,7 +280,7 @@ execute(const args_t *args, const flags_t *flags, bool config)
         sys_unsetenv("LOTTO_REPLAY");
     }
 
-    cmd = flags_get_sval(flags, FLAG_AFTER_RUN);
+    cmd = flags_get_sval(flags, flag_after_run());
     if (cmd && cmd[0]) {
         sys_setenv("LOTTO_DISABLE", "true", true);
         int ret = sys_system(cmd);

@@ -34,7 +34,9 @@
     "/share/lotto"                                                             \
     ":" CMAKE_BINARY_DIR
 
-#define MAX_LIST_STR ((size_t)(32 * 1024))
+#define MAX_LIST_STR        ((size_t)(32 * 1024))
+#define DICE_PLUGIN_MODULES "DICE_PLUGIN_MODULES"
+#define LOTTO_CLI_PRELOAD   "LOTTO_CLI_PRELOAD"
 
 #define LIBTSANO         "libtsano.so"
 #define LIBTSAN0         "libtsan.so.0"
@@ -56,6 +58,9 @@ typedef struct module_preloadable_memory_arg_s {
     const char *name;
     uint64_t counter;
 } module_preloadable_memory_arg_t;
+
+static bool _is_runtime_plugin_path(const char *path);
+static void _set_dice_plugin_modules_from_preload(void);
 
 static const char *_libpath;
 void
@@ -208,10 +213,57 @@ _preload_memmgr_plugins(const char *chain, bool runtime)
     }
 }
 
+static bool
+_is_runtime_plugin_path(const char *path)
+{
+    const char *base = strrchr(path, '/');
+    base             = base ? base + 1 : path;
+    return strncmp(base, "lotto-runtime-", strlen("lotto-runtime-")) == 0;
+}
+
+static void
+_set_dice_plugin_modules_from_preload(void)
+{
+    const char *ld_preload = getenv("LD_PRELOAD");
+    char plugin_modules[MAX_LIST_STR];
+    size_t len = 0;
+
+    plugin_modules[0] = '\0';
+    if (ld_preload && ld_preload[0]) {
+        char ld_preload_cpy[MAX_LIST_STR];
+        sys_snprintf(ld_preload_cpy, sizeof(ld_preload_cpy), "%s", ld_preload);
+        for (const char *path = strtok(ld_preload_cpy, ":"); path != NULL;
+             path             = strtok(NULL, ":")) {
+            int written;
+            if (!_is_runtime_plugin_path(path))
+                continue;
+            if (len > 0) {
+                written = sys_snprintf(plugin_modules + len,
+                                       sizeof(plugin_modules) - len, ":%s",
+                                       path);
+            } else {
+                written = sys_snprintf(plugin_modules + len,
+                                       sizeof(plugin_modules) - len, "%s",
+                                       path);
+            }
+            ASSERT(written >= 0 &&
+                   (size_t)written < sizeof(plugin_modules) - len);
+            len += (size_t)written;
+        }
+    }
+    if (len > 0) {
+        setenv(DICE_PLUGIN_MODULES, plugin_modules, true);
+    } else {
+        unsetenv(DICE_PLUGIN_MODULES);
+    }
+}
+
 void
 preload(const char *dir, bool verbose, bool do_preload_plotto,
         const char *memmgr_chain_runtime, const char *memmgr_chain_user)
 {
+    const char *cli_preload = getenv(LOTTO_CLI_PRELOAD);
+
     /* make libraries available */
     // clang-format off
     driver_dump_files(dir, (driver_file_t[]) {
@@ -246,12 +298,15 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
         return;
     }
 
+    if (cli_preload && cli_preload[0]) {
+        setenv("LD_PRELOAD", cli_preload, true);
+    } else {
+        unsetenv("LD_PRELOAD");
+    }
+
 #ifdef __SANITIZE_ADDRESS__
     _preload_lib(LIBASAN, true);
 #endif
-    /* inform dice the name of liblotto */
-    setenv("DICE_DSO", LIBLOTTO, true);
-
     /* preload memmgr chains */
     _preload_memmgr_plugins(memmgr_chain_runtime, true);
     _preload_memmgr_plugins(memmgr_chain_user, false);
@@ -269,6 +324,8 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
             &(preload_module_arg_t){.module_predicate =
                                         module_preloadable_not_memory});
     }
+
+    _set_dice_plugin_modules_from_preload();
 
     exec_info_store_envvars();
 }

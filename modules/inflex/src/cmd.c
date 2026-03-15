@@ -18,13 +18,13 @@
 #include <lotto/base/envvar.h>
 #include <lotto/base/record_granularity.h>
 #include <lotto/base/trace_flat.h>
+#include <lotto/cli/preload.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
 #include <lotto/driver/flags/prng.h>
 #include <lotto/driver/flags/sequencer.h>
-#include <lotto/cli/preload.h>
 #include <lotto/driver/record.h>
 #include <lotto/driver/replay.h>
 #include <lotto/driver/subcmd.h>
@@ -36,23 +36,11 @@
 #include <lotto/sys/stream_file.h>
 #include <sys/stat.h>
 
-DECLARE_FLAG_INPUT;
-DECLARE_FLAG_OUTPUT;
-DECLARE_FLAG_VERBOSE;
-DECLARE_FLAG_ROUNDS;
-DECLARE_FLAG_TEMPORARY_DIRECTORY;
-DECLARE_FLAG_NO_PRELOAD;
-DECLARE_FLAG_LOGGER_BLOCK;
-DECLARE_FLAG_BEFORE_RUN;
-DECLARE_FLAG_AFTER_RUN;
-DECLARE_FLAG_LOGGER_FILE;
 DECLARE_COMMAND_FLAG(INFLEX_MIN, "", "inflex-min", "UINT",
                      "minimum clock for the inflection point", flag_uval(0))
 DECLARE_COMMAND_FLAG(INFLEX_METHOD, "", "inflex-method", "METHOD",
                      "b(inary) / l(inear) search + p(robablistic)/e(xplore)",
                      flag_sval("bp"))
-
-DECLARE_FLAG_REPLAY_GOAL;
 
 void round_print(flags_t *flags, uint64_t round);
 
@@ -85,13 +73,14 @@ static bool _always_fails_at_clk_explore(args_t *args, flags_t *flags,
 int
 inflex(args_t *args, flags_t *flags)
 {
-    setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, FLAG_LOGGER_FILE), true);
+    setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, flag_logger_file()),
+           true);
 
-    sys_fprintf(stdout, "input trace: %s\n", flags_get_sval(flags, FLAG_INPUT));
+    sys_fprintf(stdout, "input trace: %s\n", flags_get_sval(flags, flag_input()));
     sys_fprintf(stdout, "output trace: %s\n",
-                flags_get_sval(flags, FLAG_OUTPUT));
+                flags_get_sval(flags, flag_output()));
 
-    trace_t *rec = cli_trace_load(flags_get_sval(flags, FLAG_INPUT));
+    trace_t *rec = cli_trace_load(flags_get_sval(flags, flag_input()));
     ASSERT(rec);
     record_t *first = trace_next(rec, RECORD_START);
     record_t *last  = trace_last(rec);
@@ -101,15 +90,15 @@ inflex(args_t *args, flags_t *flags)
     uint64_t k = last->clk;
     trace_destroy(rec);
 
-    if (flags_is_on(flags, FLAG_VERBOSE)) {
+    if (flags_is_on(flags, flag_verbose())) {
         sys_fprintf(stdout, "[lotto] inflex: ");
         args_print(args);
         sys_fprintf(stdout, "\n");
     }
 
-    preload(flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY),
-            flags_is_on(flags, FLAG_VERBOSE),
-            !flags_is_on(flags, FLAG_NO_PRELOAD),
+    preload(flags_get_sval(flags, flag_temporary_directory()),
+            flags_is_on(flags, flag_verbose()),
+            !flags_is_on(flags, flag_no_preload()),
             flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
 
@@ -144,30 +133,30 @@ static int
 _binary_probablistic(args_t *args, flags_t *flags, uint64_t last_clk)
 {
     /* force output to be temporarily another */
-    const char *output = flags_get_sval(flags, FLAG_OUTPUT);
+    const char *output = flags_get_sval(flags, flag_output());
 
     char filename[PATH_MAX];
     sys_sprintf(filename, "%s/temp.trace",
-                flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY));
-    flags_set_default(flags, FLAG_OUTPUT, sval(filename));
+                flags_get_sval(flags, flag_temporary_directory()));
+    flags_set_default(flags, flag_output(), sval(filename));
 
     envvar_t vars[] = {
-        {"LOTTO_REPLAY", .sval = flags_get_sval(flags, FLAG_INPUT)},
-        {"LOTTO_RECORD", .sval = flags_get_sval(flags, FLAG_OUTPUT)},
+        {"LOTTO_REPLAY", .sval = flags_get_sval(flags, flag_input())},
+        {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
         {"LOTTO_LOGGER_BLOCK",
-         .sval = flags_get_sval(flags, FLAG_LOGGER_BLOCK)},
+         .sval = flags_get_sval(flags, flag_logger_block())},
         {"LOTTO_LOGGER_LEVEL", .sval = "silent"},
         {NULL}};
     envvar_set(vars, true);
 
     char candidate_filename[PATH_MAX];
     sys_sprintf(candidate_filename, "%s/candidate.trace",
-                flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY));
+                flags_get_sval(flags, flag_temporary_directory()));
 
     uint64_t ip         = flags_get_uval(flags, FLAG_INFLEX_MIN);
     uint64_t last_ip    = UINT64_MAX;
     uint64_t confidence = 0;
-    while (confidence < flags_get_uval(flags, FLAG_ROUNDS) && ip < last_clk) {
+    while (confidence < flags_get_uval(flags, flag_rounds()) && ip < last_clk) {
         sys_fprintf(stdout, "[lotto] inflex: computing confidence %lu\n",
                     confidence);
         ip = _binary_search(args, flags, ip, last_clk, _fails_at_clk);
@@ -183,7 +172,7 @@ _binary_probablistic(args_t *args, flags_t *flags, uint64_t last_clk)
             "confidence is reset to 1\n",
             candidate_filename, ip);
         /* save the candidate */
-        _truncate_trace(flags_get_sval(flags, FLAG_INPUT), candidate_filename,
+        _truncate_trace(flags_get_sval(flags, flag_input()), candidate_filename,
                         ip);
     }
 
@@ -198,17 +187,17 @@ _binary_probablistic(args_t *args, flags_t *flags, uint64_t last_clk)
 static int
 _binary_explore(args_t *args, flags_t *flags, uint64_t last_clk)
 {
-    const char *output = flags_get_sval(flags, FLAG_OUTPUT);
+    const char *output = flags_get_sval(flags, flag_output());
     char filename[PATH_MAX];
     sys_sprintf(filename, "%s/temp.trace",
-                flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY));
-    flags_set_default(flags, FLAG_OUTPUT, sval(filename));
+                flags_get_sval(flags, flag_temporary_directory()));
+    flags_set_default(flags, flag_output(), sval(filename));
 
     envvar_t vars[] = {
-        {"LOTTO_REPLAY", .sval = flags_get_sval(flags, FLAG_INPUT)},
-        {"LOTTO_RECORD", .sval = flags_get_sval(flags, FLAG_OUTPUT)},
+        {"LOTTO_REPLAY", .sval = flags_get_sval(flags, flag_input())},
+        {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
         {"LOTTO_LOGGER_BLOCK",
-         .sval = flags_get_sval(flags, FLAG_LOGGER_BLOCK)},
+         .sval = flags_get_sval(flags, flag_logger_block())},
         {"LOTTO_LOGGER_LEVEL", .sval = "silent"},
         {NULL}};
     envvar_set(vars, true);
@@ -232,7 +221,7 @@ _binary_explore(args_t *args, flags_t *flags, uint64_t last_clk)
      * Then, proceed to explore exhaustively by obtaining a full trace
      * first.
      */
-    max = _next_clock(flags_get_sval(flags, FLAG_INPUT), max);
+    max = _next_clock(flags_get_sval(flags, flag_input()), max);
     sys_fprintf(stdout,
                 "[lotto] real inflection point is between %lu and %lu\n", min,
                 max);
@@ -244,7 +233,7 @@ _binary_explore(args_t *args, flags_t *flags, uint64_t last_clk)
 
     max = _binary_search(args, flags, min, max, _always_fails_at_clk_explore);
     sys_fprintf(stdout, "[lotto] inflection point = %lu\n", max);
-    _truncate_trace(flags_get_sval(flags, FLAG_INPUT), output, max);
+    _truncate_trace(flags_get_sval(flags, flag_input()), output, max);
     return 0;
 }
 
@@ -252,17 +241,17 @@ static int
 _linear_inflex(args_t *args, flags_t *flags, uint64_t last_clk,
                predicate_t pred, bool use_explore)
 {
-    const char *output = flags_get_sval(flags, FLAG_OUTPUT);
+    const char *output = flags_get_sval(flags, flag_output());
     char filename[PATH_MAX];
     sys_sprintf(filename, "%s/temp.trace",
-                flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY));
-    flags_set_default(flags, FLAG_OUTPUT, sval(filename));
+                flags_get_sval(flags, flag_temporary_directory()));
+    flags_set_default(flags, flag_output(), sval(filename));
 
     envvar_t vars[] = {
-        {"LOTTO_REPLAY", .sval = flags_get_sval(flags, FLAG_INPUT)},
-        {"LOTTO_RECORD", .sval = flags_get_sval(flags, FLAG_OUTPUT)},
+        {"LOTTO_REPLAY", .sval = flags_get_sval(flags, flag_input())},
+        {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
         {"LOTTO_LOGGER_BLOCK",
-         .sval = flags_get_sval(flags, FLAG_LOGGER_BLOCK)},
+         .sval = flags_get_sval(flags, flag_logger_block())},
         {"LOTTO_LOGGER_LEVEL", .sval = "silent"},
         {NULL}};
     envvar_set(vars, true);
@@ -275,7 +264,7 @@ _linear_inflex(args_t *args, flags_t *flags, uint64_t last_clk,
     _linear_search(args, flags, &beg, &end, pred, _previous_clock);
 
     if (use_explore) {
-        end      = _next_clock(flags_get_sval(flags, FLAG_INPUT), end);
+        end      = _next_clock(flags_get_sval(flags, flag_input()), end);
         bool ret = _produce_full_trace_and_set_input(args, flags);
         if (!ret) {
             sys_fprintf(stderr,
@@ -292,7 +281,7 @@ _linear_inflex(args_t *args, flags_t *flags, uint64_t last_clk,
     clk_t ip = end > 0 ? end - 1 : 0;
     _linear_search(args, flags, &beg, &ip, pred, NULL);
     sys_fprintf(stdout, "[lotto] inflection point = %lu\n", ip);
-    _truncate_trace(flags_get_sval(flags, FLAG_INPUT), output, ip);
+    _truncate_trace(flags_get_sval(flags, flag_input()), output, ip);
     return 0;
 }
 
@@ -301,7 +290,7 @@ static void
 _linear_search(args_t *args, flags_t *flags, clk_t *beg, clk_t *end,
                predicate_t pred, advance_clock_t advance)
 {
-    const char *input = flags_get_sval(flags, FLAG_INPUT);
+    const char *input = flags_get_sval(flags, flag_input());
     for (clk_t clk = *end; clk > *beg;
          advance ? (clk = advance(input, clk)) : --clk) {
         sys_fprintf(stdout, "[lotto] inflex: probing clock %lu\n", clk);
@@ -340,7 +329,7 @@ _fails(const args_t *args, flags_t *flags)
         /* exit on CTRL-C */
         exit(130);
     }
-    adjust(flags_get_sval(flags, FLAG_OUTPUT));
+    adjust(flags_get_sval(flags, flag_output()));
     if (return_code == 0) {
         return false;
     }
@@ -350,7 +339,7 @@ _fails(const args_t *args, flags_t *flags)
 static bool
 _fails_at_clk(args_t *args, flags_t *flags, clk_t clk)
 {
-    flags_set_by_opt(flags, FLAG_REPLAY_GOAL, uval(clk));
+    flags_set_by_opt(flags, flag_replay_goal(), uval(clk));
     bool fail = _fails(args, flags);
     return fail;
 }
@@ -358,7 +347,7 @@ _fails_at_clk(args_t *args, flags_t *flags, clk_t clk)
 static bool
 _always_fails_at_clk_prob(args_t *args, flags_t *flags, clk_t clk)
 {
-    uint64_t rounds   = flags_get_uval(flags, FLAG_ROUNDS);
+    uint64_t rounds   = flags_get_uval(flags, flag_rounds());
     size_t confidence = 1;
     bool always_fail  = true;
     while (confidence <= rounds) {
@@ -388,18 +377,18 @@ static bool
 _produce_full_trace_and_set_input(args_t *args, flags_t *flags)
 {
     static char full_trace_path[PATH_MAX];
-    const char *dir = flags_get_sval(flags, FLAG_TEMPORARY_DIRECTORY);
+    const char *dir = flags_get_sval(flags, flag_temporary_directory());
     sys_sprintf(full_trace_path, "%s/full.trace", dir);
 
     flags_t *replay_flags = flagmgr_flags_alloc();
     flags_cpy(replay_flags, flags_default());
     flags_set_by_opt(replay_flags, flag_record_granularity(),
                      uval(RECORD_GRANULARITY_CHPT));
-    flags_set_by_opt(replay_flags, FLAG_INPUT,
-                     sval(flags_get_sval(flags, FLAG_INPUT)));
-    flags_set_by_opt(replay_flags, FLAG_OUTPUT, sval(full_trace_path));
-    flags_set_by_opt(replay_flags, FLAG_NO_PRELOAD, on());
-    flags_set_by_opt(replay_flags, FLAG_TEMPORARY_DIRECTORY, sval(dir));
+    flags_set_by_opt(replay_flags, flag_input(),
+                     sval(flags_get_sval(flags, flag_input())));
+    flags_set_by_opt(replay_flags, flag_output(), sval(full_trace_path));
+    flags_set_by_opt(replay_flags, flag_no_preload(), on());
+    flags_set_by_opt(replay_flags, flag_temporary_directory(), sval(dir));
     replay(args, replay_flags);
     flags_free(replay_flags);
 
@@ -407,7 +396,7 @@ _produce_full_trace_and_set_input(args_t *args, flags_t *flags)
     if (stat(full_trace_path, &stbuf)) {
         return false;
     }
-    flags_set_by_opt(flags, FLAG_INPUT, sval(full_trace_path));
+    flags_set_by_opt(flags, flag_input(), sval(full_trace_path));
     return true;
 }
 
@@ -466,22 +455,20 @@ _default_flags()
     return flags;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
-    flag_t sel[] = {FLAG_OUTPUT,
-                    FLAG_INPUT,
-                    FLAG_VERBOSE,
-                    FLAG_ROUNDS,
-                    FLAG_TEMPORARY_DIRECTORY,
-                    FLAG_NO_PRELOAD,
-                    FLAG_LOGGER_BLOCK,
-                    FLAG_BEFORE_RUN,
-                    FLAG_AFTER_RUN,
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_COMMANDS, {
+    flag_t sel[] = {flag_output(),
+                    flag_input(),
+                    flag_verbose(),
+                    flag_rounds(),
+                    flag_temporary_directory(),
+                    flag_no_preload(),
+                    flag_logger_block(),
+                    flag_before_run(),
+                    flag_after_run(),
                     FLAG_INFLEX_MIN,
                     FLAG_INFLEX_METHOD,
-                    FLAG_LOGGER_FILE,
+                    flag_logger_file(),
                     0};
     subcmd_register(inflex, "inflex", "", "Find an inflection point of a trace",
                     true, sel, _default_flags, SUBCMD_GROUP_TRACE);
-}
+})

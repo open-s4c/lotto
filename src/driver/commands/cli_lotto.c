@@ -3,10 +3,12 @@
 #include <unistd.h>
 
 #include <lotto/base/flag.h>
+#include <lotto/cli/preload.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
-#include <lotto/cli/preload.h>
 #include <lotto/driver/subcmd.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/string.h>
@@ -19,7 +21,6 @@
 static const char *lotto_version = LOTTO_VERSION;
 
 DECLARE_FLAG_VERSION;
-DECLARE_FLAG_TEMPORARY_DIRECTORY;
 
 DECLARE_COMMAND_FLAG(PLUGIN_DIRECTORY, "", "plugin-directory", "DIR",
                      "plugin directory to load Lotto plugins", flag_sval(""))
@@ -118,12 +119,10 @@ lotto(args_t *args, flags_t *flags)
     return 0;
 }
 
-static void LOTTO_CONSTRUCTOR
-init()
-{
-    flag_t sel[] = {FLAG_VERSION,       FLAG_TEMPORARY_DIRECTORY,
+LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_COMMANDS, {
+    flag_t sel[] = {FLAG_VERSION,       flag_temporary_directory(),
                     FLAG_LIST_COMMANDS, FLAG_PLUGIN_DIRECTORY,
                     FLAG_PLUGIN_LIST,   0};
     subcmd_register(lotto, "-", "", "Show details of lotto itself", false, sel,
                     flags_default, SUBCMD_GROUP_OTHER);
-}
+})

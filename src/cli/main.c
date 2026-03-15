@@ -1,35 +1,34 @@
-#include <dlfcn.h>
 #include <libgen.h>
 #include <limits.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-#include <lotto/driver/args.h>
-#include <lotto/driver/exec_info.h>
-#include <lotto/cli/preload.h>
-#include <lotto/driver/subcmd.h>
-#include <lotto/driver/utils.h>
 #include <lotto/cmake_variables.h>
-#include <lotto/sys/assert.h>
-#include <lotto/sys/logger.h>
+#include <lotto/driver/main.h>
 #include <lotto/sys/modules.h>
-#include <lotto/sys/stdio.h>
 #include <sys/personality.h>
 
-#define MAX_COMMAND_ARGS 2
-#define ERROR_MAX_LEN    2048
+#define LOTTO_BOOTSTRAP_ENV "LOTTO_DRIVER_BOOTSTRAPPED"
+#define DICE_PLUGIN_MODULES "DICE_PLUGIN_MODULES"
+#define LOTTO_CLI_PRELOAD   "LOTTO_CLI_PRELOAD"
+#define MAX_COMMAND_ARGS    2
+#define MAX_LIST_STR        ((size_t)(32 * 1024))
 
-static int _load_module(module_t *module, void *arg);
+typedef struct preload_state_s {
+    char *buf;
+    size_t len;
+    size_t cap;
+} preload_state_t;
 
-static void
-describe(subcmd_t *scmd)
-{
-    sys_fprintf(stdout, "Description:\n    %s\n\n", scmd->desc);
-    sys_fprintf(stdout, "Usage:\n");
-    sys_fprintf(stdout, "    lotto [--plugin-dir DIR] %s [<options>] %s\n\n",
-                scmd->name, scmd->args);
-    flags_help(scmd->defaults(), scmd->runtime_sel, scmd->sel);
-}
+static void driver_options(int argc, char **argv, const char **module_dir,
+                           const char **module_list);
+static int add_driver_module(module_t *module, void *arg);
+static void prepend_env_path(const char *name, const char *value);
+static void append_preload(preload_state_t *state, const char *path);
+static int exec_self(char **argv);
 
 int
 main(int argc, char **argv)
@@ -37,131 +36,158 @@ main(int argc, char **argv)
     const int old_personality = personality(ADDR_NO_RANDOMIZE);
     if (!(old_personality & ADDR_NO_RANDOMIZE)) {
         personality(ADDR_NO_RANDOMIZE);
-#ifdef __linux__
-        execv("/proc/self/exe", argv);
-#else
-        char *abs_path = realpath(argv[0], NULL);
-        const char *path = abs_path ? abs_path : argv[0];
-        execv(path, argv);
-        free(abs_path);
-#endif
-        perror("failed to exec");
-        return 1;
+        return exec_self(argv);
     }
 
-    const char *module_dir  = NULL;
-    const char *module_list = NULL;
-    int subcmd_pos          = 0;
-    char *arg0              = argv[0];
+    if (getenv(LOTTO_BOOTSTRAP_ENV) == NULL) {
+        const char *module_dir  = NULL;
+        const char *module_list = NULL;
+        char resolved_path[PATH_MAX];
+        char driver_path[PATH_MAX];
+        char binary_dir[PATH_MAX];
 
-    // We must process plugin dir before we load any CLI plugins, that's why we
-    // cannot use SUBCMD_GROUP_OTHER to simply collect possible plugin-related
-    // flags
-    // Check up to the first MAX_COMMAND_ARGS argument-value pairs
-    int max_command_args_idx = MAX_COMMAND_ARGS * 2 - 1;
-    for (int argv_idx = 1; argv_idx <= max_command_args_idx; argv_idx += 2) {
-        if (argc > argv_idx + 2) {
+        driver_options(argc, argv, &module_dir, &module_list);
+        lotto_module_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
+                          module_dir);
+        if (lotto_module_enable_only(module_list) != 0) {
+            return 1;
+        }
+
+        if (realpath(argv[0], resolved_path) == NULL) {
+            if (argv[0][0] == '/') {
+                snprintf(resolved_path, sizeof(resolved_path), "%s", argv[0]);
+            } else {
+                perror("failed to resolve lotto path");
+                return 1;
+            }
+        }
+
+        snprintf(binary_dir, sizeof(binary_dir), "%s", dirname(resolved_path));
+        snprintf(driver_path, sizeof(driver_path), "%s/liblotto-driver.so",
+                 binary_dir);
+
+        preload_state_t preload = {.buf = malloc(MAX_LIST_STR),
+                                   .len = 0,
+                                   .cap = MAX_LIST_STR};
+        preload_state_t plugin_modules = {.buf = malloc(MAX_LIST_STR),
+                                          .len = 0,
+                                          .cap = MAX_LIST_STR};
+        if (preload.buf == NULL || plugin_modules.buf == NULL) {
+            perror("malloc");
+            free(preload.buf);
+            free(plugin_modules.buf);
+            return 1;
+        }
+        preload.buf[0] = '\0';
+        plugin_modules.buf[0] = '\0';
+
+        append_preload(&preload, driver_path);
+        if (lotto_module_foreach(add_driver_module, &preload) != 0) {
+            free(preload.buf);
+            free(plugin_modules.buf);
+            return 1;
+        }
+        if (lotto_module_foreach(add_driver_module, &plugin_modules) != 0) {
+            free(preload.buf);
+            free(plugin_modules.buf);
+            return 1;
+        }
+        if (getenv("LD_PRELOAD") != NULL && getenv("LD_PRELOAD")[0] != '\0') {
+            setenv(LOTTO_CLI_PRELOAD, getenv("LD_PRELOAD"), true);
+            append_preload(&preload, getenv("LD_PRELOAD"));
+        } else {
+            unsetenv(LOTTO_CLI_PRELOAD);
+        }
+
+        setenv("LD_PRELOAD", preload.buf, true);
+        setenv(DICE_PLUGIN_MODULES, plugin_modules.buf, true);
+        setenv(LOTTO_BOOTSTRAP_ENV, "1", true);
+        prepend_env_path("LD_LIBRARY_PATH", binary_dir);
+        free(preload.buf);
+        free(plugin_modules.buf);
+        return exec_self(argv);
+    }
+    unsetenv(LOTTO_BOOTSTRAP_ENV);
+
+    return driver_main(argc, argv);
+}
+
+static void
+driver_options(int argc, char **argv, const char **module_dir,
+               const char **module_list)
+{
+    *module_dir  = NULL;
+    *module_list = NULL;
+
+    for (int argv_idx = 1; argv_idx <= MAX_COMMAND_ARGS * 2 - 1; argv_idx += 2) {
+        if (argc > argv_idx + 1) {
             if (strcmp(argv[argv_idx], "--plugin-dir") == 0) {
-                module_dir = argv[argv_idx + 1];
-                // subcmd array index - 1
-                subcmd_pos = argv_idx + 1;
+                *module_dir = argv[argv_idx + 1];
             }
             if (strcmp(argv[argv_idx], "--plugins") == 0) {
-                module_list = argv[argv_idx + 1];
-                // subcmd array index - 1
-                subcmd_pos = argv_idx + 1;
+                *module_list = argv[argv_idx + 1];
             }
         }
-    }
-
-    lotto_module_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
-                  module_dir);
-    if (0 != lotto_module_enable_only(module_list))
-        exit(1);
-    lotto_module_foreach(_load_module, NULL);
-
-
-#if defined(LOTTO_EMBED_LIB) && LOTTO_EMBED_LIB == 0
-    /* add arg0 path to LD_LIBRARY_PATH */
-    {
-        char resolved_path[PATH_MAX];
-        ASSERT(realpath(argv[0], resolved_path) != 0 &&
-               "Unable to resolve path. You must provide lotto's path or a "
-               "real path alias.");
-        preload_set_libpath(dirname(resolved_path));
-    }
-#endif
-
-    const char *scmd_str = argv[subcmd_pos + 1];
-    subcmd_t *scmd       = subcmd_find(scmd_str != NULL ? scmd_str : "-h");
-    if (NULL == scmd) {
-        if (NULL != scmd_str) {
-            subcmd_t *scmd_closest = subcmd_find_closest(scmd_str);
-            if (NULL != scmd_closest) {
-                sys_fprintf(stderr, "error: Did you mean %s ?\n",
-                            scmd_closest->name);
-            }
-        }
-        sys_fprintf(stderr, "error: unknown command %s\n", scmd_str);
-        return 1;
-    }
-
-    exec_info_t *exec_info  = get_exec_info();
-    exec_info->hash_actual  = get_lotto_hash(arg0);
-    exec_info->args = (scmd->group != SUBCMD_GROUP_OTHER) ?
-                          ARGS(argc - subcmd_pos - 1, argv + subcmd_pos + 1) :
-                          ARGS(argc - subcmd_pos, argv + subcmd_pos);
-
-    exec_info->args.arg0 = arg0;
-    flags_t *flags       = scmd->defaults();
-    switch (
-        flags_parse(flags, &exec_info->args, scmd->runtime_sel, scmd->sel)) {
-        case FLAGS_PARSE_OK: {
-            if (scmd->group == SUBCMD_GROUP_RUN && exec_info->args.argc < 1) {
-                sys_fprintf(stderr, "error: no program to run specified\n");
-                return 1;
-            }
-            if (scmd->group == SUBCMD_GROUP_TRACE && exec_info->args.argc > 0) {
-                sys_fprintf(stderr,
-                            "error: this command does not expect arguments\n");
-                return 1;
-            }
-
-            int r = scmd->func(&exec_info->args, flags);
-            if (r == -1 && scmd->group == SUBCMD_GROUP_RUN) {
-                sys_fprintf(stderr, "error: could not run the program %s\n",
-                            exec_info->args.argv[0]);
-            }
-            return r;
-        }
-        case FLAGS_PARSE_HELP:
-            if (scmd->name[0] != '-')
-                describe(scmd);
-            else
-                scmd->func(&exec_info->args, flags);
-            return -1;
-        case FLAGS_PARSE_LIST_FLAGS:
-            flags_list(scmd->runtime_sel, scmd->sel);
-            return 0;
-        case FLAGS_PARSE_ERROR:
-            return -1;
-        default:
-            ASSERT(0 && "should never reach here");
     }
 }
 
 static int
-_load_module(module_t *module, void *arg)
+add_driver_module(module_t *module, void *arg)
 {
-    (void)arg;
-    if (!(module->kind & MODULE_KIND_CLI))
+    preload_state_t *state = arg;
+
+    if (!(module->kind & MODULE_KIND_CLI)) {
         return 0;
-    void *handle = dlopen(module->path, RTLD_NOW | RTLD_GLOBAL);
-    if (!handle) {
-        char error[ERROR_MAX_LEN];
-        strcpy(error, dlerror());
-        logger_errorf("error loading module '%s': %s\n", module->path, error);
-        module->disabled = true;
     }
+    append_preload(state, module->path);
     return 0;
+}
+
+static void
+prepend_env_path(const char *name, const char *value)
+{
+    char buf[MAX_LIST_STR];
+    const char *cur = getenv(name);
+
+    if (cur != NULL && cur[0] != '\0') {
+        snprintf(buf, sizeof(buf), "%s:%s", value, cur);
+    } else {
+        snprintf(buf, sizeof(buf), "%s", value);
+    }
+    setenv(name, buf, true);
+}
+
+static void
+append_preload(preload_state_t *state, const char *path)
+{
+    int written;
+
+    if (state->len > 0) {
+        written = snprintf(state->buf + state->len, state->cap - state->len,
+                           ":%s", path);
+    } else {
+        written = snprintf(state->buf + state->len, state->cap - state->len,
+                           "%s", path);
+    }
+
+    if (written < 0 || (size_t)written >= state->cap - state->len) {
+        fprintf(stderr, "error: LD_PRELOAD list too long\n");
+        exit(1);
+    }
+    state->len += (size_t)written;
+}
+
+static int
+exec_self(char **argv)
+{
+#ifdef __linux__
+    execv("/proc/self/exe", argv);
+#else
+    char *abs_path   = realpath(argv[0], NULL);
+    const char *path = abs_path ? abs_path : argv[0];
+    execv(path, argv);
+    free(abs_path);
+#endif
+    perror("failed to exec");
+    return 1;
 }

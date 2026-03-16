@@ -33,7 +33,7 @@ as the current implementation.
 Lotto runs in more than one process image:
 
 - The CLI process loads `lotto-driver.so` and the enabled driver plugins.
-- The instrumented target process loads `liblotto.so` and the enabled runtime
+- The instrumented target process loads `liblotto-runtime.so` and the enabled runtime
   plugins through `LD_PRELOAD`.
 
 Each process executes its own initialization sequence. The phase model applies
@@ -106,7 +106,7 @@ Builtin modules and plugin modules should follow the same phase contract.
 
 ### Builtin modules
 
-Builtin modules are linked into `lotto-driver.so` or `liblotto.so`. Their
+Builtin modules are linked into `lotto-driver.so` or `liblotto-runtime.so`. Their
 constructors run when the shared object is loaded, so they can participate in
 Phase 1 by advertising types and installing subscriptions.
 

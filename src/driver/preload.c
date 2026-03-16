@@ -273,11 +273,11 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
 #if !defined(LOTTO_EMBED_LIB) || LOTTO_EMBED_LIB == 1
         verbose ?
         (driver_file_t){.path    = LIBLOTTO,
-                        .content = liblotto_verbose_so,
-                        .len     = liblotto_verbose_so_len} :
+                        .content = liblotto_runtime_verbose_so,
+                        .len     = liblotto_runtime_verbose_so_len} :
         (driver_file_t){.path    = LIBLOTTO,
-                        .content = liblotto_so,
-                        .len     = liblotto_so_len},
+                        .content = liblotto_runtime_so,
+                        .len     = liblotto_runtime_so_len},
 #endif
         {NULL}});
     // clang-format on
@@ -311,7 +311,7 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
     _preload_memmgr_plugins(memmgr_chain_runtime, true);
     _preload_memmgr_plugins(memmgr_chain_user, false);
 
-    /* preload liblotto */
+    /* preload the runtime library */
     _preload_libs(dir, (libspec_t[]){
                            {LIBLOTTO, do_preload_plotto},
                            {NULL},

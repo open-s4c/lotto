@@ -9,7 +9,7 @@ fi
 DICE_SOURCE="$ROOTDIR/deps/dice"
 DICE_BUILD="$LOTTO_BUILD/deps/dice"
 
-LDPRELOAD=${LOTTO_BUILD}/liblotto.so
+LDPRELOAD=${LOTTO_BUILD}/liblotto-runtime.so
 if [ ! -z "$PRELOAD" ]; then
 	#LDPRELOAD="$LDPRELOAD:$PRELOAD"
 	LDPRELOAD="$PRELOAD:$LDPRELOAD"

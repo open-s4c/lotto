@@ -23,7 +23,7 @@ static int p_out[2];
 static int p_err[2];
 
 #define DICE_DSO_ENV "DICE_DSO"
-#define LOTTO_DSO    "liblotto.so"
+#define LOTTO_DSO    "liblotto-runtime.so"
 
 
 static void

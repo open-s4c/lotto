@@ -24,7 +24,7 @@ static void _intercept_resume(mediator_t *m, context_t *ctx);
 bool
 _lotto_loaded(void)
 {
-    /* Inform user that liblotto is loaded. See lotto/check.h */
+    /* Inform user that the Lotto runtime library is loaded. */
     return true;
 }
 

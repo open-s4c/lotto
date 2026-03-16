@@ -1,7 +1,7 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
-#include <lotto/engine/statemgr.h>
 #include <lotto/driver/exec_info.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/stdlib.h>

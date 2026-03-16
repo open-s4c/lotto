@@ -11,9 +11,9 @@
 #include <lotto/sys/string.h>
 #include <lotto/util/contract.h>
 
-#define LOTTO_MEMPOOL_ALIGNMENT       8
-#define LOTTO_MEMPOOL_CANARY          0xBEEFFEED
-#define GET_ENTRY_PTR_STRUCT(p) ((entryptr_t *)(p)-1)
+#define LOTTO_MEMPOOL_ALIGNMENT 8
+#define LOTTO_MEMPOOL_CANARY    0xBEEFFEED
+#define GET_ENTRY_PTR_STRUCT(p) ((entryptr_t *)(p) - 1)
 #define GET_CANARY(p)           GET_ENTRY_PTR_STRUCT(p)->canary
 #define GET_ENTRY_PTR(p)        GET_ENTRY_PTR_STRUCT(p)->entry
 #define GET_ENTRY(p)            (*GET_ENTRY_PTR(p))

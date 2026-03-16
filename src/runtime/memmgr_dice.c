@@ -1,11 +1,10 @@
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <stdbool.h>
-
-#include <lotto/sys/assert.h>
-#include <lotto/sys/memmgr_impl.h>
 
 #include <dice/mempool.h>
+#include <lotto/sys/assert.h>
+#include <lotto/sys/memmgr_impl.h>
 
 static void
 memmgr_init()

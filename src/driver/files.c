@@ -1,11 +1,11 @@
 #include <limits.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 #include <lotto/driver/files.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 static bool
 driver_try_create_dir(const char *dir)

@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/driver/flagmgr.h>
 #include "state.h"
+#include <lotto/driver/flagmgr.h>
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_DEADLOCK_ENABLED, "", "handler-deadlock",
                          "enable deadlock handler", flag_on(),

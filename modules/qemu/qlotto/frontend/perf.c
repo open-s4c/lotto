@@ -268,12 +268,12 @@ vcpu_trace_end_capture(unsigned int cpu_index, void *udata)
     uint64_t uniq_num     = g_hash_table_size(frontend_perf_state.uniq_trace);
     uint64_t icount_count = icounter_get(get_instruction_counter());
     uint64_t icount_diff  = icount_count - (uintptr_t)g_hash_table_lookup(
-                                               frontend_perf_state.icount_trace,
-                                               (gpointer)trace_id);
+                                              frontend_perf_state.icount_trace,
+                                              (gpointer)trace_id);
     uint64_t wclock_count = now();
     uint64_t wclock_diff  = wclock_count - (uintptr_t)g_hash_table_lookup(
-                                               frontend_perf_state.wclock_trace,
-                                               (gpointer)trace_id);
+                                              frontend_perf_state.wclock_trace,
+                                              (gpointer)trace_id);
     uint64_t wfe_count = icounter_get(get_instruction_counter_wfe());
     uint64_t wfe_diff =
         wfe_count - (uintptr_t)g_hash_table_lookup(

@@ -1,8 +1,8 @@
 #include <stddef.h>
 #include <string.h>
 
-#include <lotto/base/vec.h>
 #include <lotto/base/marshable.h>
+#include <lotto/base/vec.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
@@ -13,7 +13,7 @@
         .marshal = _marshal, .unmarshal = _unmarshal, .size = _size,           \
     }
 
-#define AT(v,i) (vecitem_t *)((char *)(v)->items + (v)->mi.alloc_size * (i))
+#define AT(v, i) (vecitem_t *)((char *)(v)->items + (v)->mi.alloc_size * (i))
 
 static size_t
 _size(const marshable_t *m)
@@ -67,7 +67,7 @@ _unmarshal(marshable_t *m, const void *buf)
     /* unmarshal data */
     for (size_t i = 0; i < cnt; ++i) {
         vecitem_t *it = vec_add(v);
-        b = marshable_unmarshal_m(it, b);
+        b             = marshable_unmarshal_m(it, b);
     }
     ASSERT(v->cnt == cnt);
 
@@ -80,7 +80,7 @@ vec_init(vec_t *v, marshable_t mi)
     ASSERT(v);
     ASSERT(mi.alloc_size >= sizeof(vecitem_t));
 
-    *v = (vec_t) {
+    *v = (vec_t){
         .m     = MARSHABLE,
         .mi    = mi,
         .cnt   = 0,
@@ -95,13 +95,13 @@ vec_add(vec_t *v)
 {
     ASSERT(v);
     if (v->cnt >= v->cap) {
-        v->cap = (v->cap == 0) ? 8 : v->cap * 2;
+        v->cap   = (v->cap == 0) ? 8 : v->cap * 2;
         v->items = sys_realloc(v->items, v->mi.alloc_size * v->cap);
         ASSERT(v->items);
     }
-    size_t i = v->cnt;
+    size_t i      = v->cnt;
     vecitem_t *it = AT(v, i);
-    it->m = v->mi;
+    it->m         = v->mi;
     v->cnt++;
     return it;
 }
@@ -113,8 +113,8 @@ vec_clear(vec_t *v)
     ASSERT(v);
     sys_free(v->items);
     v->items = NULL;
-    v->cap = 0;
-    v->cnt = 0;
+    v->cap   = 0;
+    v->cnt   = 0;
 }
 
 
@@ -123,7 +123,7 @@ vec_sort(vec_t *v, vecitem_comparator_f compar)
 {
     ASSERT(v);
     ASSERT(compar);
-    typedef int(*qsort_compar)(const void *, const void *);
+    typedef int (*qsort_compar)(const void *, const void *);
     qsort(v->items, v->cnt, v->mi.alloc_size, (qsort_compar)compar);
 }
 
@@ -135,7 +135,7 @@ vec_reserve(vec_t *v, size_t cap)
     if (cap <= v->cap) {
         return;
     }
-    v->cap = cap;
+    v->cap   = cap;
     v->items = sys_realloc(v->items, v->cap * v->mi.alloc_size);
     ASSERT(v->items);
 }
@@ -148,7 +148,8 @@ vec_concat(vec_t *left, const vec_t *right)
     ASSERT(right);
     ASSERT(left->mi.alloc_size == right->mi.alloc_size);
     vec_reserve(left, left->cnt + right->cnt);
-    sys_memcpy(AT(left, left->cnt), AT(right, 0), right->cnt * left->mi.alloc_size);
+    sys_memcpy(AT(left, left->cnt), AT(right, 0),
+               right->cnt * left->mi.alloc_size);
     left->cnt = left->cnt + right->cnt;
 }
 
@@ -180,7 +181,7 @@ vec_union(vec_t *left, const vec_t *right, vecitem_comparator_f compar)
     vec_concat(left, right);
     vec_sort(left, compar);
 
-    size_t j = 0;               /* next write pos */
+    size_t j = 0; /* next write pos */
     /* invariant: 0 <= j <= i < left->cnt */
     for (size_t i = 0; i < left->cnt; ++i) {
         if (j == 0 || compar(AT(left, i), AT(left, j - 1)) != 0) {

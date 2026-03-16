@@ -1,10 +1,10 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
-#include <lotto/engine/pubsub.h>
-#include <lotto/engine/statemgr.h>
+#include "poll.h"
 #include <lotto/engine/clock.h>
 #include <lotto/engine/dispatcher.h>
-#include "poll.h"
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/modules/timeout/timeout.h>
 #include <lotto/sys/poll.h>
 

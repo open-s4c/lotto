@@ -12,8 +12,8 @@
 #include <lotto/base/envvar.h>
 #include <lotto/base/trace.h>
 #include <lotto/engine/pubsub.h>
-#include <lotto/engine/statemgr.h>
 #include <lotto/engine/recorder.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/stdio.h>
@@ -25,13 +25,15 @@
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__REPLAY_END)
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__INFO_RECORD_LOAD)
 
-void __attribute__((noinline)) recorder_end_trace()
+void __attribute__((noinline))
+recorder_end_trace()
 {
     logger_debugf("trace fully loaded\n");
     // nothing happends here
 }
 
-void __attribute__((noinline)) recorder_end_replay()
+void __attribute__((noinline))
+recorder_end_replay()
 {
     logger_debugf("end of replay\n");
     LOTTO_PUBLISH(EVENT_ENGINE__REPLAY_END, nil);
@@ -128,7 +130,7 @@ _recorder_replay_next(clk_t clk)
         }
 
         logger_debugf("replaying record [clk: %lu kind: %s]\n", r->clk,
-                   kind_str(r->kind));
+                      kind_str(r->kind));
         /* we match the record, let's load it. */
         statemgr_record_unmarshal(r);
         switch (r->kind) {
@@ -164,7 +166,7 @@ _recorder_replay_next(clk_t clk)
                 break;
             default:
                 logger_fatalf("unexpected %s record (clk: %lu)\n",
-                           kind_str(r->kind), clk);
+                              kind_str(r->kind), clk);
         }
         trace_advance(_recorder.input);
     }

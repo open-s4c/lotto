@@ -59,10 +59,7 @@ typedef struct {
 } quack_t;
 
 /** Initializer of quack. */
-#define QUACK_INIT()                                                           \
-    {                                                                          \
-        .head = VATOMIC_INIT(0)                                                \
-    }
+#define QUACK_INIT() {.head = VATOMIC_INIT(0)}
 
 /**
  * Initializes quack.

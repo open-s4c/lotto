@@ -21,12 +21,13 @@
 #define SO_SUFFIX     ".so"
 #define SO_SUFFIX_LEN (sizeof(SO_SUFFIX) - 1)
 
-#define DRIVER_MODULE_PREFIX     "lotto-driver-"
-#define DRIVER_MODULE_PREFIX_LEN (sizeof(DRIVER_MODULE_PREFIX) - 1)
+#define DRIVER_MODULE_PREFIX      "lotto-driver-"
+#define DRIVER_MODULE_PREFIX_LEN  (sizeof(DRIVER_MODULE_PREFIX) - 1)
 #define RUNTIME_MODULE_PREFIX     "lotto-runtime-"
 #define RUNTIME_MODULE_PREFIX_LEN (sizeof(DRIVER_MODULE_PREFIX) - 1)
 
-#define STARTS_WITH(s, LITERAL_NAME) (sys_strncmp((s), LITERAL_NAME, LITERAL_NAME##_LEN)  == 0)
+#define STARTS_WITH(s, LITERAL_NAME)                                           \
+    (sys_strncmp((s), LITERAL_NAME, LITERAL_NAME##_LEN) == 0)
 
 static module_t _modules[MAX_MODULES];
 static size_t _next = 0;
@@ -280,8 +281,8 @@ lotto_module_kind_str(module_kind_t kind)
 
     size_t off = 0;
     if (kind & MODULE_KIND_CLI) {
-        off += sys_snprintf(buf + off, sizeof(buf) - off, "%sCLI",
-                            off ? "|" : "");
+        off +=
+            sys_snprintf(buf + off, sizeof(buf) - off, "%sCLI", off ? "|" : "");
     }
     if (kind & MODULE_KIND_ENGINE) {
         off += sys_snprintf(buf + off, sizeof(buf) - off, "%sENGINE",

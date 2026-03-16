@@ -1,5 +1,5 @@
-#include <lotto/base/context.h>
 #include "state.h"
+#include <lotto/base/context.h>
 #include <lotto/region_preemption.h>
 #include <lotto/runtime/intercept.h>
 

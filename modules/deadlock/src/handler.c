@@ -1,12 +1,12 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
+#include "state.h"
 #include <lotto/base/reason.h>
 #include <lotto/base/tidbag.h>
-#include <lotto/engine/pubsub.h>
-#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/modules/deadlock/events.h>
-#include "state.h"
 #include <lotto/modules/mutex/mutex.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>

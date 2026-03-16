@@ -7,7 +7,7 @@
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/stdlib.h>
 
-#define ADDRESS_BDD_FALSE (uintptr_t) NULL
+#define ADDRESS_BDD_FALSE (uintptr_t)NULL
 #define ADDRESS_BDD_TRUE  ~ADDRESS_BDD_FALSE
 
 struct address_bdd_s {

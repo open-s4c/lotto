@@ -17,9 +17,9 @@
 #include <lotto/base/arg.h>
 #include <lotto/base/category.h>
 #include <lotto/base/context.h>
-#include <lotto/runtime/events.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/rsrc_deadlock.h>
+#include <lotto/runtime/events.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/logger.h>
 
@@ -51,8 +51,8 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_INIT, {
     bool detached = false;
     context_t *c  = ctx(.func = "pthread_thread_start", .cat = CAT_TASK_INIT,
                         .args = {
-                            [0] = arg(uintptr_t, (uintptr_t)pthread_self()),
-                            [1] = arg(bool, detached),
+                           [0] = arg(uintptr_t, (uintptr_t)pthread_self()),
+                           [1] = arg(bool, detached),
                        });
     intercept_capture(c);
     return PS_OK;
@@ -62,8 +62,8 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
     bool detached = false;
     context_t *c  = ctx(.func = "pthread_thread_start", .cat = CAT_TASK_INIT,
                         .args = {
-                            [0] = arg(uintptr_t, (uintptr_t)pthread_self()),
-                            [1] = arg(bool, detached),
+                           [0] = arg(uintptr_t, (uintptr_t)pthread_self()),
+                           [1] = arg(bool, detached),
                        });
     intercept_capture(c);
     return PS_OK;

@@ -1,8 +1,8 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <stdlib.h>
 
-#include <lotto/driver/flagmgr.h>
 #include "state.h"
+#include <lotto/driver/flagmgr.h>
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_QEMU_GDB_ENABLED, "G", "gdb",
                          "enable qemu gdb server", flag_off(),

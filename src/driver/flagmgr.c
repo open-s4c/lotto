@@ -10,11 +10,11 @@
 #include <lotto/base/flag.h>
 #include <lotto/base/record_granularity.h>
 #include <lotto/base/stable_address.h>
-#include <lotto/engine/pubsub.h>
-#include <lotto/engine/statemgr.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/prng.h>
 #include <lotto/driver/subcmd.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/modules/enforce/state.h>
 #include <lotto/modules/termination/state.h>
 #include <lotto/sys/assert.h>

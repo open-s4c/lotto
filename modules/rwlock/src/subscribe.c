@@ -1,7 +1,7 @@
-#include <time.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
 
 #include <dice/chains/capture.h>
 #include <dice/chains/intercept.h>
@@ -19,58 +19,55 @@
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/logger.h>
 
-static int const_zero(pthread_rwlock_t *l) { return 0 ;}
-static int const_zero_timed(pthread_rwlock_t *l, const struct timespec *t) { return 0; }
+static int
+const_zero(pthread_rwlock_t *l)
+{
+    return 0;
+}
+static int
+const_zero_timed(pthread_rwlock_t *l, const struct timespec *t)
+{
+    return 0;
+}
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_RDLOCK, {
     struct pthread_rwlock_rdlock_event *ev = EVENT_PAYLOAD(event);
-    intercept_capture(ctx_pc(
-        .pc = (uintptr_t)ev->pc,
-        .cat = CAT_RWLOCK_RDLOCK,
-        .func = "pthread_rwlock_rdlock",
-        .args = {arg_ptr(ev->lock)},
-    ));
+    intercept_capture(ctx_pc(.pc = (uintptr_t)ev->pc, .cat = CAT_RWLOCK_RDLOCK,
+                             .func = "pthread_rwlock_rdlock",
+                             .args = {arg_ptr(ev->lock)}, ));
     ev->func = const_zero;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_WRLOCK, {
     struct pthread_rwlock_wrlock_event *ev = EVENT_PAYLOAD(event);
-    intercept_capture(ctx_pc(
-        .pc = (uintptr_t)ev->pc,
-        .cat = CAT_RWLOCK_WRLOCK,
-        .func = "pthread_rwlock_wrlock",
-        .args = {arg_ptr(ev->lock)},
-    ));
+    intercept_capture(ctx_pc(.pc = (uintptr_t)ev->pc, .cat = CAT_RWLOCK_WRLOCK,
+                             .func = "pthread_rwlock_wrlock",
+                             .args = {arg_ptr(ev->lock)}, ));
     ev->func = const_zero;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_UNLOCK, {
     struct pthread_rwlock_unlock_event *ev = EVENT_PAYLOAD(event);
-    intercept_capture(ctx_pc(
-        .pc = (uintptr_t)ev->pc,
-        .cat = CAT_RWLOCK_UNLOCK,
-        .func = "pthread_rwlock_unlock",
-        .args = {arg_ptr(ev->lock)},
-    ));
+    intercept_capture(ctx_pc(.pc = (uintptr_t)ev->pc, .cat = CAT_RWLOCK_UNLOCK,
+                             .func = "pthread_rwlock_unlock",
+                             .args = {arg_ptr(ev->lock)}, ));
     ev->func = const_zero;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_TRYRDLOCK, {
     struct pthread_rwlock_tryrdlock_event *ev = EVENT_PAYLOAD(event);
-    ev->func = const_zero;
+    ev->func                                  = const_zero;
     return PS_OK;
 })
 PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_RWLOCK_TRYRDLOCK, {
     struct pthread_rwlock_tryrdlock_event *ev = EVENT_PAYLOAD(event);
-    context_t *ctx = ctx_pc(
-        .pc = (uintptr_t)ev->pc,
-        .cat = CAT_RWLOCK_TRYRDLOCK,
-        .func = "pthread_rwlock_tryrdlock",
-        .args = {arg_ptr(ev->lock)},
-    );
+    context_t *ctx =
+        ctx_pc(.pc = (uintptr_t)ev->pc, .cat = CAT_RWLOCK_TRYRDLOCK,
+               .func = "pthread_rwlock_tryrdlock",
+               .args = {arg_ptr(ev->lock)}, );
     intercept_capture(ctx);
     ev->ret = (int)ctx->args[1].value.u32;
     return PS_OK;
@@ -78,17 +75,15 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_RWLOCK_TRYRDLOCK, {
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_TRYWRLOCK, {
     struct pthread_rwlock_trywrlock_event *ev = EVENT_PAYLOAD(event);
-    ev->func = const_zero;
+    ev->func                                  = const_zero;
     return PS_OK;
 })
 PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_RWLOCK_TRYWRLOCK, {
     struct pthread_rwlock_trywrlock_event *ev = EVENT_PAYLOAD(event);
-    context_t *ctx = ctx_pc(
-        .pc = (uintptr_t)ev->pc,
-        .cat = CAT_RWLOCK_TRYWRLOCK,
-        .func = "pthread_rwlock_trywrlock",
-        .args = {arg_ptr(ev->lock)},
-    );
+    context_t *ctx =
+        ctx_pc(.pc = (uintptr_t)ev->pc, .cat = CAT_RWLOCK_TRYWRLOCK,
+               .func = "pthread_rwlock_trywrlock",
+               .args = {arg_ptr(ev->lock)}, );
     intercept_capture(ctx);
     ev->ret = (int)ctx->args[1].value.u32;
     return PS_OK;
@@ -96,24 +91,20 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_RWLOCK_TRYWRLOCK, {
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_TIMEDRDLOCK, {
     struct pthread_rwlock_timedrdlock_event *ev = EVENT_PAYLOAD(event);
-    intercept_capture(ctx_pc(
-        .pc = (uintptr_t)ev->pc,
-        .cat = CAT_RWLOCK_RDLOCK,
-        .func = "pthread_rwlock_timedrdlock",
-        .args = {arg_ptr(ev->lock), arg_ptr(ev->abstime)},
-    ));
+    intercept_capture(
+        ctx_pc(.pc = (uintptr_t)ev->pc, .cat = CAT_RWLOCK_RDLOCK,
+               .func = "pthread_rwlock_timedrdlock",
+               .args = {arg_ptr(ev->lock), arg_ptr(ev->abstime)}, ));
     ev->func = const_zero_timed;
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_RWLOCK_TIMEDWRLOCK, {
     struct pthread_rwlock_timedwrlock_event *ev = EVENT_PAYLOAD(event);
-    intercept_capture(ctx_pc(
-        .pc = (uintptr_t)ev->pc,
-        .cat = CAT_RWLOCK_WRLOCK,
-        .func = "pthread_rwlock_timedwrlock",
-        .args = {arg_ptr(ev->lock), arg_ptr(ev->abstime)},
-    ));
+    intercept_capture(
+        ctx_pc(.pc = (uintptr_t)ev->pc, .cat = CAT_RWLOCK_WRLOCK,
+               .func = "pthread_rwlock_timedwrlock",
+               .args = {arg_ptr(ev->lock), arg_ptr(ev->abstime)}, ));
     ev->func = const_zero_timed;
     return PS_OK;
 })

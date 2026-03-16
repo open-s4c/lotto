@@ -5,7 +5,7 @@
 #include <lotto/base/tidset.h>
 #include <lotto/base/trace.h>
 #include <lotto/base/trace_flat.h>
-#include <lotto/engine/statemgr.h>
+#include <lotto/cli/preload.h>
 #include <lotto/driver/args.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/exec_info.h>
@@ -16,7 +16,7 @@
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/trace.h>
 #include <lotto/driver/utils.h>
-#include <lotto/cli/preload.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/modules/available/state.h>
 #include <lotto/modules/explore/explore.h>
 #include <lotto/sys/stdio.h>
@@ -84,9 +84,9 @@ _explore_interval(args_t *args, flags_t *flags, trace_t *input, uint64_t from,
                 break;
             trace_t *trace =
                 cli_trace_load(flags_get_sval(flags, flag_output()));
-            int sub        = _explore_interval(args, flags, trace, clk + 1, to,
-                                               expect_failure);
-            is_error       = (err = sub) != 0;
+            int sub  = _explore_interval(args, flags, trace, clk + 1, to,
+                                         expect_failure);
+            is_error = (err = sub) != 0;
             trace_destroy(trace);
         }
     }
@@ -104,7 +104,8 @@ explore(args_t *args, flags_t *flags)
             flags_get_sval(flags, flag_memmgr_user()));
 
     envvar_t vars[] = {
-        {"LOTTO_LOGGER_FILE", .sval = flags_get_sval(flags, flag_logger_file())},
+        {"LOTTO_LOGGER_FILE",
+         .sval = flags_get_sval(flags, flag_logger_file())},
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
         {"LOTTO_REPLAY", .sval = "temp.trace"},
         {"LOTTO_LOGGER_BLOCK",

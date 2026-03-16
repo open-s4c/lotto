@@ -4,14 +4,14 @@
 #include <dice/self.h>
 #include <lotto/base/context.h>
 #include <lotto/base/task_id.h>
-#include <lotto/runtime/events.h>
 #include <lotto/engine/engine.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/state.h>
+#include <lotto/runtime/events.h>
 #include <lotto/runtime/mediator.h>
 #include <lotto/runtime/runtime.h>
 #include <lotto/runtime/switcher.h>
-#include <lotto/engine/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/pthread.h>

@@ -83,7 +83,7 @@ stable_address_compare(const stable_address_t *sa, const stable_address_t *sb)
         case ADDRESS_PTR:
             return sa->value.ptr < sb->value.ptr ? -1 :
                    sa->value.ptr > sb->value.ptr ? 1 :
-                   0;
+                                                   0;
 #ifdef LOTTO_STABLE_ADDRESS_MAP
         case ADDRESS_MAP: {
             int name_cmp = strcmp(sa->value.map.name, sb->value.map.name);
@@ -91,7 +91,7 @@ stable_address_compare(const stable_address_t *sa, const stable_address_t *sb)
                 return name_cmp;
             return sa->value.map.offset < sb->value.map.offset ? -1 :
                    sa->value.map.offset > sb->value.map.offset ? 1 :
-                   0;
+                                                                 0;
         }
 #endif
         default:

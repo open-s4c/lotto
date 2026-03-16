@@ -3,11 +3,11 @@
 #include <lotto/base/stable_address.h>
 #include <lotto/base/string.h>
 #include <lotto/engine/catmgr.h>
-#include <lotto/engine/pubsub.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
-#include <lotto/modules/enforce/state.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/state.h>
+#include <lotto/modules/enforce/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/stdio.h>

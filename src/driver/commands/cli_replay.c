@@ -29,7 +29,8 @@ replay(args_t *args, flags_t *flags)
     setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, flag_logger_file()),
            true);
 
-    sys_fprintf(stdout, "trace file: %s\n", flags_get_sval(flags, flag_input()));
+    sys_fprintf(stdout, "trace file: %s\n",
+                flags_get_sval(flags, flag_input()));
 
     uint64_t last_clk = cli_trace_last_clk(flags_get_sval(flags, flag_input()));
     uint64_t goal     = flags_get_uval(flags, flag_replay_goal());

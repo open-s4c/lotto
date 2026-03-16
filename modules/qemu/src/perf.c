@@ -3,8 +3,8 @@
 
 #include <lotto/base/context.h>
 #include <lotto/base/task_id.h>
-#include <lotto/modules/qemu/perf.h>
 #include <lotto/modules/qemu/callbacks.h>
+#include <lotto/modules/qemu/perf.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/now.h>
 #include <lotto/util/macros.h>
@@ -93,9 +93,9 @@ __perf_print_results(void)
                 (double)total_tid_lotto_time * 100.0;
 
             logger_infof("   [%lu] Time spent in %12s: %14lu\n", i,
-                      state_l_str(sl), perf_state.__perf_time_lotto[i][sl]);
+                         state_l_str(sl), perf_state.__perf_time_lotto[i][sl]);
             logger_infof("   [%lu] Time spent in %12s: %6.3f%%\n", i,
-                      state_l_str(sl), perf_percent);
+                         state_l_str(sl), perf_percent);
         }
         logger_infof("\n");
     }
@@ -110,9 +110,9 @@ __perf_print_results(void)
                                   (double)total_tid_lotto_time * 100.0;
 
             logger_infof("   [%lu] Time spent in %12s: %14lu\n", i,
-                      state_q_str(sq), perf_state.__perf_time_qemu[i][sq]);
+                         state_q_str(sq), perf_state.__perf_time_qemu[i][sq]);
             logger_infof("   [%lu] Time spent in %12s: %6.3f%%\n", i,
-                      state_q_str(sq), perf_percent);
+                         state_q_str(sq), perf_percent);
         }
         logger_infof("\n");
     }

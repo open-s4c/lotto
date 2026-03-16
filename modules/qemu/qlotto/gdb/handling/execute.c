@@ -190,8 +190,8 @@ gdb_srv_handle_v(int fd, uint8_t *msg, uint64_t msg_len)
                     cpu_index =
                         CAST_TYPE(int32_t, gdb_srv_gdb_tid_to_vcpu(tid));
                 }
-                // logger_printf("Got request to add breakpoint at addr 0x%lx\n",
-                // b_pc);
+                // logger_printf("Got request to add breakpoint at addr
+                // 0x%lx\n", b_pc);
                 gdb_add_breakpoint_range_exclude(b_pc_1, size, cpu_index);
                 gdb_send_ack(fd);
                 gdb_send_ok(fd);

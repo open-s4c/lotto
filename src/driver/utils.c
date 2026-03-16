@@ -10,11 +10,11 @@
 #include <lotto/base/marshable.h>
 #include <lotto/base/trace_chunked.h>
 #include <lotto/base/trace_flat.h>
-#include <lotto/engine/statemgr.h>
 #include <lotto/driver/args.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/sequencer.h>
 #include <lotto/driver/trace.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/now.h>
 #include <lotto/sys/stdio.h>

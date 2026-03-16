@@ -109,7 +109,8 @@ gdb_get_symbols(const char *filename)
     uint64_t idx = 0;
 
     if (elf_version(EV_CURRENT) == EV_NONE) {
-        logger_errorf(" ELF library initialization failed : %s ", elf_errmsg(-1));
+        logger_errorf(" ELF library initialization failed : %s ",
+                      elf_errmsg(-1));
     }
 
     if ((fd = rl_open(filename, O_RDONLY, 0)) < 0) {

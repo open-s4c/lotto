@@ -155,4 +155,4 @@ gdb_execution_has_halted()
 }
 
 LOTTO_SUBSCRIBE(EVENT_DEADLOCK__DETECTED,
-                       { gdb_execution_halt(_state.gdb_execution_tid); })
+                { gdb_execution_halt(_state.gdb_execution_tid); })

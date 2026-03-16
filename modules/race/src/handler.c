@@ -2,12 +2,12 @@
 #include <string.h>
 
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
+#include "state.h"
 #include <lotto/base/tidmap.h>
-#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/modules/ichpt/ichpt.h>
 #include <lotto/modules/race/race_result.h>
-#include "state.h"
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
@@ -19,7 +19,7 @@
 #else
     #define LAZY_DEREG_DELAY 10
     #define MAX_CAPACITY     4
-    //#define MASK             0xFFFF000000000000
+    // #define MASK             0xFFFF000000000000
     #define MASK             0xFFFFFFFF00000000
 #endif
 

@@ -1,10 +1,10 @@
 #include <errno.h>
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/engine/pubsub.h>
-#include <lotto/engine/statemgr.h>
+#include "state.h"
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
-#include "state.h"
+#include <lotto/engine/pubsub.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/logger_block.h>
@@ -18,7 +18,7 @@ struct reader {
 
 struct rwlock {
     mapitem_t ti;
-    task_id  writer;
+    task_id writer;
     tidmap_t readers;
     tidset_t read_waiters;
     tidset_t write_waiters;
@@ -32,7 +32,7 @@ REGISTER_STATE(EPHEMERAL, _state, {
     map_init(&_state.locks, MARSHABLE_STATIC(sizeof(struct rwlock)));
 })
 
-static struct rwlock * _rwlock_init(uint64_t addr);
+static struct rwlock *_rwlock_init(uint64_t addr);
 STATIC bool _rwlock_is_read_locked(const struct rwlock *lock);
 STATIC bool _rwlock_is_read_locked_by(const struct rwlock *lock, task_id id);
 STATIC bool _rwlock_is_write_locked(const struct rwlock *lock);
@@ -62,7 +62,7 @@ _rwlock_handle(const context_t *ctx, event_t *e)
             ASSERT(!e->any_task_filter);
             e->any_task_filter = _should_wait;
             break;
-        
+
         case CAT_RWLOCK_WRLOCK:
             _handle_wrlock(ctx->id, addr, e);
             e->is_chpt = true;
@@ -110,10 +110,12 @@ LOTTO_SUBSCRIBE(EVENT_ENGINE__NEXT_TASK, {
             _posthandle_unlock(ctx->id, addr);
             break;
         case CAT_RWLOCK_TRYRDLOCK:
-            ctx->args[1].value.u32 = (uint32_t)_posthandle_tryrdlock(ctx->id, addr);
+            ctx->args[1].value.u32 =
+                (uint32_t)_posthandle_tryrdlock(ctx->id, addr);
             break;
         case CAT_RWLOCK_TRYWRLOCK:
-            ctx->args[1].value.u32 = (uint32_t)_posthandle_trywrlock(ctx->id, addr);
+            ctx->args[1].value.u32 =
+                (uint32_t)_posthandle_trywrlock(ctx->id, addr);
             break;
         default:
             break;
@@ -164,7 +166,8 @@ _should_wait(task_id id)
     const struct rwlock *it = (struct rwlock *)map_iterate(&_state.locks);
     for (; it; it = (const struct rwlock *)map_next(&it->ti)) {
         if (_rwlock_is_write_locked(it)) {
-            if (tidset_has(&it->write_waiters, id) || tidset_has(&it->read_waiters, id)) {
+            if (tidset_has(&it->write_waiters, id) ||
+                tidset_has(&it->read_waiters, id)) {
                 return true;
             }
         } else if (_rwlock_is_read_locked(it)) {
@@ -202,10 +205,11 @@ STATIC bool
 _handle_wrlock(task_id id, uint64_t addr, event_t *e)
 {
     logger_debugf("[%lu] rwlock wrlock 0x%lx\n", id, addr);
-    struct rwlock *lock = _rwlock_init(addr);
+    struct rwlock *lock  = _rwlock_init(addr);
     bool is_write_locked = _rwlock_is_write_locked(lock);
-    bool is_read_locked = _rwlock_is_read_locked(lock);
-    if (is_write_locked && lock->writer == id || is_read_locked && _rwlock_is_read_locked_by(lock, id)) {
+    bool is_read_locked  = _rwlock_is_read_locked(lock);
+    if (is_write_locked && lock->writer == id ||
+        is_read_locked && _rwlock_is_read_locked_by(lock, id)) {
         e->reason = REASON_RSRC_DEADLOCK;
         return false;
     }
@@ -224,11 +228,12 @@ _posthandle_rdlock(task_id id, uintptr_t addr)
     ENSURE(tidset_remove(&lock->read_waiters, id));
     struct reader *reader = (struct reader *)tidmap_find(&lock->readers, id);
     if (!reader) {
-        reader = (struct reader *)tidmap_register(&lock->readers, id);
+        reader      = (struct reader *)tidmap_register(&lock->readers, id);
         reader->cnt = 0;
     }
     reader->cnt++;
-    logger_debugf("rwlock 0x%lx is read locked by %lu (cnt=%d)\n", addr, id, reader->cnt);
+    logger_debugf("rwlock 0x%lx is read locked by %lu (cnt=%d)\n", addr, id,
+                  reader->cnt);
 }
 
 STATIC int
@@ -246,12 +251,13 @@ _posthandle_tryrdlock(task_id id, uintptr_t addr)
     }
     struct reader *reader = (struct reader *)tidmap_find(&lock->readers, id);
     if (!reader) {
-        reader = (struct reader *)tidmap_register(&lock->readers, id);
+        reader      = (struct reader *)tidmap_register(&lock->readers, id);
         reader->cnt = 0;
     }
     reader->cnt++;
-    logger_debugf("rwlock 0x%lx is (try)read locked by %lu (cnt=%d)\n", addr, id, reader->cnt);
-        return 0;
+    logger_debugf("rwlock 0x%lx is (try)read locked by %lu (cnt=%d)\n", addr,
+                  id, reader->cnt);
+    return 0;
 }
 
 STATIC void
@@ -269,7 +275,7 @@ STATIC int
 _posthandle_trywrlock(task_id id, uintptr_t addr)
 {
     struct rwlock *lock = _rwlock_init(addr);
-    if (lock->writer == id) 
+    if (lock->writer == id)
         return EDEADLK;
     if (_rwlock_is_read_locked(lock) || _rwlock_is_write_locked(lock)) {
         return EBUSY;
@@ -288,14 +294,19 @@ _posthandle_unlock(task_id id, uintptr_t addr)
         lock->writer = NO_TASK;
         logger_debugf("rwlock 0x%lx is unlocked by writer %lu\n", addr, id);
     } else if (_rwlock_is_read_locked_by(lock, id)) {
-        struct reader *reader = (struct reader *)tidmap_find(&lock->readers, id);
+        struct reader *reader =
+            (struct reader *)tidmap_find(&lock->readers, id);
         ASSERT(reader && reader->cnt >= 0);
         reader->cnt--;
-        logger_debugf("rwlock 0x%lx is unlocked by reader %lu (count=%d)\n", addr, id, reader->cnt);
+        logger_debugf("rwlock 0x%lx is unlocked by reader %lu (count=%d)\n",
+                      addr, id, reader->cnt);
         if (reader->cnt == 0) {
             tidmap_deregister(&lock->readers, id);
         }
     } else {
-        logger_warnf("undefined behavior: task %lu tries to unlock an unacquired rwlock 0x%lx\n", id, addr);
+        logger_warnf(
+            "undefined behavior: task %lu tries to unlock an unacquired rwlock "
+            "0x%lx\n",
+            id, addr);
     }
 }

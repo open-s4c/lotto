@@ -1,9 +1,9 @@
 #include <math.h>
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
-#include <lotto/engine/pubsub.h>
-#include <lotto/driver/flagmgr.h>
 #include "state.h"
+#include <lotto/driver/flagmgr.h>
+#include <lotto/engine/pubsub.h>
 
 NEW_CALLBACK_FLAG(PCT_K, "k", "pct-k", "INT", "PCT k parameter", flag_uval(10),
                   {

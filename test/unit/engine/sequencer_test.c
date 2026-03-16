@@ -6,11 +6,11 @@
 #include <lotto/base/cappt.h>
 #include <lotto/base/context.h>
 #include <lotto/base/trace_flat.h>
-#include <lotto/engine/pubsub.h>
-#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
+#include <lotto/engine/statemgr.h>
 
 // NOLINTBEGIN(bugprone-suspicious-memory-comparison)
 

@@ -116,7 +116,8 @@ gdb_srv_listen(struct pollfd *fds, int *nfds)
         exit(1);
     }
 
-    logger_infof("Successfully started up gdb_server to port %u\n", addr.sin_port);
+    logger_infof("Successfully started up gdb_server to port %u\n",
+                 addr.sin_port);
 
     fds->events = POLLIN;
     (*nfds)++;

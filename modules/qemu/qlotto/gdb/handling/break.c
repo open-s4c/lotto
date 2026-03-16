@@ -181,7 +181,7 @@ gdb_has_breakpoint_in_range(tb_info_t *tb_info)
         if (bp_cur->ti.key >= tb_pc_start &&
             bp_cur->ti.key <= tb_pc_end) { // found breakpoint
             logger_infof("BP 0x%lx in range [0x%lx,0x%lx]!\n", bp_cur->ti.key,
-                      tb_pc_start, tb_pc_end);
+                         tb_pc_start, tb_pc_end);
             return true;
         }
     }

@@ -4,12 +4,12 @@
  * http://www.cs.columbia.edu/~junfeng/papers/pos-cav18.pdf
  ******************************************************************************/
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
+#include "state.h"
 #include <lotto/base/tidmap.h>
-#include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
-#include "state.h"
 #include <lotto/engine/state.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
 #include <lotto/util/once.h>

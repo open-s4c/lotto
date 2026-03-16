@@ -19,25 +19,26 @@
 
 // clang-format on
 
-#include <pthread.h>
-#include <stdatomic.h>
 #include <assert.h>
+#include <pthread.h>
 #include <sched.h>
+#include <stdatomic.h>
 
 #include <lotto/order.h>
 
 typedef atomic_flag spinlock_t;
 #define SPINLOCK_INIT ATOMIC_FLAG_INIT
-#define LOCK(l) while(atomic_flag_test_and_set((l)))
-#define UNLOCK(l) atomic_flag_clear((l))
+#define LOCK(l)       while (atomic_flag_test_and_set((l)))
+#define UNLOCK(l)     atomic_flag_clear((l))
 
 spinlock_t s = SPINLOCK_INIT;
-int x = 0;
+int x        = 0;
 
 void
 lock(spinlock_t *s)
 {
-    while(atomic_flag_test_and_set(s));
+    while (atomic_flag_test_and_set(s))
+        ;
 }
 
 void

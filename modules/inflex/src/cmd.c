@@ -76,7 +76,8 @@ inflex(args_t *args, flags_t *flags)
     setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, flag_logger_file()),
            true);
 
-    sys_fprintf(stdout, "input trace: %s\n", flags_get_sval(flags, flag_input()));
+    sys_fprintf(stdout, "input trace: %s\n",
+                flags_get_sval(flags, flag_input()));
     sys_fprintf(stdout, "output trace: %s\n",
                 flags_get_sval(flags, flag_output()));
 

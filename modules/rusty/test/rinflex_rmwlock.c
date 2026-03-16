@@ -19,18 +19,23 @@
 
 // clang-format on
 
-#include <stdatomic.h>
-#include <pthread.h>
 #include <assert.h>
+#include <pthread.h>
+#include <stdatomic.h>
 
 typedef atomic_int spinlock_t;
 atomic_int _chpt;
 
-void lock(spinlock_t *lock) {
-    while (atomic_fetch_or(lock, 1) & 1);
+void
+lock(spinlock_t *lock)
+{
+    while (atomic_fetch_or(lock, 1) & 1)
+        ;
 }
 
-void unlock(spinlock_t *lock) {
+void
+unlock(spinlock_t *lock)
+{
     atomic_store(lock, 0);
 }
 
@@ -71,4 +76,3 @@ main()
     pthread_join(t2, 0);
     return 0;
 }
-

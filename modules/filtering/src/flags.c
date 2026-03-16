@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/driver/flagmgr.h>
 #include "state.h"
+#include <lotto/driver/flagmgr.h>
 #include <lotto/sys/string.h>
 
 NEW_CALLBACK_FLAG(FILTERING, "F", "filtering-on", "",

@@ -351,13 +351,15 @@ _add_pending_unblocked(task_id id)
     caslock_release(&_seq.pending.lock);
 }
 
-void __attribute__((noinline)) sequencer_clk_met()
+void __attribute__((noinline))
+sequencer_clk_met()
 {
     logger_debugf("clk met\n");
     clk_bound = 0;
 }
 
-void __attribute__((noinline)) sequencer_time_met()
+void __attribute__((noinline))
+sequencer_time_met()
 {
     logger_debugf("time met\n");
     time_bound_ns = 0;

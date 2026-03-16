@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
+
 #include <lotto/engine/prng.h>
 #include <lotto/engine/state.h>
 #include <lotto/sys/assert.h>

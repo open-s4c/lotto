@@ -41,8 +41,8 @@ show(args_t *args, flags_t *flags)
 }
 
 LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_COMMANDS, {
-    flag_t sel[] = {flag_input(), flag_temporary_directory(),
-                    flag_no_preload(), flag_verbose(), 0};
+    flag_t sel[] = {flag_input(), flag_temporary_directory(), flag_no_preload(),
+                    flag_verbose(), 0};
     subcmd_register(show, "show", "", "Show details of a trace", false, sel,
                     flags_default, SUBCMD_GROUP_TRACE);
 })

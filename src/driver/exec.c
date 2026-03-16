@@ -101,7 +101,9 @@ read_pipes()
             bytes_read = sys_read(pfds[i].fd, buffer, BUFFER_SIZE - 1);
             if (bytes_read > 0) {
                 buffer[bytes_read] = '\0';
-                sys_dprintf(pfds[i].fd == p_out[0] ? STDOUT_FILENO : STDERR_FILENO, "%s", buffer);
+                sys_dprintf(pfds[i].fd == p_out[0] ? STDOUT_FILENO :
+                                                     STDERR_FILENO,
+                            "%s", buffer);
             }
             data_read = true;
         }
@@ -180,7 +182,7 @@ execute(const args_t *args, const flags_t *flags, bool config)
     const char *old_dice_dso = sys_getenv(DICE_DSO_ENV);
     char *old_dice_dso_copy  = NULL;
     if (old_dice_dso) {
-        size_t len      = sys_strlen(old_dice_dso);
+        size_t len        = sys_strlen(old_dice_dso);
         old_dice_dso_copy = sys_malloc(len + 1);
         sys_strcpy(old_dice_dso_copy, old_dice_dso);
     }

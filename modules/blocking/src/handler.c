@@ -1,9 +1,9 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
+#include "state.h"
+#include <lotto/engine/dispatcher.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/engine/dispatcher.h>
 #include <lotto/modules/blocking/blocking.h>
-#include "state.h"
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
@@ -30,7 +30,7 @@ REGISTER_EPHEMERAL(_state, {
     tidset_init(&_state.blocked_replay);
 })
 LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_PERSISTENT,
-                       { _state.consumed = false; })
+                { _state.consumed = false; })
 
 /*******************************************************************************
  * handler

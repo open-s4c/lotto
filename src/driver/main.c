@@ -12,8 +12,8 @@
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/utils.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/stdio.h>
 #include <lotto/sys/modules.h>
+#include <lotto/sys/stdio.h>
 
 #define MAX_COMMAND_ARGS 2
 
@@ -25,7 +25,8 @@ driver_options(int argc, char **argv, const char **module_dir,
     *module_list = NULL;
     *subcmd_pos  = 0;
 
-    for (int argv_idx = 1; argv_idx <= MAX_COMMAND_ARGS * 2 - 1; argv_idx += 2) {
+    for (int argv_idx = 1; argv_idx <= MAX_COMMAND_ARGS * 2 - 1;
+         argv_idx += 2) {
         if (argc > argv_idx + 1) {
             if (strcmp(argv[argv_idx], "--plugin-dir") == 0) {
                 *module_dir = argv[argv_idx + 1];
@@ -96,7 +97,8 @@ driver_main(int argc, char **argv)
 
     exec_info->args.arg0 = arg0;
     flags_t *flags       = scmd->defaults();
-    switch (flags_parse(flags, &exec_info->args, scmd->runtime_sel, scmd->sel)) {
+    switch (
+        flags_parse(flags, &exec_info->args, scmd->runtime_sel, scmd->sel)) {
         case FLAGS_PARSE_OK: {
             if (scmd->group == SUBCMD_GROUP_RUN && exec_info->args.argc < 1) {
                 sys_fprintf(stderr, "error: no program to run specified\n");

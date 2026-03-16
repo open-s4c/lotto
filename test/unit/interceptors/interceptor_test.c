@@ -9,8 +9,8 @@
 #include <lotto/base/plan.h>
 #include <lotto/base/record.h>
 #include <lotto/engine/catmgr.h>
-#include <lotto/engine/pubsub.h>
 #include <lotto/engine/dispatcher.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/runtime/mediator.h>
 #include <lotto/states/handlers/deadlock.h>
@@ -84,10 +84,7 @@ typedef struct {
     foo mock;
 } testcase_t;
 
-#define TESTCASE(N)                                                            \
-    {                                                                          \
-        .func = #N, .test = (foo)test_##N, .mock = (foo)mock_##N               \
-    }
+#define TESTCASE(N) {.func = #N, .test = (foo)test_##N, .mock = (foo)mock_##N}
 
 testcase_t tests[] = {
     TESTCASE(pthread_mutex_lock),

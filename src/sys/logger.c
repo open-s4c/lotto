@@ -10,7 +10,7 @@
 #include <lotto/sys/stdio.h>
 
 static enum logger_level _level = LOGGER_INFO;
-static int _fd = -1;
+static int _fd                  = -1;
 
 #define LOGGER_PRINTF                                                          \
     do {                                                                       \

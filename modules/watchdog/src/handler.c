@@ -1,7 +1,7 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
+#include "state.h"
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
-#include "state.h"
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>

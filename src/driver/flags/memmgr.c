@@ -5,8 +5,7 @@
 
 NEW_PUBLIC_CALLBACK_FLAG(MEMMGR_RUNTIME, "", "memmgr-runtime",
                          "leakcheck|mempool|uaf[:leakcheck|mempool|uaf]*",
-                         "runtime memory manager chain", flag_sval(""),
-                         {})
+                         "runtime memory manager chain", flag_sval(""), {})
 NEW_PUBLIC_CALLBACK_FLAG(MEMMGR_USER, "", "memmgr-user",
                          "leakcheck|mempool|uaf[:leakcheck|mempool|uaf]*",
                          "user memory manager chain", flag_sval(""), {})

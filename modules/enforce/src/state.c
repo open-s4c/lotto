@@ -1,4 +1,4 @@
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/marshable.h>
 #include <lotto/base/string.h>
 #include <lotto/engine/catmgr.h>
@@ -16,7 +16,8 @@ REGISTER_CONFIG(_config, {
     char str[ENFORCE_MODES_MAX_LEN];
     enforce_modes_str(_config.modes, str);
     logger_infof("modes           = %s\n", str);
-    logger_infof("compare_address = %s\n", _config.compare_address ? "on" : "off");
+    logger_infof("compare_address = %s\n",
+                 _config.compare_address ? "on" : "off");
 })
 
 enforce_config_t *

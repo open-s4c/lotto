@@ -15,9 +15,9 @@
 
 #include <lotto/base/envvar.h>
 #include <lotto/base/libraries.h>
-#include <lotto/driver/exec_info.h>
 #include <lotto/cli/preload.h>
 #include <lotto/cmake_variables.h>
+#include <lotto/driver/exec_info.h>
 #include <lotto/driver/files.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
@@ -238,13 +238,13 @@ _set_dice_plugin_modules_from_preload(void)
             if (!_is_runtime_plugin_path(path))
                 continue;
             if (len > 0) {
-                written = sys_snprintf(plugin_modules + len,
-                                       sizeof(plugin_modules) - len, ":%s",
-                                       path);
+                written =
+                    sys_snprintf(plugin_modules + len,
+                                 sizeof(plugin_modules) - len, ":%s", path);
             } else {
-                written = sys_snprintf(plugin_modules + len,
-                                       sizeof(plugin_modules) - len, "%s",
-                                       path);
+                written =
+                    sys_snprintf(plugin_modules + len,
+                                 sizeof(plugin_modules) - len, "%s", path);
             }
             ASSERT(written >= 0 &&
                    (size_t)written < sizeof(plugin_modules) - len);

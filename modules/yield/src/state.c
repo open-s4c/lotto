@@ -1,7 +1,7 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
+#include "state.h"
 #include <dice/module.h>
 #include <lotto/engine/statemgr.h>
-#include "state.h"
 #include <lotto/sys/logger_block.h>
 
 static yield_config_t _config;

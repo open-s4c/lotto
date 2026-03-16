@@ -7,9 +7,9 @@
 #include <lotto/base/callrec.h>
 #include <lotto/base/record.h>
 #include <lotto/base/trace.h>
-#include <lotto/engine/pubsub.h>
 #include <lotto/engine/clock.h>
 #include <lotto/engine/prng.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/sys/logger_block.h>
@@ -43,7 +43,7 @@ fork(void)
 time_t
 real_time(time_t *tloc)
 {
-    REAL_DECL(time_t, time, time_t * tloc);
+    REAL_DECL(time_t, time, time_t *tloc);
     if (REAL_NAME(time) == NULL)
         REAL_NAME(time) = real_func("time", 0);
 

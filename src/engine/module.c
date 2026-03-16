@@ -2,8 +2,8 @@
 #include <stdio.h>
 
 #include <dice/pubsub.h>
-#include <lotto/events.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/events.h>
 #include <lotto/sys/abort.h>
 
 static bool startup_barrier_closed_;
@@ -42,7 +42,8 @@ LOTTO_ADVERTISE_TYPE(EVENT_LOTTO_INIT)
 
 LOTTO_MODULE_INIT()
 
-static void __attribute__((constructor)) lotto_startup_()
+static void __attribute__((constructor))
+lotto_startup_()
 {
     PS_PUBLISH(CHAIN_CONTROL, EVENT_LOTTO_STARTUP_SYNC, 0, 0);
     startup_barrier_closed_ = true;

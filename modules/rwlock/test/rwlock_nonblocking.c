@@ -2,8 +2,8 @@
 // RUN: %lotto %stress -r 50 -- %b
 // clang-format on
 
-#include <stdbool.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 #define N_READERS 7
 #define N_WRITERS 3
@@ -19,8 +19,10 @@ reader(void *arg)
     int err1, err2;
     err1 = pthread_rwlock_tryrdlock(&l);
     err2 = pthread_rwlock_tryrdlock(&l);
-    if (!err1) pthread_rwlock_unlock(&l);
-    if (!err2) pthread_rwlock_unlock(&l);
+    if (!err1)
+        pthread_rwlock_unlock(&l);
+    if (!err2)
+        pthread_rwlock_unlock(&l);
     return NULL;
 }
 
@@ -30,7 +32,8 @@ writer(void *arg)
     (void)arg;
     int err1;
     err1 = pthread_rwlock_trywrlock(&l);
-    if (!err1) pthread_rwlock_unlock(&l);
+    if (!err1)
+        pthread_rwlock_unlock(&l);
     return NULL;
 }
 

@@ -66,9 +66,9 @@ main(int argc, char **argv)
         snprintf(driver_path, sizeof(driver_path), "%s/liblotto-driver.so",
                  binary_dir);
 
-        preload_state_t preload = {.buf = malloc(MAX_LIST_STR),
-                                   .len = 0,
-                                   .cap = MAX_LIST_STR};
+        preload_state_t preload        = {.buf = malloc(MAX_LIST_STR),
+                                          .len = 0,
+                                          .cap = MAX_LIST_STR};
         preload_state_t plugin_modules = {.buf = malloc(MAX_LIST_STR),
                                           .len = 0,
                                           .cap = MAX_LIST_STR};
@@ -78,7 +78,7 @@ main(int argc, char **argv)
             free(plugin_modules.buf);
             return 1;
         }
-        preload.buf[0] = '\0';
+        preload.buf[0]        = '\0';
         plugin_modules.buf[0] = '\0';
 
         append_preload(&preload, driver_path);
@@ -119,7 +119,8 @@ driver_options(int argc, char **argv, const char **module_dir,
     *module_dir  = NULL;
     *module_list = NULL;
 
-    for (int argv_idx = 1; argv_idx <= MAX_COMMAND_ARGS * 2 - 1; argv_idx += 2) {
+    for (int argv_idx = 1; argv_idx <= MAX_COMMAND_ARGS * 2 - 1;
+         argv_idx += 2) {
         if (argc > argv_idx + 1) {
             if (strcmp(argv[argv_idx], "--plugin-dir") == 0) {
                 *module_dir = argv[argv_idx + 1];

@@ -6,8 +6,8 @@
 #include <lotto/sys/assert.h>
 #include <lotto/sys/memmgr_impl.h>
 #include <lotto/sys/real.h>
-#include <lotto/sys/string.h>
 #include <lotto/sys/stdlib.h>
+#include <lotto/sys/string.h>
 #include <vsync/spinlock/caslock.h>
 
 #define MAX_FRAMES 10

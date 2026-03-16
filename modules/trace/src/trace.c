@@ -69,10 +69,10 @@ _default_flags()
 }
 
 LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_COMMANDS, {
-    flag_t sel[] = {flag_input(),        flag_output(),
-                    flag_verbose(),      flag_temporary_directory(),
-                    flag_no_preload(),   flag_logger_block(),
-                    flag_replay_goal(),  0};
+    flag_t sel[] = {flag_input(),       flag_output(),
+                    flag_verbose(),     flag_temporary_directory(),
+                    flag_no_preload(),  flag_logger_block(),
+                    flag_replay_goal(), 0};
     subcmd_register(trace, "trace", "[--] <command line>",
                     "Create an initial trace for running Lotto without CLI",
                     true, sel, _default_flags, SUBCMD_GROUP_RUN);

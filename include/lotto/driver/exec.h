@@ -1,3 +1,7 @@
+/**
+ * @file exec.h
+ * @brief Driver declarations for exec.
+ */
 #ifndef LOTTO_DRIVER_EXEC_H
 #define LOTTO_DRIVER_EXEC_H
 

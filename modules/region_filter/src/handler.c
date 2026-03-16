@@ -2,7 +2,7 @@
 #include <lotto/base/tidbag.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/modules/region_filter/state.h>
+#include "state.h"
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
 

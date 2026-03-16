@@ -1,7 +1,7 @@
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/modules/race.h>
+#include <lotto/modules/race/race_result.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/string.h>
 race_t race_check(const context_t *ctx, clk_t clk);

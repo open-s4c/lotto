@@ -9,7 +9,7 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/modules/ichpt.h>
+#include <lotto/modules/ichpt/ichpt.h>
 #include <lotto/modules/ichpt/state.h>
 #include <lotto/engine/state.h>
 #include <lotto/sys/logger_block.h>

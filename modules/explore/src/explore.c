@@ -18,7 +18,7 @@
 #include <lotto/driver/utils.h>
 #include <lotto/cli/preload.h>
 #include <lotto/modules/available/state.h>
-#include <lotto/modules/explore.h>
+#include <lotto/modules/explore/explore.h>
 #include <lotto/sys/stdio.h>
 
 static uint64_t round_index;

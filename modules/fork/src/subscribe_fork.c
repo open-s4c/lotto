@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
-#include <state.h>
+#include "state.h"
 
 #include <lotto/base/tidmap.h>
 #include <lotto/engine/statemgr.h>

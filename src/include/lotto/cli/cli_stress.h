@@ -1,3 +1,7 @@
+/**
+ * @file cli_stress.h
+ * @brief Internal CLI declarations for cli stress.
+ */
 #ifndef LOTTO_CLI_STRESS_H
 #define LOTTO_CLI_STRESS_H
 

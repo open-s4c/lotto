@@ -12,8 +12,7 @@ macro(add_runtime_module)
 
     add_library(${RUNTIME_MODULE_TARGET} ${RUNTIME_MODULE_TYPE}
                                          ${RUNTIME_MODULE_SOURCES})
-    target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto.h lotto-src.h
-                                                           dice.h)
+    target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto.h dice.h)
     target_compile_definitions(
         ${RUNTIME_MODULE_TARGET}
         PRIVATE DICE_MULTIFILE_MODULE #
@@ -45,8 +44,7 @@ macro(add_driver_module)
 
     add_library(${DRIVER_MODULE_TARGET} ${DRIVER_MODULE_TYPE}
                                         ${DRIVER_MODULE_SOURCES})
-    target_link_libraries(${DRIVER_MODULE_TARGET} PRIVATE lotto.h lotto-src.h
-                                                          dice.h)
+    target_link_libraries(${DRIVER_MODULE_TARGET} PRIVATE lotto.h dice.h)
     target_compile_definitions(
         ${DRIVER_MODULE_TARGET}
         PRIVATE DICE_MULTIFILE_MODULE #

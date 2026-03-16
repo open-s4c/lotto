@@ -1,3 +1,7 @@
+/**
+ * @file wrapper.h
+ * @brief Rust FFI declarations for wrapper.
+ */
 /* IWYU pragma: begin_keep */
 #include "dice/events/memaccess.h"
 #include "lotto/base/cappt.h"
@@ -14,9 +18,9 @@
 #include "lotto/base/stable_address.h"
 #include "lotto/base/task_id.h"
 #include "lotto/base/tidset.h"
-#include "lotto/core/driver/events.h"
-#include "lotto/core/engine/events.h"
-#include "lotto/core/runtime/events.h"
+#include "lotto/driver/events.h"
+#include "lotto/engine/events.h"
+#include "lotto/runtime/events.h"
 #include "lotto/base/trace.h"
 #include "lotto/base/trace_file.h"
 #include "lotto/base/value.h"
@@ -54,7 +58,7 @@
 #include "lotto/sys/string.h"
 #include "lotto/sys/unistd.h"
 #include "lotto/sys/wait.h"
-#include <lotto/modules/rusty.h>
+#include <lotto/modules/rusty/rusty.h>
 #include <lotto/modules/termination/flags.h>
 #include <lotto/modules/termination/state.h>
 /* IWYU pragma: end_keep */

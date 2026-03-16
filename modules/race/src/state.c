@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/engine/statemgr.h>
-#include <lotto/modules/race/state.h>
+#include "state.h"
 #include <lotto/sys/logger_block.h>
 
 static race_config_t _config;

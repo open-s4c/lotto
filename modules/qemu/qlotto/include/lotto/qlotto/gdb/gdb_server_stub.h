@@ -1,5 +1,9 @@
-#ifndef GDB_SERVER_STUB_H
-#define GDB_SERVER_STUB_H
+/**
+ * @file gdb_server_stub.h
+ * @brief QLotto GDB declarations for gdb server stub.
+ */
+#ifndef LOTTO_QLOTTO_GDB_GDB_SERVER_STUB_H
+#define LOTTO_QLOTTO_GDB_GDB_SERVER_STUB_H
 
 #include <qemu-plugin.h>
 // #include <stdbool.h>
@@ -14,4 +18,4 @@ int64_t gdb_srv_handle_pkt(int fd, uint8_t *pkt, uint64_t pkt_len);
 
 void gdb_srv_stub_init(void);
 
-#endif // GDB_SERVER_STUB_H
+#endif // LOTTO_QLOTTO_GDB_GDB_SERVER_STUB_H

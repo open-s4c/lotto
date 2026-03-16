@@ -1,3 +1,7 @@
+/**
+ * @file armcpu.h
+ * @brief QEMU module declarations for armcpu.
+ */
 /*
  * ARM virtual CPU header
  *
@@ -17,8 +21,8 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ARM_CPU_H
-#define ARM_CPU_H
+#ifndef LOTTO_MODULES_QEMU_ARMCPU_H
+#define LOTTO_MODULES_QEMU_ARMCPU_H
 
 #include <byteswap.h>
 #include <endian.h>
@@ -50,7 +54,7 @@ typedef uint64_t target_ulong;
 #endif
 
 #ifndef DIV_ROUND_UP
-    #define DIV_ROUND_UP(n, d) (((n) + (d)-1) / (d))
+    #define DIV_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
 #endif
 
 /* VFP system registers.  */
@@ -773,4 +777,4 @@ htobe128(uint128_t x)
     return x;
 }
 
-#endif // ARM_CPU_H
+#endif // LOTTO_MODULES_QEMU_ARMCPU_H

@@ -1,3 +1,7 @@
+/**
+ * @file record.h
+ * @brief Driver declarations for record.
+ */
 #ifndef LOTTO_DRIVER_RECORD_H
 #define LOTTO_DRIVER_RECORD_H
 

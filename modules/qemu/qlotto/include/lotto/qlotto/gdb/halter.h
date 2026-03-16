@@ -1,3 +1,7 @@
+/**
+ * @file halter.h
+ * @brief QLotto GDB declarations for halter.
+ */
 #ifndef LOTTO_GDB_HALTER_H
 #define LOTTO_GDB_HALTER_H
 

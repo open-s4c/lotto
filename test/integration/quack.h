@@ -1,8 +1,8 @@
 /*
  * Create: Mon Jul 26 17:40:56 CEST 2021
  */
-#ifndef VSYNC_QUACK_H
-#define VSYNC_QUACK_H
+#ifndef LOTTO_TEST_INTEGRATION_QUACK_H
+#define LOTTO_TEST_INTEGRATION_QUACK_H
 /*******************************************************************************
  * @file  quack.h
  * @brief Lockfree concurrent stack/queue (Treiber stack)

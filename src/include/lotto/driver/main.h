@@ -1,3 +1,7 @@
+/**
+ * @file main.h
+ * @brief Internal driver declarations for main.
+ */
 #ifndef LOTTO_DRIVER_MAIN_H
 #define LOTTO_DRIVER_MAIN_H
 

@@ -1,3 +1,7 @@
+/**
+ * @file lotto_udf_trace.h
+ * @brief QEMU guest declarations for lotto udf trace.
+ */
 #ifndef LOTTO_UDF_TRACE_H
 #define LOTTO_UDF_TRACE_H
 

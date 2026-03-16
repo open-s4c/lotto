@@ -1,3 +1,7 @@
+/**
+ * @file lotto_udf_aarch64_generic.h
+ * @brief QEMU guest declarations for lotto udf aarch64 generic.
+ */
 #ifndef LOTTO_UDF_AARCH64_GENERIC_H
 #define LOTTO_UDF_AARCH64_GENERIC_H
 

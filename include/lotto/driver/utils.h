@@ -1,3 +1,7 @@
+/**
+ * @file utils.h
+ * @brief Driver declarations for utils.
+ */
 #ifndef LOTTO_DRIVER_UTILS_H
 #define LOTTO_DRIVER_UTILS_H
 

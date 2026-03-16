@@ -1,3 +1,7 @@
+/**
+ * @file perf.h
+ * @brief QEMU module declarations for perf.
+ */
 #ifndef LOTTO_RUNTIME_PERF_H
 #define LOTTO_RUNTIME_PERF_H
 

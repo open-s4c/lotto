@@ -1,3 +1,7 @@
+/**
+ * @file args.h
+ * @brief Driver declarations for args.
+ */
 #ifndef LOTTO_DRIVER_ARGS_H
 #define LOTTO_DRIVER_ARGS_H
 

@@ -5,7 +5,7 @@
 #include <vsync/spinlock/caslock.h>
 
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/modules/uafcheck.h>
+#include "uafcheck.h"
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/memmgr_impl.h>

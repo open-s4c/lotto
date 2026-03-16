@@ -17,7 +17,7 @@
 #include <lotto/base/arg.h>
 #include <lotto/base/category.h>
 #include <lotto/base/context.h>
-#include <lotto/core/runtime/events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/rsrc_deadlock.h>
 #include <lotto/runtime/intercept.h>

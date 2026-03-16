@@ -1,3 +1,7 @@
+/**
+ * @file events.h
+ * @brief Timeout module event declarations.
+ */
 #ifndef LOTTO_MODULES_TIMEOUT_EVENTS_H
 #define LOTTO_MODULES_TIMEOUT_EVENTS_H
 

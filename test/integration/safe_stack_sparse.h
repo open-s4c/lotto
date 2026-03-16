@@ -1,3 +1,7 @@
+/**
+ * @file safe_stack_sparse.h
+ * @brief Integration test helper declarations for safe stack sparse.
+ */
 #include <stdatomic.h>
 
 #include <lotto/log.h>

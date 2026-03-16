@@ -1,3 +1,7 @@
+/**
+ * @file lotto_qemu_syscall.h
+ * @brief QEMU guest declarations for lotto qemu syscall.
+ */
 #ifndef LOTTO_QEMU_SYSCALL_AARCH64_H
 #define LOTTO_QEMU_SYSCALL_AARCH64_H
 

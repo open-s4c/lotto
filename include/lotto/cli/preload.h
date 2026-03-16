@@ -1,3 +1,7 @@
+/**
+ * @file preload.h
+ * @brief CLI declarations for preload.
+ */
 #ifndef LOTTO_CLI_PRELOAD_H
 #define LOTTO_CLI_PRELOAD_H
 

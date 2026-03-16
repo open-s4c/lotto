@@ -1,3 +1,7 @@
+/**
+ * @file gdb_readelf.h
+ * @brief QLotto GDB declarations for gdb readelf.
+ */
 #ifndef LOTTO_QEMU_GDB_READELF_H
 #define LOTTO_QEMU_GDB_READELF_H
 

@@ -1,3 +1,7 @@
+/**
+ * @file state.h
+ * @brief Enforce module state declarations.
+ */
 #ifndef LOTTO_STATE_ENFORCE_H
 #define LOTTO_STATE_ENFORCE_H
 

@@ -19,7 +19,9 @@ if [ "${STYLE}" != "" ]; then
     STYLE=":${STYLE}"
 fi
 
-CLANG_FORMAT=clang-format-14
+if [ -z "$CLANG_FORMAT" ]; then
+	CLANG_FORMAT=clang-format
+fi
 
 # Apply clang-format to all *.h and *.c files in src folder.
 find "$@" \( -name '*.h' -o -name '*.c' -o -name '*.cpp' -o -name '*.hpp' -o -name '*.cxx' \) \

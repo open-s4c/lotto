@@ -1,3 +1,7 @@
+/**
+ * @file flags.h
+ * @brief Termination module flag declarations.
+ */
 #ifndef LOTTO_FLAG_TERMINATION_H
 #define LOTTO_FLAG_TERMINATION_H
 

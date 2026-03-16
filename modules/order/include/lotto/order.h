@@ -36,7 +36,8 @@ void lotto_order(uint64_t order) __attribute__((weak));
  */
 void lotto_order_cond(bool cond, uint64_t order) __attribute__((weak));
 
-static inline void __attribute__((unused)) lotto_order_cleanup(uint64_t *order)
+static inline void __attribute__((unused))
+lotto_order_cleanup(uint64_t *order)
 {
     lotto_order(2 * *order);
 }

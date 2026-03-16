@@ -1,3 +1,7 @@
+/**
+ * @file memory.h
+ * @brief QLotto GDB handling declarations for memory.
+ */
 #ifndef LOTTO_GDB_MEMORY_H
 #define LOTTO_GDB_MEMORY_H
 

@@ -1,3 +1,7 @@
+/**
+ * @file rogue.h
+ * @brief Rogue module declarations for rogue.
+ */
 #ifndef LOTTO_UNSAFE_ROGUE_H
 #define LOTTO_UNSAFE_ROGUE_H
 

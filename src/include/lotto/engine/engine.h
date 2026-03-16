@@ -1,3 +1,7 @@
+/**
+ * @file engine.h
+ * @brief Internal engine declarations for engine.
+ */
 #ifndef LOTTO_ENGINE_H
 #define LOTTO_ENGINE_H
 

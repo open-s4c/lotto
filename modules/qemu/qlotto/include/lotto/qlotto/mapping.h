@@ -1,3 +1,7 @@
+/**
+ * @file mapping.h
+ * @brief QLotto declarations for mapping.
+ */
 #ifndef LOTTO_QEMU_MAPPING_H
 #define LOTTO_QEMU_MAPPING_H
 

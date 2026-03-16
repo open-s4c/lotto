@@ -1,7 +1,6 @@
 add_library(plugin-snapshot SHARED plugin_snapshot.c)
 target_include_directories(
-    plugin-snapshot PRIVATE ${PROJECT_SOURCE_DIR}/src/include
-                            ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu)
+    plugin-snapshot PRIVATE ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu)
 
 target_include_directories(plugin-snapshot PUBLIC ${CMAKE_BINARY_DIR}/include)
 # required for QEMUv9

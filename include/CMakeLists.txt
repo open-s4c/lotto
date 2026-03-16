@@ -20,7 +20,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E make_directory
             ${CMAKE_BINARY_DIR}/include/lotto/unsafe
     COMMAND
-        ${CMAKE_C_COMPILER} -E -I${CMAKE_SOURCE_DIR}/src/include
+        ${CMAKE_C_COMPILER} -E -I${CMAKE_SOURCE_DIR}/include
         -I${CMAKE_BINARY_DIR}/include
         "-I$<JOIN:$<TARGET_PROPERTY:vsync,INTERFACE_INCLUDE_DIRECTORIES>,;-I>"
         ${CMAKE_CURRENT_SOURCE_DIR}/lotto/unsafe/_sys.h -o

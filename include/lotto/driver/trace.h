@@ -1,3 +1,7 @@
+/**
+ * @file trace.h
+ * @brief Driver declarations for trace.
+ */
 #ifndef LOTTO_DRIVER_TRACE_H
 #define LOTTO_DRIVER_TRACE_H
 

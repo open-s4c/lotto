@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include <lotto/driver/flagmgr.h>
-#include <lotto/modules/watchdog/state.h>
+#include "state.h"
 
 #define DEFAULT_BUDGET 100
 

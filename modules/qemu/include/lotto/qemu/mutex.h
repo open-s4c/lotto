@@ -1,5 +1,9 @@
-#ifndef QEMU_MUTEX_H
-#define QEMU_MUTEX_H
+/**
+ * @file mutex.h
+ * @brief QEMU guest declarations for mutex.
+ */
+#ifndef LOTTO_QEMU_MUTEX_H
+#define LOTTO_QEMU_MUTEX_H
 
 #include <lotto/qemu/lotto_udf.h>
 

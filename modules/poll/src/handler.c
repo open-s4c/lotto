@@ -4,8 +4,8 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/engine/clock.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/modules/poll.h>
-#include <lotto/modules/timeout.h>
+#include "poll.h"
+#include <lotto/modules/timeout/timeout.h>
 #include <lotto/sys/poll.h>
 
 /*******************************************************************************

@@ -1,5 +1,9 @@
-#ifndef RSP_UTIL_H
-#define RSP_UTIL_H
+/**
+ * @file rsp_util.h
+ * @brief QLotto GDB declarations for rsp util.
+ */
+#ifndef LOTTO_QLOTTO_GDB_RSP_UTIL_H
+#define LOTTO_QLOTTO_GDB_RSP_UTIL_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -25,4 +29,4 @@ int64_t rsp_extract_thread_id(char *msg, uint64_t msg_len, int64_t *pid,
 int64_t rsp_ascii_to_hex(char *hex, char *ascii, uint64_t ascii_len);
 int64_t rsp_hex_to_ascii(char *ascii, char *hex, uint64_t hex_len);
 
-#endif // RSP_UTIL_H
+#endif // LOTTO_QLOTTO_GDB_RSP_UTIL_H

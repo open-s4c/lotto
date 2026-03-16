@@ -1,3 +1,7 @@
+/**
+ * @file safe_stack.h
+ * @brief Integration test helper declarations for safe stack.
+ */
 #include <stdatomic.h>
 
 #include <lotto/log.h>

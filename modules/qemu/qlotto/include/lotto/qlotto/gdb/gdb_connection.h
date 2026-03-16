@@ -1,5 +1,9 @@
-#ifndef GDB_CONNECTION_H
-#define GDB_CONNECTION_H
+/**
+ * @file gdb_connection.h
+ * @brief QLotto GDB declarations for gdb connection.
+ */
+#ifndef LOTTO_QLOTTO_GDB_GDB_CONNECTION_H
+#define LOTTO_QLOTTO_GDB_GDB_CONNECTION_H
 
 #include <stdint.h>
 
@@ -20,4 +24,4 @@ int64_t gdb_awaits_host_ack();
 
 int gdb_srv_get_client_fd();
 
-#endif // GDB_CONNECTION_H
+#endif // LOTTO_QLOTTO_GDB_GDB_CONNECTION_H

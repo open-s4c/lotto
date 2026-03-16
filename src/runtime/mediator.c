@@ -4,7 +4,7 @@
 #include <dice/self.h>
 #include <lotto/base/context.h>
 #include <lotto/base/task_id.h>
-#include <lotto/core/runtime/events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/engine/engine.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>

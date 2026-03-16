@@ -1,3 +1,7 @@
+/**
+ * @file execute.h
+ * @brief QLotto GDB handling declarations for execute.
+ */
 #ifndef LOTTO_GDB_EXECUTE_H
 #define LOTTO_GDB_EXECUTE_H
 

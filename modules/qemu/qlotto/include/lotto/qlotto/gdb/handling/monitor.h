@@ -1,3 +1,7 @@
+/**
+ * @file monitor.h
+ * @brief QLotto GDB handling declarations for monitor.
+ */
 #ifndef LOTTO_GDB_MONITOR_H
 #define LOTTO_GDB_MONITOR_H
 

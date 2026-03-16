@@ -1,3 +1,7 @@
+/**
+ * @file lotto_qemu_sighandler.h
+ * @brief QEMU guest declarations for lotto qemu sighandler.
+ */
 #ifndef LOTTO_QEMU_SIGHANDLER_H
 #define LOTTO_QEMU_SIGHANDLER_H
 

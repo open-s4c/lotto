@@ -1,3 +1,7 @@
+/**
+ * @file debug.h
+ * @brief Debug module private declarations.
+ */
 #ifndef LOTTO_DEBUG_DEBUG_H
 #define LOTTO_DEBUG_DEBUG_H
 

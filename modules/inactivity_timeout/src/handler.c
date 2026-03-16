@@ -7,7 +7,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/modules/inactivity_timeout/state.h>
+#include "state.h"
 #include <lotto/sys/logger_block.h>
 
 static struct event_data {

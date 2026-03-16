@@ -1,3 +1,7 @@
+/**
+ * @file gdb_base.h
+ * @brief QLotto GDB declarations for gdb base.
+ */
 #ifndef LOTTO_QEMU_GDB_BASE_H
 #define LOTTO_QEMU_GDB_BASE_H
 

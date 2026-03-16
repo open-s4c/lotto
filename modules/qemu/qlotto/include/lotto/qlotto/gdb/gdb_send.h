@@ -1,3 +1,7 @@
+/**
+ * @file gdb_send.h
+ * @brief QLotto GDB declarations for gdb send.
+ */
 #ifndef LOTTO_QEMU_GDB_SEND_H
 #define LOTTO_QEMU_GDB_SEND_H
 

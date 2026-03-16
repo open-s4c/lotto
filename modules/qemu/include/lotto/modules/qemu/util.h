@@ -1,3 +1,7 @@
+/**
+ * @file util.h
+ * @brief QEMU module declarations for util.
+ */
 #ifndef LOTTO_QEMU_PLUGIN_UTIL_H
 #define LOTTO_QEMU_PLUGIN_UTIL_H
 

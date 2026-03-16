@@ -56,18 +56,20 @@ set(LIBS
     dice-stacktrace.o
     dice-tsan.o)
 
-macro(add_runtime TARGET)
+macro(add_runtime TARGET OUTPUT_NAME)
     add_library(${TARGET} SHARED ${SRCS})
     target_link_libraries(${TARGET} PRIVATE ${LIBS})
-    set_target_properties(${TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                                               ${CMAKE_BINARY_DIR})
+    set_target_properties(
+        ${TARGET}
+        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} OUTPUT_NAME
+                   ${OUTPUT_NAME})
     install(TARGETS ${TARGET} DESTINATION lib)
-    set(LIBTARGET "lib${TARGET}.so")
+    set(LIBTARGET "lib${OUTPUT_NAME}.so")
     make_blob(blob-${TARGET} ${LIBTARGET} ${TARGET})
 endmacro()
 
-add_runtime(lotto)
-add_runtime(lotto-verbose)
+add_runtime(lotto lotto-runtime)
+add_runtime(lotto-verbose lotto-runtime-verbose)
 target_compile_definitions(lotto-verbose PRIVATE -DLOTTO_VERBOSE)
 
 add_library(runtime-module.o OBJECT module.c)

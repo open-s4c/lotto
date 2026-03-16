@@ -1,9 +1,9 @@
 // clang-format off
 // ALLOW_RETRIES: 5
-// REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE, DISABLED
+// REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress4rinflex -- %b)
-// RUN: %lotto %rinflex -r 15 2>&1 | iconv -t utf-8 -f utf-8 -c | filecheck %s
+// RUN: %lotto %rinflex -r 15 2>&1 | iconv -t utf-8 -f utf-8 -c | %check %s
 
 // CHECK: ------ . ------ . ------ . ------ . ------
 // CHECK: event - tid: {{[0-9]+}}, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: BEFORE_AWRITE

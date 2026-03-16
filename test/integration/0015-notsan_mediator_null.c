@@ -1,8 +1,7 @@
 // clang-format off
-// REQUIRES: DISABLED
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %run -- %b 2>&1) | %check %s
-// CHECK: [{{[[:digit:]]+}}](estimated) SIGABRT
+// CHECK: [{{[[:digit:]]+}}] SIGABRT
 // clang-format on
 #include <assert.h>
 #include <signal.h>

@@ -26,7 +26,7 @@ include(cmake/submodule.cmake)
 # ##############################################################################
 
 set(DICE_LOG_LEVEL
-    "DEBUG"
+    "FATAL"
     CACHE STRING "" FORCE)
 
 set(DICE_MEMSET

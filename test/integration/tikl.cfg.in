@@ -36,5 +36,4 @@ trace          = trace %tmpdir %output
 -D @LOTTO_ENGINE_NAME@
 -D @LOTTO_RUST_LIT_FEATURE@
 -D @LOTTO_STABLE_ADDRESS_MAP_LIT_FEATURE@
--D dice-runtime
 -D @CMAKE_C_COMPILER_ID@

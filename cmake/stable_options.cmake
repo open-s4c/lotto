@@ -48,7 +48,7 @@ if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
     add_compile_definitions(DEFAULT_SLACK_TIME=0)
 endif()
 
-option(LOTTO_EMBED_LIB "Embed libplotto.so in Lotto CLI" ON)
+option(LOTTO_EMBED_LIB "Embed libplotto.so in Lotto CLI" OFF)
 
 if(NOT ${LOTTO_EMBED_LIB})
     add_compile_definitions(LOTTO_EMBED_LIB=0)

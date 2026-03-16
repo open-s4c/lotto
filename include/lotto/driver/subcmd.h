@@ -1,3 +1,7 @@
+/**
+ * @file subcmd.h
+ * @brief Driver declarations for subcmd.
+ */
 #ifndef LOTTO_DRIVER_SUBCMD_H
 #define LOTTO_DRIVER_SUBCMD_H
 

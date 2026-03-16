@@ -1,5 +1,9 @@
-#ifndef GDB_SERVER_H
-#define GDB_SERVER_H
+/**
+ * @file gdb_server.h
+ * @brief QLotto GDB declarations for gdb server.
+ */
+#ifndef LOTTO_QLOTTO_GDB_GDB_SERVER_H
+#define LOTTO_QLOTTO_GDB_GDB_SERVER_H
 
 #include <stdint.h>
 
@@ -13,4 +17,4 @@ typedef struct gdb_server_thread_s {
 
 int gdb_server_start(void);
 
-#endif // GDB_SERVER_H
+#endif // LOTTO_QLOTTO_GDB_GDB_SERVER_H

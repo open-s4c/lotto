@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/driver/flagmgr.h>
-#include <lotto/modules/region_preemption/state.h>
+#include "state.h"
 
 NEW_PRETTY_CALLBACK_FLAG(
     HANDLER_REGION_PREEMPTION_ENABLED, "", "region-preemption",

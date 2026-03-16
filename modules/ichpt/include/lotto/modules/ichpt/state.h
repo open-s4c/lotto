@@ -1,11 +1,15 @@
+/**
+ * @file state.h
+ * @brief Ichpt module state declarations.
+ */
 #ifndef LOTTO_STATE_ICHPT_H
 #define LOTTO_STATE_ICHPT_H
 
 #include <stdbool.h>
 
-#include <lotto/base/vec.h>
 #include <lotto/base/marshable.h>
 #include <lotto/base/stable_address.h>
+#include <lotto/base/vec.h>
 
 typedef struct ichpt_config {
     marshable_t m;

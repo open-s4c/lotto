@@ -1,7 +1,7 @@
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/sequencer.h>
 #include <lotto/driver/subcmd.h>
-#include <lotto/modules/explore.h>
+#include <lotto/modules/explore/explore.h>
 
 static flags_t *
 _default_flags()

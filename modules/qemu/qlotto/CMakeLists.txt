@@ -15,7 +15,7 @@ set(QEMU_HASH 79f97e8ba4a19d2b5fa9fd080379abc061466d66b12300a7fc5b5fa345ae3ac2)
 # Build QEmu
 
 set(QEMU_SRC ${PROJECT_SOURCE_DIR}/deps/qemu)
-set(EXTRA_CFLAGS "-I${PROJECT_SOURCE_DIR}/src/include")
+set(EXTRA_CFLAGS "")
 if((CMAKE_COMPILER_IS_GNUCC AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL
                                 12.0) OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(EXTRA_CFLAGS "${EXTRA_CFLAGS} -Wno-error=dangling-pointer")
@@ -43,4 +43,4 @@ ExternalProject_Add(
     INSTALL_COMMAND make install > install.log 2>&1)
 
 add_library(qlotto.o OBJECT qlotto.c)
-target_link_libraries(qlotto.o PRIVATE lotto.h lotto-src.h dice.h)
+target_link_libraries(qlotto.o PRIVATE lotto.h dice.h)

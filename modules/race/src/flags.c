@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/driver/flagmgr.h>
-#include <lotto/modules/race/state.h>
+#include "state.h"
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_RACE_ENABLED, "", "handler-race",
                          "enable data race detection handler", flag_on(),

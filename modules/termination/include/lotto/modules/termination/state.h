@@ -1,3 +1,7 @@
+/**
+ * @file state.h
+ * @brief Termination module state declarations.
+ */
 #ifndef LOTTO_STATE_TERMINATION_H
 #define LOTTO_STATE_TERMINATION_H
 

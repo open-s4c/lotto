@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include <lotto/driver/flagmgr.h>
-#include <lotto/modules/qemu/state.h>
+#include "state.h"
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_QEMU_GDB_ENABLED, "G", "gdb",
                          "enable qemu gdb server", flag_off(),

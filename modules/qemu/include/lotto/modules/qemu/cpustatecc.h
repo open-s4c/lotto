@@ -1,3 +1,7 @@
+/**
+ * @file cpustatecc.h
+ * @brief QEMU module declarations for cpustatecc.
+ */
 /*
  * QEMU CPU model
  *
@@ -18,8 +22,8 @@
  * <http://www.gnu.org/licenses/gpl-2.0.html>
  */
 
-#ifndef QEMU_CPU_H
-#define QEMU_CPU_H
+#ifndef LOTTO_MODULES_QEMU_CPUSTATECC_H
+#define LOTTO_MODULES_QEMU_CPUSTATECC_H
 
 #include <stdint.h>
 
@@ -63,4 +67,4 @@ typedef struct CPUStateCC {
     // easier to handle
 } CPUStateCC;
 
-#endif // QEMU_CPU_H
+#endif // LOTTO_MODULES_QEMU_CPUSTATECC_H

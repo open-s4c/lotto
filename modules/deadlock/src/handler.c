@@ -6,8 +6,8 @@
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
 #include <lotto/modules/deadlock/events.h>
-#include <lotto/modules/deadlock/state.h>
-#include <lotto/modules/mutex.h>
+#include "state.h"
+#include <lotto/modules/mutex/mutex.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/casts.h>

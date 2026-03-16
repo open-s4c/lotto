@@ -1,0 +1,12 @@
+/**
+ * @file events.h
+ * @brief Runtime declarations for events.
+ */
+#ifndef LOTTO_CORE_RUNTIME_EVENTS_H
+#define LOTTO_CORE_RUNTIME_EVENTS_H
+
+#define EVENT_RUNTIME__MEMMGR_INIT 129
+#define EVENT_PTHREAD_DETACH       131
+#define EVENT_RUNTIME__NOP         132
+
+#endif

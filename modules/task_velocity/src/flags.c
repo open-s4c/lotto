@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/driver/flagmgr.h>
-#include <lotto/modules/task_velocity/state.h>
+#include "state.h"
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_TASK_VELOCITY_ENABLED, "",
                          "handler-task-velocity",

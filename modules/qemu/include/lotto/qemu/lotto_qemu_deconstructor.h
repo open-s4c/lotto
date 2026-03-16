@@ -1,3 +1,7 @@
+/**
+ * @file lotto_qemu_deconstructor.h
+ * @brief QEMU guest declarations for lotto qemu deconstructor.
+ */
 #ifndef LOTTO_QEMU_DECONSTRUCTOR_H
 #define LOTTO_QEMU_DECONSTRUCTOR_H
 

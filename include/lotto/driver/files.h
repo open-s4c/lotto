@@ -1,3 +1,7 @@
+/**
+ * @file files.h
+ * @brief Driver declarations for files.
+ */
 #ifndef LOTTO_DRIVER_FILES_H
 #define LOTTO_DRIVER_FILES_H
 

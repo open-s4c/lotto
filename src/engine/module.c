@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include <dice/pubsub.h>
-#include <lotto/core/events.h>
+#include <lotto/events.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/sys/abort.h>
 

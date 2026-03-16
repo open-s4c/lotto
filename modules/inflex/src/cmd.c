@@ -30,7 +30,7 @@
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/trace.h>
 #include <lotto/driver/utils.h>
-#include <lotto/modules/explore.h>
+#include <lotto/modules/explore/explore.h>
 #include <lotto/sys/now.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/stream_file.h>

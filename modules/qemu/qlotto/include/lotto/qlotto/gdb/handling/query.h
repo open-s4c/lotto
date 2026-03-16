@@ -1,3 +1,7 @@
+/**
+ * @file query.h
+ * @brief QLotto GDB handling declarations for query.
+ */
 #ifndef LOTTO_GDB_QUERY_H
 #define LOTTO_GDB_QUERY_H
 

@@ -1,3 +1,7 @@
+/**
+ * @file lotto_udf.h
+ * @brief QEMU guest declarations for lotto udf.
+ */
 #ifndef LOTTO_UDF_H
 #define LOTTO_UDF_H
 

@@ -2,7 +2,7 @@
 #include <limits.h>
 #include <stdlib.h>
 
-#include <lotto/modules/mempool.h>
+#include "mempool.h"
 #include <lotto/sys/assert.h>
 #include <lotto/sys/memmgr_impl.h>
 #include <lotto/sys/mempool.h>

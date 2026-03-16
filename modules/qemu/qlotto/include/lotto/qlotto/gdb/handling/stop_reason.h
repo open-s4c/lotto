@@ -1,3 +1,7 @@
+/**
+ * @file stop_reason.h
+ * @brief QLotto GDB handling declarations for stop reason.
+ */
 #ifndef LOTTO_GDB_STOP_REASON_H
 #define LOTTO_GDB_STOP_REASON_H
 

@@ -1,3 +1,7 @@
+/**
+ * @file sequencer.h
+ * @brief Driver flag declarations for sequencer.
+ */
 #ifndef LOTTO_FLAG_SEQUENCER_H
 #define LOTTO_FLAG_SEQUENCER_H
 

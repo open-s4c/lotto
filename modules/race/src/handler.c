@@ -5,9 +5,9 @@
 #include <lotto/base/tidmap.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/modules/ichpt.h>
-#include <lotto/modules/race.h>
-#include <lotto/modules/race/state.h>
+#include <lotto/modules/ichpt/ichpt.h>
+#include <lotto/modules/race/race_result.h>
+#include "state.h"
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>

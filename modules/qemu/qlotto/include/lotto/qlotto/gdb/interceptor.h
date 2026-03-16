@@ -1,3 +1,7 @@
+/**
+ * @file interceptor.h
+ * @brief QLotto GDB declarations for interceptor.
+ */
 #ifndef LOTTO_GDB_INTERCEPTOR_H
 #define LOTTO_GDB_INTERCEPTOR_H
 

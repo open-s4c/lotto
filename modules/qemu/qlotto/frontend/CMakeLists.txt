@@ -5,9 +5,8 @@ add_compile_definitions(_GNU_SOURCE)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GLIB2 REQUIRED IMPORTED_TARGET glib-2.0)
 
-target_include_directories(
-    plugin-lotto PRIVATE ${PROJECT_SOURCE_DIR}/src/include
-                         ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu)
+target_include_directories(plugin-lotto
+                           PRIVATE ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu)
 
 target_include_directories(plugin-lotto PUBLIC ${CMAKE_BINARY_DIR}/include)
 

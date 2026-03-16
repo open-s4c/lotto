@@ -6,7 +6,7 @@
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
 #include <lotto/evec.h>
-#include <lotto/modules/timeout.h>
+#include <lotto/modules/timeout/timeout.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/casts.h>
 #include <lotto/util/macros.h>

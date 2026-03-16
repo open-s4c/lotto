@@ -1,3 +1,7 @@
+/**
+ * @file _sys.h
+ * @brief Unsafe declarations for  sys.
+ */
 #ifndef LOTTO_UNSAFE_SYS_H
 #define LOTTO_UNSAFE_SYS_H
 

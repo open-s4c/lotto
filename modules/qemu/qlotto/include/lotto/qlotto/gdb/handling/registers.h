@@ -1,3 +1,7 @@
+/**
+ * @file registers.h
+ * @brief QLotto GDB handling declarations for registers.
+ */
 #ifndef LOTTO_GDB_REGISTERS_H
 #define LOTTO_GDB_REGISTERS_H
 

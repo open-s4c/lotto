@@ -1,3 +1,7 @@
+/**
+ * @file interceptor_internal.h
+ * @brief Runtime internal declarations for interceptor internal.
+ */
 #ifndef LOTTO_INTERCEPTOR_INTERNAL_H
 #define LOTTO_INTERCEPTOR_INTERNAL_H
 

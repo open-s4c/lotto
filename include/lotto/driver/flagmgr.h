@@ -1,3 +1,7 @@
+/**
+ * @file flagmgr.h
+ * @brief Driver declarations for flagmgr.
+ */
 #ifndef LOTTO_FLAGMRG_H
 #define LOTTO_FLAGMRG_H
 
@@ -76,11 +80,8 @@ typedef struct str_converter_s {
 #define STR_CONVERTER_BOOL                                                     \
     (str_converter_t)                                                          \
     {                                                                          \
-        STR_CONVERTER_TYPE_BOOL, ._bool = {                                    \
-            enabled_str,                                                       \
-            enabled_from,                                                      \
-            "enable|disable"                                                   \
-        }                                                                      \
+        STR_CONVERTER_TYPE_BOOL,                                               \
+            ._bool = {enabled_str, enabled_from, "enable|disable"}             \
     }
 
 static inline const char *

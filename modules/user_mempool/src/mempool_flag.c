@@ -4,7 +4,7 @@
 
 #include <lotto/engine/statemgr.h>
 #include <lotto/driver/flagmgr.h>
-#include <lotto/modules/mempool.h>
+#include "mempool.h"
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/util/macros.h>

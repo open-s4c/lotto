@@ -1,3 +1,7 @@
+/**
+ * @file arm_cpu.h
+ * @brief QLotto GDB declarations for arm cpu.
+ */
 #ifndef LOTTO_ARM_CPU_H
 #define LOTTO_ARM_CPU_H
 

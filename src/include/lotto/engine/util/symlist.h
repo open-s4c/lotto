@@ -1,5 +1,9 @@
-#ifndef SYMLIST_H
-#define SYMLIST_H
+/**
+ * @file symlist.h
+ * @brief Engine utility declarations for symlist.
+ */
+#ifndef LOTTO_ENGINE_UTIL_SYMLIST_H
+#define LOTTO_ENGINE_UTIL_SYMLIST_H
 
 #include <stddef.h>
 #include <stdint.h>

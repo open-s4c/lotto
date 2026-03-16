@@ -1,3 +1,7 @@
+/**
+ * @file event.h
+ * @brief QLotto frontend declarations for event.
+ */
 #ifndef LOTTO_QEMU_EVENT_H
 #define LOTTO_QEMU_EVENT_H
 

@@ -1,7 +1,7 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <dice/module.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/modules/rwlock/state.h>
+#include "state.h"
 #include <lotto/sys/logger_block.h>
 
 static rwlock_config_t _config;

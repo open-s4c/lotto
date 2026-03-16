@@ -1,3 +1,7 @@
+/**
+ * @file interceptor.h
+ * @brief QLotto frontend declarations for interceptor.
+ */
 #ifndef LOTTO_QEMU_INTERCEPTOR_H
 #define LOTTO_QEMU_INTERCEPTOR_H
 

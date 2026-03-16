@@ -1,3 +1,7 @@
+/**
+ * @file state.h
+ * @brief Available module state declarations.
+ */
 #ifndef LOTTO_STATE_AVAILABLE_H
 #define LOTTO_STATE_AVAILABLE_H
 

@@ -5,7 +5,7 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/engine/clock.h>
 #include <lotto/engine/dispatcher.h>
-#include <lotto/modules/timeout.h>
+#include <lotto/modules/timeout/timeout.h>
 
 LOTTO_ADVERTISE_TYPE(EVENT_TIMEOUT__TRIGGER)
 

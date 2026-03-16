@@ -7,8 +7,7 @@ target_compile_options(plugin-gdb-server PRIVATE -O0 -g)
 add_compile_definitions(_GNU_SOURCE)
 
 target_include_directories(
-    plugin-gdb-server PRIVATE ${PROJECT_SOURCE_DIR}/src/include
-                              ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu)
+    plugin-gdb-server PRIVATE ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu)
 
 target_include_directories(plugin-gdb-server PUBLIC ${CMAKE_BINARY_DIR}/include)
 # required for QEMUv9

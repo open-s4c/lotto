@@ -1,3 +1,7 @@
+/**
+ * @file qemu_plugin.h
+ * @brief Internal engine declarations for qemu plugin.
+ */
 #ifndef LOTTO_QEMU_PLUGIN_H
 #define LOTTO_QEMU_PLUGIN_H
 

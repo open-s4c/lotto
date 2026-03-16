@@ -1,3 +1,7 @@
+/**
+ * @file fd_stub.h
+ * @brief QLotto GDB declarations for fd stub.
+ */
 #ifndef LOTTO_GDB_FD_STUB_H
 #define LOTTO_GDB_FD_STUB_H
 

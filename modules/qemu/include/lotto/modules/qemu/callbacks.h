@@ -1,3 +1,7 @@
+/**
+ * @file callbacks.h
+ * @brief QEMU module declarations for callbacks.
+ */
 #ifndef LOTTO_QEMU_CALLBACKS_H
 #define LOTTO_QEMU_CALLBACKS_H
 

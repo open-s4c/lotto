@@ -56,7 +56,8 @@ lotto_disabled(void)
     return _lotto_disabled == NULL || _lotto_disabled();
 }
 
-static inline void __attribute__((unused)) lotto_ghost_cleanup(void *ghost)
+static inline void __attribute__((unused))
+lotto_ghost_cleanup(void *ghost)
 {
     (void)ghost;
     lotto_enable();

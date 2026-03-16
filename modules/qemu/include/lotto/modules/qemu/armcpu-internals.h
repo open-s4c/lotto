@@ -1,3 +1,7 @@
+/**
+ * @file armcpu-internals.h
+ * @brief QEMU module declarations for armcpu internals.
+ */
 /*
  * QEMU ARM CPU -- internal functions and types
  *
@@ -22,8 +26,8 @@
  * private to it and not required by the rest of QEMU.
  */
 
-#ifndef TARGET_ARM_INTERNALS_H
-#define TARGET_ARM_INTERNALS_H
+#ifndef LOTTO_MODULES_QEMU_ARMCPU_INTERNALS_H
+#define LOTTO_MODULES_QEMU_ARMCPU_INTERNALS_H
 
 typedef uint64_t target_ulong;
 

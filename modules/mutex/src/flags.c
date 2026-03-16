@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/driver/flagmgr.h>
-#include <lotto/modules/mutex/state.h>
+#include "state.h"
 
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_MUTEX_ENABLED, "", "handler-mutex",
                          "enable mutex handler", flag_on(), STR_CONVERTER_BOOL,

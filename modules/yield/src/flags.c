@@ -1,6 +1,6 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/driver/flagmgr.h>
-#include <lotto/modules/yield/state.h>
+#include "state.h"
 
 NEW_CALLBACK_FLAG(ADVISORY_YIELD, "", "advisory-yield", "",
                   "does not force sched_yield() to result in a context switch",

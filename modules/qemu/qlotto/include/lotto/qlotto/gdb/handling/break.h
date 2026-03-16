@@ -1,3 +1,7 @@
+/**
+ * @file break.h
+ * @brief QLotto GDB handling declarations for break.
+ */
 #ifndef LOTTO_GDB_BREAK_H
 #define LOTTO_GDB_BREAK_H
 

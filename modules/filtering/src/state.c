@@ -2,7 +2,7 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/modules/filtering/state.h>
+#include "state.h"
 #include <lotto/sys/logger_block.h>
 
 static filtering_config_t _config;

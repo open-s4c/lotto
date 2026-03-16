@@ -1,3 +1,7 @@
+/**
+ * @file switcher.h
+ * @brief Internal runtime declarations for switcher.
+ */
 #ifndef LOTTO_SWITCHER_H
 #define LOTTO_SWITCHER_H
 

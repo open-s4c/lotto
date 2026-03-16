@@ -1,3 +1,7 @@
+/**
+ * @file intercept_translation.h
+ * @brief QLotto frontend declarations for intercept translation.
+ */
 #ifndef LOTTO_QEMU_INTERCEPT_TRANSLATION_H
 #define LOTTO_QEMU_INTERCEPT_TRANSLATION_H
 

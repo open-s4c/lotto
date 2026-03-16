@@ -1,3 +1,7 @@
+/**
+ * @file stubs.h
+ * @brief QLotto frontend declarations for stubs.
+ */
 #ifndef LOTTO_QLOTTO_STUBS_H
 #define LOTTO_QLOTTO_STUBS_H
 

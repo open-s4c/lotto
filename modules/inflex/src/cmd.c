@@ -456,7 +456,7 @@ _default_flags()
     return flags;
 }
 
-LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_COMMANDS, {
+ON_DRIVER_REGISTER_COMMANDS({
     flag_t sel[] = {flag_output(),
                     flag_input(),
                     flag_verbose(),

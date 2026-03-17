@@ -104,7 +104,7 @@ debug(args_t *args, flags_t *flags)
     return res;
 }
 
-LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_COMMANDS, {
+ON_DRIVER_REGISTER_COMMANDS({
     flag_t sel[] = {flag_input(),
                     flag_verbose(),
                     flag_temporary_directory(),

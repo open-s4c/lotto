@@ -119,7 +119,7 @@ lotto(args_t *args, flags_t *flags)
     return 0;
 }
 
-LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_COMMANDS, {
+ON_DRIVER_REGISTER_COMMANDS({
     flag_t sel[] = {FLAG_VERSION,       flag_temporary_directory(),
                     FLAG_LIST_COMMANDS, FLAG_PLUGIN_DIRECTORY,
                     FLAG_PLUGIN_LIST,   0};

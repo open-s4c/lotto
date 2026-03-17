@@ -141,8 +141,13 @@ flag_t flag_logger_file();
         (CALLBACK);                                                            \
     }
 
-#define _FLAGMGR_SUBSCRIBE(...)                                                \
+#define ON_DRIVER_REGISTER_FLAGS(...)                                          \
     LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_FLAGS, __VA_ARGS__)
+
+#define ON_DRIVER_REGISTER_COMMANDS(...)                                       \
+    LOTTO_SUBSCRIBE_CONTROL(EVENT_DRIVER__REGISTER_COMMANDS, __VA_ARGS__)
+
+#define _FLAGMGR_SUBSCRIBE(...) ON_DRIVER_REGISTER_FLAGS(__VA_ARGS__)
 
 #define NEW_PRETTY_CALLBACK_FLAG(name, opt, long_opt, desc, val,               \
                                  str_converter, CALLBACK)                      \

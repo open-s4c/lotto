@@ -222,7 +222,7 @@ qemu(args_t *args, flags_t *flags)
     return res;
 }
 
-LOTTO_ON_DRIVER_INIT({
+ON_DRIVER_REGISTER_COMMANDS({
     flag_t sel[] = {flag_verbose(),
                     FLAG_QEMU_BIN,
                     FLAG_QEMU_PLUGIN_DIR,

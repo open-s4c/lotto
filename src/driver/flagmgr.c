@@ -15,8 +15,6 @@
 #include <lotto/driver/subcmd.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/modules/enforce/state.h>
-#include <lotto/modules/termination/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/now.h>
 #include <lotto/sys/stdio.h>
@@ -395,8 +393,8 @@ _flags_with_opt(int64_t o)
     return FLAG_NONE;
 }
 
-void
-enforce_no_default(flags_t *flags)
+static void
+apply_forced_non_defaults(flags_t *flags)
 {
     const flags_t *default_flags = flags_default();
     for (flag_t b = FLAG_NONE + 1; b < _next_option; b++) {
@@ -423,7 +421,7 @@ enforce_no_default(flags_t *flags)
         }
 
         ASSERT(b == flag_seed() &&
-               "No action implemented for enforced non-default behavior");
+               "No action implemented for generic forced non-default behavior");
         if (flags_get(flags, b).is_default) {
             flags_set_by_opt(flags, b, uval(now()));
         }
@@ -497,7 +495,7 @@ flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
         }
     }
 
-    enforce_no_default(flags);
+    apply_forced_non_defaults(flags);
 
     args_shift(args, optind);
     return FLAGS_PARSE_OK;

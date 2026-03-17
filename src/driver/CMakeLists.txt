@@ -4,6 +4,9 @@ add_subdirectory(flags)
 
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
+set(DRIVER_MODULE_INCLUDE_DIRS
+    ${PROJECT_SOURCE_DIR}/modules/available/include)
+
 set(CLI_UTILS_SRCS
 	module.c
     utils.c

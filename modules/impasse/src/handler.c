@@ -12,4 +12,4 @@ _impasse_handle(const context_t *ctx, event_t *e)
     logger_errorf("Deadlock detected! (impasse)\n");
     e->reason = REASON_IMPASSE;
 }
-REGISTER_HANDLER(SLOT_IMPASSE, _impasse_handle);
+REGISTER_HANDLER(_impasse_handle);

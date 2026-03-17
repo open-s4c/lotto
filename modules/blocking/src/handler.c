@@ -92,7 +92,7 @@ _blocking_handle(const context_t *ctx, event_t *e)
     /* filter blocked tasks */
     tidset_subtract(&e->tset, BLOCKED_TASKS(e->replay));
 }
-REGISTER_HANDLER(SLOT_BLOCKING, _blocking_handle)
+REGISTER_HANDLER(_blocking_handle)
 
 /*******************************************************************************
  * debug functions

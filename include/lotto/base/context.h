@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <dice/types.h>
 #include <lotto/base/arg.h>
 #include <lotto/base/category.h>
 #include <lotto/base/task_id.h>
@@ -17,6 +18,7 @@
  * Represents the context of an intercepted call.
  */
 typedef struct context {
+    struct metadata _; ///< Dice metadata prefix for pubsub callbacks
     category_t cat; ///< Category of interception
     task_id id;     ///< Task ID
     task_id vid;    ///< Virtual task ID (NO_TASK if not available)

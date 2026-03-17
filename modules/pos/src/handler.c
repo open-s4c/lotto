@@ -183,7 +183,7 @@ _pos_handle(const context_t *ctx, event_t *e)
     e->readonly = true;
     e->reason   = REASON_DETERMINISTIC;
 }
-REGISTER_HANDLER(SLOT_POS, _pos_handle);
+REGISTER_HANDLER(_pos_handle);
 
 /*******************************************************************************
  * marshaling implementation

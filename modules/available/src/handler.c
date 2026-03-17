@@ -13,4 +13,4 @@ _available_handle(const context_t *ctx, event_t *e)
     ASSERT(e);
     tidset_copy(get_available_tasks(), &e->tset);
 }
-REGISTER_HANDLER(SLOT_AVAILABLE, _available_handle);
+REGISTER_HANDLER(_available_handle);

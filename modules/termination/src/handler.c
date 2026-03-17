@@ -55,4 +55,4 @@ _termination_handle(const context_t *ctx, event_t *e)
             break;
     }
 }
-REGISTER_HANDLER(SLOT_TERMINATION, _termination_handle);
+REGISTER_HANDLER(_termination_handle);

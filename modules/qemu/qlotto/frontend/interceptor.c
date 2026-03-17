@@ -115,7 +115,7 @@ _handler(const context_t *ctx, event_t *e)
             break;
     }
 }
-REGISTER_HANDLER_EXTERNAL(SLOT_USER_FILTER, _handler);
+REGISTER_HANDLER_EXTERNAL(_handler);
 
 void
 qlotto_set_armcpu(unsigned int cpu_index, void *armcpu_v)

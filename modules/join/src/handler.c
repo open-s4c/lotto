@@ -213,4 +213,4 @@ _join_handle(const context_t *ctx, event_t *e)
         e->any_task_filter = _should_wait;
     }
 }
-REGISTER_HANDLER(SLOT_JOIN, _join_handle)
+REGISTER_HANDLER(_join_handle)

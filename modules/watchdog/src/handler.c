@@ -93,4 +93,4 @@ _watchdog_handle(const context_t *ctx, event_t *e)
             break;
     }
 }
-REGISTER_HANDLER(SLOT_WATCHDOG, _watchdog_handle)
+REGISTER_HANDLER(_watchdog_handle)

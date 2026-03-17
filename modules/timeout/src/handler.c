@@ -90,7 +90,7 @@ _timeout_handle(const context_t *ctx, event_t *e)
     }
     _time_leap(&e->tset);
 }
-REGISTER_HANDLER(SLOT_TIMEOUT, _timeout_handle);
+REGISTER_HANDLER(_timeout_handle);
 
 /*******************************************************************************
  * interface

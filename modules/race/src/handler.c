@@ -305,4 +305,4 @@ _race_handle(const context_t *ctx, event_t *e)
             add_ichpt(race.loc2.pc);
     }
 }
-REGISTER_HANDLER(SLOT_RACE, _race_handle)
+REGISTER_HANDLER(_race_handle)

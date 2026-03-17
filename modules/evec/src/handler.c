@@ -306,7 +306,7 @@ _evec_handle(const context_t *ctx, event_t *e)
         e->any_task_filter = _should_wait;
     }
 }
-REGISTER_HANDLER(SLOT_EVEC, _evec_handle);
+REGISTER_HANDLER(_evec_handle);
 
 LOTTO_SUBSCRIBE(EVENT_ENGINE__NEXT_TASK, {
     const context_t *ctx = (context_t *)as_any(v);

@@ -17,11 +17,6 @@ race_t race_check(const context_t *ctx, clk_t clk);
 #define A4 A(104)
 
 void
-dispatcher_register(slot_t slot, handle_f handle)
-{
-}
-
-void
 add_ichpt(uintptr_t addr)
 {
 }

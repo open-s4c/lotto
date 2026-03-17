@@ -12,11 +12,6 @@ void ichpt_reset();
 #define I2   I(2)
 #define I3   I(3)
 
-void
-dispatcher_register(slot_t slot, handle_f handle)
-{
-}
-
 #undef statemgr_register
 void
 statemgr_register(marshable_t *m, state_type_t type)

@@ -118,4 +118,4 @@ _priority_handle(const context_t *ctx, event_t *e)
     tidset_filter(&e->tset, _is_max_priority);
     e->is_chpt |= !tidset_has(&e->tset, ctx->id);
 }
-REGISTER_HANDLER(SLOT_PRIORITY, _priority_handle)
+REGISTER_HANDLER(_priority_handle)

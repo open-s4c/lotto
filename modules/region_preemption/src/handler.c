@@ -164,7 +164,7 @@ _region_preemption_handle(const context_t *ctx, event_t *e)
             break;
     }
 }
-REGISTER_HANDLER(SLOT_REGION_PREEMPTION, _region_preemption_handle)
+REGISTER_HANDLER(_region_preemption_handle)
 
 /*******************************************************************************
  * marshaling implementation

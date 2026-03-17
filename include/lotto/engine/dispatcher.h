@@ -8,7 +8,6 @@
 #include <lotto/base/cappt.h>
 #include <lotto/base/context.h>
 #include <lotto/base/plan.h>
-#include <lotto/base/slot.h>
 #include <lotto/check.h>
 #include <lotto/engine/pubsub.h>
 
@@ -21,16 +20,6 @@
 typedef void (*handle_f)(const context_t *ctx, event_t *e);
 
 /**
- * Register event handler in dispatcher
- *
- * @param slot unique slot number
- * @param handle event handler callback
- *
- * Slots are processes in increasing order.
- */
-void dispatcher_register(slot_t slot, handle_f handle);
-
-/**
  * Dispatches an event to all event handlers
  *
  * @param ctx calling context generating event
@@ -39,13 +28,23 @@ void dispatcher_register(slot_t slot, handle_f handle);
  */
 task_id dispatch_event(const context_t *ctx, event_t *e);
 
-#define REGISTER_HANDLER(slot, handle)                                         \
-    ON_REGISTRATION_PHASE({ dispatcher_register(slot, handle); })
+#define REGISTER_HANDLER(handle)                                               \
+    PS_SUBSCRIBE(CHAIN_LOTTO_DEFAULT, EVENT_ENGINE__CAPTURE, {                 \
+        const context_t *ctx = (const context_t *)md;                          \
+        event_t *e           = (event_t *)event;                               \
+        handle(ctx, e);                                                        \
+        if (e->skip)                                                           \
+            return PS_STOP_CHAIN;                                              \
+    })
 
-#define REGISTER_HANDLER_EXTERNAL(slot, handle)                                \
-    ON_REGISTRATION_PHASE({                                                    \
+#define REGISTER_HANDLER_EXTERNAL(handle)                                      \
+    PS_SUBSCRIBE(CHAIN_LOTTO_DEFAULT, EVENT_ENGINE__CAPTURE, {                 \
+        const context_t *ctx = (const context_t *)md;                          \
+        event_t *e           = (event_t *)event;                               \
         if (lotto_loaded())                                                    \
-            dispatcher_register(slot, handle);                                 \
+            handle(ctx, e);                                                    \
+        if (e->skip)                                                           \
+            return PS_STOP_CHAIN;                                              \
     })
 
 #endif

@@ -3,40 +3,13 @@
 #include <lotto/base/task_id.h>
 #include <lotto/base/tidset.h>
 #include <lotto/engine/dispatcher.h>
+#include <lotto/engine/events.h>
 #include <lotto/engine/prng.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/real.h>
 
-static struct {
-    handle_f handle;
-} _slots[SLOT_END_];
-
-static slot_t _last;
-
-void
-dispatcher_register(slot_t slot, handle_f handle)
-{
-    logger_debugf("slot: %s\n", slot_str(slot));
-    ASSERT(slot < SLOT_END_);
-    ASSERT(handle != NULL && "empty registrations are not allowed");
-    ASSERT((_slots[slot].handle == NULL || _slots[slot].handle == handle) &&
-           "repeated registrations are not allowed");
-    _slots[slot].handle = handle;
-
-    if (slot > _last)
-        _last = slot;
-}
-
-static void
-_handle_chain(const context_t *ctx, event_t *e)
-{
-    handle_f handle;
-    for (slot_t slot = 0; slot <= _last && !e->skip; slot++) {
-        if ((handle = _slots[slot].handle) != NULL)
-            handle(ctx, e);
-    }
-}
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__CAPTURE)
 
 void handle_creation(const context_t *ctx, event_t *e);
 
@@ -45,8 +18,9 @@ dispatch_event(const context_t *ctx, event_t *e)
 {
     handle_creation(ctx, e);
 
-    /* dispatch to handlers */
-    _handle_chain(ctx, e);
+    /* dispatch to handlers in slot order through the capture chain */
+    PS_PUBLISH(CHAIN_LOTTO_DEFAULT, EVENT_ENGINE__CAPTURE, e,
+               (struct metadata *)ctx);
 
     if (!e->is_chpt) {
         ASSERT(e->next == NO_TASK || e->next == ctx->id);

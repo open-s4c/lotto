@@ -91,4 +91,4 @@ _inactivity_alarm(const context_t *ctx, event_t *e)
     }
 }
 
-REGISTER_HANDLER(SLOT_INACTIVITY_TIMEOUT, _inactivity_alarm)
+REGISTER_HANDLER(_inactivity_alarm)

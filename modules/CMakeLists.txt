@@ -57,6 +57,9 @@ add_module(priority)
 add_module(task_velocity)
 add_module(order)
 add_module(disable)
+if(${LOTTO_RUST})
+    add_module(rusty)
+endif()
 
 # scheduling strategy handlers
 add_module(pos)
@@ -66,6 +69,7 @@ add_module(pct)
 add_module(deadlock)
 add_module(enforce)
 add_module(inactivity_timeout)
+
 
 # other components
 add_module(time)
@@ -82,6 +86,3 @@ if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
     add_module(qemu)
 endif()
 add_module(fork)
-if(${LOTTO_RUST})
-    add_module(rusty)
-endif()

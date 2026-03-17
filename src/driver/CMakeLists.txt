@@ -4,9 +4,6 @@ add_subdirectory(flags)
 
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
-set(DRIVER_MODULE_INCLUDE_DIRS
-    ${PROJECT_SOURCE_DIR}/modules/available/include)
-
 set(CLI_UTILS_SRCS
 	module.c
     utils.c
@@ -39,14 +36,12 @@ endmacro()
 add_library(cli.o OBJECT ${CLI_UTILS_SRCS})
 target_compile_options(cli.o PRIVATE -g)
 target_link_libraries(cli.o PUBLIC m)
-target_include_directories(cli.o PRIVATE ${DRIVER_MODULE_INCLUDE_DIRS})
 add_driver_dependencies(cli.o)
 
 add_library(cli_testing.o OBJECT ${CLI_UTILS_SRCS})
 target_compile_definitions(cli_testing.o PRIVATE -DLOTTO_TEST)
 target_compile_options(cli_testing.o PRIVATE -g)
 target_link_libraries(cli_testing.o PUBLIC m)
-target_include_directories(cli_testing.o PRIVATE ${DRIVER_MODULE_INCLUDE_DIRS})
 add_driver_dependencies(cli_testing.o)
 
 file(GLOB DRIVER_SRCS "commands/*.c")
@@ -68,7 +63,6 @@ target_link_libraries(
             memmgr_user_libc.o
             lotto-driver-engine.o
             dice.o)
-target_link_libraries(lotto-driver PRIVATE lotto-driver-available)
 target_compile_options(lotto-driver PRIVATE -g)
 target_compile_definitions(lotto-driver
                            PRIVATE LOTTO_VERSION="${PROJECT_VERSION}")

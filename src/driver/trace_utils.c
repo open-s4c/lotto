@@ -16,7 +16,6 @@
 #include <lotto/driver/trace_prepare.h>
 #include <lotto/engine/catmgr.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/modules/available/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/stdio.h>
@@ -149,21 +148,6 @@ cli_trace_trim_to_kind(trace_t *trace, kinds_t kinds)
     for (record_t *record = trace_last(trace);
          record != NULL && !(record->kind & kinds);
          trace_forget(trace), record = trace_last(trace)) {}
-}
-
-tidset_t *
-cli_trace_alternative_tasks(trace_t *trace)
-{
-    record_t *record = trace_last(trace);
-    if (record != NULL) {
-        tidset_t *tidset = sys_malloc(sizeof(tidset_t));
-        tidset_init(tidset);
-        statemgr_unmarshal(record->data, STATE_TYPE_PERSISTENT, false);
-        tidset_copy(tidset, get_available_tasks());
-        tidset_remove(tidset, record->id);
-        return tidset;
-    }
-    return NULL;
 }
 
 void

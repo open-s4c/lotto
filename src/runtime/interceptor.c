@@ -12,7 +12,6 @@
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/real.h>
-#include <lotto/unsafe/disable.h>
 #include <lotto/util/macros.h>
 
 

@@ -12,6 +12,12 @@ v_add_submodule(dice)
 # ------------------------------------------------------------------------------
 install(TARGETS tsano DESTINATION lib)
 
+# Dice is added as a submodule with EXCLUDE_FROM_ALL, so its own install rules
+# are not included in Lotto's top-level install. Install the parts needed by
+# installed Lotto module headers explicitly.
+install(TARGETS dice DESTINATION lib)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dice/include/dice DESTINATION include)
+
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/include/blob-tsano.h
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include

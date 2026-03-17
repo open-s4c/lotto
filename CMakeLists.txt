@@ -74,6 +74,19 @@ find_package(libvsync 4.2 CONFIG REQUIRED)
 link_libraries(libvsync::vsync)
 add_library(vsync ALIAS libvsync::vsync)
 
+# Installed Lotto public headers expose libvsync types/macros, so install the
+# corresponding headers into the Lotto prefix as well.
+get_target_property(LOTTO_VSYNC_INCLUDE_DIRS libvsync::vsync
+                    INTERFACE_INCLUDE_DIRECTORIES)
+if(LOTTO_VSYNC_INCLUDE_DIRS)
+    list(REMOVE_DUPLICATES LOTTO_VSYNC_INCLUDE_DIRS)
+    foreach(LOTTO_VSYNC_INCLUDE_DIR ${LOTTO_VSYNC_INCLUDE_DIRS})
+        if(EXISTS "${LOTTO_VSYNC_INCLUDE_DIR}/vsync")
+            install(DIRECTORY "${LOTTO_VSYNC_INCLUDE_DIR}/vsync" DESTINATION include)
+        endif()
+    endforeach()
+endif()
+
 # ------------------------------------------------------------------------------
 # tikl tests options
 # ------------------------------------------------------------------------------
@@ -190,6 +203,30 @@ add_subdirectory(doc)
 add_subdirectory(modules)
 
 add_subdirectory(scripts)
+
+set(LOTTO_CICD_INSTALL_BUILD_DIR "${CMAKE_BINARY_DIR}/cicd-install-build")
+set(LOTTO_CICD_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/cicd-install-prefix")
+add_custom_target(
+    cicd-install
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${LOTTO_CICD_INSTALL_BUILD_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${LOTTO_CICD_INSTALL_PREFIX}"
+    COMMAND
+        ${CMAKE_COMMAND} -S "${CMAKE_SOURCE_DIR}" -B
+        "${LOTTO_CICD_INSTALL_BUILD_DIR}" -G "${CMAKE_GENERATOR}"
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DCMAKE_INSTALL_PREFIX=${LOTTO_CICD_INSTALL_PREFIX}
+        -DLOTTO_FRONTEND=${LOTTO_FRONTEND} -DLOTTO_RUST=${LOTTO_RUST}
+        -DLOTTO_LTO=${LOTTO_LTO} -DLOTTO_RACKET_TESTS=OFF
+    COMMAND ${CMAKE_COMMAND} --build "${LOTTO_CICD_INSTALL_BUILD_DIR}" -j
+    COMMAND ${CMAKE_COMMAND} --install "${LOTTO_CICD_INSTALL_BUILD_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf
+            "${LOTTO_CICD_INSTALL_BUILD_DIR}/modules"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf
+            "${LOTTO_CICD_INSTALL_BUILD_DIR}/qlotto/modules"
+    COMMAND "${LOTTO_CICD_INSTALL_PREFIX}/bin/lotto" modules
+    USES_TERMINAL)
 
 # ##############################################################################
 # yapf

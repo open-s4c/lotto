@@ -17,7 +17,18 @@ install(
     DIRECTORY lotto
     DESTINATION include
     COMPONENT LottoSrc
-    PATTERN "include/lotto/unsafe/_sys.h" EXCLUDE)
+    PATTERN "unsafe/_sys.h" EXCLUDE
+    PATTERN "base/libraries.h.in" EXCLUDE)
+
+install(
+    FILES ${CMAKE_BINARY_DIR}/include/lotto/base/libraries.h
+    DESTINATION include/lotto/base
+    COMPONENT LottoSrc)
+
+install(
+    FILES ${CMAKE_BINARY_DIR}/include/lotto/unsafe/sys.h
+    DESTINATION include/lotto/unsafe
+    COMPONENT LottoSrc)
 
 install(
     FILES CMakeLists.txt

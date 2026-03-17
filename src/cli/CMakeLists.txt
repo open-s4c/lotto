@@ -24,6 +24,8 @@ set_target_properties(
     lotto-cli
     PROPERTIES ENABLE_EXPORTS ON
                OUTPUT_NAME lotto
-               RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+               RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+               INSTALL_RPATH "$ORIGIN/../lib")
 
+install(TARGETS lotto-cli-lib DESTINATION lib)
 install(TARGETS lotto-cli DESTINATION bin)

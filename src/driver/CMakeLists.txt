@@ -69,3 +69,4 @@ target_compile_definitions(lotto-driver
                            PRIVATE LOTTO_VERSION="${PROJECT_VERSION}")
 set_target_properties(lotto-driver PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                               ${CMAKE_BINARY_DIR})
+install(TARGETS lotto-driver DESTINATION lib)

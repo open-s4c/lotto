@@ -21,7 +21,7 @@
 #include "lotto/base/trace_file.h"
 #include "lotto/base/value.h"
 #include "lotto/base/vec.h"
-#include "lotto/cli/preload.h"
+#include "lotto/driver/preload.h"
 #include "lotto/driver/args.h"
 #include "lotto/driver/events.h"
 #include "lotto/driver/exec.h"

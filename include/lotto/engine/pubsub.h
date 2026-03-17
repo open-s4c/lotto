@@ -9,7 +9,6 @@
 #include <lotto/base/value.h>
 #include <lotto/driver/events.h>
 #include <lotto/engine/events.h>
-#include <lotto/events.h>
 #include <lotto/runtime/events.h>
 #include <lotto/util/macros.h>
 

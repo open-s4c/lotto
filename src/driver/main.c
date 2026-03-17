@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <lotto/cli/preload.h>
+#include <lotto/driver/preload.h>
 #include <lotto/cmake_variables.h>
 #include <lotto/driver/args.h>
 #include <lotto/driver/exec_info.h>

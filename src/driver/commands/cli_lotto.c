@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #include <lotto/base/flag.h>
-#include <lotto/cli/preload.h>
+#include <lotto/driver/preload.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
 #include <lotto/driver/subcmd.h>

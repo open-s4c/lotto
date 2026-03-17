@@ -2,8 +2,8 @@
 #include <stdio.h>
 
 #include <dice/pubsub.h>
+#include <lotto/engine/events.h>
 #include <lotto/engine/pubsub.h>
-#include <lotto/events.h>
 #include <lotto/sys/abort.h>
 
 static bool startup_barrier_closed_;

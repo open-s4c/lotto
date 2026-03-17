@@ -9,10 +9,10 @@ typedef enum strategy {
     STRATEGY_RANDOM,
     STRATEGY_PCT,
     STRATEGY_POS,
-    STRATEGY_STATIC,
+    STRATEGY_FIRST,
 } strategy_t;
 
-#define N_STRAT 3
+#define N_STRAT 4
 
 const char *strategy_str(strategy_t strategy);
 

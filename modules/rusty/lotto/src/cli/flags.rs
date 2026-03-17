@@ -181,7 +181,7 @@ pub static FLAG_OUTPUT: FlagKey = FlagKey::new(
 
 pub static FLAG_REPLAY_GOAL: FlagKey = FlagKey::new(
     c"FLAG_REPLAY_GOAL",
-    c"g",
+    c"",
     c"goal",
     c"INT",
     c"replay goal",

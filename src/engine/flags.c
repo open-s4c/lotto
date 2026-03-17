@@ -35,7 +35,7 @@ NEW_PUBLIC_CALLBACK_FLAG(SEED, "", "seed", "INT",
                          { prng()->seed = (uint32_t)as_uval(v); })
 
 NEW_PUBLIC_PRETTY_CALLBACK_FLAG(
-    RECORD_GRANULARITY, "", "record-granularity", "record granularity",
+    RECORD_GRANULARITY, "g", "record-granularity", "record granularity",
     flag_uval(RECORD_GRANULARITIES_DEFAULT),
     STR_CONVERTER_PRINT(record_granularities_str, record_granularities_from,
                         RECORD_GRANULARITIES_MAX_LEN,
@@ -47,7 +47,7 @@ NEW_CALLBACK_FLAG(SLACK, "", "slack", "INT", "slack time in milliseconds",
                   { sequencer_config()->slack = as_uval(v); })
 
 NEW_PUBLIC_CALLBACK_FLAG(STRATEGY, "s", "strategy", "STRAT",
-                         "select strategy pct, pos, or random",
+                         "select strategy first, pct, pos, or random",
                          flag_sval("pos"), {
                              ASSERT(sys_strlen(as_sval(v)) < STRATEGY_LEN);
                              strcpy(sequencer_config()->strategy, as_sval(v));

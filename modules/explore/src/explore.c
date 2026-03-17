@@ -26,6 +26,17 @@ static const category_t cats[] = {CAT_TASK_CREATE, CAT_NONE};
 
 void round_print(flags_t *flags, uint64_t round);
 
+static int
+_task_id_cmp(const void *a, const void *b)
+{
+    const task_id *ta = a;
+    const task_id *tb = b;
+
+    return *ta > *tb ? 1 :
+           *ta < *tb ? -1 :
+                       0;
+}
+
 static bool
 _cats_has(const category_t cats[], category_t cat)
 {
@@ -71,6 +82,7 @@ _explore_interval(args_t *args, flags_t *flags, trace_t *input, uint64_t from,
         }
         tidset_copy(&choices, replay_choices);
         tidset_remove(&choices, current_record->id);
+        tidset_sort(&choices, _task_id_cmp);
         clk_t clk = current_record->clk;
         for (size_t i = 0;
              ((!expect_failure && !err) || (expect_failure && err)) &&

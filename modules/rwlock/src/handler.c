@@ -92,7 +92,7 @@ _rwlock_handle(const context_t *ctx, event_t *e)
         }
     }
 }
-REGISTER_HANDLER(SLOT_RWLOCK, _rwlock_handle)
+REGISTER_HANDLER(_rwlock_handle)
 
 LOTTO_SUBSCRIBE(EVENT_ENGINE__NEXT_TASK, {
     context_t *ctx = (context_t *)as_any(v);

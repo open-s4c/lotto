@@ -42,4 +42,4 @@ _region_filter_handle(const context_t *ctx, event_t *e)
         e->filter_less = true;
     }
 }
-REGISTER_HANDLER(SLOT_REGION_FILTER, _region_filter_handle)
+REGISTER_HANDLER(_region_filter_handle)

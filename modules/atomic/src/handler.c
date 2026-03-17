@@ -44,4 +44,4 @@ _atomic_handle(const context_t *ctx, event_t *e)
             // NOLINTEND(bugprone-branch-clone)
     }
 }
-REGISTER_HANDLER(SLOT_ATOMIC, _atomic_handle)
+REGISTER_HANDLER(_atomic_handle)

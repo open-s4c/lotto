@@ -18,7 +18,7 @@ use crate::raw::reason::REASON_DETERMINISTIC;
 use crate::raw::reason::*;
 use crate::raw::selector_SELECTOR_FIRST;
 use crate::raw::{
-    base_category, context_t, dispatcher_register, event_t, task_id, tidset_remove, tidset_t,
+    base_category, context_t, event_t, task_id, tidset_remove, tidset_t,
 };
 use lotto_sys as raw;
 use std::mem::align_of;
@@ -273,6 +273,23 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const context_t, event: *mut even
     }
 }
 
+unsafe extern "C" fn publish_arrival_subscription(
+    _chain: raw::chain_id,
+    _type: raw::type_id,
+    event: *mut c_void,
+    md: *mut raw::metadata,
+) -> raw::ps_err {
+    let ctx = md.cast::<context_t>() as *const context_t;
+    let event = event.cast::<event_t>();
+    unsafe { publish_arrival(ctx, event) };
+    let event = unsafe { event.as_ref() }.expect("Unexpected null pointer");
+    if event.skip {
+        raw::ps_err_PS_STOP_CHAIN
+    } else {
+        raw::ps_err_PS_OK
+    }
+}
+
 /// Add's the handler to the subscribed list of `execute events`.
 /// This requires passing the ownership of the handler.
 pub fn subscribe_execute<Handler>(handler: &'static Handler)
@@ -379,16 +396,14 @@ pub unsafe extern "C" fn publish_execute(
 pub fn subscribe_phase() {
     // Subscribe to sequencer resume with the task-id to run.
     subscribe_default(lotto_sys::EVENT_ENGINE__NEXT_TASK as u16, Some(publish_execute));
+    subscribe_default(
+        lotto_sys::EVENT_ENGINE__CAPTURE as u16,
+        Some(publish_arrival_subscription),
+    );
 }
 
 /// Register the capture point handler with Lotto.
 pub fn register_phase() {
-    use raw::slot_t::SLOT_RUSTY_ENGINE;
-    trace!("Hello this is the lotto rusty pubsub handler initializing");
-    // Safety: We assume no other function will be calling a dispacth for the same slot.
-    unsafe {
-        dispatcher_register(SLOT_RUSTY_ENGINE, Some(publish_arrival));
-    }
 }
 
 /// Perform runtime initialization after Lotto registration is complete.

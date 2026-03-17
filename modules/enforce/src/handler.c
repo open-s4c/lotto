@@ -238,4 +238,4 @@ _handle(const context_t *ctx, event_t *cp)
     }
     _save(ctx, cp);
 }
-REGISTER_HANDLER(SLOT_ENFORCEMENT, _handle)
+REGISTER_HANDLER(_handle)

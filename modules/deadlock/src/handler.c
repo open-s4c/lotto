@@ -277,7 +277,7 @@ _deadlock_handle(const context_t *ctx, event_t *e)
 }
 
 LOTTO_ADVERTISE_TYPE(EVENT_DEADLOCK__DETECTED)
-REGISTER_HANDLER(SLOT_DEADLOCK, _deadlock_handle)
+REGISTER_HANDLER(_deadlock_handle)
 
 static tidset_t _dbg_set;
 

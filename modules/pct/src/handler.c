@@ -121,4 +121,4 @@ _pct_handle(const context_t *ctx, event_t *e)
     if (tidmap_size(&pct_state()->map) > pct_state()->counts.nmax)
         pct_state()->counts.nmax = tidmap_size(&pct_state()->map);
 }
-REGISTER_HANDLER(SLOT_PCT, _pct_handle)
+REGISTER_HANDLER(_pct_handle)

@@ -192,4 +192,4 @@ _filtering_handle(const context_t *ctx, event_t *e)
     e->readonly = true;
     e->skip     = true;
 }
-REGISTER_HANDLER(SLOT_FILTERING, _filtering_handle)
+REGISTER_HANDLER(_filtering_handle)

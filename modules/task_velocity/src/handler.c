@@ -109,4 +109,4 @@ _task_velocity_handle(const context_t *ctx, event_t *e)
     tidset_filter(&e->tset, _filter_by_probability);
     e->is_chpt |= !tidset_has(&e->tset, ctx->id);
 }
-REGISTER_HANDLER(SLOT_TASK_VELOCITY, _task_velocity_handle)
+REGISTER_HANDLER(_task_velocity_handle)

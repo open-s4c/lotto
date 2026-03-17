@@ -15,7 +15,7 @@
 
 #include <lotto/base/envvar.h>
 #include <lotto/base/libraries.h>
-#include <lotto/cli/preload.h>
+#include <lotto/driver/preload.h>
 #include <lotto/cmake_variables.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/files.h>

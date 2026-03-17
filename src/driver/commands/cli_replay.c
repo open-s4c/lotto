@@ -9,7 +9,7 @@
 
 #include <lotto/base/envvar.h>
 #include <lotto/base/record_granularity.h>
-#include <lotto/cli/preload.h>
+#include <lotto/driver/preload.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/flagmgr.h>

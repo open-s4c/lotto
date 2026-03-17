@@ -1,9 +1,9 @@
 /**
  * @file preload.h
- * @brief CLI declarations for preload.
+ * @brief Driver declarations for preload.
  */
-#ifndef LOTTO_CLI_PRELOAD_H
-#define LOTTO_CLI_PRELOAD_H
+#ifndef LOTTO_DRIVER_PRELOAD_H
+#define LOTTO_DRIVER_PRELOAD_H
 
 #include <stdbool.h>
 

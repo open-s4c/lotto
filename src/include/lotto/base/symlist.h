@@ -1,9 +1,9 @@
 /**
  * @file symlist.h
- * @brief Engine utility declarations for symlist.
+ * @brief Internal base declarations for symlist.
  */
-#ifndef LOTTO_ENGINE_UTIL_SYMLIST_H
-#define LOTTO_ENGINE_UTIL_SYMLIST_H
+#ifndef LOTTO_BASE_SYMLIST_H
+#define LOTTO_BASE_SYMLIST_H
 
 #include <stddef.h>
 #include <stdint.h>

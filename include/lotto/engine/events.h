@@ -5,6 +5,12 @@
 #ifndef LOTTO_CORE_ENGINE_EVENTS_H
 #define LOTTO_CORE_ENGINE_EVENTS_H
 
+/* Lotto startup phase events driven by the engine. */
+#define EVENT_LOTTO_STARTUP_SYNC 130
+#define EVENT_LOTTO_REGISTER     140
+#define EVENT_LOTTO_INIT         141
+
+/* Core engine events. */
 #define EVENT_ENGINE__START                      110
 #define EVENT_ENGINE__REPLAY_END                 111
 #define EVENT_ENGINE__BEFORE_CAPTURE             112

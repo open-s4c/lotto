@@ -5,7 +5,7 @@
 #include <lotto/base/tidset.h>
 #include <lotto/base/trace.h>
 #include <lotto/base/trace_flat.h>
-#include <lotto/cli/preload.h>
+#include <lotto/driver/preload.h>
 #include <lotto/driver/args.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/exec_info.h>

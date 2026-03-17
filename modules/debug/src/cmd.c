@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 #include "debug.h"
-#include <lotto/cli/preload.h>
+#include <lotto/driver/preload.h>
 #include <lotto/cmake_variables.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/subcmd.h>

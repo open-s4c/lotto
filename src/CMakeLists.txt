@@ -4,11 +4,6 @@ add_subdirectory(include)
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
 include_directories(include)
-include_directories(../modules/termination/include)
-include_directories(../modules/enforce/include)
-include_directories(../modules/available/include)
-include_directories(../modules/deadlock/include)
-include_directories(../modules/disable/include)
 
 add_compile_definitions(DICE_MULTIFILE_MODULE)
 if (${LOTTO_LTO})

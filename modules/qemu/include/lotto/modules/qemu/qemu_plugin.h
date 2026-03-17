@@ -1,9 +1,9 @@
 /**
  * @file qemu_plugin.h
- * @brief Internal engine declarations for qemu plugin.
+ * @brief QEMU module declarations for qemu plugin.
  */
-#ifndef LOTTO_QEMU_PLUGIN_H
-#define LOTTO_QEMU_PLUGIN_H
+#ifndef LOTTO_MODULES_QEMU_PLUGIN_H
+#define LOTTO_MODULES_QEMU_PLUGIN_H
 
 #include <lotto/base/task_id.h>
 #include <lotto/modules/qemu/armcpu.h>
@@ -18,4 +18,4 @@ qemu_snapshot(void)
     ASSERT(0 && "Should not call weak function, but qemu-plugin variant.");
 }
 
-#endif // LOTTO_QEMU_PLUGIN_H
+#endif

@@ -2,7 +2,6 @@
 //! from the C side, and publish the events to the subscribed handlers.
 //!
 //!
-use core::ffi::c_void;
 use crate::base::{TaskId, Value};
 use crate::engine::handler::AbortReason::*;
 use crate::engine::handler::ShutdownReason::*;
@@ -29,28 +28,6 @@ pub type CustomCatTable =
 
 pub trait CustomCatTrait {
     fn call_right_handler(&self, handler: &mut (dyn ArrivalOrExecuteHandler + Send + Sync));
-}
-
-pub fn subscribe_default(
-    event_type: u16,
-    callback: Option<
-        unsafe extern "C" fn(
-            raw::chain_id,
-            raw::type_id,
-            *mut c_void,
-            *mut raw::metadata,
-        ) -> raw::ps_err,
-    >,
-) {
-    let err = unsafe {
-        raw::ps_subscribe(
-            lotto_sys::CHAIN_LOTTO_DEFAULT as u16,
-            event_type,
-            callback,
-            lotto_sys::DICE_MODULE_SLOT as i32,
-        )
-    };
-    assert_eq!(err, raw::ps_err_PS_OK, "ps_subscribe failed: {err}");
 }
 
 /// Publish the arrival of an event to all the subscribed handlers.
@@ -273,23 +250,6 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const context_t, event: *mut even
     }
 }
 
-unsafe extern "C" fn publish_arrival_subscription(
-    _chain: raw::chain_id,
-    _type: raw::type_id,
-    event: *mut c_void,
-    md: *mut raw::metadata,
-) -> raw::ps_err {
-    let ctx = md.cast::<context_t>() as *const context_t;
-    let event = event.cast::<event_t>();
-    unsafe { publish_arrival(ctx, event) };
-    let event = unsafe { event.as_ref() }.expect("Unexpected null pointer");
-    if event.skip {
-        raw::ps_err_PS_STOP_CHAIN
-    } else {
-        raw::ps_err_PS_OK
-    }
-}
-
 /// Add's the handler to the subscribed list of `execute events`.
 /// This requires passing the ownership of the handler.
 pub fn subscribe_execute<Handler>(handler: &'static Handler)
@@ -336,6 +296,16 @@ pub unsafe extern "C" fn publish_execute(
     _md_ptr: *mut raw::metadata,
 ) -> raw::ps_err {
     let v = *(v as *mut raw::value);
+    unsafe { publish_execute_value(v) };
+    raw::ps_err_PS_OK
+}
+
+/// Publish an execute event from a raw Lotto value.
+///
+/// # Safety
+///
+/// The caller must ensure `v` contains a valid `context_t` payload.
+pub unsafe fn publish_execute_value(v: raw::value) {
     let ctx = &*(Value::from(v).as_any() as *const raw::context_t);
 
     // For [`Handler::posthandle`] interface.
@@ -389,17 +359,10 @@ pub unsafe extern "C" fn publish_execute(
             }
         }
     }
-    raw::ps_err_PS_OK
 }
 
-/// Install Dice pubsub subscriptions needed by the Rust engine bridge.
+/// Legacy no-op kept for old call sites. Subscriptions now live in the C glue.
 pub fn subscribe_phase() {
-    // Subscribe to sequencer resume with the task-id to run.
-    subscribe_default(lotto_sys::EVENT_ENGINE__NEXT_TASK as u16, Some(publish_execute));
-    subscribe_default(
-        lotto_sys::EVENT_ENGINE__CAPTURE as u16,
-        Some(publish_arrival_subscription),
-    );
 }
 
 /// Register the capture point handler with Lotto.

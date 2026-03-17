@@ -21,7 +21,6 @@ static INIT_ONCE: Once = Once::new();
 pub fn rusty_subscribe() {
     SUBSCRIBE_ONCE.call_once(|| {
         lotto::log::init();
-        lotto::brokers::statemgr::subscribe_system();
     });
 }
 
@@ -71,6 +70,36 @@ pub extern "C" fn lotto_rust_register() {
 #[no_mangle]
 pub extern "C" fn lotto_rust_init() {
     rusty_init();
+}
+
+#[no_mangle]
+pub extern "C" fn lotto_rust_after_unmarshal_config() {
+    lotto::brokers::statemgr::after_unmarshal_config();
+}
+
+#[no_mangle]
+pub extern "C" fn lotto_rust_after_unmarshal_persistent() {
+    lotto::brokers::statemgr::after_unmarshal_persistent();
+}
+
+#[no_mangle]
+pub extern "C" fn lotto_rust_after_unmarshal_final() {
+    lotto::brokers::statemgr::after_unmarshal_final();
+}
+
+#[no_mangle]
+pub extern "C" fn lotto_rust_before_marshal_config() {
+    lotto::brokers::statemgr::before_marshal_config();
+}
+
+#[no_mangle]
+pub extern "C" fn lotto_rust_before_marshal_persistent() {
+    lotto::brokers::statemgr::before_marshal_persistent();
+}
+
+#[no_mangle]
+pub extern "C" fn lotto_rust_before_marshal_final() {
+    lotto::brokers::statemgr::before_marshal_final();
 }
 
 #[no_mangle]

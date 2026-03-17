@@ -28,6 +28,7 @@ static void driver_options(int argc, char **argv, const char **module_dir,
 static int add_driver_module(module_t *module, void *arg);
 static void prepend_env_path(const char *name, const char *value);
 static void append_preload(preload_state_t *state, const char *path);
+static bool path_is_readable(const char *path);
 static int exec_self(char **argv);
 
 int
@@ -45,6 +46,7 @@ main(int argc, char **argv)
         char resolved_path[PATH_MAX];
         char driver_path[PATH_MAX];
         char binary_dir[PATH_MAX];
+        char lib_dir[PATH_MAX];
 
         driver_options(argc, argv, &module_dir, &module_list);
         lotto_module_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
@@ -65,6 +67,13 @@ main(int argc, char **argv)
         snprintf(binary_dir, sizeof(binary_dir), "%s", dirname(resolved_path));
         snprintf(driver_path, sizeof(driver_path), "%s/liblotto-driver.so",
                  binary_dir);
+        if (!path_is_readable(driver_path)) {
+            snprintf(lib_dir, sizeof(lib_dir), "%s/../lib", binary_dir);
+            snprintf(driver_path, sizeof(driver_path), "%s/liblotto-driver.so",
+                     lib_dir);
+        } else {
+            snprintf(lib_dir, sizeof(lib_dir), "%s", binary_dir);
+        }
 
         preload_state_t preload        = {.buf = malloc(MAX_LIST_STR),
                                           .len = 0,
@@ -102,7 +111,7 @@ main(int argc, char **argv)
         setenv("LD_PRELOAD", preload.buf, true);
         setenv(DICE_PLUGIN_MODULES, plugin_modules.buf, true);
         setenv(LOTTO_BOOTSTRAP_ENV, "1", true);
-        prepend_env_path("LD_LIBRARY_PATH", binary_dir);
+        prepend_env_path("LD_LIBRARY_PATH", lib_dir);
         free(preload.buf);
         free(plugin_modules.buf);
         return exec_self(argv);
@@ -156,6 +165,12 @@ prepend_env_path(const char *name, const char *value)
         snprintf(buf, sizeof(buf), "%s", value);
     }
     setenv(name, buf, true);
+}
+
+static bool
+path_is_readable(const char *path)
+{
+    return access(path, R_OK) == 0;
 }
 
 static void

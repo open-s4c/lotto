@@ -56,6 +56,9 @@ jobs:
         run: cmake --build build --target dice -j
       - name: Build Lotto
         run: cmake --build build -j
+      - name: Smoke test installation
+        if: ${{ matrix.toolchain == 'gnu' && matrix.rust == 'OFF' && matrix.variant == 'Release' }}
+        run: cmake --build build --target cicd-install
       - name: Run unit tests
         run: cmake --build build --target test
       - name: Run tikl tests

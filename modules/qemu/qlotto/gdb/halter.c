@@ -2,8 +2,6 @@
 #include <stdint.h>
 
 #include <lotto/base/task_id.h>
-#include <lotto/engine/pubsub.h>
-#include <lotto/modules/deadlock/events.h>
 #include <lotto/qlotto/gdb/gdb_connection.h>
 #include <lotto/qlotto/gdb/halter.h>
 #include <lotto/qlotto/gdb/handling/execute.h>
@@ -31,6 +29,7 @@ static _state_halter_t _state = {
     .gdb_stop_reason     = STOP_REASON_NONE,
     .gdb_stop_reason_n   = 0,
 };
+static bool qlotto_gdb_ready_;
 
 bool qemu_gdb_get_wait(void);
 
@@ -154,5 +153,20 @@ gdb_execution_has_halted()
     return GDB_EXECUTION_HALTED == vatomic32_read(&_state.gdb_execution_state);
 }
 
-LOTTO_SUBSCRIBE(EVENT_DEADLOCK__DETECTED,
-                { gdb_execution_halt(_state.gdb_execution_tid); })
+bool
+qlotto_gdb_ready(void)
+{
+    return qlotto_gdb_ready_;
+}
+
+void
+qlotto_set_gdb_ready(bool ready)
+{
+    qlotto_gdb_ready_ = ready;
+}
+
+void
+qlotto_deadlock_detected()
+{
+    gdb_execution_halt(_state.gdb_execution_tid);
+}

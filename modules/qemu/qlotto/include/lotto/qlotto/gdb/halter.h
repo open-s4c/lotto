@@ -33,5 +33,8 @@ stop_reason_t gdb_get_stop_reason(void);
 uint64_t gdb_get_stop_reason_n(void);
 const char *gdb_get_stop_reason_str(void);
 bool gdb_has_stop_reason();
+bool qlotto_gdb_ready(void);
+void qlotto_set_gdb_ready(bool ready);
+void qlotto_deadlock_detected(void);
 
 #endif // LOTTO_GDB_HALTER_H

@@ -7,6 +7,7 @@
 #include <lotto/base/task_id.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
+#include <lotto/modules/qemu/callbacks.h>
 #include <lotto/modules/qemu/cpustatecc.h>
 #include <lotto/modules/qemu/perf.h>
 #include <lotto/modules/qemu/util.h>
@@ -27,6 +28,12 @@
 #include <capstone/capstone.h>
 
 #define MAX_CPUS 1024
+
+REGISTER_GLOBAL(qlotto_register_cpu, void, unsigned int cpu_index, void *cpu,
+                void *cpuenv, void *cpustatecc)
+REGISTER_DEFINE(qlotto_register_cpu, void, unsigned int cpu_index, void *cpu,
+                void *cpuenv, void *cpustatecc)
+
 typedef struct frontend_state_s {
     uint64_t inst_loop_count;
     int32_t cpu_index_offset;
@@ -41,6 +48,7 @@ typedef struct frontend_state_s {
 } frontend_state_t;
 
 static frontend_state_t frontend_state;
+static bool qlotto_frontend_ready_;
 
 icounter_t *
 get_instruction_counter(void)
@@ -58,6 +66,18 @@ icounter_t *
 get_instruction_counter_wfe(void)
 {
     return &frontend_state.inline_insn_count_wfe;
+}
+
+bool
+qlotto_frontend_ready(void)
+{
+    return qlotto_frontend_ready_;
+}
+
+void
+qlotto_set_frontend_ready(bool ready)
+{
+    qlotto_frontend_ready_ = ready;
 }
 
 /*******************************************************************************
@@ -99,8 +119,8 @@ _should_drop(const context_t *ctx, bool inc)
     return true;
 }
 
-static void
-_handler(const context_t *ctx, event_t *e)
+void
+qlotto_capture_handle(const context_t *ctx, event_t *e)
 {
     switch (ctx->cat) {
         case CAT_REGION_IN:
@@ -115,7 +135,6 @@ _handler(const context_t *ctx, event_t *e)
             break;
     }
 }
-REGISTER_HANDLER_EXTERNAL(_handler);
 
 void
 qlotto_set_armcpu(unsigned int cpu_index, void *armcpu_v)

@@ -6,6 +6,7 @@
 #include <lotto/base/reason.h>
 #include <lotto/check.h>
 #include <lotto/modules/qemu/callbacks.h>
+#include <lotto/qlotto/frontend/interceptor.h>
 #include <lotto/qlotto/frontend/intercept_translation.h>
 #include <lotto/runtime/intercept.h>
 #include <lotto/runtime/runtime.h>
@@ -46,6 +47,7 @@ qemu_plugin_install(qemu_plugin_id_t id, const qemu_info_t *info, int argc,
 {
     ENSURE(lotto_loaded());
     REGISTER_CALL(qlotto_register_cpu)
+    qlotto_set_frontend_ready(true);
     instrumentation_init();
 
     qemu_plugin_register_vcpu_tb_trans_cb(id, vcpu_tb_trans);

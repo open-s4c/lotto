@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <lotto/driver/flagmgr.h>
+#include <lotto/driver/preload.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/stdlib.h>
@@ -110,6 +111,10 @@ _derive_default_paths(const args_t *args, char *qemu_bin, char *plugin_dir,
 int
 qemu(args_t *args, flags_t *flags)
 {
+    preload(flags_get_sval(flags, flag_temporary_directory()),
+            flags_is_on(flags, flag_verbose()),
+            !flags_is_on(flags, flag_no_preload()), NULL, NULL);
+
     const bool with_gdb_server = flags_is_on(flags, FLAG_QEMU_WITH_GDB_SERVER);
     const bool with_measure    = flags_is_on(flags, FLAG_QEMU_WITH_MEASURE);
     const bool with_snapshot   = flags_is_on(flags, FLAG_QEMU_WITH_SNAPSHOT);
@@ -224,6 +229,8 @@ qemu(args_t *args, flags_t *flags)
 
 ON_DRIVER_REGISTER_COMMANDS({
     flag_t sel[] = {flag_verbose(),
+                    flag_temporary_directory(),
+                    flag_no_preload(),
                     FLAG_QEMU_BIN,
                     FLAG_QEMU_PLUGIN_DIR,
                     FLAG_QEMU_WITH_GDB_SERVER,

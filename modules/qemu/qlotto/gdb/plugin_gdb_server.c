@@ -12,6 +12,7 @@
 #include <lotto/qlotto/gdb/arm_cpu.h>
 #include <lotto/qlotto/gdb/fd_stub.h>
 #include <lotto/qlotto/gdb/gdb_connection.h>
+#include <lotto/qlotto/gdb/halter.h>
 #include <lotto/qlotto/gdb/gdb_send.h>
 #include <lotto/qlotto/gdb/gdb_server.h>
 #include <lotto/qlotto/gdb/gdb_server_stub.h>
@@ -101,6 +102,7 @@ qemu_plugin_install(qemu_plugin_id_t id, const qemu_info_t *info, int argc,
     qemu_plugin_register_vcpu_tb_trans_cb(id, vcpu_tb_trans);
     qemu_plugin_register_atexit_cb(id, plugin_exit, NULL);
     REGISTER_CALL(gdb_register_cpu)
+    qlotto_set_gdb_ready(true);
     ENSURE(cs_open(CS_ARCH_ARM64, CS_MODE_ARM, &disasm) == CS_ERR_OK);
     ENSURE(cs_option(disasm, CS_OPT_DETAIL, CS_OPT_ON) == CS_ERR_OK);
 

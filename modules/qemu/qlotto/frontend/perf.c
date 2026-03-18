@@ -33,6 +33,8 @@ WEAK uint64_t get_task_sched_count();
 REGISTER_GLOBAL_DEFINE(into_guest_from_qemu, void, uint32_t cpu_index)
 REGISTER_GLOBAL_DEFINE(into_qemu_from_guest, void, uint32_t cpu_index)
 REGISTER_GLOBAL_DEFINE(into_qemu_from_guest_unsafe, void, uint32_t cpu_index)
+REGISTER_GLOBAL(in_guest, bool, task_id tid)
+REGISTER_DEFINE(in_guest, bool, task_id tid)
 
 typedef struct frontend_perf_state_s {
     uint64_t wtime_startup;

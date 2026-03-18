@@ -65,12 +65,16 @@ main(int argc, char **argv)
         }
 
         snprintf(binary_dir, sizeof(binary_dir), "%s", dirname(resolved_path));
-        snprintf(driver_path, sizeof(driver_path), "%s/liblotto-driver.so",
+        const char *fmtstr = "%s/liblotto-driver.so";
+        snprintf(driver_path, sizeof(driver_path) - strlen(fmtstr), fmtstr,
                  binary_dir);
         if (!path_is_readable(driver_path)) {
-            snprintf(lib_dir, sizeof(lib_dir), "%s/../lib", binary_dir);
-            snprintf(driver_path, sizeof(driver_path), "%s/liblotto-driver.so",
-                     lib_dir);
+            const char *fmt_libdir     = "%s/../lib";
+            const char *fmt_driverpath = "%s/liblotto-driver.so";
+            snprintf(lib_dir, sizeof(lib_dir) - strlen(fmt_libdir), fmt_libdir,
+                     binary_dir);
+            snprintf(driver_path, sizeof(driver_path) - strlen(fmt_driverpath),
+                     fmt_driverpath, lib_dir);
         } else {
             snprintf(lib_dir, sizeof(lib_dir), "%s", binary_dir);
         }

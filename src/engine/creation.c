@@ -74,6 +74,7 @@ handle_creation(const context_t *ctx, event_t *e)
                    "a task is reregistered");
             e->reason  = REASON_DETERMINISTIC;
             e->is_chpt = true;
+            e->next    = _state.last_parent;
             break;
 
         case CAT_TASK_FINI:

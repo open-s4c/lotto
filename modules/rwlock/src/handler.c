@@ -225,7 +225,10 @@ _posthandle_rdlock(task_id id, uintptr_t addr)
 {
     struct rwlock *lock = _rwlock_init(addr);
     ASSERT(!_rwlock_is_write_locked(lock));
-    ENSURE(tidset_remove(&lock->read_waiters, id));
+    if (!tidset_remove(&lock->read_waiters, id)) {
+        logger_debugf("rwlock 0x%lx reader %lu was not queued\n", addr, id);
+        return;
+    }
     struct reader *reader = (struct reader *)tidmap_find(&lock->readers, id);
     if (!reader) {
         reader      = (struct reader *)tidmap_register(&lock->readers, id);
@@ -266,7 +269,10 @@ _posthandle_wrlock(task_id id, uintptr_t addr)
     struct rwlock *lock = _rwlock_init(addr);
     ASSERT(!_rwlock_is_read_locked(lock));
     ASSERT(lock->writer == NO_TASK);
-    ENSURE(tidset_remove(&lock->write_waiters, id));
+    if (!tidset_remove(&lock->write_waiters, id)) {
+        logger_debugf("rwlock 0x%lx writer %lu was not queued\n", addr, id);
+        return;
+    }
     lock->writer = id;
     logger_debugf("rwlock 0x%lx is write locked by %lu\n", addr, id);
 }

@@ -5,13 +5,13 @@
 #include <lotto/base/tidset.h>
 #include <lotto/base/trace.h>
 #include <lotto/base/trace_flat.h>
-#include <lotto/driver/preload.h>
 #include <lotto/driver/args.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
 #include <lotto/driver/flags/sequencer.h>
+#include <lotto/driver/preload.h>
 #include <lotto/driver/record.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/trace.h>
@@ -22,7 +22,7 @@
 #include <lotto/sys/stdio.h>
 
 static uint64_t round_index;
-static const category_t cats[] = {CAT_TASK_CREATE, CAT_NONE};
+static const category_t cats[] = {CAT_NONE};
 
 void round_print(flags_t *flags, uint64_t round);
 
@@ -32,9 +32,7 @@ _task_id_cmp(const void *a, const void *b)
     const task_id *ta = a;
     const task_id *tb = b;
 
-    return *ta > *tb ? 1 :
-           *ta < *tb ? -1 :
-                       0;
+    return *ta > *tb ? 1 : *ta < *tb ? -1 : 0;
 }
 
 static bool
@@ -54,7 +52,7 @@ _get_last_record_smaller_or_equal_than_clock(trace_t *recorder, uint64_t clock)
     record_t *result;
     for (result = trace_last(recorder);
          result && (result->clk > clock || !(result->kind & RECORD_SCHED) ||
-                    result->cat == CAT_NONE || _cats_has(cats, result->cat));
+                    _cats_has(cats, result->cat));
          trace_forget(recorder), result = trace_last(recorder)) {}
     return result;
 }

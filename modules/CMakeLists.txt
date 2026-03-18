@@ -26,6 +26,9 @@ include_directories(explore/include)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LOTTO_MODULE_BUILD_DIR}")
 
+set(RUNTIME_MODULE_TYPE_rusty SHARED)
+set(RUNTIME_MODULE_LTO_rusty OFF)
+
 # blocking handlers
 add_module(blocking)
 add_module(join)

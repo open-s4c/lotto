@@ -226,7 +226,7 @@ flag_t flag_logger_file();
     DECLARE_COMMAND_FLAG(VERBOSE, "v", "verbose", "", "verbose", flag_off())
 
 #define DECLARE_FLAG_REPLAY_GOAL                                               \
-    DECLARE_COMMAND_FLAG(REPLAY_GOAL, "g", "goal", "INT", "replay goal",       \
+    DECLARE_COMMAND_FLAG(REPLAY_GOAL, "", "goal", "INT", "replay goal",       \
                          flag_uval(MAX_ROUNDS))
 
 #define DECLARE_FLAG_LOGGER_FILE                                               \

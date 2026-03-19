@@ -8,7 +8,8 @@ _default_flags()
 {
     flags_t *flags = flagmgr_flags_alloc();
     flags_cpy(flags, flags_default());
-    flags_set_default(flags, flag_strategy(), sval("random"));
+    flags_set_default(flags, flag_input(), sval("replay.trace"));
+    flags_set_default(flags, flag_strategy(), sval("first"));
     return flags;
 }
 

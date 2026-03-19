@@ -4,10 +4,10 @@
 #include <lotto/sys/assert.h>
 
 static const char *strategy_map[] = {
-    [STRATEGY_STATIC] = "static",
     [STRATEGY_RANDOM] = "random",
     [STRATEGY_PCT]    = "pct",
     [STRATEGY_POS]    = "pos",
+    [STRATEGY_FIRST]  = "first",
 };
 
 const char *

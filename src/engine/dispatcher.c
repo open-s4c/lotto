@@ -1,10 +1,13 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#include <string.h>
+#include <lotto/base/strategy.h>
 #include <lotto/base/task_id.h>
 #include <lotto/base/tidset.h>
 #include <lotto/engine/dispatcher.h>
 #include <lotto/engine/events.h>
 #include <lotto/engine/prng.h>
+#include <lotto/engine/state.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/real.h>
@@ -12,6 +15,17 @@
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__CAPTURE)
 
 void handle_creation(const context_t *ctx, event_t *e);
+
+static int
+_task_id_cmp(const void *a, const void *b)
+{
+    const task_id *ta = a;
+    const task_id *tb = b;
+
+    return *ta > *tb ? 1 :
+           *ta < *tb ? -1 :
+                       0;
+}
 
 task_id
 dispatch_event(const context_t *ctx, event_t *e)
@@ -38,8 +52,17 @@ dispatch_event(const context_t *ctx, event_t *e)
     }
 
     /* we need to select the next task from the remaining tasks */
-    if (e->selector == SELECTOR_UNDEFINED)
-        e->selector = SELECTOR_RANDOM; // comes from config
+    if (e->selector == SELECTOR_UNDEFINED) {
+        if (strcmp(sequencer_config()->strategy, strategy_str(STRATEGY_FIRST)) ==
+            0) {
+            tidset_sort(&e->tset, _task_id_cmp);
+            e->selector = SELECTOR_FIRST;
+            if (e->reason == REASON_UNKNOWN)
+                e->reason = REASON_DETERMINISTIC;
+        } else {
+            e->selector = SELECTOR_RANDOM; // comes from config
+        }
+    }
 
     switch (e->selector) {
         case SELECTOR_RANDOM:

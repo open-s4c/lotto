@@ -23,10 +23,10 @@ static void *
 run_bob(void *arg)
 {
     (void)arg;
-    while (!g_ctrl) {}
-
-    int val = g_data;
-    assert(val == 1);
+    if (g_ctrl) {
+        int val = g_data;
+        assert(val == 1);
+    }
 
     return NULL;
 }

@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <lotto/base/category.h>
+#include <dice/types.h>
 #include <lotto/base/clk.h>
 #include <lotto/base/reason.h>
 #include <lotto/base/task_id.h>
@@ -46,7 +46,9 @@ typedef struct record_s {
     struct record_s *next; /**< Shall not be used. */
     task_id id;            /**< Thread creating record. */
     clk_t clk;             /**< Clock value of record. */
-    category_t cat;        /**< Context category of task call. */
+    chain_id src_chain;    /**< Source event chain. */
+    type_id type;          /**< Semantic ingress event type. */
+    type_id src_type;      /**< Normalized source event type. */
     reason_t reason;       /**< Reason for record. */
     enum record kind;      /**< Kind of payload: INFO, SCHED, CALL */
     size_t size;           /**< Size of payload. */

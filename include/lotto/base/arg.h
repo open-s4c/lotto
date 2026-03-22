@@ -7,7 +7,6 @@
 
 #include <stdint.h>
 
-#include <lotto/base/category.h>
 #include <lotto/base/task_id.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/string.h>

@@ -15,10 +15,10 @@
 
 #include <lotto/base/envvar.h>
 #include <lotto/base/libraries.h>
-#include <lotto/driver/preload.h>
 #include <lotto/cmake_variables.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/files.h>
+#include <lotto/driver/preload.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/logger_block.h>

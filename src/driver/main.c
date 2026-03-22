@@ -4,11 +4,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <lotto/driver/preload.h>
 #include <lotto/cmake_variables.h>
 #include <lotto/driver/args.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/main.h>
+#include <lotto/driver/preload.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/utils.h>
 #include <lotto/sys/assert.h>

@@ -5,8 +5,8 @@
 #ifndef LOTTO_ENGINE_H
 #define LOTTO_ENGINE_H
 
-#include <lotto/base/context.h>
-#include <lotto/base/plan.h>
+#include <lotto/runtime/capture_point.h>
+#include <lotto/engine/plan.h>
 #include <lotto/base/reason.h>
 #include <lotto/base/trace.h>
 
@@ -21,23 +21,23 @@ void engine_init(trace_t *input, trace_t *output);
  * engine_fini can be called from signal unsafe contexts, eg, from signal
  * handlers.
  */
-int engine_fini(const context_t *ctx, reason_t reason);
+int engine_fini(const capture_point *cp, reason_t reason);
 
 /**
  * Returns an action for a given captured context.
  *
  * The action has to be fulfilled following the expected contract.
  */
-plan_t engine_capture(const context_t *ctx);
+struct plan engine_capture(const capture_point *cp);
 
 /**
  * Informs engine that task is resuming after an ACTION_YIELD.
  */
-void engine_resume(const context_t *ctx);
+void engine_resume(const capture_point *cp);
 
 /**
  * Informs engine that the task has returned from a call.
  */
-void engine_return(const context_t *ctx);
+void engine_return(const capture_point *cp);
 
 #endif

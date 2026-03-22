@@ -12,16 +12,15 @@
 
 #include <limits.h>
 #include <stdint.h>
-#include <stdio.h>
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 
 #include <lotto/base/clk.h>
-#include <lotto/base/context.h>
 #include <lotto/base/marshable.h>
 #include <lotto/base/value.h>
 #include <lotto/engine/clock.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/runtime/capture_point.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/casts.h>
 #include <lotto/util/contract.h>
@@ -54,8 +53,8 @@ LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
 
 LOTTO_SUBSCRIBE_ONCE(EVENT_ENGINE__BEFORE_CAPTURE, {
 #if defined(QLOTTO_ENABLED)
-    const context_t *ctx = (const context_t *)as_any(v);
-    _clock_tick(ctx->icount);
+    const capture_point *cp = (const capture_point *)as_any(v);
+    _clock_tick(cp->icount);
 #else
     (void)v;
     _clock_tick(0);

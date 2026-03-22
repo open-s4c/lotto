@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h> // _exit
 
 #include <vsync/atomic.h>
@@ -11,21 +10,24 @@
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
+#include <dice/chains/capture.h>
 #include <lotto/base/reason.h>
-#include <lotto/engine/catmgr.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/now.h>
 #include <lotto/util/contract.h>
 #include <lotto/util/once.h>
 
-#define log(ctx, fmt, ...)                                                     \
-    logger_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx] " fmt "\n",      \
-                  ctx->id, CONTRACT(_ghost.clk, ) ctx->pc & 0xfff,             \
-                  ##__VA_ARGS__)
+#define log(cp, fmt, ...)                                                      \
+    logger_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx, type:%u, "       \
+                  "src:%u] " fmt "\n",                                         \
+                  cp->id, CONTRACT(_ghost.clk, ) cp->pc & 0xfff, cp->src_type,  \
+                  cp->src_type, ##__VA_ARGS__)
+
 
 CONTRACT(enum state{
     INIT     = 0,
@@ -60,45 +62,40 @@ LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__BEFORE_CAPTURE)
  * contract checker using ghost state
  ******************************************************************************/
 
-CONTRACT(static void _check_plan(const context_t *ctx, plan_t p) {
-    if (ctx->cat >= CAT_END_) {
-        return;
-    }
+CONTRACT(static void _check_plan(const capture_point *cp, struct plan p) {
     /* plan.next is only set if ACTION_WAKE is given */
 
     ASSERT(p.next != NO_TASK);
-    ASSERT(!p.with_slack || CAT_SLACK(ctx->cat));
+    ASSERT(!p.with_slack || cp->blocking);
     unsigned pure_actions =
         p.actions & ACTION_SHUTDOWN && p.actions != ACTION_SHUTDOWN ?
             p.actions & ~ACTION_SHUTDOWN :
             p.actions;
     switch (pure_actions) {
         case ACTION_CONTINUE:
+            // fallthru
         case ACTION_WAKE | ACTION_YIELD | ACTION_RESUME:
-            ASSERT(ctx->cat != CAT_TASK_FINI);
+            ASSERT(cp->src_type != EVENT_TASK_FINI);
             break;
-        case ACTION_CALL | ACTION_YIELD | ACTION_RESUME:
-            ASSERT(ctx->cat == CAT_TASK_CREATE);
-            break;
-        case ACTION_WAKE | ACTION_CALL | ACTION_RETURN | ACTION_YIELD |
-            ACTION_RESUME:
-            ASSERT(p.replay_type != REPLAY_OFF || p.next != ctx->id);
-            ASSERT(ctx->cat == CAT_CALL);
+        case ACTION_BLOCK | ACTION_YIELD | ACTION_RESUME:
+            ASSERT(cp->src_type == EVENT_TASK_CREATE);
             break;
         case ACTION_WAKE | ACTION_BLOCK | ACTION_RETURN | ACTION_YIELD |
             ACTION_RESUME:
-            ASSERT(p.replay_type != REPLAY_OFF || p.next != ctx->id);
-            ASSERT(ctx->cat == CAT_TASK_BLOCK);
+            ASSERT(p.replay_type != REPLAY_OFF || p.next != cp->id);
+            ASSERT(cp->blocking);
             break;
         case ACTION_WAKE:
-            ASSERT(p.next != ctx->id);
-            ASSERT(ctx->cat == CAT_TASK_FINI);
+            ASSERT(p.next != cp->id);
+            ASSERT(cp->src_type == EVENT_TASK_FINI);
             break;
         case ACTION_SHUTDOWN:
             break;
         default:
             plan_print(p);
-            logger_fatalf("(cat: %s) plan mismatch\n", category_str(ctx->cat));
+            logger_fatalf("(cat: %s, type:%u, src:%u) plan mismatch\n",
+                          ps_type_str(cp->src_type), cp->src_type,
+                          cp->src_type);
     }
 })
 
@@ -113,15 +110,15 @@ engine_init(trace_t *input, trace_t *output)
 }
 
 int
-engine_fini(const context_t *ctx, reason_t reason)
+engine_fini(const capture_point *cp, reason_t reason)
 {
     CONTRACT({ //
         ASSERT(vatomic_xchg(&_ghost.state, FINISHED) != FINISHED);
-        ASSERT(ctx->id != NO_TASK);
+        ASSERT(cp->id != NO_TASK);
     })
 
-    log(ctx, "engine_fini() called! terminating...\n");
-    sequencer_fini(ctx, reason);
+    log(cp, "engine_fini() called! terminating...\n");
+    sequencer_fini(cp, reason);
 
     bool success;
     if (IS_REASON_SHUTDOWN(reason)) {
@@ -139,13 +136,13 @@ engine_fini(const context_t *ctx, reason_t reason)
     return !success;
 }
 
-plan_t
-engine_capture(const context_t *ctx)
+struct plan
+engine_capture(const capture_point *cp)
 {
     CONTRACT({
         ASSERT(vatomic_read(&_ghost.state) != FINISHED);
-        ASSERT(ctx->func != NULL);
-        ASSERT(ctx->id != NO_TASK);
+        ASSERT(cp->func != NULL);
+        ASSERT(cp->id != NO_TASK);
 
         _ghost.clk++;
 
@@ -153,11 +150,11 @@ engine_capture(const context_t *ctx)
         ASSERT(caslock_tryacquire(&_ghost.lock));
     })
 
-    log(ctx, "CAPTURE  %s\t%s", category_str(ctx->cat), ctx->func);
+    log(cp, "CAPTURE  %s\t%s", ps_type_str(cp->src_type), cp->func);
 
-    struct value val = any(ctx);
+    struct value val = any(cp);
     LOTTO_PUBLISH(EVENT_ENGINE__BEFORE_CAPTURE, val);
-    plan_t p = sequencer_capture(ctx);
+    struct plan p = sequencer_capture(cp);
 
     CONTRACT({
         ASSERT(p.clk == _ghost.clk);
@@ -169,55 +166,54 @@ engine_capture(const context_t *ctx)
             vatomic_write(&_ghost.state, CAPTURED);
         }
 
-        if ((plan_has(p, ACTION_CALL) || plan_has(p, ACTION_BLOCK)) &&
-            ctx->cat != CAT_TASK_CREATE) {
+        if (plan_has(p, ACTION_BLOCK) && cp->src_type != EVENT_TASK_CREATE) {
             vatomic_inc(&_ghost.pending_calls);
         }
 
-        ASSERT(_ghost.running_id == ctx->id);
+        ASSERT(_ghost.running_id == cp->id);
 
         caslock_release(&_ghost.lock);
-        _check_plan(ctx, p);
+        _check_plan(cp, p);
     })
 
     if (plan_next(p) == ACTION_CONTINUE)
-        log(ctx, "CONTINUE %s\t%s", category_str(ctx->cat), ctx->func);
+        log(cp, "CONTINUE %s\t%s", ps_type_str(cp->src_type), cp->func);
 
     return p;
 }
 
 void
-engine_resume(const context_t *ctx)
+engine_resume(const capture_point *cp)
 {
-    log(ctx, "RESUME   %s\t%s", category_str(ctx->cat), ctx->func);
+    log(cp, "RESUME   %s\t%s", ps_type_str(cp->src_type), cp->func);
 
     CONTRACT({
         ASSERT(caslock_tryacquire(&_ghost.lock));
         enum state old_state = vatomic_xchg(&_ghost.state, RESUMED);
         ASSERT(old_state != FINISHED);
         ASSERT(old_state == INIT || old_state == CAPTURED);
-        ASSERT(ctx->id != NO_TASK);
-        _ghost.running_id = ctx->id;
+        ASSERT(cp->id != NO_TASK);
+        _ghost.running_id = cp->id;
     })
 
-    sequencer_resume(ctx);
+    sequencer_resume(cp);
 
     CONTRACT(caslock_release(&_ghost.lock));
 }
 
 void
-engine_return(const context_t *ctx)
+engine_return(const capture_point *cp)
 {
     CONTRACT({
-        ASSERT(ctx->id != NO_TASK);
+        ASSERT(cp->id != NO_TASK);
         if (vatomic_read(&_ghost.state) == FINISHED) {
             logger_warnf("ignoring engine_return after fini (t: %lu)\n",
-                         ctx->id);
+                         cp->id);
             return;
         }
         ASSERT(vatomic_get_dec(&_ghost.pending_calls) > 0);
     })
 
-    log(ctx, "RETURN   %s\t%s", category_str(ctx->cat), ctx->func);
-    sequencer_return(ctx);
+    log(cp, "RETURN   %s\t%s", ps_type_str(cp->src_type), cp->func);
+    sequencer_return(cp);
 }

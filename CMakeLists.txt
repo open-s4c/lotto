@@ -11,7 +11,7 @@ if(PROJECT_IS_TOP_LEVEL)
     set(CMAKE_C_FLAGS_RELEASE "-O3")
     set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
 endif()
-add_compile_options("-fPIC" "-Werror")
+add_compile_options("-fPIC" "-Werror" -DLOG_UNLOCKED)
 
 # ##############################################################################
 # Include stable options (shared with release)
@@ -26,7 +26,7 @@ include(cmake/submodule.cmake)
 # ##############################################################################
 
 set(DICE_LOG_LEVEL
-    "FATAL"
+    "INFO"
     CACHE STRING "" FORCE)
 
 set(DICE_MEMSET
@@ -59,7 +59,7 @@ set(DICE_MAX_BUILTIN_SLOTS
     CACHE STRING "" FORCE)
 
 set(DICE_MAX_TYPES
-    150
+    200
     CACHE STRING "" FORCE)
 
 add_compile_definitions(DICE_XTOR_PRIO=1000)

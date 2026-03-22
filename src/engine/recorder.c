@@ -8,7 +8,6 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
-#include <lotto/base/context.h>
 #include <lotto/base/envvar.h>
 #include <lotto/base/trace.h>
 #include <lotto/engine/pubsub.h>
@@ -25,15 +24,13 @@
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__REPLAY_END)
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__INFO_RECORD_LOAD)
 
-void __attribute__((noinline))
-recorder_end_trace()
+void __attribute__((noinline)) recorder_end_trace()
 {
     logger_debugf("trace fully loaded\n");
     // nothing happends here
 }
 
-void __attribute__((noinline))
-recorder_end_replay()
+void __attribute__((noinline)) recorder_end_replay()
 {
     logger_debugf("end of replay\n");
     LOTTO_PUBLISH(EVENT_ENGINE__REPLAY_END, nil);
@@ -192,29 +189,30 @@ recorder_replay(clk_t clk)
 }
 
 void
-recorder_record(const context_t *ctx, clk_t clk)
+recorder_record(const capture_point *cp, clk_t clk)
 {
     CONTRACT({
         ASSERT(!_ghost.finito && "do not call recorder after fini");
-        ASSERT(ctx->id != NO_TASK && "do not record for NO_TASK");
+        ASSERT(cp->id != NO_TASK && "do not record for NO_TASK");
         ASSERT(clk > 0 && "do not record at clock 0");
         ASSERT(clk > _ghost.record_clk && "clk strict monotonic");
         _ghost.record_clk = clk;
         ASSERT(clk >= _ghost.replay_clk && "record clk >= to replay");
     })
 
-    logger_debugf("recorder_record called (clk: %lu id: %lu)\n", clk, ctx->id);
+    logger_debugf("recorder_record called (clk: %lu id: %lu)\n", clk, cp->id);
 
     if (!_recorder.output)
         return;
 
     record_t *r = record_alloc(statemgr_size(STATE_TYPE_PERSISTENT));
     ASSERT(r != NULL);
-    r->kind = RECORD_SCHED;
-    r->id   = ctx->id;
-    r->cat  = ctx->cat;
-    r->pc   = ctx->pc;
-    r->clk  = clk;
+    r->kind      = RECORD_SCHED;
+    r->id        = cp->id;
+    r->src_chain = cp->src_chain;
+    r->src_type  = cp->src_type;
+    r->pc        = cp->pc;
+    r->clk       = clk;
     statemgr_marshal(&r->data, STATE_TYPE_PERSISTENT);
     _recorder_out(r);
 

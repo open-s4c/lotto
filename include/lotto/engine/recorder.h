@@ -8,9 +8,10 @@
 #include <stdbool.h>
 
 #include <lotto/base/clk.h>
-#include <lotto/base/context.h>
 #include <lotto/base/task_id.h>
 #include <lotto/base/trace.h>
+#include <lotto/runtime/capture_point.h>
+
 typedef struct replay {
     enum replay_status {
         REPLAY_DONE,  //< replay is over or never started
@@ -31,7 +32,7 @@ typedef struct replay {
  * @param ctx the capture point context
  * @param clk the current clock being resumed
  */
-void recorder_record(const context_t *ctx, clk_t clk);
+void recorder_record(const capture_point *cp, clk_t clk);
 
 /**
  * Replay by unmarshaling the current record if `clk` matches.

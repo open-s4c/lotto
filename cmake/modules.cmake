@@ -87,6 +87,34 @@ macro(new_module NAME)
     set(MODULE_SLOT ${SLOT})
 endmacro()
 
+function(lotto_tikl_define_lines OUT_VAR)
+    set(FEATURES ${ARGN})
+    string(JOIN "\n-D " DEFINES ${FEATURES})
+    if(DEFINES)
+        set(DEFINES "-D ${DEFINES}")
+    endif()
+    set(${OUT_VAR}
+        "${DEFINES}"
+        PARENT_SCOPE)
+endfunction()
+
+function(lotto_collect_enabled_module_features OUT_VAR CMAKE_FILE)
+    file(STRINGS "${CMAKE_FILE}" LOTTO_MODULE_CMAKELISTS)
+    set(FEATURES "")
+    foreach(LINE ${LOTTO_MODULE_CMAKELISTS})
+        string(REGEX MATCH "^[ \t]*add_module\\(([A-Za-z0-9_+-]+)\\)"
+               MODULE_MATCH "${LINE}")
+        if(MODULE_MATCH)
+            string(REGEX REPLACE "^[ \t]*add_module\\(([A-Za-z0-9_+-]+)\\)$"
+                                 "\\1" MODULE_NAME "${MODULE_MATCH}")
+            list(APPEND FEATURES module-${MODULE_NAME})
+        endif()
+    endforeach()
+    set(${OUT_VAR}
+        "${FEATURES}"
+        PARENT_SCOPE)
+endfunction()
+
 add_custom_target(tikl-modules)
 
 function(add_tikl_module_target NAME)
@@ -97,7 +125,8 @@ endfunction()
 
 macro(add_module NAME)
     new_module(${NAME})
-	add_tikl_module_target(${NAME})
+    list(APPEND LOTTO_TIKL_MODULE_FEATURES module-${NAME})
+    add_tikl_module_target(${NAME})
     add_subdirectory(${NAME})
 endmacro()
 

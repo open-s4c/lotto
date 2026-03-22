@@ -9,9 +9,11 @@
 
 #include "state.h"
 #include <lotto/base/tidmap.h>
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/task_velocity/events.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
@@ -72,41 +74,34 @@ _filter_by_probability(task_id task)
  * handler
  ******************************************************************************/
 STATIC void
-_task_velocity_handle(const context_t *ctx, event_t *e)
+_task_velocity_handle(const capture_point *cp, event_t *e)
 {
     ASSERT(e);
     if (e->skip || !task_velocity_config()->enabled)
         return;
 
-    ASSERT(ctx);
-    ASSERT(ctx->id != NO_TASK);
+    ASSERT(cp);
+    ASSERT(cp->id != NO_TASK);
     task_t *t = NULL;
-    switch (ctx->cat) {
-        case CAT_TASK_FINI:
-            tidmap_deregister(&_state.map, ctx->id);
-            ASSERT(!tidset_has(&e->tset, ctx->id));
-            break;
-
-        case CAT_TASK_INIT:
-            t = (task_t *)tidmap_find(&_state.map, ctx->id);
-            ASSERT(t == NULL);
-            t = (task_t *)tidmap_register(&_state.map, ctx->id);
-            ASSERT(t);
-            t->probability = LOTTO_TASK_VELOCITY_MAX;
-            break;
-        case CAT_TASK_VELOCITY:
-            t = (task_t *)tidmap_find(&_state.map, ctx->id);
-            ASSERT(t);
-            t->probability = CAST_TYPE(uint64_t, ctx->args[0].value.u64);
-            break;
-        default:
-            break;
+    if (cp->src_type == EVENT_TASK_FINI) {
+        tidmap_deregister(&_state.map, cp->id);
+        ASSERT(!tidset_has(&e->tset, cp->id));
+    } else if (cp->src_type == EVENT_TASK_INIT) {
+        t = (task_t *)tidmap_find(&_state.map, cp->id);
+        ASSERT(t == NULL);
+        t = (task_t *)tidmap_register(&_state.map, cp->id);
+        ASSERT(t);
+        t->probability = LOTTO_TASK_VELOCITY_MAX;
+    } else if (cp->src_type == EVENT_TASK_VELOCITY) {
+        t = (task_t *)tidmap_find(&_state.map, cp->id);
+        ASSERT(t);
+        t->probability = (uint64_t)((task_velocity_event_t *)cp->payload)->probability;
     }
     if (e->readonly || e->skip) {
         return;
     }
 
     tidset_filter(&e->tset, _filter_by_probability);
-    e->is_chpt |= !tidset_has(&e->tset, ctx->id);
+    e->is_chpt |= !tidset_has(&e->tset, cp->id);
 }
-REGISTER_HANDLER(_task_velocity_handle)
+REGISTER_SEQUENCER_HANDLER(_task_velocity_handle)

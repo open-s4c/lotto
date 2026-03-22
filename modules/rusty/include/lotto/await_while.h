@@ -67,6 +67,8 @@
 /* Disable await_while macros in libvsync */
 #define VSYNC_AWAIT_WHILE_H
 
+void intercept_spin_start() __attribute__((weak));
+void intercept_spin_end(uint32_t cond) __attribute__((weak));
 void _lotto_spin_start() __attribute__((weak));
 void _lotto_spin_end(uint32_t cond) __attribute__((weak));
 
@@ -78,8 +80,8 @@ void _lotto_spin_end(uint32_t cond) __attribute__((weak));
 static inline void
 lotto_spin_start()
 {
-    if (_lotto_spin_start != NULL) {
-        _lotto_spin_start();
+    if (intercept_spin_start != NULL) {
+        intercept_spin_start();
     }
 }
 
@@ -94,8 +96,8 @@ lotto_spin_start()
 static inline void
 lotto_spin_end(uint32_t cond)
 {
-    if (_lotto_spin_end != NULL) {
-        _lotto_spin_end(cond);
+    if (intercept_spin_end != NULL) {
+        intercept_spin_end(cond);
     }
 }
 

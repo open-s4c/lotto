@@ -2,11 +2,12 @@
 
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
-#include <lotto/engine/catmgr.h>
-#include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/stdio.h>
@@ -24,33 +25,48 @@
  * 3.) load filtering config file if specified
  */
 
-static double _drop[CAT_END_];
-static double _drop_less[CAT_END_];
+static double _drop[MAX_TYPES];
+static double _drop_less[MAX_TYPES];
 
 void
 _set_default_filtering()
 {
-    _drop[CAT_AFTER_AWRITE]    = 1;
-    _drop[CAT_AFTER_AREAD]     = 1;
-    _drop[CAT_AFTER_XCHG]      = 1;
-    _drop[CAT_AFTER_RMW]       = 1;
-    _drop[CAT_AFTER_CMPXCHG_S] = 1;
-    _drop[CAT_AFTER_CMPXCHG_F] = 1;
-    _drop[CAT_AFTER_FENCE]     = 1;
-    _drop[CAT_FUNC_EXIT]       = 1;
-    _drop[CAT_BEFORE_READ]     = 1;
-    _drop[CAT_BEFORE_WRITE]    = 1;
+    //    _drop[EVENT_AFTER_AWRITE]    = 1;
+    //    _drop[EVENT_AFTER_AREAD]     = 1;
+    //    _drop[EVENT_AFTER_XCHG]      = 1;
+    //    _drop[EVENT_AFTER_RMW]       = 1;
+    //    _drop[EVENT_AFTER_CMPXCHG_S] = 1;
+    //    _drop[EVENT_AFTER_CMPXCHG_F] = 1;
+    //    _drop[EVENT_AFTER_FENCE]     = 1;
+    //    _drop[EVENT_FUNC_EXIT]       = 1;
+    //    _drop[EVENT_BEFORE_READ]     = 1;
+    //    _drop[EVENT_BEFORE_WRITE]    = 1;
 }
 
 STATIC void _load_state();
+
+static type_id
+_type_from_number(const char *value)
+{
+    unsigned long type = strtoul(value, NULL, 10);
+    return type < MAX_TYPES ? (type_id)type : ANY_EVENT;
+}
+
+static type_id
+_effective_type(const capture_point *cp)
+{
+    type_id type = cp->type != 0 ? cp->type : cp->src_type;
+    ASSERT(type < MAX_TYPES);
+    return type;
+}
 
 LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
     _set_default_filtering();
     *_drop_less = *_drop;
 
 #ifdef QLOTTO_ENABLED
-    _drop_less[CAT_BEFORE_READ]  = 0;
-    _drop_less[CAT_BEFORE_WRITE] = 0;
+    _drop_less[EVENT_BEFORE_READ]  = 0;
+    _drop_less[EVENT_BEFORE_WRITE] = 0;
 #endif
 
     if (filtering_config()->enabled)
@@ -101,18 +117,6 @@ deblank(char *input, size_t length)
     return output;
 }
 
-#define GEN_CAT(cat)                                                           \
-    if (!sys_strncmp(config_data + i, category_str(CAT_##cat),                 \
-                     sys_strlen(category_str(CAT_##cat)))) {                   \
-        i += sys_strlen(category_str(CAT_##cat));                              \
-        if (config_data[i] == '=') {                                           \
-            i++;                                                               \
-            _drop[CAT_##cat] = atof(config_data + i);                          \
-        } else {                                                               \
-            i -= sys_strlen(category_str(CAT_##cat));                          \
-        }                                                                      \
-    }
-
 /* Parses the raw information from the config file and places it in _drop[] */
 static void
 _parse_config()
@@ -125,32 +129,40 @@ _parse_config()
 
     config_data = deblank(config_data, config_data_length);
 
-    size_t i = 0;
-    for (size_t l = 0; l < MAX_CONFIG_ENTRIES; l++, i++) {
-        bool skip_line = false;
-        for (; config_data[i] != '\n'; i++) {
-            if (config_data[i] == '\0')
-                return;
+    char *line = config_data;
+    for (size_t l = 0; l < MAX_CONFIG_ENTRIES && *line; l++) {
+        char *next = strchr(line, '\n');
+        if (next != NULL) {
+            *next = '\0';
+        }
 
-            if (skip_line)
-                continue;
-
-            if (config_data[i] == '#') {
-                skip_line = true;
-                continue;
+        if (*line != '\0' && *line != '#') {
+            char *eq = strchr(line, '=');
+            if (eq != NULL) {
+                *eq = '\0';
+                type_id type = _type_from_number(line);
+                if (type != ANY_EVENT) {
+                    _drop[type] = atof(eq + 1);
+                }
             }
+        }
 
-            FOR_EACH_CATEGORY
+        if (next == NULL) {
+            break;
+        }
+        line = next + 1;
+    }
+}
+
+static void
+_print_config()
+{
+    for (type_id type = 0; type < MAX_TYPES; type++) {
+        if (_drop[type] != 0) {
+            logger_debugln("%u = %f", type, _drop[type]);
         }
     }
 }
-#undef GEN_CAT
-
-#define GEN_CAT(cat)                                                           \
-    logger_debugln("%s = %f", category_str(CAT_##cat), _drop[CAT_##cat]);
-void
-_print_config(){FOR_EACH_CATEGORY}
-#undef GEN_CAT
 
 STATIC void _load_state()
 {
@@ -164,18 +176,19 @@ STATIC void _load_state()
  * handler functions
  ******************************************************************************/
 STATIC void
-_filtering_handle(const context_t *ctx, event_t *e)
+_filtering_handle(const capture_point *cp, event_t *e)
 {
     if (!filtering_config()->enabled)
         return;
 
-    ASSERT(ctx);
-    ASSERT(ctx->id != NO_TASK);
+    ASSERT(cp);
+    ASSERT(cp->id != NO_TASK);
     ASSERT(e);
 
-    double p = _drop[ctx->cat];
+    type_id type = _effective_type(cp);
+    double p     = _drop[type];
     if (e->filter_less) {
-        p = _drop_less[ctx->cat];
+        p = _drop_less[type];
     }
 
     if (p == 0)
@@ -188,8 +201,8 @@ _filtering_handle(const context_t *ctx, event_t *e)
             return;
     }
 
-    e->next     = ctx->id;
+    e->next     = cp->id;
     e->readonly = true;
     e->skip     = true;
 }
-REGISTER_HANDLER(_filtering_handle)
+REGISTER_SEQUENCER_HANDLER(_filtering_handle)

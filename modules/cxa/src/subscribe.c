@@ -4,21 +4,34 @@
 #include <dice/interpose.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>
-#include <lotto/base/arg.h>
-#include <lotto/base/category.h>
-#include <lotto/base/context.h>
-#include <lotto/runtime/intercept.h>
+#include <dice/self.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/modules/cxa/events.h>
+#include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress.h>
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_CXA_GUARD_ACQUIRE, {
     struct __cxa_guard_acquire_event *ev = EVENT_PAYLOAD(event);
-    context_t *ctx =
-        ctx_pc(.pc = (uintptr_t)ev->pc, .cat = CAT_CALL,
-               .func = "__cxa_guard_acquire", .args = {arg_ptr(ev->addr)}, );
-    intercept_before_call(ctx);
+    capture_point cp                     = {
+                            .src_chain = CAPTURE_BEFORE,
+                            .src_type  = EVENT_CXA_GUARD_CALL,
+                            .payload   = ev,
+                            .pc        = (uintptr_t)ev->pc,
+                            .func      = "__cxa_guard_acquire",
+                            .blocking  = true,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, type, &cp, md);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_CXA_GUARD_ACQUIRE, {
-    intercept_after_call("__cxa_guard_acquire");
+    capture_point cp = {
+        .src_chain = CAPTURE_AFTER,
+        .src_type  = EVENT_CXA_GUARD_CALL,
+        .payload   = NULL,
+        .func      = "__cxa_guard_acquire",
+        .blocking  = true,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, type, &cp, md);
     return PS_OK;
 })

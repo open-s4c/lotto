@@ -1,8 +1,10 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <lotto/base/tidbag.h>
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
 
@@ -11,24 +13,24 @@ static tidbag_t _in_region;
 REGISTER_EPHEMERAL(_in_region, { tidbag_init(&_in_region); })
 
 STATIC void
-_region_filter_handle(const context_t *ctx, event_t *e)
+_region_filter_handle(const capture_point *cp, event_t *e)
 {
-    ASSERT(ctx && ctx->id != NO_TASK);
+    ASSERT(cp && cp->id != NO_TASK);
     ASSERT(e);
 
     if (!region_filter_config()->enabled)
         return;
 
-    task_id tid = ctx->vid != NO_TASK ? ctx->vid : ctx->id;
+    task_id tid = cp->vid != NO_TASK ? cp->vid : cp->id;
 
-    switch (ctx->cat) {
-        case CAT_REGION_IN:
+    switch (cp->type) {
+        case EVENT_REGION_IN:
             if (!tidbag_has(&_in_region, tid)) {
                 logger_infof("enter region %lx\n", tid);
             }
             tidbag_insert(&_in_region, tid);
             break;
-        case CAT_REGION_OUT:
+        case EVENT_REGION_OUT:
             tidbag_remove(&_in_region, tid);
             if (!tidbag_has(&_in_region, tid)) {
                 logger_infof("leave region %lx\n", tid);
@@ -42,4 +44,4 @@ _region_filter_handle(const context_t *ctx, event_t *e)
         e->filter_less = true;
     }
 }
-REGISTER_HANDLER(_region_filter_handle)
+REGISTER_SEQUENCER_HANDLER(_region_filter_handle)

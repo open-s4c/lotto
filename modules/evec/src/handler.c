@@ -1,11 +1,12 @@
 
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/map.h>
-#include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/evec.h>
+#include <lotto/modules/evec/events.h>
 #include <lotto/modules/timeout/timeout.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/casts.h>
@@ -266,32 +267,34 @@ _should_wait(task_id id)
 }
 
 static void
-_evec_handle(const context_t *ctx, event_t *e)
+_evec_handle(const capture_point *cp, event_t *e)
 {
     ASSERT(e);
-    ASSERT(ctx);
-    ASSERT(ctx->id != NO_TASK);
+    ASSERT(cp);
+    ASSERT(cp->id != NO_TASK);
 
-    uint64_t eid   = ctx->args[0].value.u64;
     bool may_block = false;
     clock_time(&_state.now);
     _state.received_timeout = false;
     _check_timeouts(true);
-    switch (ctx->cat) {
-        case CAT_EVEC_WAIT:
-            _handle_wait(ctx->id, eid);
+    switch (cp->src_type) {
+        case EVENT_EVEC_WAIT: {
+            struct evec_timed_wait_event *ev = CP_PAYLOAD(ev);
+            _handle_wait(cp->id, (uint64_t)(uintptr_t)ev->addr);
             may_block = e->is_chpt = true;
             break;
-        case CAT_EVEC_TIMED_WAIT:
-            _handle_timed_wait(
-                ctx->id, eid, (const struct timespec *)ctx->args[1].value.ptr,
-                (enum lotto_timed_wait_status *)ctx->args[2].value.ptr);
+        }
+        case EVENT_EVEC_TIMED_WAIT: {
+            struct evec_timed_wait_event *ev = CP_PAYLOAD(ev);
+            _handle_timed_wait(cp->id, (uint64_t)(uintptr_t)ev->addr,
+                               ev->abstime, &ev->ret);
             may_block = e->is_chpt = true;
             break;
-        case CAT_EVEC_PREPARE:
-        case CAT_EVEC_CANCEL:
-        case CAT_EVEC_WAKE:
-        case CAT_EVEC_MOVE:
+        }
+        case EVENT_EVEC_PREPARE:
+        case EVENT_EVEC_CANCEL:
+        case EVENT_EVEC_WAKE:
+        case EVENT_EVEC_MOVE:
             e->is_chpt = true;
             break;
         default:
@@ -306,26 +309,34 @@ _evec_handle(const context_t *ctx, event_t *e)
         e->any_task_filter = _should_wait;
     }
 }
-REGISTER_HANDLER(_evec_handle);
+REGISTER_SEQUENCER_HANDLER(_evec_handle);
 
-LOTTO_SUBSCRIBE(EVENT_ENGINE__NEXT_TASK, {
-    const context_t *ctx = (context_t *)as_any(v);
-    ASSERT(ctx);
+LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {
+    const capture_point *cp = EVENT_PAYLOAD(cp);
+    ASSERT(cp->id != NO_TASK);
 
-    uint64_t eid = ctx->args[0].value.u64;
-    switch (ctx->cat) {
-        case CAT_EVEC_PREPARE:
-            _posthandle_prepare(ctx->id, eid);
+    switch (type) {
+        case EVENT_EVEC_PREPARE: {
+            struct evec_wake_event *ev = CP_PAYLOAD(ev);
+            _posthandle_prepare(cp->id, (uint64_t)(uintptr_t)ev->addr);
             break;
-        case CAT_EVEC_CANCEL:
-            _posthandle_cancel(ctx->id, eid);
+        }
+        case EVENT_EVEC_CANCEL: {
+            struct evec_wake_event *ev = CP_PAYLOAD(ev);
+            _posthandle_cancel(cp->id, (uint64_t)(uintptr_t)ev->addr);
             break;
-        case CAT_EVEC_WAKE:
-            _posthandle_wake(ctx->id, eid, ctx->args[1].value.u32);
+        }
+        case EVENT_EVEC_WAKE: {
+            struct evec_wake_event *ev = CP_PAYLOAD(ev);
+            _posthandle_wake(cp->id, (uint64_t)(uintptr_t)ev->addr, ev->cnt);
             break;
-        case CAT_EVEC_MOVE:
-            _posthandle_move(ctx->id, eid, ctx->args[1].value.u64);
+        }
+        case EVENT_EVEC_MOVE: {
+            struct evec_move_event *ev = CP_PAYLOAD(ev);
+            _posthandle_move(cp->id, (uint64_t)(uintptr_t)ev->src,
+                             (uint64_t)(uintptr_t)ev->dst);
             break;
+        }
         default:
             break;
     }

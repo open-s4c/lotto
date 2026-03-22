@@ -3,7 +3,7 @@
 
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/reason.h>
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/termination/state.h>
@@ -14,8 +14,9 @@ static uint64_t cur_preempt = 0;
 static task_id last         = 0;
 
 STATIC void
-_termination_handle(const context_t *ctx, event_t *e)
+_termination_handle(const capture_point *cp, event_t *e)
 {
+    (void)cp;
     if (IS_REASON_SHUTDOWN(e->reason)) {
         return;
     }
@@ -55,4 +56,4 @@ _termination_handle(const context_t *ctx, event_t *e)
             break;
     }
 }
-REGISTER_HANDLER(_termination_handle);
+REGISTER_SEQUENCER_HANDLER(_termination_handle);

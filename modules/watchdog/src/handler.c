@@ -1,7 +1,9 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
-#include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
+#include <lotto/engine/sequencer.h>
+#include <lotto/modules/yield/context_payload.h>
+#include <lotto/runtime/memaccess_payload.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
@@ -52,9 +54,9 @@ _watchdog_ok(task_id id)
  * handler function
  ******************************************************************************/
 STATIC void
-_watchdog_handle(const context_t *ctx, event_t *e)
+_watchdog_handle(const capture_point *cp, event_t *e)
 {
-    ASSERT(ctx && ctx->id != NO_TASK);
+    ASSERT(cp && cp->id != NO_TASK);
     ASSERT(e);
     if (e->skip || !watchdog_config()->enabled)
         return;
@@ -62,26 +64,28 @@ _watchdog_handle(const context_t *ctx, event_t *e)
     if (e->readonly)
         return;
 
-    switch (ctx->cat) {
-        case CAT_AFTER_AREAD:
-        case CAT_AFTER_AWRITE:
-        case CAT_AFTER_XCHG:
-        case CAT_AFTER_CMPXCHG_S:
-        case CAT_AFTER_CMPXCHG_F:
-        case CAT_AFTER_RMW:
-        case CAT_AFTER_FENCE:
-        case CAT_BEFORE_READ:
-        case CAT_BEFORE_WRITE:
-        case CAT_USER_YIELD:
+    switch (cp->src_type) {
+        case EVENT_MA_AREAD:
+        case EVENT_MA_AWRITE:
+        case EVENT_MA_XCHG:
+        case EVENT_MA_CMPXCHG:
+        case EVENT_MA_RMW:
+        case EVENT_MA_FENCE:
+            if (cp->src_chain != CAPTURE_AFTER)
+                break;
+            // fallthru
+        case EVENT_MA_READ:
+        case EVENT_MA_WRITE:
 
-            /* Typically, we do not reschedule when performing non-atomic
-             * reads or writes. However, to avoid tasks stuck in spinloops,
-             * we limit for how long a task may run uninterrupted. */
-            if (_watchdog_ok(ctx->id))
+            /* Typically, we do not reschedule when performing
+             * non-atomic reads or writes. However, to avoid tasks stuck
+             * in spinloops, we limit for how long a task may run
+             * uninterrupted. */
+            if (_watchdog_ok(cp->id))
                 break;
 
             /* Avoid repeating current task: remove it from the tset. */
-            tidset_remove(&e->tset, ctx->id);
+            tidset_remove(&e->tset, cp->id);
             if (!e->is_chpt) {
                 e->reason  = REASON_WATCHDOG;
                 e->is_chpt = true;
@@ -90,7 +94,18 @@ _watchdog_handle(const context_t *ctx, event_t *e)
             break;
 
         default:
+            if (context_yield_event(cp) != CONTEXT_YIELD_USER) {
+                break;
+            }
+            if (_watchdog_ok(cp->id))
+                break;
+            tidset_remove(&e->tset, cp->id);
+            if (!e->is_chpt) {
+                e->reason  = REASON_WATCHDOG;
+                e->is_chpt = true;
+            }
+            e->selector = SELECTOR_RANDOM;
             break;
     }
 }
-REGISTER_HANDLER(_watchdog_handle)
+REGISTER_SEQUENCER_HANDLER(_watchdog_handle)

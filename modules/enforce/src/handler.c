@@ -2,12 +2,13 @@
 #include <lotto/base/marshable.h>
 #include <lotto/base/stable_address.h>
 #include <lotto/base/string.h>
-#include <lotto/engine/catmgr.h>
-#include <lotto/engine/dispatcher.h>
+#include <dice/pubsub.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/state.h>
 #include <lotto/modules/enforce/state.h>
+#include <lotto/runtime/memaccess_payload.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/stdio.h>
@@ -18,21 +19,31 @@
 #include <lotto/util/once.h>
 
 #define PASTE(a, b) a##b
-#define EQUAL(x)    (enforce_state()->ctx.PASTE(, x) == ctx->PASTE(, x))
+#define EQUAL_CP(x) (enforce_state()->cp.PASTE(, x) == cp->PASTE(, x))
 #define EQUAL_PC                                                               \
-    (pc = stable_address_get(ctx->pc,                                          \
+    (pc = stable_address_get(cp->pc,                                           \
                              sequencer_config()->stable_address_method),       \
      stable_address_equals(&enforce_state()->pc, &pc))
 #define EQUAL_DATA                                                             \
-    (sys_memcmp(enforce_state()->data, (char *)ctx->args[0].value.ptr,         \
-                ctx->args[1].value.u64) == 0 &&                                \
-     (ctx->args[1].value.u64 == ENFORCE_DATA_SIZE ||                           \
-      (((char *)ctx->args[0].value.ptr)[ctx->args[1].value.u64] == 0 &&        \
-       sys_memcmp((char *)ctx->args[0].value.ptr + ctx->args[1].value.u64,     \
-                  (char *)ctx->args[0].value.ptr + ctx->args[1].value.u64 + 1, \
-                  ENFORCE_DATA_SIZE - ctx->args[1].value.u64 - 1) == 0)))
+    (sys_memcmp(enforce_state()->data, (char *)context_memaccess_addr(cp),     \
+                context_memaccess_size(cp)) == 0 &&                            \
+     (context_memaccess_size(cp) == ENFORCE_DATA_SIZE ||                       \
+      (((char *)context_memaccess_addr(cp))[context_memaccess_size(cp)] ==     \
+           0 &&                                                                \
+       sys_memcmp((char *)context_memaccess_addr(cp) +                         \
+                      context_memaccess_size(cp),                              \
+                  (char *)context_memaccess_addr(cp) +                         \
+                      context_memaccess_size(cp) + 1,                          \
+                  ENFORCE_DATA_SIZE - context_memaccess_size(cp) - 1) == 0)))
 #define EQUAL_SEED (enforce_state()->seed == prng_seed())
 #define MODE(x)    (enforce_modes_has(enforce_config()->modes, ENFORCE_MODE_##x))
+#define EQUAL_ADDR (enforce_state()->addr == context_memaccess_addr(cp))
+
+static type_id
+_effective_type(const capture_point *cp)
+{
+    return cp->type != 0 ? cp->type : cp->src_type;
+}
 
 static arg_t
 _read_val(const arg_t *ptr, size_t width)
@@ -60,36 +71,29 @@ _read_val(const arg_t *ptr, size_t width)
 }
 
 bool
-_as_expected(const context_t *ctx)
+_as_expected(const capture_point *cp)
 {
     stable_address_t pc;
-    if ((MODE(TID) && !EQUAL(id)) || (MODE(CAT) && !EQUAL(cat)) ||
+    context_memaccess_event_t ma = context_memaccess_event(cp);
+    bool has_memaccess           = ma != CONTEXT_MA_NONE;
+    if ((MODE(TID) && !EQUAL_CP(id)) ||
+        (MODE(CAT) && enforce_state()->cp.type != _effective_type(cp)) ||
         (MODE(PC) && !EQUAL_PC) ||
-        (MODE(ADDRESS) && !EQUAL(args[0].value.u64)) ||
+        (MODE(ADDRESS) && has_memaccess && !EQUAL_ADDR) ||
         (MODE(SEED) && !EQUAL_SEED))
         return false;
 
-    switch (ctx->cat) {
-        case CAT_BEFORE_READ:
-        case CAT_BEFORE_AREAD:
-        case CAT_BEFORE_WRITE:
-        case CAT_BEFORE_AWRITE:
+    switch (ma) {
+        case CONTEXT_MA_BEFORE_READ:
+        case CONTEXT_MA_BEFORE_AREAD:
+        case CONTEXT_MA_BEFORE_WRITE:
+        case CONTEXT_MA_BEFORE_AWRITE:
             if (MODE(DATA)) {
-                arg_t a = _read_val(&ctx->args[0], ctx->args[1].value.u64);
+                arg_t p = arg_ptr((void *)context_memaccess_addr(cp));
+                arg_t a = _read_val(&p, context_memaccess_size(cp));
                 if (enforce_state()->val.value.u64 != a.value.u64) {
                     return false;
                 }
-            }
-            break;
-
-        case CAT_ENFORCE:
-            if (!MODE(CUSTOM)) {
-                break;
-            }
-            ASSERT(ctx->args[0].width == ARG_PTR);
-            ASSERT(ctx->args[1].value.u64 <= ENFORCE_DATA_SIZE);
-            if (!EQUAL_DATA) {
-                return false;
             }
             break;
 
@@ -101,7 +105,7 @@ _as_expected(const context_t *ctx)
 }
 
 #define REPORT_CTX(fmt, F, x)                                                  \
-    REPORT(fmt, F, x, enforce_state()->ctx.PASTE(, x), ctx->PASTE(, x))
+    REPORT(fmt, F, x, enforce_state()->cp.PASTE(, x), cp->PASTE(, x))
 
 #define REPORT(fmt, F, n, x, y)                                                \
     do {                                                                       \
@@ -113,18 +117,23 @@ _as_expected(const context_t *ctx)
 #define _(X) X
 
 static void
-_report(const context_t *ctx)
+_report(const capture_point *cp)
 {
+    context_memaccess_event_t ma = context_memaccess_event(cp);
+    bool has_memaccess           = ma != CONTEXT_MA_NONE;
     stable_address_t pc;
-    if (!EQUAL(id))
+    if (!EQUAL_CP(id))
         REPORT_CTX("%lu", _, id);
-    if (!EQUAL(cat))
-        REPORT_CTX("%s", category_str, cat);
-    if (MODE(ADDRESS) && !EQUAL(args[0].value.u64))
-        REPORT_CTX("%lx", _, args[0].value.u64);
+    if (MODE(CAT) && enforce_state()->cp.type != _effective_type(cp))
+        REPORT("%s", ps_type_str, cat, enforce_state()->cp.type,
+               _effective_type(cp));
+    if (MODE(ADDRESS) && has_memaccess && !EQUAL_ADDR)
+        REPORT("%lx", _, addr, enforce_state()->addr,
+               context_memaccess_addr(cp));
     if (MODE(DATA) &&
-        (ctx->cat == CAT_BEFORE_READ || ctx->cat == CAT_BEFORE_AREAD)) {
-        arg_t a = _read_val(&ctx->args[0], ctx->args[1].value.u64);
+        (ma == CONTEXT_MA_BEFORE_READ || ma == CONTEXT_MA_BEFORE_AREAD)) {
+        arg_t p = arg_ptr((void *)context_memaccess_addr(cp));
+        arg_t a = _read_val(&p, context_memaccess_size(cp));
         if (enforce_state()->val.value.u64 != a.value.u64) {
             logger_errorf("MISMATCH [field: val, expected: %lu, actual: %lu]\n",
                           enforce_state()->val.value.u64, a.value.u64);
@@ -133,22 +142,7 @@ _report(const context_t *ctx)
     if (MODE(PC) && !EQUAL_PC)
         REPORT_CTX("%p", (void *), pc);
 
-    if (ctx->cat == CAT_ENFORCE && !EQUAL_DATA) {
-        struct value val = on();
-        LOTTO_PUBLISH(EVENT_ENFORCE__VIOLATED, val);
-        logger_errorf("MISMATCH [field: enforce, expected: ");
-        for (size_t i = 0; i < ENFORCE_DATA_SIZE; i++) {
-            logger_errorf("%2.2x", enforce_state()->data[i]);
-        }
-        logger_errorf(", actual: ");
-        for (size_t i = 0; i < ctx->args[1].value.u64; i++) {
-            logger_errorf("%2.2x",
-                          *((unsigned char *)ctx->args[0].value.ptr + i));
-        }
-        logger_errorf("]\n");
-    }
-
-    if (!EQUAL_SEED) {
+    if (MODE(SEED) && !EQUAL_SEED) {
         REPORT("%lu", _, seed, enforce_state()->seed, prng_seed());
     }
 }
@@ -156,29 +150,21 @@ _report(const context_t *ctx)
 LOTTO_ADVERTISE_TYPE(EVENT_ENFORCE__VIOLATED)
 
 void
-_save(const context_t *ctx, const event_t *e)
+_save(const capture_point *cp, const event_t *e)
 {
-    switch (ctx->cat) {
-        case CAT_BEFORE_READ:
-        case CAT_BEFORE_AREAD:
-        case CAT_BEFORE_WRITE:
-        case CAT_BEFORE_AWRITE:
-            if (MODE(DATA)) {
-                enforce_state()->val =
-                    _read_val(&ctx->args[0], ctx->args[1].value.u64);
-            }
-            break;
+    context_memaccess_event_t ma = context_memaccess_event(cp);
+    bool has_memaccess           = ma != CONTEXT_MA_NONE;
 
-        case CAT_ENFORCE:
-            if (!MODE(CUSTOM)) {
-                break;
+    switch (_effective_type(cp)) {
+        case EVENT_BEFORE_READ:
+        case EVENT_BEFORE_AREAD:
+        case EVENT_BEFORE_WRITE:
+        case EVENT_BEFORE_AWRITE:
+            if (MODE(DATA)) {
+                arg_t p = arg_ptr((void *)context_memaccess_addr(cp));
+                enforce_state()->val =
+                    _read_val(&p, context_memaccess_size(cp));
             }
-            ASSERT(ctx->args[0].width == ARG_PTR);
-            ASSERT(ctx->args[1].value.u64 <= ENFORCE_DATA_SIZE);
-            sys_memcpy(enforce_state()->data, (char *)ctx->args[0].value.ptr,
-                       ctx->args[1].value.u64);
-            sys_memset(enforce_state()->data + ctx->args[1].value.u64, 0,
-                       ENFORCE_DATA_SIZE - ctx->args[1].value.u64);
             break;
 
         default:
@@ -186,11 +172,15 @@ _save(const context_t *ctx, const event_t *e)
     }
     enforce_state()->clk = e->clk;
     if (MODE(CAT) || MODE(TID) || MODE(ADDRESS)) {
-        enforce_state()->ctx = *ctx;
+        enforce_state()->cp = *cp;
+        enforce_state()->cp.type = _effective_type(cp);
+        if (MODE(ADDRESS) && has_memaccess) {
+            enforce_state()->addr = context_memaccess_addr(cp);
+        }
     }
     if (MODE(PC)) {
         enforce_state()->pc = stable_address_get(
-            ctx->pc, sequencer_config()->stable_address_method);
+            cp->pc, sequencer_config()->stable_address_method);
     }
     if (MODE(SEED)) {
         enforce_state()->seed = prng_seed();
@@ -217,20 +207,18 @@ check_aslr()
 }
 
 void
-_handle(const context_t *ctx, event_t *cp)
+_handle(const capture_point *ctx, event_t *cp)
 {
     once(check_aslr());
     if (enforce_config()->modes == ENFORCE_MODE_NONE)
         return;
-    if (MODE(CUSTOM) && ctx->cat == CAT_ENFORCE) {
-        cp->should_record = true;
-    }
     if (cp->replay && cp->clk == enforce_state()->clk) {
         if (!_as_expected(ctx)) {
             logger_errorf(
-                "Replay mismatch! cappt = [clk: %lu, id: %lu, cat: %s, pc: "
+                "Replay mismatch! cappt = [clk: %lu, id: %lu, type: %s, pc: "
                 "%p]\n",
-                cp->clk, ctx->id, category_str(ctx->cat), (void *)ctx->pc);
+                cp->clk, ctx->id, ps_type_str(_effective_type(ctx)),
+                (void *)ctx->pc);
             _report(ctx);
             logger_fatalf("unexpected capture point\n");
             sys_abort();
@@ -238,4 +226,4 @@ _handle(const context_t *ctx, event_t *cp)
     }
     _save(ctx, cp);
 }
-REGISTER_HANDLER(_handle)
+REGISTER_SEQUENCER_HANDLER(_handle)

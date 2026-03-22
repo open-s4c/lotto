@@ -4,10 +4,11 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <lotto/base/tidmap.h>
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/ichpt/ichpt.h>
 #include <lotto/modules/race/race_result.h>
+#include <lotto/runtime/memaccess_payload.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
@@ -189,63 +190,76 @@ race_print(race_t race)
 }
 
 race_t
-race_check(const context_t *ctx, clk_t clk)
+race_check(const capture_point *cp, clk_t clk)
 {
-    const category_t cat = ctx->cat;
-    race_t race          = {0};
-    ot_entry e           = {
-                  .addr    = ctx->args[0].value.ptr,
-                  .id      = ctx->vid != NO_TASK ? ctx->vid : ctx->id,
-                  .virtual = ctx->vid != NO_TASK,
-                  .pc      = ctx->pc,
+    race_t race = {0};
+    ot_entry e  = {
+         .addr    = 0,
+         .id      = cp->vid != NO_TASK ? cp->vid : cp->id,
+         .virtual = cp->vid != NO_TASK,
+         .pc      = cp->pc,
     };
 
+    ot_set *oset = ot_get_or_reg(e.id);
+    switch (cp->src_chain) {
+        default: // BEFORE or EVENT
+            switch (cp->src_type) {
+                case EVENT_MA_AREAD:
+                    e.atomic = true;
+                    // fallthru
+                case EVENT_MA_READ:
+                    e.readonly = true;
+                    // fallthru
+                case EVENT_MA_WRITE:
+                    e.addr = context_memaccess_addr(cp);
+                    if (e.addr == 0)
+                        return race;
 #ifndef RACE_DEFAULT
-    if (e.addr & MASK)
-        return race;
+                    if (e.addr & MASK)
+                        return race;
 #endif
 
-    ot_set *oset = ot_get_or_reg(e.id);
-    switch (cat) {
-        case CAT_BEFORE_AREAD:
-            e.atomic = true;
-            // fallthru
-        case CAT_BEFORE_READ:
-            e.readonly = true;
-            // fallthru
-        case CAT_BEFORE_WRITE:
-            if (e.addr == 0)
-                return race;
+                    ot_add(oset, &e);
+                    race = ot_conflict(oset, &e, clk);
+                    if (race.addr)
+                        return race;
+                    break;
 
-            ot_add(oset, &e);
-            race = ot_conflict(oset, &e, clk);
-            if (race.addr)
-                return race;
+                case EVENT_MA_AWRITE:
+                case EVENT_MA_CMPXCHG:
+                case EVENT_MA_XCHG:
+                case EVENT_MA_RMW:
+                    e.addr = context_memaccess_addr(cp);
+                    if (e.addr == 0)
+                        return race;
+#ifndef RACE_DEFAULT
+                    if (e.addr & MASK)
+                        return race;
+#endif
+
+                    e.atomic   = true;
+                    e.readonly = false;
+                    race       = ot_conflict(oset, &e, clk);
+                    if (race.addr)
+                        return race;
+                    break;
+                default:
+                    break;
+            }
             break;
 
-        case CAT_BEFORE_AWRITE:
-        case CAT_BEFORE_CMPXCHG:
-        case CAT_BEFORE_XCHG:
-        case CAT_BEFORE_RMW:
-            if (e.addr == 0)
-                return race;
-
-            e.atomic   = true;
-            e.readonly = false;
-            race       = ot_conflict(oset, &e, clk);
-            if (race.addr)
-                return race;
-            break;
-
-        case CAT_AFTER_CMPXCHG_F:
-        case CAT_AFTER_CMPXCHG_S:
-        case CAT_AFTER_AWRITE:
-        case CAT_AFTER_XCHG:
-        case CAT_AFTER_RMW:
-        case CAT_AFTER_FENCE:
-            ot_clear(oset);
-            break;
-        default:
+        case CAPTURE_AFTER:
+            switch (cp->src_type) {
+                case EVENT_MA_CMPXCHG:
+                case EVENT_MA_AWRITE:
+                case EVENT_MA_XCHG:
+                case EVENT_MA_RMW:
+                case EVENT_MA_FENCE:
+                    ot_clear(oset);
+                    break;
+                default:
+                    break;
+            }
             break;
     }
     return race;
@@ -255,30 +269,28 @@ race_check(const context_t *ctx, clk_t clk)
  * handler
  ******************************************************************************/
 STATIC void
-_race_handle(const context_t *ctx, event_t *e)
+_race_handle(const capture_point *cp, event_t *e)
 {
-    ASSERT(ctx && ctx->id != NO_TASK);
+    ASSERT(cp && cp->id != NO_TASK);
     ASSERT(e);
 
     if (!race_config()->enabled)
         return;
 
 #if defined(QLOTTO_ENABLED)
-    if (((ctx->pstate >> 2) & 0x3) != 0)
+    if (((cp->pstate >> 2) & 0x3) != 0)
         return;
 #endif
 
-    switch (ctx->cat) {
-        case CAT_TASK_FINI:
-            ot_lazy_dereg(ctx->vid != NO_TASK ? ctx->vid : ctx->id, e->clk);
-            // fallthru
-        case CAT_TASK_INIT:
-            return;
-        default:
-            break;
+    if (cp->src_type == EVENT_TASK_FINI) {
+        ot_lazy_dereg(cp->vid != NO_TASK ? cp->vid : cp->id, e->clk);
+        return;
+    }
+    if (cp->src_type == EVENT_TASK_INIT) {
+        return;
     }
 
-    race_t race = race_check(ctx, e->clk);
+    race_t race = race_check(cp, e->clk);
     if (race.addr == 0) {
         /* do some cleanup every couple of clks */
         if ((e->clk % LAZY_DEREG_DELAY) == 0)
@@ -305,4 +317,4 @@ _race_handle(const context_t *ctx, event_t *e)
             add_ichpt(race.loc2.pc);
     }
 }
-REGISTER_HANDLER(_race_handle)
+REGISTER_SEQUENCER_HANDLER(_race_handle)

@@ -15,7 +15,7 @@ use lotto::collections::FxHashMap;
 use lotto::engine::handler::EventResult;
 use lotto::engine::handler::{Address, ContextInfo, TaskId};
 use lotto::engine::handler::{ExecuteArrivalHandler, ExecuteHandler};
-use lotto::engine::pubsub::CustomCatTrait;
+use lotto::engine::pubsub::CustomContextTrait;
 use lotto::log::info;
 use lotto::log::{debug, trace, warn};
 use lotto::raw::task_id;
@@ -187,13 +187,11 @@ impl ExecuteHandler for SwitchWaitingThread {
 
 pub fn register() {
     {
-        let _ = await_cat();
-        let await_cat_num = await_cat().0;
         let table = &mut lotto::engine::handler::ENGINE_DATA
             .try_lock()
             .expect("single threaded")
-            .custom_cat_table;
-        table.insert(await_cat_num, parse_await_context());
+            .custom_event_table;
+        table.insert(lotto::raw::EVENT_AWAIT, parse_await_context());
     }
     lotto::engine::pubsub::subscribe_arrival_or_execute(&*HANDLER);
     lotto::brokers::statemgr::register(&*HANDLER);

@@ -3,7 +3,7 @@
 // RUN: %lotto %stress -r 1 --enforcement-mode ADDRESS --record-granularity CAPTURE -- %b
 // RUN: sleep 1
 // RUN: (! %lotto %replay 3>&2 2>&1 1>&3) | %check %s
-// CHECK: MISMATCH [field: args[0].value.u64
+// CHECK: MISMATCH [field: addr
 // clang-format on
 
 #include <pthread.h>

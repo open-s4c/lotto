@@ -4,6 +4,8 @@
  */
 /* IWYU pragma: begin_keep */
 #include "dice/events/memaccess.h"
+#include "dice/events/pthread.h"
+#include "dice/events/stacktrace.h"
 #include "lotto/base/cappt.h"
 #include "lotto/base/context.h"
 #include "lotto/base/envvar.h"
@@ -21,7 +23,6 @@
 #include "lotto/base/trace_file.h"
 #include "lotto/base/value.h"
 #include "lotto/base/vec.h"
-#include "lotto/driver/preload.h"
 #include "lotto/driver/args.h"
 #include "lotto/driver/events.h"
 #include "lotto/driver/exec.h"
@@ -30,20 +31,25 @@
 #include "lotto/driver/flags/memmgr.h"
 #include "lotto/driver/flags/prng.h"
 #include "lotto/driver/flags/sequencer.h"
+#include "lotto/driver/preload.h"
 #include "lotto/driver/record.h"
 #include "lotto/driver/subcmd.h"
 #include "lotto/driver/trace.h"
 #include "lotto/driver/utils.h"
 #include "lotto/engine/catmgr.h"
-#include "lotto/engine/dispatcher.h"
+#include "lotto/engine/sequencer.h"
 #include "lotto/engine/events.h"
 #include "lotto/engine/prng.h"
 #include "lotto/engine/pubsub.h"
 #include "lotto/engine/state.h"
 #include "lotto/engine/statemgr.h"
 #include "lotto/modules/ichpt/state.h"
+#include "lotto/modules/rusty/events.h"
 #include "lotto/modules/termination/state.h"
+#include "lotto/runtime/capture_point.h"
 #include "lotto/runtime/events.h"
+#include "lotto/runtime/ingress_events.h"
+#include "lotto/runtime/module_events.h"
 #include "lotto/sys/fcntl.h"
 #include "lotto/sys/memory.h"
 #include "lotto/sys/now.h"
@@ -61,4 +67,6 @@
 #include <lotto/modules/rusty/rusty.h>
 #include <lotto/modules/termination/flags.h>
 #include <lotto/modules/termination/state.h>
+
+enum { LOTTO_RUSTY_MODULE_SLOT = MODULE_SLOT };
 /* IWYU pragma: end_keep */

@@ -7,10 +7,11 @@
 #include <math.h>
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/state.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
 #include <lotto/util/once.h>
@@ -76,34 +77,28 @@ _pct_sort(tidset_t *tset)
  * handler
  ******************************************************************************/
 STATIC void
-_pct_handle(const context_t *ctx, event_t *e)
+_pct_handle(const capture_point *cp, event_t *e)
 {
     once(pct_config()->enabled =
              (strcmp(sequencer_config()->strategy, "pct") == 0));
     ASSERT(e);
-    ASSERT(ctx);
+    ASSERT(cp);
 
     task_t *t = NULL;
 
     /* initialization */
-    switch (ctx->cat) {
-        case CAT_TASK_FINI:
-            tidmap_deregister(&pct_state()->map, ctx->id);
-            ASSERT(!tidset_has(&e->tset, ctx->id));
-            break;
-
-        case CAT_TASK_INIT:
-            t = (task_t *)tidmap_find(&pct_state()->map, ctx->id);
-            ASSERT(t == NULL);
-            t = (task_t *)tidmap_register(&pct_state()->map, ctx->id);
-            ASSERT(t);
-            t->priority = _pct_priority(prng_next());
-            break;
-
-        default:
-            t = (task_t *)tidmap_find(&pct_state()->map, ctx->id);
-            ASSERT(t);
-            break;
+    if (cp->type == EVENT_TASK_FINI) {
+        tidmap_deregister(&pct_state()->map, cp->id);
+        ASSERT(!tidset_has(&e->tset, cp->id));
+    } else if (cp->type == EVENT_TASK_INIT) {
+        t = (task_t *)tidmap_find(&pct_state()->map, cp->id);
+        ASSERT(t == NULL);
+        t = (task_t *)tidmap_register(&pct_state()->map, cp->id);
+        ASSERT(t);
+        t->priority = _pct_priority(prng_next());
+    } else {
+        t = (task_t *)tidmap_find(&pct_state()->map, cp->id);
+        ASSERT(t);
     }
 
     if (!pct_config()->enabled || e->selector != SELECTOR_UNDEFINED ||
@@ -121,4 +116,4 @@ _pct_handle(const context_t *ctx, event_t *e)
     if (tidmap_size(&pct_state()->map) > pct_state()->counts.nmax)
         pct_state()->counts.nmax = tidmap_size(&pct_state()->map);
 }
-REGISTER_HANDLER(_pct_handle)
+REGISTER_SEQUENCER_HANDLER(_pct_handle)

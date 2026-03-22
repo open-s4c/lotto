@@ -1,4 +1,4 @@
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/handlers/ichpt.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/ensure.h>

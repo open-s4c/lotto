@@ -1,11 +1,11 @@
 use crate::{Either, StackFrameId, StackTrace};
 use lotto::collections::FxHashMap;
-use lotto::{base::HandlerArg, base::StableAddress, raw, Stateful};
+use lotto::{base::category::effective_category, base::StableAddress, raw, Stateful};
 use lotto::{
     base::Value,
     brokers::statemgr::*,
     cli::flags::{FlagKey, STR_CONVERTER_BOOL},
-    engine::handler::{self, TaskId},
+    engine::handler::{self, get_stacktrace_caller_from_context, TaskId},
     log::*,
 };
 use std::ffi::{c_void, CStr};
@@ -38,9 +38,11 @@ impl handler::Handler for StackTraceHandler {
             return;
         }
         let id = TaskId(ctx.id);
-        match ctx.cat {
+        match effective_category(ctx) {
             raw::base_category::CAT_FUNC_ENTRY => {
-                let caller_pc = get_arg_ptr(&ctx.args[0]) - call_insn_len();
+                let caller_pc =
+                    get_stacktrace_caller_from_context(ctx).expect("missing stacktrace caller")
+                        - call_insn_len();
                 let (sname, fname) = self.get_pc_info(caller_pc as *const c_void);
                 let caller_pc = StableAddress::with_default_method(caller_pc);
                 let frame_id = StackFrameId {
@@ -81,11 +83,6 @@ impl StackTraceHandler {
             .or_insert_with(|| get_pc_info1(pc))
             .clone()
     }
-}
-
-fn get_arg_ptr(arg: &raw::arg) -> usize {
-    let arg = HandlerArg::from(*arg);
-    arg.addr()
 }
 
 /// Length of a function call instruction.

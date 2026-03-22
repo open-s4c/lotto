@@ -5,7 +5,7 @@ enable_language(CXX)
 unset(CMAKE_C_CLANG_TIDY)
 
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
-configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
+set(LOTTO_TIKL_MODULE_FEATURES)
 
 include_directories(blocking/include)
 include_directories(ichpt/include)
@@ -35,16 +35,15 @@ add_module(join)
 add_module(mutex)
 add_module(rwlock)
 add_module(evec)
-add_module(poll)
-add_module(timeout)
+#add_module(poll)
+#add_module(timeout)
 add_module(impasse)
 add_module(cxa)
 
 # hard filters                                                                 #
-# GEN_SLOT(USER_FILTER)                                                        #
-add_module(region_preemption)
-add_module(region_filter)
-add_module(filtering)
+#add_module(region_preemption)
+#add_module(region_filter)
+#add_module(filtering)
 
 # feature handlers
 add_module(available)
@@ -53,39 +52,45 @@ add_module(ichpt)
 add_module(race)
 add_module(atomic)
 add_module(yield)
-add_module(termination)
+#add_module(termination)
 
 # advanced handlers                                                            #
 add_module(priority)
 add_module(task_velocity)
 add_module(order)
 add_module(disable)
-if(${LOTTO_RUST})
-    add_module(rusty)
-endif()
+#if(${LOTTO_RUST})
+#    add_module(rusty)
+#endif()
 
 # scheduling strategy handlers
-add_module(pos)
-add_module(pct)
+#add_module(pos)
+#add_module(pct)
 
 # error detectors
 add_module(deadlock)
-add_module(enforce)
-add_module(inactivity_timeout)
-
+#add_module(enforce)
+#add_module(inactivity)
 
 # other components
-add_module(time)
-add_module(random)
+#add_module(time)
+#add_module(random)
 add_module(tsan)
-if("${LOTTO_DRUM}")
-    add_module(drum)
-endif()
+#if("${LOTTO_DRUM}")
+#    add_module(drum)
+#endif()
 add_module(debug)
 add_module(explore)
 add_module(trace)
 add_module(inflex)
-if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
-    add_module(qemu)
-endif()
-add_module(fork)
+#if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
+#    add_module(qemu)
+#endif()
+#add_module(fork)
+
+set(LOTTO_TIKL_MODULE_FEATURES
+    "${LOTTO_TIKL_MODULE_FEATURES}"
+    CACHE INTERNAL "Enabled Lotto module tikl features")
+lotto_tikl_define_lines(LOTTO_TIKL_MODULE_DEFINES
+                        ${LOTTO_TIKL_MODULE_FEATURES})
+configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)

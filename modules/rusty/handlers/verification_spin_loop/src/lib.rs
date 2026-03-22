@@ -107,7 +107,7 @@ use lotto::collections::FxHashSet;
 use lotto::engine::handler::ContextInfo;
 use lotto::engine::handler::{Address, ValuesTypes};
 use lotto::engine::handler::{ExecuteArrivalHandler, ExecuteHandler};
-use lotto::engine::pubsub::CustomCatTrait;
+use lotto::engine::pubsub::CustomContextTrait;
 use lotto::log::{debug, info, trace};
 
 use lotto::engine::handler::TaskId;
@@ -676,16 +676,12 @@ static HANDLER: LazyLock<SpinLoopHandler> = LazyLock::new(SpinLoopHandler::new);
 
 pub fn register() {
     {
-        let _ = spin_start_cat();
-        let _ = spin_end_cat();
-        let spin_start_cat_num = spin_start_cat().0;
-        let spin_end_cat_num = spin_end_cat().0;
         let table = &mut lotto::engine::handler::ENGINE_DATA
             .try_lock()
             .expect("single threaded")
-            .custom_cat_table;
-        table.insert(spin_start_cat_num, parse_spin_start_context());
-        table.insert(spin_end_cat_num, parse_spin_end_context());
+            .custom_event_table;
+        table.insert(lotto::raw::EVENT_SPIN_START, parse_spin_start_context());
+        table.insert(lotto::raw::EVENT_SPIN_END, parse_spin_end_context());
     }
     lotto::engine::pubsub::subscribe_arrival_or_execute(&*HANDLER);
     lotto::brokers::statemgr::register(&*HANDLER);

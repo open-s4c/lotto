@@ -1,10 +1,13 @@
-#include <lotto/engine/dispatcher.h>
+#include <dice/events/memaccess.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/race/race_result.h>
+#include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/string.h>
-race_t race_check(const context_t *ctx, clk_t clk);
+race_t race_check(const capture_point *cp, clk_t clk);
 
 #define A(V) ((uintptr_t)(V))
 #define I1   A(1)
@@ -25,7 +28,7 @@ add_ichpt(uintptr_t addr)
  * simple test for adding and checkign ichpts
  ******************************************************************************/
 typedef struct {
-    context_t ctx;
+    capture_point cp;
     race_t race;
     bool end;
 } call_t;
@@ -42,11 +45,22 @@ typedef struct {
         .loc2 = (struct race_loc){.pc = (i2)},                                 \
     }
 
-#define actx(ID, ADDR, CAT, PC)                                                \
-    (context_t)                                                                \
+#define cp_read(ID, ADDR, PC)                                                  \
+    (capture_point)                                                            \
     {                                                                          \
-        .id = (ID), .pc = (PC), .cat = (CAT),                                  \
-        .args[0] = (arg_t){.width = ARG_PTR, .value.ptr = (ADDR)},             \
+        .id = (ID), .vid = NO_TASK, .pc = (PC), .src_chain = CAPTURE_EVENT,    \
+        .src_type = EVENT_MA_READ,                                             \
+        .payload  = &(struct ma_read_event){.addr = (void *)(ADDR),            \
+                                            .size = sizeof(uintptr_t)},        \
+    }
+
+#define cp_write(ID, ADDR, PC)                                                 \
+    (capture_point)                                                            \
+    {                                                                          \
+        .id = (ID), .vid = NO_TASK, .pc = (PC), .src_chain = CAPTURE_EVENT,    \
+        .src_type = EVENT_MA_WRITE,                                            \
+        .payload  = &(struct ma_write_event){.addr = (void *)(ADDR),           \
+                                             .size = sizeof(uintptr_t)},       \
     }
 
 #define NORACE race(0, 0, 0)
@@ -58,13 +72,13 @@ test_add()
     task_id t2 = 2;
 
     call_t calls[] = {
-        {actx(t1, CAT_BEFORE_READ, A1, I1), NORACE},
-        {actx(t2, CAT_BEFORE_WRITE, A1, I2), NORACE},
+        {cp_read(t1, A1, I1), NORACE},
+        {cp_write(t2, A2, I2), NORACE},
         END,
     };
 
     for (call_t *c = calls; !c->end; c++) {
-        race_t r = race_check(&c->ctx, 0);
+        race_t r = race_check(&c->cp, 0);
         ENSURE(r.addr == c->race.addr);
         ENSURE(r.loc1.pc == c->race.loc2.pc);
     }

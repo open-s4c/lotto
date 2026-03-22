@@ -1,6 +1,6 @@
 use lotto::collections::FxHashMap;
 use lotto::{
-    base::category::Category,
+    base::category::{effective_category, Category},
     base::StableAddress,
     base::Value,
     brokers::statemgr::*,
@@ -38,7 +38,7 @@ impl handler::Handler for AddressHandler {
         }
         let tasks = &mut self.pers.tasks;
         let addr = StableAddress::with_default_method(ctx.pc);
-        let cat = ctx.cat;
+        let cat = effective_category(ctx);
         let info = AddressInfo { addr, cat };
         tasks.insert(TaskId::new(ctx.id), info);
     }

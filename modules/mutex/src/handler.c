@@ -1,14 +1,15 @@
 #include <errno.h>
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/mutex/events.h>
+#include <lotto/runtime/capture_point.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/logger_block.h>
-#include <lotto/util/casts.h>
 #include <lotto/util/macros.h>
 
 struct mtx {
@@ -194,24 +195,56 @@ _posthandle_release(task_id id, uint64_t addr)
     }
 }
 
+static type_id
+_mutex_event_type(const capture_point *cp)
+{
+    return cp->src_type;
+}
+
+static uint64_t
+_mutex_addr(const capture_point *cp)
+{
+    ASSERT(cp != NULL);
+    switch (_mutex_event_type(cp)) {
+        case EVENT_MUTEX_ACQUIRE:
+            return (uint64_t)(uintptr_t)((struct mutex_acquire_event *)cp->payload)
+                ->addr;
+        case EVENT_MUTEX_TRYACQUIRE:
+            return (uint64_t)(uintptr_t)((struct mutex_tryacquire_event *)cp->payload)
+                ->addr;
+        case EVENT_MUTEX_RELEASE:
+            return (uint64_t)(uintptr_t)((struct mutex_release_event *)cp->payload)
+                ->addr;
+        default:
+            ASSERT(0);
+            return 0;
+    }
+}
+
+static void
+_mutex_try_set_ret(const capture_point *cp, int ret)
+{
+    ASSERT(_mutex_event_type(cp) == EVENT_MUTEX_TRYACQUIRE);
+    ((struct mutex_tryacquire_event *)cp->payload)->ret = ret;
+}
+
 STATIC void
-_mutex_handle(const context_t *ctx, event_t *e)
+_mutex_handle(const capture_point *cp, event_t *e)
 {
     ASSERT(e);
     if (e->skip || !mutex_config()->enabled)
         return;
 
-    ASSERT(ctx);
-    ASSERT(ctx->id != NO_TASK);
-    uint64_t addr = CAST_TYPE(uint64_t, ctx->args[0].value.ptr);
-    switch (ctx->cat) {
-        case CAT_MUTEX_ACQUIRE:
-            _handle_acquire(ctx->id, addr);
+    ASSERT(cp);
+    ASSERT(cp->id != NO_TASK);
+    switch (_mutex_event_type(cp)) {
+        case EVENT_MUTEX_ACQUIRE:
+            _handle_acquire(cp->id, _mutex_addr(cp));
             ASSERT(e->any_task_filter == NULL);
             e->any_task_filter = _should_wait;
             // fallthru
-        case CAT_MUTEX_TRYACQUIRE:
-        case CAT_MUTEX_RELEASE:
+        case EVENT_MUTEX_TRYACQUIRE:
+        case EVENT_MUTEX_RELEASE:
             e->is_chpt = true;
             break;
         default:
@@ -219,29 +252,30 @@ _mutex_handle(const context_t *ctx, event_t *e)
     }
 
     /* remove waiting tasks from the tset */
-    if (_remove_waiters(&e->tset, ctx->id) && mutex_config()->deadlock_check &&
-        _check_deadlock(ctx->id, addr, NO_TASK)) {
+    bool should_wait = _remove_waiters(&e->tset, cp->id);
+    if (_mutex_event_type(cp) != 0 && should_wait &&
+        mutex_config()->deadlock_check &&
+        _check_deadlock(cp->id, _mutex_addr(cp), NO_TASK)) {
         logger_errorf("Aborting on deadlock\n");
         e->reason = REASON_RSRC_DEADLOCK;
     }
 }
-REGISTER_HANDLER(_mutex_handle)
+REGISTER_SEQUENCER_HANDLER(_mutex_handle)
 
-LOTTO_SUBSCRIBE(EVENT_ENGINE__NEXT_TASK, {
-    const context_t *ctx = (context_t *)as_any(v);
-    ASSERT(ctx);
+LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {
+    const capture_point *cp = (const capture_point *)md;
+    ASSERT(cp);
 
-    uint64_t addr = (uint64_t)ctx->args[0].value.ptr;
-    switch (ctx->cat) {
-        case CAT_MUTEX_ACQUIRE:
-            _posthandle_acquire(ctx->id, addr);
+    switch (_mutex_event_type(cp)) {
+        case EVENT_MUTEX_ACQUIRE:
+            _posthandle_acquire(cp->id, _mutex_addr(cp));
             break;
-        case CAT_MUTEX_TRYACQUIRE: {
-            arg_t *ok    = (arg_t *)&ctx->args[1];
-            ok->value.u8 = _posthandle_tryacquire(ctx->id, addr);
+        case EVENT_MUTEX_TRYACQUIRE: {
+            _mutex_try_set_ret(
+                cp, _posthandle_tryacquire(cp->id, _mutex_addr(cp)));
         } break;
-        case CAT_MUTEX_RELEASE:
-            _posthandle_release(ctx->id, addr);
+        case EVENT_MUTEX_RELEASE:
+            _posthandle_release(cp->id, _mutex_addr(cp));
             break;
         default:
             break;

@@ -1,9 +1,11 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
-#include <lotto/engine/dispatcher.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/blocking/blocking.h>
+#include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
@@ -37,10 +39,10 @@ LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_PERSISTENT,
  ******************************************************************************/
 
 STATIC void
-_blocking_handle(const context_t *ctx, event_t *e)
+_blocking_handle(const capture_point *cp, event_t *e)
 {
-    ASSERT(ctx);
-    ASSERT(ctx->id != NO_TASK);
+    ASSERT(cp);
+    ASSERT(cp->id != NO_TASK);
     ASSERT(e);
 
     /* unblock tasks if any requested */
@@ -55,7 +57,7 @@ _blocking_handle(const context_t *ctx, event_t *e)
             tidset_subtract(&_state.blocked_replay, returned_tasks());
             _state.consumed = true;
         }
-        tidset_remove(&_state.blocked_replay, ctx->id);
+        tidset_remove(&_state.blocked_replay, cp->id);
     } else {
         if (_state.replaying) {
             _state.replaying = false;
@@ -69,22 +71,22 @@ _blocking_handle(const context_t *ctx, event_t *e)
 
     e->should_record |= tidset_size(returned_tasks()) > 0 &&
                         !(tidset_size(returned_tasks()) == 1 &&
-                          tidset_has(returned_tasks(), ctx->id));
+                          tidset_has(returned_tasks(), cp->id));
 
     /* When blocking, the current task should not be selectable. */
-    if (ctx->cat == CAT_CALL || ctx->cat == CAT_TASK_BLOCK) {
+    if (cp->blocking && cp->src_type != EVENT_TASK_CREATE) {
         ASSERT(!e->is_chpt);
-        ASSERT(!tidset_has(&_state.blocked_actual, ctx->id));
+        ASSERT(!tidset_has(&_state.blocked_actual, cp->id));
 
-        tidset_insert(&_state.blocked_actual, ctx->id);
+        tidset_insert(&_state.blocked_actual, cp->id);
         if (e->replay) {
-            tidset_insert(&_state.blocked_replay, ctx->id);
+            tidset_insert(&_state.blocked_replay, cp->id);
         }
         e->reason  = REASON_CALL;
         e->is_chpt = true;
     }
 
-    _state.prev = ctx->id;
+    _state.prev = cp->id;
 
     if (e->skip)
         return;
@@ -92,7 +94,7 @@ _blocking_handle(const context_t *ctx, event_t *e)
     /* filter blocked tasks */
     tidset_subtract(&e->tset, BLOCKED_TASKS(e->replay));
 }
-REGISTER_HANDLER(_blocking_handle)
+REGISTER_SEQUENCER_HANDLER(_blocking_handle)
 
 /*******************************************************************************
  * debug functions

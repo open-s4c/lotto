@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <lotto/base/context.h>
+#include <lotto/runtime/capture_point.h>
 #include <lotto/base/marshable.h>
 #include <lotto/base/reason.h>
 #include <lotto/base/tidset.h>
@@ -31,5 +31,5 @@ init_lock_pair(const char *acq_name, const char *rel_name)
 {
 }
 
-__attribute__((noreturn)) void (*lotto_exit_locks)(const context_t *ctx,
+__attribute__((noreturn)) void (*lotto_exit_locks)(const capture_point *ctx,
                                                    reason_t reason) = NULL;

@@ -3,6 +3,15 @@ enable_language(CXX)
 unset(CMAKE_C_CLANG_TIDY)
 
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
+if(DEFINED LOTTO_TIKL_MODULE_FEATURES)
+    lotto_tikl_define_lines(TIKL_MODULE_DEFINES ${LOTTO_TIKL_MODULE_FEATURES})
+else()
+    lotto_collect_enabled_module_features(
+        LOTTO_TEST_TIKL_MODULE_FEATURES
+        "${PROJECT_SOURCE_DIR}/modules/CMakeLists.txt")
+    lotto_tikl_define_lines(TIKL_MODULE_DEFINES
+                            ${LOTTO_TEST_TIKL_MODULE_FEATURES})
+endif()
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
 add_dependencies(tikl-test tikl-build)
 

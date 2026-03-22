@@ -223,7 +223,7 @@ The interceptor encapsulate the mediator use to supply a concise interface for d
 - interception before an event
 - wrapping an external blocking event
 
-The former scenario just puts `intercept_capture()` before the code executing the event. The event must not block. The latter case handles external blocking events by surrounding them with `intercept_before_call()` and `intercept_after_call()`. These calls create a region which is detached from Lotto, i.e., it runs in parallel with other tasks. Thus, to ensure deterministic replay there must be no race between blocking events.
+The former scenario just puts `runtime_ingress()` before the code executing the event. The event must not block. The latter case handles external blocking events by surrounding them with `runtime_ingress_before()` and `runtime_ingress_after()`. These calls create a region which is detached from Lotto, i.e., it runs in parallel with other tasks. Thus, to ensure deterministic replay there must be no race between blocking events.
 
 ### `sighandler`
 

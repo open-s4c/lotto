@@ -5,7 +5,7 @@
 
 ### How to know if my gcc/clang supports TSAN instrumentation
 
-Creare a test file
+Create a test file
 
     cat > test.c <<EOF
     int x;

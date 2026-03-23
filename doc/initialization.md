@@ -130,6 +130,12 @@ plugins should behave exactly like builtins:
 
 ### Dice readiness
 
+> **Note:** The description below reflects the originally intended design, not
+> the current implementation. The current tree uses `EVENT_LOTTO_STARTUP_SYNC`
+> (a dummy publication) as the startup boundary, not `EVENT_DICE_READY`. See
+> the note at the top of this document and `src/engine/module.c` for the
+> active model.
+
 Dice publishes `EVENT_DICE_INIT` and then `EVENT_DICE_READY` from
 `ps_initd_()`. Lotto should treat `EVENT_DICE_READY` as the point where the
 Lotto phase machine starts.

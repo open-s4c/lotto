@@ -1,17 +1,17 @@
 # Lotto
 
 A tool to **debug** concurrent systems. Lotto helps the developer to find, reproduce and understand concurrency bugs.
-Note that Lotto's primiry target **is not** searching for unknown bugs, but rather debugging known bugs.
+Note that Lotto's primary target **is not** searching for unknown bugs, but rather debugging known bugs.
 
 Lotto intercepts and controls the execution of multithreaded systems, exploring schedulings that are likely to trigger concurrent bugs.
 The developer can tune Lotto's bug search by [adding annotations](doc/api/lotto/README.md) to the system under test.
 Once the target bug is triggered, Lotto is capable of replaying it with or without `gdb`.
-Finally, to help the develper to understand the bug, Lotto can try to find crucial scheduling decisions that contribute to the bug being triggered (see [inflection point](doc/inflex.md)).
+Finally, to help the developer to understand the bug, Lotto can try to find crucial scheduling decisions that contribute to the bug being triggered (see [inflection point](doc/inflex.md)).
 
 Lotto can be built in three flavors:
 
 - **pLotto**: POSIX Lotto links to a target application and controls the scheduling of the application threads.
-- **qLotto**: QEMU-based Lotto runs an arm64 VM and controls the scheduling of the virtual cores.
+- **qLotto**: QEMU-based Lotto runs an arm64 VM and controls the scheduling of the virtual cores. *(experimental)*
 
 ## Quick start
 

@@ -25,6 +25,26 @@ cmake --install build # optionally add `--prefix $HOME/.local` to install to a l
 Be sure to add the installation location (e.g. `$HOME/.local/bin`) to your `PATH` environment variable.
 In principle the `lotto` executable is self-contained and can also be copied directly from the `build` directory.
 
+### Installed layout
+
+```
+<prefix>/
+  bin/
+    lotto                      # CLI executable
+  lib/
+    liblotto-driver.so         # driver library
+    liblotto-runtime.so        # runtime library (preloaded into SUT)
+    liblotto-runtime-dbg.so    # runtime library with debug logging
+    liblotto-cli.so            # CLI support library
+    lotto/
+      lotto-driver-<name>.so   # driver plugin modules
+      lotto-runtime-<name>.so  # runtime plugin modules
+  include/
+    lotto/                     # public API headers
+    lotto/modules/             # module-provided headers
+    dice/                      # Dice pubsub headers (needed to build plugins)
+```
+
 
 ### Cross-compiling lotto
 

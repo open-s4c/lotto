@@ -4,13 +4,9 @@
 
   Replace futex with a busyloop in switcher
 
-- `LOTTO_DISABLE_HANDLERS`: (default `;`)
-
-  List of Lotto handlers to be disabled
-
 - `LOTTO_EMBED_LIB`: (default `ON`)
 
-  Embed libplotto.so in Lotto CLI
+  Embed `liblotto-runtime.so` in the Lotto CLI binary
 
 - `LOTTO_EXECINFO`: (default `ON`)
 

@@ -1,6 +1,6 @@
 # Racket tests
 
-Lotto has a set of test cases written in Racket. To run these tests you have to install racket and a few packages and configure Lotto to run the Racket tests. The tests are located in `tests/racket`.
+Lotto has a set of test cases written in Racket. To run these tests you have to install racket and a few packages and configure Lotto to run the Racket tests. The tests are located in `test/racket`.
 
 ## Installing Racket
 

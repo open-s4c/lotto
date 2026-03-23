@@ -3,6 +3,7 @@
 #include <libgen.h>
 #include <stdint.h>
 
+#include <dice/pubsub.h>
 #include <lotto/base/envvar.h>
 #include <lotto/base/flag.h>
 #include <lotto/base/record.h>
@@ -14,7 +15,6 @@
 #include <lotto/driver/record.h>
 #include <lotto/driver/trace.h>
 #include <lotto/driver/trace_prepare.h>
-#include <lotto/engine/catmgr.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
@@ -135,10 +135,10 @@ cli_trace_trim_to_goal(trace_t *trace, clk_t goal, bool drop_old_config)
 }
 
 void
-cli_trace_trim_to_cat(trace_t *trace, category_t cat)
+cli_trace_trim_to_chain(trace_t *trace, chain_id chain)
 {
     for (record_t *record = trace_last(trace);
-         record != NULL && record->cat != cat;
+         record != NULL && record->src_chain != chain;
          trace_forget(trace), record = trace_last(trace)) {}
 }
 
@@ -363,7 +363,9 @@ record_print(const record_t *r, int i)
     logger_println("RECORD %d", i);
     logger_println("  clock:    %s", clk_str);
     logger_println("  task:     %lu", r->id);
-    logger_println("  category: %s", category_str(r->cat));
+    logger_println("  src_chain:%s", ps_chain_str(r->src_chain));
+    logger_println("  type:     %u", r->type);
+    logger_println("  src_type: %u", r->src_type);
     logger_println("  reason:   %s", reason_str(r->reason));
     logger_println("  kind:     %s", kind_str(r->kind));
     logger_println("  pc:       %" PRIxPTR, r->pc);

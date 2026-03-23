@@ -12,7 +12,7 @@
 #include <dice/self.h>
 #include <lotto/base/record.h>
 #include <lotto/base/task_id.h>
-#include <lotto/runtime/intercept.h>
+#include <lotto/runtime/ingress.h>
 #include <lotto/runtime/runtime.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/real.h>
@@ -69,22 +69,15 @@ _write_uint64(int fd, uint64_t n)
 static void
 _handle(reason_t user_reason, reason_t runtime_reason)
 {
-    // mediator_disable_registration();
-    context_t ctx   = {.cat = CAT_NONE};
-    reason_t reason = user_reason;
+    capture_point cp = {0};
+    reason_t reason  = user_reason;
 
-    mediator_t *m = mediator_get_data(false);
+    mediator_t *m = mediator_get(self_md(), false);
     if (m) {
-        reason = m->registration_status != MEDIATOR_REGISTRATION_NONE &&
-                         mediator_in_capture(m) ?
-                     runtime_reason :
-                     user_reason;
+        reason = mediator_in_capture(m) ? runtime_reason : user_reason;
         sys_write(SIGHANLDER_FD, "[", 1);
-        _write_uint64(SIGHANLDER_FD, ctx.id);
+        _write_uint64(SIGHANLDER_FD, cp.id);
         sys_write(SIGHANLDER_FD, "]", 1);
-        if (m->registration_status == MEDIATOR_REGISTRATION_NONE) {
-            sys_write(SIGHANLDER_FD, "(estimated)", sys_strlen("(estimated)"));
-        }
         sys_write(SIGHANLDER_FD, " ", 1);
         const char *str_reason = reason_str(reason);
         sys_write(SIGHANLDER_FD, str_reason, sys_strlen(str_reason));
@@ -92,7 +85,7 @@ _handle(reason_t user_reason, reason_t runtime_reason)
     }
     _backtrace_print();
 
-    lotto_exit(&ctx, reason);
+    lotto_exit(&cp, reason);
 }
 
 static void
@@ -167,11 +160,8 @@ __assert_fail(const char *assertion, const char *file, line_int line,
 
     _backtrace_print();
 
-    context_t ctx = {
-        .id  = tid,
-        .cat = CAT_NONE,
-    };
-    lotto_exit(&ctx, REASON_ASSERT_FAIL);
+    capture_point cp = {.id = tid};
+    lotto_exit(&cp, REASON_ASSERT_FAIL);
 }
 
 #endif

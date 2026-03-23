@@ -11,8 +11,6 @@
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
-extern marshable_t *catmgr_state(void) __attribute__((weak));
-
 struct engine_state {
     prng_t prng;
     sequencer_config_t sequencer;

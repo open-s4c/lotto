@@ -10,19 +10,18 @@
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
 #include <lotto/base/cappt.h>
-#include <lotto/base/category.h>
-#include <lotto/base/context.h>
 #include <lotto/base/envvar.h>
 #include <lotto/base/reason.h>
 #include <lotto/base/record.h>
 #include <lotto/engine/clock.h>
-#include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/state.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/sys/real.h>
@@ -31,9 +30,10 @@
 #include <vsync/atomic/dispatch.h>
 #include <vsync/spinlock/caslock.h>
 
-#define log(ctx, fmt, ...)                                                     \
-    logger_debugf("[t:%lu, clk:%lu, pc:0x%lx] " fmt "\n", ctx->id, _seq.clk,   \
-                  ctx->pc & 0xfff, ##__VA_ARGS__)
+#define log(cp, fmt, ...)                                                      \
+    logger_debugf("[t:%lu, clk:%lu, pc:0x%lx, type:%u, src:%u] " fmt "\n",     \
+                  cp->id, _seq.clk, cp->pc & 0xfff, cp->src_type,              \
+                  cp->src_type, ##__VA_ARGS__)
 
 typedef struct {
     _Atomic(clk_t) clk;
@@ -47,18 +47,16 @@ typedef struct {
     uint64_t chpt_count;
     uint64_t switch_count;
     bool last_chpt;
-    category_t prev_cat;
-
+    type_id prev_type;
     task_id prev_task;
     task_id next_task;
+    bool prev_blocking;
     bool should_record;
 } sequencer_t;
 static sequencer_t _seq;
 
 clk_t clk_bound;
 uint64_t time_bound_ns;
-
-LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__NEXT_TASK)
 
 LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
     (void)v;
@@ -82,7 +80,8 @@ sequencer_reset(void)
     _seq.should_record = false;
     _seq.prev_task     = NO_TASK;
     _seq.next_task     = NO_TASK;
-    _seq.prev_cat      = CAT_NONE;
+    _seq.prev_type     = 0;
+    _seq.prev_blocking = false;
     const char *var    = getenv("LOTTO_DEBUG_CLK_BOUND");
     if (var) {
         clk_bound = atoll(var);
@@ -99,10 +98,25 @@ REGISTER_EPHEMERAL(_seq, ({ sequencer_reset(); }))
  ******************************************************************************/
 static void _update_unblocked(void);
 static void _add_pending_unblocked(task_id id);
-static unsigned _actions_for(const context_t *ctx, task_id next,
+static unsigned _actions_for(const capture_point *cp, task_id next,
                              const event_t *e);
-static bool _granularity_should_record(const context_t *ctx, const event_t *e,
-                                       const plan_t *plan);
+static bool _granularity_should_record(const capture_point *cp,
+                                       const event_t *e,
+                                       const struct plan *plan);
+static task_id _dispatch_capture_event(const capture_point *cp,
+                                       sequencer_decision *e);
+void handle_creation(const capture_point *cp, sequencer_decision *e);
+#ifdef LOTTO_TEST
+void __attribute__((weak))
+handle_creation(const capture_point *cp, sequencer_decision *e)
+{
+    (void)cp;
+    (void)e;
+}
+
+bool sequencer_dispatch_override(const capture_point *cp, sequencer_decision *e,
+                                 task_id *next);
+#endif
 
 /*******************************************************************************
  * Debug functions
@@ -113,10 +127,10 @@ void __attribute__((noinline)) sequencer_time_met();
 /*******************************************************************************
  * Public interface
  ******************************************************************************/
-plan_t
-sequencer_capture(const context_t *ctx)
+struct plan
+sequencer_capture(const capture_point *cp)
 {
-    ASSERT(ctx->id != NO_TASK);
+    ASSERT(cp->id != NO_TASK);
 
     _seq.clk++;
 #ifdef QLOTTO_ENABLED
@@ -135,14 +149,16 @@ sequencer_capture(const context_t *ctx)
     _update_unblocked();
 
     /* prepare capture point */
-    event_t e = {.clk       = _seq.clk,
-                 .unblocked = _seq.unblocked,
-                 .replay    = ry.status != REPLAY_DONE,
-                 .tset      = {}};
+    sequencer_decision e = {.clk       = _seq.clk,
+                            .unblocked = _seq.unblocked,
+                            .replay    = ry.status != REPLAY_DONE,
+                            .tset      = {}};
 
     /* pass capture point to handlers */
-    log(ctx, "sequence: cp->replay: %d", e.replay);
-    task_id next = dispatch_event(ctx, &e);
+    log(cp, "sequence: cp->replay: %d", e.replay);
+    capture_point capture_cp = *cp;
+    capture_cp.decision      = &e;
+    task_id next             = _dispatch_capture_event(&capture_cp, &e);
 
     replay_type_t replay_type =
         !e.replay ? REPLAY_OFF :
@@ -150,7 +166,7 @@ sequencer_capture(const context_t *ctx)
 
     switch (ry.status) {
         case REPLAY_LOAD:
-            ASSERT(next == ANY_TASK || next == ry.id || CAT_BLOCK(ctx->cat));
+            ASSERT(next == ANY_TASK || next == ry.id || cp->blocking);
             next = ry.id;
             break;
         case REPLAY_FORCE:
@@ -159,8 +175,8 @@ sequencer_capture(const context_t *ctx)
         case REPLAY_DONE:
             break;
         case REPLAY_CONT:
-            if (sequencer_config()->slack > 0 && CAT_SLACK(ctx->cat)) {
-                next = ctx->id;
+            if (sequencer_config()->slack > 0 && cp->blocking) {
+                next = cp->id;
             }
             break;
         default:
@@ -169,17 +185,17 @@ sequencer_capture(const context_t *ctx)
     }
 
     /* prepare plan */
-    plan_t p = {
+    struct plan p = {
         .actions         = IS_REASON_TERMINATE(e.reason) ?
-                               next != ctx->id ?
+                               next != cp->id ?
                                ACTION_SHUTDOWN :
-                               _actions_for(ctx, next, &e) | ACTION_SHUTDOWN :
-                               _actions_for(ctx, next, &e),
+                               _actions_for(cp, next, &e) | ACTION_SHUTDOWN :
+                               _actions_for(cp, next, &e),
         .clk             = _seq.clk,
         .next            = next,
         .any_task_filter = e.any_task_filter,
         .reason          = e.reason,
-        .with_slack      = CAT_SLACK(ctx->cat) && e.replay == REPLAY_DONE,
+        .with_slack      = cp->blocking && e.replay == REPLAY_DONE,
         .replay_type     = replay_type,
     };
 
@@ -189,15 +205,16 @@ sequencer_capture(const context_t *ctx)
 
     /* track decision for resume */
     _seq.should_record =
-        e.should_record || _granularity_should_record(ctx, &e, &p);
-    _seq.next_task = next;
-    _seq.prev_cat  = ctx->cat;
+        e.should_record || _granularity_should_record(cp, &e, &p);
+    _seq.next_task     = next;
+    _seq.prev_type     = cp->src_type;
+    _seq.prev_blocking = cp->blocking;
 
     /* event counting */
     {
         _seq.chpt_count += _seq.last_chpt = e.is_chpt;
-        _seq.switch_count += _seq.prev_task != ctx->id;
-        _seq.prev_task = ctx->id;
+        _seq.switch_count += _seq.prev_task != cp->id;
+        _seq.prev_task = cp->id;
     }
 
     /* clean up */
@@ -217,38 +234,88 @@ sequencer_capture(const context_t *ctx)
  * decision
  */
 void
-sequencer_resume(const context_t *ctx)
+sequencer_resume(const capture_point *cp)
 {
-    struct value val = any(ctx);
-    LOTTO_PUBLISH(EVENT_ENGINE__NEXT_TASK, val);
+    bool prev_blocking = _seq.prev_blocking;
+    bool prev_create   = _seq.prev_type == EVENT_TASK_CREATE;
+
+    capture_point resume_cp = *cp;
+    resume_cp.decision      = NULL;
+    PS_PUBLISH(CHAIN_SEQUENCER_RESUME, cp->src_type, &resume_cp,
+               (metadata_t *)&resume_cp);
     if (_seq.clk == 0)
         return;
-    if (ctx->id == 1 && ctx->cat == CAT_NONE)
+    if (cp->id == 1 && cp->src_type == 0 && cp->src_type == 0)
         return;
 
     if (_seq.should_record ||
-        (sequencer_config()->slack > 0 && CAT_SLACK(_seq.prev_cat) &&
-         ctx->id != _seq.prev_task) ||
-        (_seq.prev_cat != CAT_TASK_CREATE &&
-         (sequencer_config()->slack == 0 || !CAT_SLACK(_seq.prev_cat)) &&
-         _seq.next_task != ctx->id)) {
-        recorder_record(ctx, _seq.clk);
+        (sequencer_config()->slack > 0 && prev_blocking &&
+         cp->id != _seq.prev_task) ||
+        (!prev_create && (sequencer_config()->slack == 0 || !prev_blocking) &&
+         _seq.next_task != cp->id)) {
+        recorder_record(cp, _seq.clk);
     }
 
     _update_unblocked();
 }
 
-void
-sequencer_return(const context_t *ctx)
+static task_id
+_dispatch_capture_event(const capture_point *cp, sequencer_decision *e)
 {
-    ASSERT(CAT_BLOCK(ctx->cat));
-    _add_pending_unblocked(ctx->id);
+#ifdef LOTTO_TEST
+    task_id next = NO_TASK;
+    if (sequencer_dispatch_override(cp, e, &next))
+        return next;
+#endif
+    handle_creation(cp, e);
+
+    capture_point capture_cp = *cp;
+    capture_cp.decision      = e;
+    PS_PUBLISH(CHAIN_SEQUENCER_CAPTURE, cp->src_type, &capture_cp,
+               (metadata_t *)&capture_cp);
+
+    if (!e->is_chpt) {
+        ASSERT(e->next == NO_TASK || e->next == cp->id);
+        return cp->id;
+    }
+
+    if (e->next != NO_TASK) {
+        return e->next;
+    }
+
+    if (tidset_size(&e->tset) == 0) {
+        return ANY_TASK;
+    }
+
+    if (e->selector == SELECTOR_UNDEFINED)
+        e->selector = SELECTOR_RANDOM;
+
+    switch (e->selector) {
+        case SELECTOR_RANDOM:
+            if (e->reason == REASON_UNKNOWN)
+                e->reason = REASON_DETERMINISTIC;
+            return tidset_get(&e->tset, prng_range(0, tidset_size(&e->tset)));
+        case SELECTOR_FIRST:
+            return tidset_get(&e->tset, 0);
+        default:
+            logger_debugf("Selector %d\n", e->selector);
+    }
+
+    ASSERT(0);
+    return NO_TASK;
 }
 
 void
-sequencer_fini(const context_t *ctx, reason_t reason)
+sequencer_return(const capture_point *cp)
 {
-    recorder_fini(_seq.clk, ctx->id, reason);
+    ASSERT(cp->blocking);
+    _add_pending_unblocked(cp->id);
+}
+
+void
+sequencer_fini(const capture_point *cp, reason_t reason)
+{
+    recorder_fini(_seq.clk, cp->id, reason);
     logger_debugf("[lotto] chpts: %lu, switches: %lu, clks: %lu\n",
                   _seq.chpt_count, _seq.switch_count, _seq.clk);
 }
@@ -263,36 +330,29 @@ sequencer_get_clk()
  * internal functions
  ******************************************************************************/
 static inline unsigned
-_actions_for(const context_t *ctx, task_id next, const event_t *e)
+_actions_for(const capture_point *cp, task_id next, const event_t *e)
 {
-    switch (ctx->cat) {
-        case CAT_TASK_CREATE:
+    switch (cp->src_type) {
+        case EVENT_TASK_CREATE:
             ASSERT(e->replay || next == ANY_TASK);
-            return ACTION_CALL | ACTION_YIELD | ACTION_RESUME;
-
-        case CAT_CALL:
-            ASSERT(next != NO_TASK);
-            return ACTION_WAKE | ACTION_CALL | ACTION_RETURN | ACTION_YIELD |
-                   ACTION_RESUME;
-
-        case CAT_TASK_BLOCK:
-            ASSERT(next != NO_TASK);
-            return ACTION_WAKE | ACTION_BLOCK | ACTION_RETURN | ACTION_YIELD |
-                   ACTION_RESUME;
-
-        case CAT_TASK_INIT:
+            return ACTION_BLOCK | ACTION_YIELD | ACTION_RESUME;
+        case EVENT_TASK_INIT:
             ASSERT(next != NO_TASK);
             return ACTION_WAKE | ACTION_YIELD | ACTION_RESUME;
-
-        case CAT_TASK_FINI:
+        case EVENT_TASK_FINI:
             ASSERT(next != NO_TASK);
             return ACTION_WAKE;
 
         default:
+            if (cp->blocking) {
+                ASSERT(next != NO_TASK);
+                return ACTION_WAKE | ACTION_BLOCK | ACTION_RETURN |
+                       ACTION_YIELD | ACTION_RESUME;
+            }
 #ifdef LOTTO_SEQUENCER_CONTINUE
-            if (next != ctx->id && cp->wait_exact)
+            if (next != cp->id && cp->wait_exact)
                 return ACTION_WAKE | ACTION_WAIT | ACTION_RESUME;
-            else if (next != ctx->id || cp->should_record)
+            else if (next != cp->id || cp->should_record)
                 return ACTION_WAKE | ACTION_YIELD | ACTION_RESUME;
             else
                 return ACTION_CONTINUE;
@@ -304,8 +364,8 @@ _actions_for(const context_t *ctx, task_id next, const event_t *e)
 
 
 static bool
-_granularity_should_record(const context_t *ctx, const event_t *e,
-                           const plan_t *plan)
+_granularity_should_record(const capture_point *cp, const event_t *e,
+                           const struct plan *plan)
 {
     bool should_record = false;
     for (uint32_t i = 1; !should_record && i <= sequencer_config()->gran;
@@ -315,7 +375,7 @@ _granularity_should_record(const context_t *ctx, const event_t *e,
         }
         switch (i) {
             case RECORD_GRANULARITY_SWITCH:
-                should_record |= plan->next != ctx->id;
+                should_record |= plan->next != cp->id;
                 break;
             case RECORD_GRANULARITY_CHPT:
                 should_record |= e->is_chpt;
@@ -351,15 +411,13 @@ _add_pending_unblocked(task_id id)
     caslock_release(&_seq.pending.lock);
 }
 
-void __attribute__((noinline))
-sequencer_clk_met()
+void __attribute__((noinline)) sequencer_clk_met()
 {
     logger_debugf("clk met\n");
     clk_bound = 0;
 }
 
-void __attribute__((noinline))
-sequencer_time_met()
+void __attribute__((noinline)) sequencer_time_met()
 {
     logger_debugf("time met\n");
     time_bound_ns = 0;

@@ -5,35 +5,96 @@
 #ifndef LOTTO_SEQUENCER_H
 #define LOTTO_SEQUENCER_H
 
-#include <lotto/base/context.h>
-#include <lotto/base/plan.h>
+#include <stdbool.h>
+
+#include <lotto/base/clk.h>
 #include <lotto/base/reason.h>
+#include <lotto/base/task_id.h>
+#include <lotto/base/tidset.h>
+#include <lotto/check.h>
+#include <lotto/engine/plan.h>
+#include <lotto/engine/pubsub.h>
+#include <lotto/runtime/capture_point.h>
+
+enum selector {
+    SELECTOR_UNDEFINED = 0,
+    SELECTOR_RANDOM,
+    SELECTOR_FIRST,
+};
+
+typedef struct sequencer_decision {
+    const clk_t clk;
+    bool is_chpt;
+    task_id next;
+    bool readonly;
+    bool skip;
+    tidset_t tset;
+    tidset_t unblocked;
+    reason_t reason;
+    enum selector selector;
+    bool should_record;
+    bool filter_less;
+    bool replay;
+    bool (*any_task_filter)(task_id);
+} sequencer_decision;
+
+typedef sequencer_decision event_t;
+
+typedef void (*handle_f)(const capture_point *cp, sequencer_decision *e);
 
 /**
  * Terminates sequencer
  */
-void sequencer_fini(const context_t *ctx, reason_t reason);
+void sequencer_fini(const capture_point *cp, reason_t reason);
 
 /**
  * Returns an action for a given captured context.
  *
  * The action has to be fulfilled following the expected contract.
  */
-plan_t sequencer_capture(const context_t *ctx);
+struct plan sequencer_capture(const capture_point *cp);
 
 /**
  * Informs sequencer that task is resuming after an ACTION_YIELD.
  */
-void sequencer_resume(const context_t *ctx);
+void sequencer_resume(const capture_point *cp);
 
 /**
  * Informs the sequencer that the task has returned from a call.
  */
-void sequencer_return(const context_t *ctx);
+void sequencer_return(const capture_point *cp);
 
 /**
  * Returns the current clock
  */
 clk_t sequencer_get_clk();
+
+#define REGISTER_HANDLER(handle)                                               \
+    PS_SUBSCRIBE(CHAIN_SEQUENCER_CAPTURE, ANY_EVENT, {                         \
+        const capture_point *cp = EVENT_PAYLOAD(cp);                           \
+        sequencer_decision *e   = cp->decision;                                \
+        handle(cp, e);                                                         \
+        if (e->skip)                                                           \
+            return PS_STOP_CHAIN;                                              \
+    })
+
+#define REGISTER_HANDLER_EXTERNAL(handle)                                      \
+    PS_SUBSCRIBE(CHAIN_SEQUENCER_CAPTURE, ANY_EVENT, {                         \
+        const capture_point *cp = EVENT_PAYLOAD(cp);                           \
+        sequencer_decision *e   = cp->decision;                                \
+        if (lotto_loaded())                                                    \
+            handle(cp, e);                                                     \
+        if (e->skip)                                                           \
+            return PS_STOP_CHAIN;                                              \
+    })
+
+#define REGISTER_SEQUENCER_HANDLER(handle)                                     \
+    PS_SUBSCRIBE(CHAIN_SEQUENCER_CAPTURE, ANY_EVENT, {                         \
+        const capture_point *cp = EVENT_PAYLOAD(cp);                           \
+        sequencer_decision *e   = cp->decision;                                \
+        handle(cp, e);                                                         \
+        if (e->skip)                                                           \
+            return PS_STOP_CHAIN;                                              \
+    })
 
 #endif

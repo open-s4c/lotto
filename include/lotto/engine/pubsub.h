@@ -9,12 +9,26 @@
 #include <lotto/base/value.h>
 #include <lotto/driver/events.h>
 #include <lotto/engine/events.h>
+#include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/events.h>
 #include <lotto/util/macros.h>
 
 /* Lotto pubsub chains. */
-#define CHAIN_LOTTO_CONTROL 7
-#define CHAIN_LOTTO_DEFAULT 8
+#define CHAIN_LOTTO_CONTROL     7
+#define CHAIN_LOTTO_DEFAULT     8
+#define CHAIN_INGRESS_EVENT     9
+#define CHAIN_INGRESS_BEFORE    10
+#define CHAIN_INGRESS_AFTER     11
+#define CHAIN_SEQUENCER_CAPTURE 12
+#define CHAIN_SEQUENCER_RESUME  13
+
+#define FORWARD_CAPTURE_TO_INGRESS(SUFFIX, TYPE)                               \
+    LOTTO_ADVERTISE_TYPE(TYPE)                                                 \
+    PS_SUBSCRIBE(CAPTURE_##SUFFIX, TYPE, {                                     \
+        capture_point *cp = EVENT_PAYLOAD(event);                              \
+        PS_PUBLISH(CHAIN_INGRESS_##SUFFIX, TYPE, cp, md);                      \
+        return PS_OK;                                                          \
+    })
 
 /* Advertise a Lotto event type name for debugging and tracing output. */
 #define LOTTO_ADVERTISE_TYPE(TYPE)                                             \
@@ -47,6 +61,16 @@
 /* Subscribe on the Lotto control chain. */
 #define LOTTO_SUBSCRIBE_CONTROL(TYPE, ...)                                     \
     LOTTO_SUBSCRIBE_WITH_K_(CHAIN_LOTTO_CONTROL, TYPE, __COUNTER__,            \
+                            LOTTO_BODY({__VA_ARGS__}))
+
+/* Subscribe on the sequencer capture chain. */
+#define LOTTO_SUBSCRIBE_SEQUENCER_CAPTURE(TYPE, ...)                           \
+    LOTTO_SUBSCRIBE_WITH_K_(CHAIN_SEQUENCER_CAPTURE, TYPE, __COUNTER__,        \
+                            LOTTO_BODY({__VA_ARGS__}))
+
+/* Subscribe on the sequencer resume chain. */
+#define LOTTO_SUBSCRIBE_SEQUENCER_RESUME(TYPE, ...)                            \
+    LOTTO_SUBSCRIBE_WITH_K_(CHAIN_SEQUENCER_RESUME, TYPE, __COUNTER__,         \
                             LOTTO_BODY({__VA_ARGS__}))
 
 /*
@@ -123,7 +147,7 @@
         __VA_ARGS__                                                            \
         return PS_OK;                                                          \
     }                                                                          \
-    static void DICE_CTOR V_JOIN(V_JOIN(ps_subscribe, TAG), )(void)            \
+    static void DICE_CTOR V_JOIN(V_JOIN(lotto_subscribe, TAG), )(void)         \
     {                                                                          \
         int err = ps_subscribe(CHAIN, TYPE, LOTTO_HANDLER_NAME(TAG), SLOT);    \
         if (err != PS_OK)                                                      \

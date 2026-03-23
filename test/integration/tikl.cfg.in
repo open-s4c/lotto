@@ -21,6 +21,9 @@ stress         = stress %tmpdir %output
 stress4rinflex = stress %tmpdir %output -s random --stable-address-method MAP --handler-address enable --handler-cas enable --handler-stacktrace enable --handler-event enable
 trace          = trace %tmpdir %output
 
+# useful options
+mask_addr      = --stable-address-method MASK
+
 # tikl flags
 -q
 -vv

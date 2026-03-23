@@ -58,7 +58,7 @@
     GEN_SLOT(CONTRACT)                                                         \
     GEN_SLOT(SEQUENCER)                                                        \
     GEN_SLOT(RECORDER)                                                         \
-    GEN_SLOT(INACTIVITY_TIMEOUT)                                               \
+    GEN_SLOT(INACTIVITY)                                                       \
     GEN_SLOT(CATMGR)                                                           \
                                                                                \
     GEN_SLOT(ANYSTALL)

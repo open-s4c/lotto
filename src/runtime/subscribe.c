@@ -15,30 +15,11 @@
 #include <dice/pubsub.h>
 #include <dice/self.h>
 #include <lotto/base/arg.h>
-#include <lotto/base/category.h>
-#include <lotto/base/context.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/events.h>
-#include <lotto/runtime/intercept.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/logger.h>
-
-#if 0
-int detachstate;
-if (attr == NULL) {
-    detachstate = PTHREAD_CREATE_JOINABLE;
-} else {
-    ENSURE(pthread_attr_getdetachstate(attr, &detachstate) == 0);
-}
-(void)intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_TASK_INIT,
-                            .args = {arg(uint64_t, pthread_self()),
-                                     arg(bool, detachstate ==
-                                                   PTHREAD_CREATE_DETACHED)}));
-void *ret = _run(_arg);
-return ret;
-}
-
-#endif
-
 
 // -----------------------------------------------------------------------------
 // thread_start and thread_exit
@@ -47,65 +28,129 @@ return ret;
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_INIT, {
     if (self_id(md) != MAIN_THREAD)
         return PS_OK;
-    bool detached = false;
-    context_t *c  = ctx(.func = "pthread_thread_start", .cat = CAT_TASK_INIT,
-                        .args = {
-                           [0] = arg(uintptr_t, (uintptr_t)pthread_self()),
-                           [1] = arg(bool, detached),
-                       });
-    intercept_capture(c);
+    bool detached              = false;
+    capture_task_init_event ev = {
+        .thread   = (uintptr_t)pthread_self(),
+        .detached = detached,
+    };
+    capture_point cp = {
+        .src_chain = CAPTURE_EVENT,
+        .src_type  = EVENT_TASK_INIT,
+        .func      = "pthread_thread_start",
+        .task_init = &ev,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_TASK_INIT, &cp, md);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
-    bool detached = false;
-    context_t *c  = ctx(.func = "pthread_thread_start", .cat = CAT_TASK_INIT,
-                        .args = {
-                           [0] = arg(uintptr_t, (uintptr_t)pthread_self()),
-                           [1] = arg(bool, detached),
-                       });
-    intercept_capture(c);
+    bool detached              = false;
+    capture_task_init_event ev = {
+        .thread   = (uintptr_t)pthread_self(),
+        .detached = detached,
+    };
+    capture_point cp = {
+        .src_chain = CAPTURE_EVENT,
+        .src_type  = EVENT_TASK_INIT,
+        .func      = "pthread_thread_start",
+        .task_init = &ev,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_TASK_INIT, &cp, md);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_EXIT, {
-    struct pthread_exit_event *ev = EVENT_PAYLOAD(event);
-    context_t *c = ctx(.func = "pthread_exit", .cat = CAT_TASK_FINI,
-                       .args = {[0] = arg_ptr(ev != NULL ? ev->ptr : NULL)});
-    intercept_capture(c);
+    struct pthread_exit_event *ev = EVENT_PAYLOAD(ev);
+    capture_task_fini_event fev   = {.ptr = ev != NULL ? ev->ptr : NULL};
+    capture_point cp              = {
+                     .src_chain = CAPTURE_EVENT,
+                     .src_type  = EVENT_TASK_FINI,
+                     .func      = "pthread_exit",
+                     .task_fini = &fev,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_TASK_FINI, &cp, md);
     return PS_OK;
 })
 
 // -----------------------------------------------------------------------------
-// pthread_create and pthread_join
+// pthread_create
 // -----------------------------------------------------------------------------
 
-PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_THREAD_CREATE, {
-    struct pthread_create_event *ev = EVENT_PAYLOAD(event);
+PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_CREATE, {
+    struct pthread_create_event *ev = EVENT_PAYLOAD(ev);
 
-    context_t *c = ctx(.func = "pthread_create", .cat = CAT_TASK_CREATE,
-                       .args = {
-                           [0] = arg_ptr(ev->thread),
-                           [1] = arg_ptr(ev->attr),
-                           [2] = arg_ptr(ev->run),
-                       });
-    (void)intercept_before_call(c);
+    capture_task_create_event cev = {
+        .thread = ev->thread,
+        .attr   = ev->attr,
+        .run    = ev->run,
+    };
+    capture_point cp = {
+        .src_chain   = chain,
+        .src_type    = EVENT_TASK_CREATE,
+        .func        = "pthread_create",
+        .task_create = &cev,
+        .blocking    = true,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_BEFORE, EVENT_TASK_CREATE, &cp, md);
     return PS_OK;
 })
 
-PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_THREAD_CREATE, {
-    intercept_after_call("pthread_create");
+PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_PTHREAD_CREATE, {
+    struct pthread_create_event *ev = EVENT_PAYLOAD(ev);
+
+    capture_task_create_event cev = {
+        .thread = ev->thread,
+        .attr   = ev->attr,
+        .run    = ev->run,
+    };
+    capture_point cp = {
+        .src_chain = chain,
+        .src_type  = EVENT_TASK_CREATE,
+        .func      = "pthread_create",
+        .payload   = &cev,
+        .blocking  = true,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_AFTER, EVENT_TASK_CREATE, &cp, md);
     return PS_OK;
 })
 
-PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_THREAD_JOIN, {
-    context_t *c = ctx(.func = "pthread_join", .cat = CAT_CALL);
-    (void)intercept_before_call(c);
+PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_JOIN, {
+    struct pthread_join_event *ev = EVENT_PAYLOAD(ev);
+
+    task_join_event_t tev = {
+        .thread = ev->thread,
+        .ptr    = ev->ptr,
+        .ret    = EINTR,
+    };
+    capture_point cp = {
+        .src_chain = chain,
+        .src_type  = EVENT_TASK_JOIN,
+        .func      = __FUNCTION__,
+        .payload   = &tev,
+        .blocking  = true,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_BEFORE, EVENT_TASK_JOIN, &cp, md);
 })
-PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_THREAD_JOIN, {
-    intercept_after_call("pthread_join");
-    return PS_OK;
+
+PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_PTHREAD_JOIN, {
+    struct pthread_join_event *ev = EVENT_PAYLOAD(ev);
+
+    task_join_event_t tev = {
+        .thread = ev->thread,
+        .ptr    = ev->ptr,
+        .ret    = ev->ret,
+    };
+    capture_point cp = {
+        .src_chain = chain,
+        .src_type  = EVENT_TASK_JOIN,
+        .func      = __FUNCTION__,
+        .payload   = &tev,
+        .blocking  = true,
+    };
+
+    PS_PUBLISH(CHAIN_INGRESS_AFTER, EVENT_TASK_JOIN, &cp, md);
 })
+
 
 struct pthread_detach_event {
     const void *pc;
@@ -119,12 +164,19 @@ LOTTO_ADVERTISE_TYPE(EVENT_PTHREAD_DETACH)
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_DETACH, {
     struct pthread_detach_event *ev = EVENT_PAYLOAD(event);
 
-    int ret = EINTR;
-    intercept_capture(ctx(.func = __FUNCTION__, .cat = CAT_DETACH,
-                          .args = {
-                              [0] = arg(uint64_t, ev->thread),
-                              [1] = arg_ptr(&ret),
-                          }));
+    int ret                       = EINTR;
+    capture_task_detach_event dev = {
+        .thread = ev->thread,
+        .ret    = &ret,
+    };
+    capture_point cp = {
+        .src_chain   = CAPTURE_BEFORE,
+        .src_type    = EVENT_TASK_DETACH,
+        .pc          = (uintptr_t)ev->pc,
+        .func        = __FUNCTION__,
+        .task_detach = &dev,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_BEFORE, EVENT_TASK_DETACH, &cp, md);
     ASSERT(ret != EINTR);
     return PS_OK;
 })

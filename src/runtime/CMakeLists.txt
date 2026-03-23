@@ -16,11 +16,6 @@ add_library(switcher.o OBJECT ${SRCS})
 add_library(switcher_testing.o OBJECT ${SRCS})
 target_compile_definitions(switcher_testing.o PRIVATE -DLOTTO_TEST)
 
-set(SRCS interceptor.c thread_id.c)
-add_library(interceptor.o OBJECT ${SRCS})
-add_library(interceptor_testing.o OBJECT ${SRCS})
-target_compile_definitions(interceptor_testing.o PRIVATE -DLOTTO_TEST)
-
 set(SRCS subscribe.c)
 add_library(subscribers.o OBJECT ${SRCS})
 
@@ -31,11 +26,10 @@ target_compile_definitions(memmgr_runtime_dice.o PRIVATE LOTTO_MEMMGR_RUNTIME)
 # ##############################################################################
 # libruntime
 # ##############################################################################
-set(SRCS runtime.c sighandler.c module.c malloc.c)
+set(SRCS ingress.c sighandler.c module.c malloc.c)
 set(LIBS
     m
     mediator.o
-    interceptor.o
     switcher.o
     sys.o
     base.o

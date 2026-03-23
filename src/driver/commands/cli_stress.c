@@ -12,12 +12,12 @@
 
 #include <lotto/base/envvar.h>
 #include <lotto/cli/cli_stress.h>
-#include <lotto/driver/preload.h>
 #include <lotto/driver/args.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
 #include <lotto/driver/flags/prng.h>
+#include <lotto/driver/preload.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/trace.h>
 #include <lotto/driver/utils.h>

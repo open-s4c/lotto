@@ -3,9 +3,9 @@
 #include <unistd.h>
 
 #include <lotto/base/flag.h>
-#include <lotto/driver/preload.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
+#include <lotto/driver/preload.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/sys/assert.h>

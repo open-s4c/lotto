@@ -5,9 +5,9 @@
 #ifndef LOTTO_RUNTIME_H
 #define LOTTO_RUNTIME_H
 
-#include <lotto/base/context.h>
 #include <lotto/base/reason.h>
+#include <lotto/runtime/capture_point.h>
 
-void lotto_exit(context_t *ctx, reason_t reason) NORETURN;
+void lotto_exit(capture_point *cp, reason_t reason) NORETURN;
 
 #endif

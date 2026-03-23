@@ -9,12 +9,12 @@
 
 #include <lotto/base/envvar.h>
 #include <lotto/base/record_granularity.h>
-#include <lotto/driver/preload.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
 #include <lotto/driver/flags/sequencer.h>
+#include <lotto/driver/preload.h>
 #include <lotto/driver/record.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/trace.h>

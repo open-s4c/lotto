@@ -24,6 +24,5 @@
 #define EVENT_ENGINE__INFO_RECORD_SAVE           120
 #define EVENT_ENGINE__DELAYED_PATH               121
 #define EVENT_ENGINE__NEXT_TASK                  122
-#define EVENT_ENGINE__CAPTURE                    123
 
 #endif

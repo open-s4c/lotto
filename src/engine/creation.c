@@ -2,8 +2,9 @@
 #define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/tidmap.h>
 #include <lotto/base/tidset.h>
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/logger_block.h>
@@ -51,41 +52,39 @@ REGISTER_EPHEMERAL(_state, ({
  * handler
  ******************************************************************************/
 void
-handle_creation(const context_t *ctx, event_t *e)
+handle_creation(const capture_point *cp, event_t *e)
 {
     ASSERT(e);
-    ASSERT(ctx);
-    ASSERT(ctx->id != NO_TASK);
+    ASSERT(cp);
+    ASSERT(cp->id != NO_TASK);
     ASSERT(!e->is_chpt);
     ASSERT(tidset_size(&e->tset) == 0);
 
-    switch (ctx->cat) {
-        case CAT_TASK_CREATE:
-            _state.last_parent = ctx->id;
+    switch (cp->src_type) {
+        case EVENT_TASK_CREATE:
+            _state.last_parent = cp->id;
             e->next            = ANY_TASK;
             e->is_chpt         = true;
             e->readonly        = true;
             break;
-
-        case CAT_TASK_INIT:
-            logger_debugf("Register tid %lu (parent: %lu)\n", ctx->id,
+        case EVENT_TASK_INIT:
+            logger_debugf("Register tid %lu (parent: %lu)\n", cp->id,
                           _state.last_parent);
-            ENSURE(tidset_insert(&_state.registered, ctx->id) &&
+            ENSURE(tidset_insert(&_state.registered, cp->id) &&
                    "a task is reregistered");
             e->reason  = REASON_DETERMINISTIC;
             e->is_chpt = true;
+            e->next    = _state.last_parent;
             break;
-
-        case CAT_TASK_FINI:
-            ENSURE(tidset_remove(&_state.registered, ctx->id) &&
+        case EVENT_TASK_FINI:
+            ENSURE(tidset_remove(&_state.registered, cp->id) &&
                    "an unregistered task deregistered");
             e->is_chpt = true;
             break;
-
         default:
-            if (!tidset_insert(&_state.registered, ctx->id))
-                break;
-            logger_debugf("Registering task %lu\n", ctx->id);
+            if (tidset_insert(&_state.registered, cp->id)) {
+                logger_debugf("Registering task %lu\n", cp->id);
+            }
             break;
     }
 

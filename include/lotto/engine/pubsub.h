@@ -23,7 +23,11 @@
 #define CHAIN_SEQUENCER_RESUME  13
 
 #define FORWARD_CAPTURE_TO_INGRESS(SUFFIX, TYPE)                               \
-    LOTTO_ADVERTISE_TYPE(TYPE)                                                 \
+    static void __attribute__((constructor(DICE_XTOR_PRIO)))                   \
+    lotto_advertise_type_##TYPE##_(void)                                       \
+    {                                                                          \
+        ps_register_type(TYPE, #TYPE);                                         \
+    }                                                                          \
     PS_SUBSCRIBE(CAPTURE_##SUFFIX, TYPE, {                                     \
         capture_point *cp = EVENT_PAYLOAD(event);                              \
         PS_PUBLISH(CHAIN_INGRESS_##SUFFIX, TYPE, cp, md);                      \

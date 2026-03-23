@@ -2,32 +2,32 @@
 
 Creation of concurrent software is a nontrivial task which is prone to hard to find bugs. Developers have to find a trade-off between slow overprotecting code patterns and more performant but possibly wrong optimizations.
 
-Lotto is a framework for reproduction and deterministic replay of concurrency bugs. It aims for supporting both user-space (PLotto) and kernel-space (QLotto) scenarios as well as providing an extensible platform to accomodate specific user needs with domain-specific plugins.
+Lotto is a framework for reproduction and deterministic replay of concurrency bugs. It aims for supporting both user-space (PLotto) and kernel-space (QLotto, experimental) scenarios as well as providing an extensible platform to accommodate specific user needs with domain-specific plugins.
 
 # Architecture
 
 Lotto can be seen as consisting of three top-level components:
 
 - CLI
-- frond-ends
+- front-ends
 
-The CLI provides the user interface for configuring and running the system under test (SUT). Front-ends connect to SUT and are responsible for passing necessary information to the engine and executing its plan. ?? is an external tool for data replay. The top-level components share some modules of Lotto as shown below.
+The CLI provides the user interface for configuring and running the system under test (SUT). Front-ends connect to SUT and are responsible for passing necessary information to the engine and executing its plan. The top-level components share some modules of Lotto as shown below.
 
 ```
 +---------+
-| dlotto  | <---------------- containerized Lotto (Alpine Linux + Docker)
+| dlotto  | <---------------- containerized Lotto (Alpine Linux + Docker) [experimental]
 +---------+
-| qlotto  | <---------------- kernel-space Lotto (Qemu + plugins)
+| qlotto  | <---------------- kernel-space Lotto (Qemu + plugins) [experimental]
 +---------+
 | plotto  | <---------------- user-space Lotto
 +---------+  +--------------- UI
 | runtime |  V
 +---------+-----+
 | engine  | cli |
-+---------+-----+   +--------- syscall record/replay
++---------+-----+   +--------- syscall record/replay (TBD)
 |    states     |   V
 +---------------+------+
-|    brokers    |  ??  |
+|    brokers    | <TBD>|
 +---------------+------+
 |         base         |
 +----------------------+
@@ -35,12 +35,12 @@ The CLI provides the user interface for configuring and running the system under
 +----------------------+
 ```
 
-Sys and base provide a library for other components. ?? uses just these two modules. Brokers and states are specific to Lotto engine. They are still used by the CLI for setting up the run. The engine sees SUT on the abstract level through the runtime. The runtime provides a unified interface for all domain-specific front-ends. The simplest frontend is PLotto. It contains basic interceptors for pthread and TSAN allowing most basic user-space applications compiled with TSAN to be run with Lotto. QLotto is a specific case of PLotto applied to a modified version of Qemu enriched with Lotto-aware plugins. This front-end allows testing deterministic replay of kernel-space applications run inside Qemu images. QLotto differs from plain PLotto run with vanilla Qemu by guest-aware interceptors. As a proof of concept, this sequence continues with DLotto. This frontend consists of QLotto running Alpine Linux with Docker inside. Theoretically, it allows running any uninstrumented application with Lotto.
+Sys and base provide a library for other components. Brokers and states are specific to the Lotto engine. They are also used by the CLI for setting up the run. The engine sees SUT on the abstract level through the runtime. The runtime provides a unified interface for all domain-specific front-ends. The simplest frontend is PLotto. It contains basic interceptors for pthread and TSAN allowing most basic user-space applications compiled with TSAN to be run with Lotto. QLotto is a specific case of PLotto applied to a modified version of Qemu enriched with Lotto-aware plugins (see *experimental* note in the qlotto section). DLotto extends that concept further with containerization and is also experimental.
 
 # Components
 
 ## `sys`
-`sys` is a wrapper around standard library functions and syscalls. It serves two main purposes. Since Lotto utilizes the so-called ``LD_PRELOAD trick'' for instrumentation, it declares functions with the same names as the ones it aims to intercept. Hence, if the original functions need to be called from the runtime, the name clash has to be resolved by symbol lookup. The `sys` component caches the real function addresses in `sys_`-prefixed wrapper functions which avoid the lookup overhead. While the runtime has capture guards which avoid recursive interception, it is still recommented to use `sys_` versions of functions accross the engine to avoid performance overhead coming from accessing the guards. Another important role is SUT isolation. Currently, `sys_malloc()` in Lotto uses its own memory manager instead of simply redirecting calls to the real `malloc()`. It is done to preserve memory allocation determinism of SUT under the assumption that the same sequence of memory management calls returns the same pointers. Thus, Lotto may allow itself to have varying internal dynamic memory use on record and replay while avoiding potential control flow deviations in SUT, e.g., due to identity hashes being used.
+`sys` is a wrapper around standard library functions and syscalls. It serves two main purposes. Since Lotto utilizes the so-called ``LD_PRELOAD trick'' for instrumentation, it declares functions with the same names as the ones it aims to intercept. Hence, if the original functions need to be called from the runtime, the name clash has to be resolved by symbol lookup. The `sys` component caches the real function addresses in `sys_`-prefixed wrapper functions which avoid the lookup overhead. While the runtime has capture guards which avoid recursive interception, it is still recommended to use `sys_` versions of functions across the engine to avoid performance overhead coming from accessing the guards. Another important role is SUT isolation. Currently, `sys_malloc()` in Lotto uses its own memory manager instead of simply redirecting calls to the real `malloc()`. It is done to preserve memory allocation determinism of SUT under the assumption that the same sequence of memory management calls returns the same pointers. Thus, Lotto may allow itself to have varying internal dynamic memory use on record and replay while avoiding potential control flow deviations in SUT, e.g., due to identity hashes being used.
 
 > TODO: move what does not fit into the base (stream, plugin, etc.), extend sys
 
@@ -178,6 +178,40 @@ Handlers must follow some conventions:
 ### `recorder`
 Recorder ensures timely loading of input records and creation of output records. For both actions it uses the state manager.
 
+## Current Runtime Event Path
+
+The active non-QEMU runtime path is:
+
+`INTERCEPT_* -> CAPTURE_* -> INGRESS_* -> mediator -> engine -> sequencer -> plan -> switcher`
+
+Where:
+
+- `INTERCEPT_*` is raw interception
+- `CAPTURE_*` is Dice `self` plus task metadata
+- `INGRESS_*` is semantic Lotto ingress
+
+`INGRESS_*` means:
+
+- `CHAIN_INGRESS_EVENT`
+- `CHAIN_INGRESS_BEFORE`
+- `CHAIN_INGRESS_AFTER`
+
+Current invariants:
+
+- ingress event type is the semantic event id
+- `capture_point.src_type` equals that semantic event id
+- `capture_point` is the semantic carrier through runtime and engine
+- sequencer chains publish semantic event ids directly
+- sequencer payload is `capture_point *`
+
+The useful structural distinction is:
+
+- `_EVENT`
+- `_BEFORE/_AFTER`
+
+`_EVENT` is a single Lotto semantic operation. `_BEFORE/_AFTER` brackets an
+operation span.
+
 ## `runtime`
 Runtime provides a simple interceptor interface to front-ends and encapsulates plan execution. It provides layers of wrappers around basic capture, resume, and return interfaces of the engine. The purpose of these layers is to gradually encapsulate event passing and plan execution. The dependency graph is shown below.
 
@@ -223,7 +257,7 @@ The interceptor encapsulate the mediator use to supply a concise interface for d
 - interception before an event
 - wrapping an external blocking event
 
-The former scenario just puts `intercept_capture()` before the code executing the event. The event must not block. The latter case handles external blocking events by surrounding them with `intercept_before_call()` and `intercept_after_call()`. These calls create a region which is detached from Lotto, i.e., it runs in parallel with other tasks. Thus, to ensure deterministic replay there must be no race between blocking events.
+The former scenario just puts `runtime_ingress()` before the code executing the event. The event must not block. The latter case handles external blocking events by surrounding them with `runtime_ingress_before()` and `runtime_ingress_after()`. These calls create a region which is detached from Lotto, i.e., it runs in parallel with other tasks. Thus, to ensure deterministic replay there must be no race between blocking events.
 
 ### `sighandler`
 
@@ -232,7 +266,7 @@ The signal handler ensures graceful termination of Lotto when a signal is receiv
 ## `plotto`
 PLotto is a collection of interceptors for pthread and TSAN. They are sufficient for basic user-space scenarios.
 
-## `qlotto`
+## `qlotto` *(experimental)*
 QLotto extends functionality of PLotto by making use of Qemu and dynamic instrumentation of guest VM instructions. This frontend provides a possibility of testing and replaying kernel code. On the high level, it is PLotto with a QLotto plugin being applied to a modified version of Qemu with plugins running SUT image. The PLotto plugin integrates Qemu plugin configurations into Lotto CLI.
 
 ### Qemu
@@ -282,7 +316,7 @@ At first, the bug has to be reproduced with plain Qemu. The snapshot plugin crea
 ### Changes to the guest
 The guest can be manually intercepted to make Lotto aware of certain events. For instance, annotating all lock interfaces would allow Lotto to detect deadlocks. QLotto provides convenience headers for easy insertion of capture points.
 
-## `dlotto`
+## `dlotto` *(experimental)*
 Scripts and images.
 
 ## `cli`

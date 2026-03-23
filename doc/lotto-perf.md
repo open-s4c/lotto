@@ -27,13 +27,13 @@ After running, a file `lotto-perf.json` will be generated on the current directo
 
 ### Pretty printing
 
-To pretty print the `json` use the script at `./lotto/scripts/lotto-perf-pretty-print.py`.
+To pretty print the `json` use the script at `scripts/lotto-perf-pretty-print.py`.
 
-You can run it with no arguments, and it will look for the file in `./lotto/build/` or feed the JSON path:
+You can run it with no arguments, and it will look for the file in `build/lotto-perf.json`, or feed the JSON path explicitly:
 
 ```bash
-# implicit. Will look in build/lotto-perf.json
-python3 lotto-perf-pretty-print.py
+# implicit: looks for build/lotto-perf.json
+python3 scripts/lotto-perf-pretty-print.py
 # explicit path
-python3 lotto-perf-pretty-print.py other-path/name.json 
+python3 scripts/lotto-perf-pretty-print.py other-path/name.json
 ```

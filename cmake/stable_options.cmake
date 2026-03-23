@@ -81,19 +81,6 @@ if(${LOTTO_BUSYLOOP_FUTEX})
     add_compile_definitions(FUTEX_USERSPACE)
 endif()
 
-if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
-    set(_H "${_H};inactivity")
-    set(_H "${_H};region_preemption")
-    set(_H "${_H};pct")
-    set(DEFAULT_DISABLED_HANDLERS "${_H}")
-else()
-    set(DEFAULT_DISABLED_HANDLERS ";")
-endif()
-
-set(LOTTO_DISABLE_HANDLERS
-    "${DEFAULT_DISABLED_HANDLERS}"
-    CACHE STRING "List of Lotto handlers to be disabled")
-
 option(LOTTO_INTERCEPT_SYSCALL "Intercept syscall()" OFF)
 if(${LOTTO_INTERCEPT_SYSCALL})
     add_compile_definitions(LOTTO_INTERCEPT_SYSCALL)

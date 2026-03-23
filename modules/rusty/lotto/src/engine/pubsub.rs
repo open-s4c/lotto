@@ -2,7 +2,7 @@
 //! from the C side, and publish the events to the subscribed handlers.
 //!
 //!
-use crate::base::{effective_category, effective_event_type, TaskId, Value};
+use crate::base::{effective_event_type, TaskId, Value};
 use crate::engine::handler::AbortReason::*;
 use crate::engine::handler::ShutdownReason::*;
 use crate::engine::handler::{ContextInfo, EventResult, Reason};
@@ -16,13 +16,13 @@ use crate::engine::handler::{
 use crate::raw::reason::REASON_DETERMINISTIC;
 use crate::raw::reason::*;
 use crate::raw::selector_SELECTOR_FIRST;
-use crate::raw::{context_t, event_t, task_id, tidset_remove, tidset_t};
+use crate::raw::{capture_point, event_t, task_id, tidset_remove, tidset_t};
 use lotto_sys as raw;
 use std::mem::align_of;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub type CustomEventTable =
-    FxHashMap<u32, Box<dyn Fn(&context_t) -> Box<dyn CustomContextTrait> + Send + Sync>>;
+    FxHashMap<u32, Box<dyn Fn(&capture_point) -> Box<dyn CustomContextTrait> + Send + Sync>>;
 
 pub trait CustomContextTrait {
     fn call_right_handler(&self, handler: &mut (dyn ArrivalOrExecuteHandler + Send + Sync));
@@ -41,9 +41,9 @@ pub trait CustomContextTrait {
 /// The user must ensure the pointers are alligned, not-NULL and
 /// properly initialized.
 ///
-pub unsafe extern "C" fn publish_arrival(ctx: *const context_t, event: *mut event_t) {
+pub unsafe extern "C" fn publish_arrival(ctx: *const capture_point, event: *mut event_t) {
     assert_eq!(
-        (ctx as usize) % align_of::<context_t>(),
+        (ctx as usize) % align_of::<capture_point>(),
         0,
         "Invalid alignment"
     );
@@ -57,9 +57,8 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const context_t, event: *mut even
 
     // SAFETY: We checked the alignment, that the pointer is not-null and trust the caller to
     // provide us with a properly initialized context.
-    let ctx: &context_t = unsafe { ctx.as_ref() }.expect("Unexpected null pointer");
+    let ctx: &capture_point = unsafe { ctx.as_ref() }.expect("Unexpected null pointer");
     let tid = TaskId::new(ctx.id);
-    let cat = effective_category(ctx);
     let ctx_info: ContextInfo = ContextInfo::new(ctx);
 
     // Call simple handlers
@@ -76,10 +75,10 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const context_t, event: *mut even
 
     // Call complex handlers
     trace!(
-        "Saving to table: task {:?} with event {:?}. Category = {:?}",
+        "Saving to table: task {:?} with event {:?}. src_type = {:?}",
         tid,
         ctx_info,
-        cat
+        effective_event_type(ctx)
     );
 
     let table = &mut crate::engine::handler::TASK_EVENT_TABLE
@@ -293,7 +292,7 @@ pub unsafe extern "C" fn publish_execute(
     raw::ps_err_PS_OK
 }
 
-pub unsafe fn publish_execute_ctx(ctx: *const raw::context_t) {
+pub unsafe fn publish_execute_ctx(ctx: *const raw::capture_point) {
     let ctx = &*ctx;
 
     {
@@ -351,9 +350,9 @@ pub unsafe fn publish_execute_ctx(ctx: *const raw::context_t) {
 ///
 /// # Safety
 ///
-/// The caller must ensure `v` contains a valid `context_t` payload.
+/// The caller must ensure `v` contains a valid `capture_point` payload.
 pub unsafe fn publish_execute_value(v: raw::value) {
-    let ctx = Value::from(v).as_any() as *const raw::context_t;
+    let ctx = Value::from(v).as_any() as *const raw::capture_point;
     publish_execute_ctx(ctx);
 }
 

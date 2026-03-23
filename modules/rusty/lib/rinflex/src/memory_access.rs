@@ -54,8 +54,6 @@
 //! 2. `modify.next` modification-order `modify` modification-order `modify.next`
 
 use bincode::{Decode, Encode};
-use lotto::base::category::Category;
-
 use crate::raw;
 pub use crate::vaddr::VAddr;
 use crate::{sized_read, Event, Transition};
@@ -542,96 +540,64 @@ pub trait MemoryOperationExt {
     fn is_xchg(&self) -> bool;
 }
 
-impl MemoryOperationExt for Category {
+impl MemoryOperationExt for Transition {
     fn is_read(&self) -> bool {
         matches!(
-            *self,
-            Category::CAT_BEFORE_READ
-                | Category::CAT_BEFORE_AREAD
-                | Category::CAT_AFTER_AREAD
-                | Category::CAT_BEFORE_RMW
-                | Category::CAT_AFTER_RMW
-                | Category::CAT_BEFORE_CMPXCHG
-                | Category::CAT_AFTER_CMPXCHG_S
-                | Category::CAT_AFTER_CMPXCHG_F
-                | Category::CAT_BEFORE_XCHG
-                | Category::CAT_AFTER_XCHG
+            self.src_type,
+            raw::EVENT_MA_READ
+                | raw::EVENT_MA_AREAD
+                | raw::EVENT_MA_RMW
+                | raw::EVENT_MA_CMPXCHG
+                | raw::EVENT_MA_CMPXCHG_WEAK
+                | raw::EVENT_MA_XCHG
         )
     }
 
     fn is_write(&self) -> bool {
         matches!(
-            *self,
-            Category::CAT_BEFORE_WRITE
-                | Category::CAT_BEFORE_AWRITE
-                | Category::CAT_AFTER_AWRITE
-                | Category::CAT_BEFORE_RMW
-                | Category::CAT_AFTER_RMW
-                | Category::CAT_BEFORE_CMPXCHG
-                | Category::CAT_AFTER_CMPXCHG_S
-                | Category::CAT_AFTER_CMPXCHG_F
-                | Category::CAT_BEFORE_XCHG
-                | Category::CAT_AFTER_XCHG
+            self.src_type,
+            raw::EVENT_MA_WRITE
+                | raw::EVENT_MA_AWRITE
+                | raw::EVENT_MA_RMW
+                | raw::EVENT_MA_CMPXCHG
+                | raw::EVENT_MA_CMPXCHG_WEAK
+                | raw::EVENT_MA_XCHG
         )
     }
 
     fn is_atomic(&self) -> bool {
         matches!(
-            *self,
-            Category::CAT_BEFORE_AWRITE
-                | Category::CAT_AFTER_AWRITE
-                | Category::CAT_BEFORE_AREAD
-                | Category::CAT_AFTER_AREAD
-                | Category::CAT_BEFORE_RMW
-                | Category::CAT_AFTER_RMW
-                | Category::CAT_BEFORE_CMPXCHG
-                | Category::CAT_AFTER_CMPXCHG_S
-                | Category::CAT_AFTER_CMPXCHG_F
-                | Category::CAT_BEFORE_XCHG
-                | Category::CAT_AFTER_XCHG
+            self.src_type,
+            raw::EVENT_MA_AWRITE
+                | raw::EVENT_MA_AREAD
+                | raw::EVENT_MA_RMW
+                | raw::EVENT_MA_CMPXCHG
+                | raw::EVENT_MA_CMPXCHG_WEAK
+                | raw::EVENT_MA_XCHG
         )
     }
 
     fn is_before(&self) -> bool {
-        matches!(
-            *self,
-            Category::CAT_BEFORE_READ
-                | Category::CAT_BEFORE_AREAD
-                | Category::CAT_BEFORE_RMW
-                | Category::CAT_BEFORE_CMPXCHG
-                | Category::CAT_BEFORE_XCHG
-                | Category::CAT_BEFORE_WRITE
-                | Category::CAT_BEFORE_AWRITE
-        )
+        !self.after
     }
 
     fn is_after(&self) -> bool {
-        matches!(
-            *self,
-            Category::CAT_AFTER_AREAD
-                | Category::CAT_AFTER_RMW
-                | Category::CAT_AFTER_CMPXCHG_S
-                | Category::CAT_AFTER_CMPXCHG_F
-                | Category::CAT_AFTER_XCHG
-                | Category::CAT_AFTER_AWRITE
-        )
+        self.after
     }
 
     fn is_cas(&self) -> bool {
         matches!(
-            *self,
-            Category::CAT_BEFORE_CMPXCHG
-                | Category::CAT_AFTER_CMPXCHG_S
-                | Category::CAT_AFTER_CMPXCHG_F
+            self.src_type,
+            raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK
         )
     }
 
     fn is_rmw(&self) -> bool {
-        matches!(*self, Category::CAT_BEFORE_RMW | Category::CAT_AFTER_RMW)
+        matches!(self.src_type, raw::EVENT_MA_RMW)
     }
 
     fn is_xchg(&self) -> bool {
-        matches!(*self, Category::CAT_BEFORE_XCHG | Category::CAT_AFTER_XCHG)
+        matches!(self.src_type, raw::EVENT_MA_XCHG)
     }
 }
 
@@ -651,5 +617,4 @@ macro_rules! impl_MemoryOperationExt_delegate {
     }
 }
 
-impl_MemoryOperationExt_delegate!(Transition, cat);
 impl_MemoryOperationExt_delegate!(Event, t);

@@ -8,7 +8,7 @@ use lotto::collections::FxHashMap;
 use lotto::engine::handler::ExecuteHandler;
 use lotto::engine::handler::{ContextInfo, TaskId};
 use lotto::log::{debug, trace, warn};
-use lotto::raw::{base_category, category_t};
+use lotto::raw;
 use lotto::raw::{map_address_t, memory_map_address_lookup};
 use std::sync::LazyLock;
 
@@ -17,7 +17,7 @@ static HANDLER: LazyLock<PerfHandler> = LazyLock::new(|| PerfHandler::default())
 #[derive(Default)]
 struct PerfHandler {
     /// Number of captures per category.
-    count_category: FxHashMap<category_t, u64>,
+    count_category: FxHashMap<u32, u64>,
     /// Number of capture chpt for each task.
     count_events_for_task: FxHashMap<TaskId, u64>,
     /// Number of times each pc creates a captured chpt.
@@ -33,10 +33,10 @@ struct CategoryCnt {
     cnt: u64,
 }
 
-impl From<(category_t, u64)> for CategoryCnt {
-    fn from(value: (category_t, u64)) -> Self {
+impl From<(u32, u64)> for CategoryCnt {
+    fn from(value: (u32, u64)) -> Self {
         Self {
-            cat: format!("{:?}", value.0),
+            cat: value.0.to_string(),
             cnt: value.1,
         }
     }
@@ -99,7 +99,7 @@ impl PerfHandler {
         *cur += 1;
 
         // count of the category
-        let cur = self.count_category.entry(ctx_info.cat).or_insert(0);
+        let cur = self.count_category.entry(ctx_info.src_type).or_insert(0);
         *cur += 1;
 
         // count of the program counter (pc)
@@ -120,8 +120,8 @@ impl PerfHandler {
         format!("\"{name}\": ") + &serde_json::to_string(&vec).expect("valid json")
     }
 
-    fn count_category_to_json(&self, count_map: FxHashMap<category_t, u64>) -> String {
-        self.count_to_json::<category_t, CategoryCnt>(count_map, "count_per_category".to_string())
+    fn count_category_to_json(&self, count_map: FxHashMap<u32, u64>) -> String {
+        self.count_to_json::<u32, CategoryCnt>(count_map, "count_per_category".to_string())
     }
 
     fn count_task_to_json(&self, count_map: FxHashMap<TaskId, u64>) -> String {
@@ -167,7 +167,7 @@ pub fn register() {
 impl ExecuteHandler for PerfHandler {
     fn handle_execute(&mut self, tid: TaskId, ctx_info: &ContextInfo) {
         self.update_counts(tid, ctx_info);
-        if tid == TaskId::new(1) && ctx_info.cat == base_category::CAT_FUNC_EXIT {
+        if tid == TaskId::new(1) && ctx_info.src_type == raw::EVENT_STACKTRACE_EXIT {
             // This can be the last event, so we can overwrite
             // the perf-log now, and maybe we will also need to do it later.
             // Note that the log is only written for successful executions

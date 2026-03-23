@@ -16,7 +16,7 @@ pub mod stats;
 pub mod trace;
 pub mod vaddr;
 
-use lotto::base::{effective_category, Category, Clock, StableAddress, StableAddressMethod, TaskId};
+use lotto::base::{effective_event_type, Clock, StableAddress, StableAddressMethod, TaskId};
 use lotto::brokers::{Decode, Encode};
 use lotto::log::*;
 use lotto::raw;
@@ -36,23 +36,72 @@ use std::sync::atomic::{fence, Ordering};
 pub struct Transition {
     pub id: TaskId,
     pub pc: StableAddress,
-    pub cat: Category,
+    pub src_type: u32,
+    pub after: bool,
 }
 
 impl Transition {
     /// Create a new [`Transition`] from a Lotto capture.
-    pub fn new(ctx: &raw::context) -> Self {
+    pub fn new(ctx: &raw::capture_point) -> Self {
         Transition {
             id: TaskId::new(ctx.id),
-            cat: effective_category(ctx),
+            src_type: effective_event_type(ctx),
+            after: u32::from(ctx.src_chain) == raw::CAPTURE_AFTER,
             pc: StableAddress::with_method(ctx.pc, StableAddressMethod::STABLE_ADDRESS_METHOD_MAP),
         }
+    }
+
+    pub fn event_name(&self) -> &'static str {
+        match self.src_type {
+            raw::EVENT_MA_READ => "MA_READ",
+            raw::EVENT_MA_WRITE => "MA_WRITE",
+            raw::EVENT_MA_AREAD => {
+                if self.after { "MA_AREAD/AFTER" } else { "MA_AREAD" }
+            }
+            raw::EVENT_MA_AWRITE => {
+                if self.after { "MA_AWRITE/AFTER" } else { "MA_AWRITE" }
+            }
+            raw::EVENT_MA_RMW => {
+                if self.after { "MA_RMW/AFTER" } else { "MA_RMW" }
+            }
+            raw::EVENT_MA_XCHG => {
+                if self.after { "MA_XCHG/AFTER" } else { "MA_XCHG" }
+            }
+            raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => {
+                if self.after { "MA_CMPXCHG/AFTER" } else { "MA_CMPXCHG" }
+            }
+            raw::EVENT_MA_FENCE => {
+                if self.after { "MA_FENCE/AFTER" } else { "MA_FENCE" }
+            }
+            raw::EVENT_MUTEX_ACQUIRE => "MUTEX_ACQUIRE",
+            raw::EVENT_MUTEX_TRYACQUIRE => "MUTEX_TRYACQUIRE",
+            raw::EVENT_MUTEX_RELEASE => "MUTEX_RELEASE",
+            raw::EVENT_STACKTRACE_ENTER => "STACKTRACE_ENTER",
+            raw::EVENT_STACKTRACE_EXIT => "STACKTRACE_EXIT",
+            raw::EVENT_TASK_CREATE => "TASK_CREATE",
+            raw::EVENT_TASK_INIT => "TASK_INIT",
+            raw::EVENT_TASK_FINI => "TASK_FINI",
+            raw::EVENT_TASK_JOIN => "TASK_JOIN",
+            raw::EVENT_ORDER => "ORDER",
+            raw::EVENT_SYS_YIELD => "SYS_YIELD",
+            raw::EVENT_USER_YIELD => "USER_YIELD",
+            raw::EVENT_SCHED_YIELD => "SCHED_YIELD",
+            _ => "UNKNOWN",
+        }
+    }
+
+    pub fn is_before(&self) -> bool {
+        !self.after
+    }
+
+    pub fn is_after(&self) -> bool {
+        self.after
     }
 }
 
 impl std::fmt::Display for Transition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, r"[id:{}, cat:{}, pc:{}]", self.id, self.cat, self.pc)
+        write!(f, r"[id:{}, type:{}, pc:{}]", self.id, self.event_name(), self.pc)
     }
 }
 
@@ -310,7 +359,7 @@ impl Event {
     /// `t` and `clk`.
     ///
     /// Peripheral information is not provided.
-    pub fn new(ctx: &raw::context, e: &raw::event_t, stacktrace: StackTrace) -> Self {
+    pub fn new(ctx: &raw::capture_point, e: &raw::event_t, stacktrace: StackTrace) -> Self {
         Self {
             t: Transition::new(ctx),
             clk: e.clk,
@@ -330,13 +379,17 @@ impl Event {
 
     /// Display this event.
     pub fn display(&self) -> Result<String, error::Error> {
+        let instruction = self.instruction();
+        let location = instruction
+            .display()
+            .unwrap_or_else(|_| format!("unknown\npc offset 0x{:x}\n", instruction.offset));
         let mut result = format!(
             "event - tid: {}, clk: {}, {} x pc: {}, cat: {}, eff: {:?}\n[{}]\n{}",
             self.t.id,
             self.clk,
             self.cnt,
             self.t.pc,
-            self.t.cat,
+            self.t.event_name(),
             Eff::from(self.m.as_ref()),
             self.stacktrace
                 .0
@@ -345,7 +398,7 @@ impl Event {
                 .map(|x| x.to_string())
                 .collect::<Vec<_>>()
                 .join(","),
-            self.instruction().display()?
+            location
         );
         for (i, frame) in self.stacktrace.0.iter().skip(1).rev().enumerate() {
             let call_insn = Instruction {

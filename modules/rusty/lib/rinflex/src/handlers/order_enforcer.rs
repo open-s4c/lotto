@@ -4,8 +4,6 @@
 //! - During execution, only counters are modified
 //! - Upon exit, the results are saved in FINAL states
 use lotto::base::reason::*;
-use lotto::base::category::effective_category;
-use lotto::base::Category;
 use lotto::base::TidSet;
 use lotto::base::Value;
 use lotto::brokers::statemgr::*;
@@ -62,16 +60,14 @@ pub struct OrderEnforcer {
 }
 
 impl Handler for OrderEnforcer {
-    fn handle(&mut self, ctx: &raw::context_t, cappt: &mut raw::event_t) {
+    fn handle(&mut self, ctx: &raw::capture_point, cappt: &mut raw::event_t) {
         if U64OrInf::from(cappt.clk) > self.max_clock {
             self.shutdown = true;
             cappt.reason = REASON_IGNORE;
             return;
         }
 
-        if effective_category(ctx) == Category::CAT_NONE
-            || self.fin.constraints.len() == 0
-        {
+        if ctx.src_type == 0 || self.fin.constraints.len() == 0 {
             return;
         }
 
@@ -142,9 +138,9 @@ impl Handler for OrderEnforcer {
         }
     }
 
-    fn posthandle(&mut self, ctx: &raw::context_t) {
+    fn posthandle(&mut self, ctx: &raw::capture_point) {
         if self.shutdown
-            || effective_category(ctx) == Category::CAT_NONE
+            || ctx.src_type == 0
             || self.fin.constraints.is_empty()
         {
             return;
@@ -167,12 +163,8 @@ impl Handler for OrderEnforcer {
         }
 
         /* Reconstruct last event */
-        let last_e = match event::get_event(tid) {
-            Some(e) => e,
-            None => panic!(
-                "Cannot retrieve an event for task {} (cat {})",
-                tid, effective_category(ctx)
-            ),
+        let Some(last_e) = event::get_event(tid) else {
+            return;
         };
 
         /* Update constraint bookkeeping */
@@ -267,7 +259,7 @@ fn should_block(cur: &Event, constraint: &Constraint) -> bool {
         debug!(
             "checking [t:{},cat:{},cnt:{},eff:{:?}] against {}",
             cur.t.id,
-            cur.t.cat,
+            cur.t.event_name(),
             cur.cnt,
             Eff::from(cur.m.as_ref()),
             constraint

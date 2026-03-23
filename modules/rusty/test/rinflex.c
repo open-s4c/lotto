@@ -5,8 +5,8 @@
 // RUN: %lotto %rinflex -r 30 2>&1 | iconv -f utf-8 -t utf-8 -c | %check %s
 
 // CHECK: ------ . ------ . ------ . ------ . ------
-// CHECK-NEXT: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_RMW
-// CHECK: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_AREAD
+// CHECK-NEXT: event - tid: 2, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: MA_RMW
+// CHECK: event - tid: 3, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: MA_AREAD
 
 // clang-format on
 

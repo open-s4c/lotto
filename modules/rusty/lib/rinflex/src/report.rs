@@ -17,8 +17,15 @@ pub struct Instruction {
 }
 
 impl Instruction {
+    fn has_path(&self) -> bool {
+        !self.path.as_os_str().is_empty()
+    }
+
     /// Obtain the source line.
     fn display_source_impl(&self) -> Result<String, Error> {
+        if !self.has_path() {
+            return Ok(String::new());
+        }
         let output = Command::new("addr2line")
             .arg("-e")
             .arg(&self.path)
@@ -31,6 +38,9 @@ impl Instruction {
 
     /// Obtain the assembly code.
     fn display_assembly_impl(&self) -> Result<String, Error> {
+        if !self.has_path() {
+            return Ok(String::new());
+        }
         if self.offset == 0 {
             return Ok(format!("NO ASSEMBLY FOR INVALID OFFSET {}", self.offset));
         }

@@ -50,7 +50,7 @@ pub extern "C" fn lotto_rust_init() {
 
 #[no_mangle]
 pub unsafe extern "C" fn lotto_rust_publish_arrival(
-    ctx: *const lotto::raw::context_t,
+    ctx: *const lotto::raw::capture_point,
     event: *mut lotto::raw::event_t,
 ) {
     lotto::engine::pubsub::publish_arrival(ctx, event);
@@ -58,8 +58,8 @@ pub unsafe extern "C" fn lotto_rust_publish_arrival(
 
 #[no_mangle]
 pub unsafe extern "C" fn lotto_rust_publish_execute(
-    ctx: *const lotto::raw::context_t,
-    _event: *const lotto::raw::context_t,
+    ctx: *const lotto::raw::capture_point,
+    _event: *const lotto::raw::capture_point,
 ) {
     lotto::engine::pubsub::publish_execute_ctx(ctx);
 }

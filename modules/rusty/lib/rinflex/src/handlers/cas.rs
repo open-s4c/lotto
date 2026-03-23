@@ -11,11 +11,14 @@ use std::sync::Mutex;
 
 use crate::memory_access::{MemoryAccess, MemoryOperationExt, Modify, ModifyKind, Read, VAddr};
 use bincode::{Decode, Encode};
-use lotto::base::category::Category;
-use lotto::base::{HandlerArg, Value};
+use lotto::base::category::{effective_category, Category};
+use lotto::base::Value;
 use lotto::brokers::{Marshable, Stateful};
 use lotto::cli::flags::{FlagKey, STR_CONVERTER_BOOL};
-use lotto::engine::handler::{Handler, TaskId};
+use lotto::engine::handler::{
+    get_addr_from_context, get_rmw_operator_from_context, get_size_from_context,
+    get_value_from_context, Handler, TaskId,
+};
 use lotto::log::*;
 use lotto::raw;
 use lotto::Stateful;
@@ -90,31 +93,35 @@ fn ctx_to_memory_access(ctx: &raw::context_t) -> Option<MemoryAccess> {
 
 #[inline]
 fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
-    if !ctx.cat.is_write() {
+    let cat = effective_category(ctx);
+    if !cat.is_write() {
         return None;
     }
 
-    let raw_addr = get_addr(ctx.args[0]);
+    let raw_addr = usize::from(
+        get_addr_from_context(ctx, 0).expect("missing memory-access address"),
+    );
     let addr = VAddr::get(ctx, raw_addr);
-    let size = get_val(ctx.args[1]);
-    let is_after = ctx.cat.is_after();
+    let size = u64::from(get_size_from_context(ctx, 1));
+    let is_after = cat.is_after();
 
-    let kind: ModifyKind = match ctx.cat {
+    let kind: ModifyKind = match cat {
         // CAS
         Category::CAT_BEFORE_CMPXCHG
         | Category::CAT_AFTER_CMPXCHG_S
         | Category::CAT_AFTER_CMPXCHG_F => ModifyKind::Cas {
             is_after,
-            expected: get_val(ctx.args[2]),
-            new: get_val(ctx.args[3]),
+            expected: get_ctx_val(ctx, 2, size),
+            new: get_ctx_val(ctx, 3, size),
         },
 
         // RMW
         Category::CAT_BEFORE_RMW | Category::CAT_AFTER_RMW => ModifyKind::Rmw {
             is_after,
-            delta: get_val(ctx.args[2]),
+            delta: get_ctx_val(ctx, 2, size),
             operator: {
-                let val = get_val(ctx.args[3]) as u32;
+                let val = get_rmw_operator_from_context(ctx)
+                    .expect("missing RMW operator from context");
                 // Safety: it's coming from the interceptor directly
                 unsafe { std::mem::transmute(val) }
             },
@@ -123,7 +130,7 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
         // XCHG
         Category::CAT_BEFORE_XCHG | Category::CAT_AFTER_XCHG => ModifyKind::Xchg {
             is_after,
-            value: get_val(ctx.args[2]),
+            value: get_ctx_val(ctx, 2, size),
         },
 
         // Plain writes
@@ -132,7 +139,7 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
         // Atomic writes
         Category::CAT_BEFORE_AWRITE | Category::CAT_AFTER_AWRITE => ModifyKind::AWrite {
             is_after,
-            value: get_val(ctx.args[2]),
+            value: get_ctx_val(ctx, 2, size),
         },
 
         // Ignore other non-modifying operations
@@ -141,10 +148,10 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
 
     // NOTE: We need to get the value early for the order enforcer to
     // detect whether the event should be blocked.
-    let read_value = if ctx.cat.is_read() {
+    let read_value = if cat.is_read() {
         // 1. Currently, only consider CAS, XCHG and RMW events.
         // 2. An AFTER event is understood as the same operation as the BEFORE event, so they use the same value.
-        if ctx.cat.is_before() && (ctx.cat.is_xchg() || ctx.cat.is_rmw() || ctx.cat.is_cas()) {
+        if cat.is_before() && (cat.is_xchg() || cat.is_rmw() || cat.is_cas()) {
             let value = unsafe { crate::sized_read(raw_addr as u64, size as usize) };
             Some(value)
         } else {
@@ -186,25 +193,16 @@ fn ctx_to_read(_ctx: &raw::context_t) -> Option<Read> {
     // })
 }
 
-fn get_addr(arg: raw::arg_t) -> usize {
-    match HandlerArg::from(arg) {
-        HandlerArg::Addr(addr) => addr,
-        x @ _ => panic!(
-            "Try to get an address from a non-address context arg {:?}",
-            x
-        ),
-    }
-}
-
-fn get_val(arg: raw::arg_t) -> u64 {
-    match HandlerArg::from(arg) {
-        HandlerArg::U8(val) => val as u64,
-        HandlerArg::U16(val) => val as u64,
-        HandlerArg::U32(val) => val as u64,
-        HandlerArg::U64(val) => val,
-        HandlerArg::Addr(addr) => addr as u64,
-        HandlerArg::None => panic!("No value"),
-        HandlerArg::U128(_) => panic!("Does not support 128-bit integer"),
+fn get_ctx_val(ctx: &raw::context_t, value_id: usize, size: u64) -> u64 {
+    match get_value_from_context(ctx, value_id, lotto::engine::handler::AddrSize::new(size)) {
+        lotto::engine::handler::ValuesTypes::U8(val) => val as u64,
+        lotto::engine::handler::ValuesTypes::U16(val) => val as u64,
+        lotto::engine::handler::ValuesTypes::U32(val) => val as u64,
+        lotto::engine::handler::ValuesTypes::U64(val) => val,
+        lotto::engine::handler::ValuesTypes::U128(_) => {
+            panic!("Does not support 128-bit integer")
+        }
+        lotto::engine::handler::ValuesTypes::None => panic!("No value"),
     }
 }
 

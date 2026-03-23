@@ -1,1 +1,1 @@
-add_runtime_module(subscribe.c module.c)
+add_runtime_module(subscribers.c module.c)

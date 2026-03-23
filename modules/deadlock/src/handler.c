@@ -2,12 +2,15 @@
 #include "state.h"
 #include <lotto/base/reason.h>
 #include <lotto/base/tidbag.h>
-#include <lotto/engine/dispatcher.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/deadlock/events.h>
+#include <lotto/modules/mutex/events.h>
 #include <lotto/modules/mutex/mutex.h>
+#include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/casts.h>
@@ -221,48 +224,94 @@ _mark_lost(task_id id)
     return ret;
 }
 
+static uintptr_t
+_mutex_addr(const capture_point *cp)
+{
+    switch (cp->src_type) {
+        case EVENT_MUTEX_ACQUIRE:
+            return (uintptr_t)((struct mutex_acquire_event *)cp->payload)->addr;
+        case EVENT_MUTEX_TRYACQUIRE:
+            return (uintptr_t)((struct mutex_tryacquire_event *)cp->payload)->addr;
+        case EVENT_MUTEX_RELEASE:
+            return (uintptr_t)((struct mutex_release_event *)cp->payload)->addr;
+        default:
+            ASSERT(0);
+            return 0;
+    }
+}
+
+static bool
+_mutex_try_ok(const capture_point *cp)
+{
+    ASSERT(cp->src_type == EVENT_MUTEX_TRYACQUIRE);
+    return ((struct mutex_tryacquire_event *)cp->payload)->ret == 0;
+}
+
+static uintptr_t
+_rsrc_addr(const capture_point *cp)
+{
+    ASSERT(cp->src_type == EVENT_RSRC_ACQUIRING ||
+           cp->src_type == EVENT_RSRC_RELEASED);
+    return (uintptr_t)((rsrc_event_t *)cp->payload)->addr;
+}
+
 STATIC void
-_deadlock_handle(const context_t *ctx, event_t *e)
+_deadlock_handle(const capture_point *cp, event_t *e)
 {
     ASSERT(e);
     if (e->skip || !deadlock_config()->enabled)
         return;
 
-    ASSERT(ctx);
+    ASSERT(cp);
 
-    /* This handler uses ctx->vid as task id if that field is properly set. In
-     * case ctx->vid != NO_TASK, but the client cannot determine the proper
-     * value, the client should set ctx->vid = ANY_TASK to force this handler
-     * discard the event. If ctx->vid is not set (ie, it is NO_TASK), ctx->id is
+    /* This handler uses cp->vid as task id if that field is properly set. In
+     * case cp->vid != NO_TASK, but the client cannot determine the proper
+     * value, the client should set cp->vid = ANY_TASK to force this handler
+     * discard the event. If cp->vid is not set (ie, it is NO_TASK), cp->id is
      * used as task id. */
-    if (ctx->vid == ANY_TASK)
+    if (cp->vid == ANY_TASK)
         return;
-    task_id tid = ctx->vid ? ctx->vid : ctx->id;
+    task_id tid = cp->vid ? cp->vid : cp->id;
 
     ASSERT(tid != NO_TASK);
-    uintptr_t addr = CAST_TYPE(uint64_t, ctx->args[0].value.ptr);
-    switch (ctx->cat) {
-        case CAT_MUTEX_ACQUIRE:
-        case CAT_RSRC_ACQUIRING:
-            if (_check_deadlock(tid, addr)) {
+    switch (cp->src_type) {
+        case EVENT_MUTEX_ACQUIRE:
+            if (_check_deadlock(tid, _mutex_addr(cp))) {
                 e->reason = REASON_RSRC_DEADLOCK;
             }
-            /* fallthru */
-        case CAT_MUTEX_TRYACQUIRE:
+            if (_is_lost(tid, _mutex_addr(cp))) {
+                e->reason = REASON_RSRC_DEADLOCK;
+            }
+            _acquiring(tid, _mutex_addr(cp));
+            break;
+        case EVENT_MUTEX_TRYACQUIRE: {
+            uintptr_t addr = _mutex_addr(cp);
             if (_is_lost(tid, addr)) {
                 e->reason = REASON_RSRC_DEADLOCK;
             }
-            if (ctx->args[1].value.u8 == 0) {
+            if (_mutex_try_ok(cp)) {
                 _acquiring(tid, addr);
             }
-            break;
-        case CAT_MUTEX_RELEASE:
-        case CAT_RSRC_RELEASED:
-            if (!_released(tid, addr)) {
+        } break;
+        case EVENT_RSRC_ACQUIRING:
+            if (_check_deadlock(tid, _rsrc_addr(cp))) {
+                e->reason = REASON_RSRC_DEADLOCK;
+            }
+            if (_is_lost(tid, _rsrc_addr(cp))) {
                 e->reason = REASON_RSRC_DEADLOCK;
             }
             break;
-        case CAT_TASK_FINI:
+        case EVENT_MUTEX_RELEASE:
+            if (!_released(tid, _mutex_addr(cp))) {
+                e->reason = REASON_RSRC_DEADLOCK;
+            }
+            break;
+        case EVENT_RSRC_RELEASED:
+            if (!_released(tid, _rsrc_addr(cp))) {
+                e->reason = REASON_RSRC_DEADLOCK;
+            }
+            break;
+        case EVENT_TASK_FINI:
             if (_mark_lost(tid)) {
                 e->reason = REASON_RSRC_DEADLOCK;
             }
@@ -277,7 +326,7 @@ _deadlock_handle(const context_t *ctx, event_t *e)
 }
 
 LOTTO_ADVERTISE_TYPE(EVENT_DEADLOCK__DETECTED)
-REGISTER_HANDLER(_deadlock_handle)
+REGISTER_SEQUENCER_HANDLER(_deadlock_handle)
 
 static tidset_t _dbg_set;
 

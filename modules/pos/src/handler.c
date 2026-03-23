@@ -6,10 +6,11 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <lotto/base/tidmap.h>
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/state.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/runtime/memaccess_payload.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
 #include <lotto/util/once.h>
@@ -106,7 +107,7 @@ _reset_wd()
  * handler
  ******************************************************************************/
 STATIC void
-_pos_handle(const context_t *ctx, event_t *e)
+_pos_handle(const capture_point *cp, event_t *e)
 {
     once({
         pos_config()->enabled =
@@ -121,43 +122,43 @@ _pos_handle(const context_t *ctx, event_t *e)
     if (e->skip)
         return;
 
-    ASSERT(ctx);
+    ASSERT(cp);
 
     uintptr_t addr = 0;
     bool is_write  = false;
     task_t *t      = NULL;
 
-    switch (ctx->cat) {
-        case CAT_TASK_FINI:
-            tidmap_deregister(&_state, ctx->id);
-            ASSERT(!tidset_has(&e->tset, ctx->id));
-            break;
+    if (cp->src_type == EVENT_TASK_FINI) {
+        tidmap_deregister(&_state, cp->id);
+        ASSERT(!tidset_has(&e->tset, cp->id));
+    } else if (cp->src_type == EVENT_TASK_INIT) {
+        t = (task_t *)tidmap_find(&_state, cp->id);
+        ASSERT(t == NULL);
+        t = (task_t *)tidmap_register(&_state, cp->id);
+        ASSERT(t);
+        t->is_write = false;
+        t->addr     = 0;
+        t->priority = _fresh_priority(prng_next());
+    } else {
+        switch (cp->src_type) {
+            case EVENT_MA_WRITE:
+            case EVENT_MA_AWRITE:
+            case EVENT_MA_CMPXCHG:
+            case EVENT_MA_CMPXCHG_WEAK:
+            case EVENT_MA_XCHG:
+            case EVENT_MA_RMW:
+                is_write = true;
+                addr     = context_memaccess_addr(cp);
+                break;
 
-        case CAT_TASK_INIT:
-            t = (task_t *)tidmap_find(&_state, ctx->id);
-            ASSERT(t == NULL);
-            t = (task_t *)tidmap_register(&_state, ctx->id);
-            ASSERT(t);
-            t->is_write = false;
-            t->addr     = 0;
-            t->priority = _fresh_priority(prng_next());
-            break;
+            case EVENT_MA_AREAD:
+            case EVENT_MA_READ:
+                addr = context_memaccess_addr(cp);
+                break;
 
-        case CAT_BEFORE_WRITE:
-        case CAT_BEFORE_AWRITE:
-        case CAT_BEFORE_CMPXCHG:
-        case CAT_BEFORE_XCHG:
-        case CAT_BEFORE_RMW:
-            is_write = true;
-            addr     = ctx->args[0].value.ptr;
-            break;
-
-        case CAT_BEFORE_AREAD:
-        case CAT_BEFORE_READ:
-            addr = ctx->args[0].value.ptr;
-
-        default:
-            break;
+            default:
+                break;
+        }
     }
 
     if (!pos_config()->enabled || !e->is_chpt ||
@@ -166,7 +167,7 @@ _pos_handle(const context_t *ctx, event_t *e)
         return;
     }
 
-    if ((t = (task_t *)tidmap_find(&_state, ctx->id))) {
+    if ((t = (task_t *)tidmap_find(&_state, cp->id))) {
         t->is_write = is_write;
         t->addr     = addr;
         if (t->priority < pos_config()->wd_threshold) {
@@ -175,7 +176,7 @@ _pos_handle(const context_t *ctx, event_t *e)
             t->priority = _fresh_priority(prng_next());
         }
     } else {
-        ASSERT(ctx->cat == CAT_TASK_FINI);
+        ASSERT(cp->src_type == EVENT_TASK_FINI);
     }
     _pos_sort(&e->tset);
     _reset_races(tidset_get(&e->tset, 0));
@@ -183,7 +184,7 @@ _pos_handle(const context_t *ctx, event_t *e)
     e->readonly = true;
     e->reason   = REASON_DETERMINISTIC;
 }
-REGISTER_HANDLER(_pos_handle);
+REGISTER_SEQUENCER_HANDLER(_pos_handle);
 
 /*******************************************************************************
  * marshaling implementation

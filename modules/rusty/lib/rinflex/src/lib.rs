@@ -16,7 +16,7 @@ pub mod stats;
 pub mod trace;
 pub mod vaddr;
 
-use lotto::base::{Category, Clock, StableAddress, StableAddressMethod, TaskId};
+use lotto::base::{effective_category, Category, Clock, StableAddress, StableAddressMethod, TaskId};
 use lotto::brokers::{Decode, Encode};
 use lotto::log::*;
 use lotto::raw;
@@ -44,7 +44,7 @@ impl Transition {
     pub fn new(ctx: &raw::context) -> Self {
         Transition {
             id: TaskId::new(ctx.id),
-            cat: ctx.cat,
+            cat: effective_category(ctx),
             pc: StableAddress::with_method(ctx.pc, StableAddressMethod::STABLE_ADDRESS_METHOD_MAP),
         }
     }

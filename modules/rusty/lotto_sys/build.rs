@@ -108,6 +108,7 @@ fn main() -> Result<()> {
         .collect();
     let rusty_include_dir = lotto_build_dir.join("modules").join("rusty").join("include");
     modules_include_dirs.push(rusty_include_dir);
+    modules_include_dirs.push(get_lotto_dir().join("modules").join("rusty").join("include"));
 
     println!("Modules include dir is {:?}", modules_include_dirs);
     modules_include_dirs

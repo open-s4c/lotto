@@ -4,6 +4,7 @@
 //! - During execution, only counters are modified
 //! - Upon exit, the results are saved in FINAL states
 use lotto::base::reason::*;
+use lotto::base::category::effective_category;
 use lotto::base::Category;
 use lotto::base::TidSet;
 use lotto::base::Value;
@@ -68,7 +69,9 @@ impl Handler for OrderEnforcer {
             return;
         }
 
-        if ctx.cat == Category::CAT_NONE || self.fin.constraints.len() == 0 {
+        if effective_category(ctx) == Category::CAT_NONE
+            || self.fin.constraints.len() == 0
+        {
             return;
         }
 
@@ -140,7 +143,10 @@ impl Handler for OrderEnforcer {
     }
 
     fn posthandle(&mut self, ctx: &raw::context_t) {
-        if self.shutdown || ctx.cat == Category::CAT_NONE || self.fin.constraints.is_empty() {
+        if self.shutdown
+            || effective_category(ctx) == Category::CAT_NONE
+            || self.fin.constraints.is_empty()
+        {
             return;
         }
 
@@ -165,7 +171,7 @@ impl Handler for OrderEnforcer {
             Some(e) => e,
             None => panic!(
                 "Cannot retrieve an event for task {} (cat {})",
-                tid, ctx.cat
+                tid, effective_category(ctx)
             ),
         };
 

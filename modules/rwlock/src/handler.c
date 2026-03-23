@@ -1,14 +1,16 @@
 #include <errno.h>
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
-#include <lotto/engine/dispatcher.h>
+#include <dice/events/pthread.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/rwlock/events.h>
+#include <lotto/runtime/capture_point.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/logger_block.h>
-#include <lotto/util/casts.h>
 #include <lotto/util/macros.h>
 
 struct reader {
@@ -44,35 +46,39 @@ STATIC void _posthandle_wrlock(task_id id, uintptr_t addr);
 STATIC int _posthandle_trywrlock(task_id id, uintptr_t addr);
 STATIC void _posthandle_unlock(task_id id, uintptr_t addr);
 STATIC bool _should_wait(task_id id);
+STATIC type_id _rwlock_event(const capture_point *cp);
+STATIC uint64_t _rwlock_addr(const capture_point *cp);
+STATIC void _rwlock_try_set_ret(const capture_point *cp, int ret);
 
 STATIC void
-_rwlock_handle(const context_t *ctx, event_t *e)
+_rwlock_handle(const capture_point *cp, event_t *e)
 {
     ASSERT(e);
     if (e->skip || !rwlock_config()->enabled)
         return;
 
-    ASSERT(ctx);
-    ASSERT(ctx->id != NO_TASK);
-    uint64_t addr = CAST_TYPE(uint64_t, ctx->args[0].value.ptr);
-    switch (ctx->cat) {
-        case CAT_RWLOCK_RDLOCK:
-            _handle_rdlock(ctx->id, addr, e);
+    ASSERT(cp);
+    ASSERT(cp->id != NO_TASK);
+    switch (_rwlock_event(cp)) {
+        case EVENT_RWLOCK_RDLOCK:
+        case EVENT_RWLOCK_TIMEDRDLOCK:
+            _handle_rdlock(cp->id, _rwlock_addr(cp), e);
             e->is_chpt = true;
             ASSERT(!e->any_task_filter);
             e->any_task_filter = _should_wait;
             break;
 
-        case CAT_RWLOCK_WRLOCK:
-            _handle_wrlock(ctx->id, addr, e);
+        case EVENT_RWLOCK_WRLOCK:
+        case EVENT_RWLOCK_TIMEDWRLOCK:
+            _handle_wrlock(cp->id, _rwlock_addr(cp), e);
             e->is_chpt = true;
             ASSERT(!e->any_task_filter);
             e->any_task_filter = _should_wait;
             break;
 
-        case CAT_RWLOCK_TRYRDLOCK:
-        case CAT_RWLOCK_TRYWRLOCK:
-        case CAT_RWLOCK_UNLOCK:
+        case EVENT_RWLOCK_TRYRDLOCK:
+        case EVENT_RWLOCK_TRYWRLOCK:
+        case EVENT_RWLOCK_UNLOCK:
             e->is_chpt = true;
             break;
 
@@ -92,35 +98,89 @@ _rwlock_handle(const context_t *ctx, event_t *e)
         }
     }
 }
-REGISTER_HANDLER(_rwlock_handle)
+REGISTER_SEQUENCER_HANDLER(_rwlock_handle)
 
-LOTTO_SUBSCRIBE(EVENT_ENGINE__NEXT_TASK, {
-    context_t *ctx = (context_t *)as_any(v);
-    ASSERT(ctx);
+LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {
+    const capture_point *cp = EVENT_PAYLOAD(cp);
+    ASSERT(cp);
 
-    uint64_t addr = (uint64_t)ctx->args[0].value.ptr;
-    switch (ctx->cat) {
-        case CAT_RWLOCK_RDLOCK:
-            _posthandle_rdlock(ctx->id, addr);
+    switch (_rwlock_event(cp)) {
+        case EVENT_RWLOCK_RDLOCK:
+        case EVENT_RWLOCK_TIMEDRDLOCK:
+            _posthandle_rdlock(cp->id, _rwlock_addr(cp));
             break;
-        case CAT_RWLOCK_WRLOCK:
-            _posthandle_wrlock(ctx->id, addr);
+        case EVENT_RWLOCK_WRLOCK:
+        case EVENT_RWLOCK_TIMEDWRLOCK:
+            _posthandle_wrlock(cp->id, _rwlock_addr(cp));
             break;
-        case CAT_RWLOCK_UNLOCK:
-            _posthandle_unlock(ctx->id, addr);
+        case EVENT_RWLOCK_UNLOCK:
+            _posthandle_unlock(cp->id, _rwlock_addr(cp));
             break;
-        case CAT_RWLOCK_TRYRDLOCK:
-            ctx->args[1].value.u32 =
-                (uint32_t)_posthandle_tryrdlock(ctx->id, addr);
+        case EVENT_RWLOCK_TRYRDLOCK:
+            _rwlock_try_set_ret(
+                cp, _posthandle_tryrdlock(cp->id, _rwlock_addr(cp)));
             break;
-        case CAT_RWLOCK_TRYWRLOCK:
-            ctx->args[1].value.u32 =
-                (uint32_t)_posthandle_trywrlock(ctx->id, addr);
+        case EVENT_RWLOCK_TRYWRLOCK:
+            _rwlock_try_set_ret(
+                cp, _posthandle_trywrlock(cp->id, _rwlock_addr(cp)));
             break;
         default:
             break;
     }
 })
+
+STATIC type_id
+_rwlock_event(const capture_point *cp)
+{
+    return cp->src_type;
+}
+
+STATIC uint64_t
+_rwlock_addr(const capture_point *cp)
+{
+    switch (_rwlock_event(cp)) {
+        case EVENT_RWLOCK_RDLOCK:
+            return (uint64_t)(uintptr_t)CP_PAYLOAD(struct rwlock_rdlock_event *)
+                ->lock;
+        case EVENT_RWLOCK_WRLOCK:
+            return (uint64_t)(uintptr_t)CP_PAYLOAD(struct rwlock_wrlock_event *)
+                ->lock;
+        case EVENT_RWLOCK_UNLOCK:
+            return (uint64_t)(uintptr_t)CP_PAYLOAD(struct rwlock_unlock_event *)
+                ->lock;
+        case EVENT_RWLOCK_TRYRDLOCK:
+            return (uint64_t)(uintptr_t)
+                CP_PAYLOAD(struct rwlock_tryrdlock_event *)->lock;
+        case EVENT_RWLOCK_TRYWRLOCK:
+            return (uint64_t)(uintptr_t)
+                CP_PAYLOAD(struct rwlock_trywrlock_event *)->lock;
+        case EVENT_RWLOCK_TIMEDRDLOCK:
+            return (uint64_t)(uintptr_t)
+                CP_PAYLOAD(struct rwlock_timedrdlock_event *)->lock;
+        case EVENT_RWLOCK_TIMEDWRLOCK:
+            return (uint64_t)(uintptr_t)
+                CP_PAYLOAD(struct rwlock_timedwrlock_event *)->lock;
+        default:
+            ASSERT(0);
+            return 0;
+    }
+}
+
+STATIC void
+_rwlock_try_set_ret(const capture_point *cp, int ret)
+{
+    switch (_rwlock_event(cp)) {
+        case EVENT_RWLOCK_TRYRDLOCK:
+            CP_PAYLOAD(struct rwlock_tryrdlock_event *)->ret = ret;
+            return;
+        case EVENT_RWLOCK_TRYWRLOCK:
+            CP_PAYLOAD(struct rwlock_trywrlock_event *)->ret = ret;
+            return;
+        default:
+            ASSERT(0);
+            return;
+    }
+}
 
 //
 // rwlock

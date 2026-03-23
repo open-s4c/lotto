@@ -1,3 +1,3 @@
-add_runtime_module(module.c state.c handler.c subscribe_yield.c
-                   subscribe.c intercept.c)
+add_runtime_module(module.c state.c handler.c intercept.c interceptors.c
+                   subscribers.c)
 add_driver_module(state.c flags.c module.c)

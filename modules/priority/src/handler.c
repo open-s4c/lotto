@@ -8,18 +8,16 @@
  * is not maximum
  */
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include "category.h"
 #include "state.h"
 #include <dice/module.h>
 #include <lotto/base/tidmap.h>
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/priority/events.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
-#include <lotto/util/once.h>
-
-static category_t CAT_PRIORITY;
 
 typedef struct {
     tiditem_t t;
@@ -73,37 +71,28 @@ _is_max_priority(task_id task)
  * handler
  ******************************************************************************/
 STATIC void
-_priority_handle(const context_t *ctx, event_t *e)
+_priority_handle(const capture_point *cp, event_t *e)
 {
-    once(CAT_PRIORITY = priority_category());
     ASSERT(e);
     if (e->skip || !priority_config()->enabled)
         return;
 
-    ASSERT(ctx);
-    ASSERT(ctx->id != NO_TASK);
+    ASSERT(cp);
+    ASSERT(cp->id != NO_TASK);
     task_t *t = NULL;
-    switch (ctx->cat) {
-        case CAT_TASK_FINI:
-            tidmap_deregister(&_state.map, ctx->id);
-            ASSERT(!tidset_has(&e->tset, ctx->id));
-            break;
-
-        case CAT_TASK_INIT:
-            t = (task_t *)tidmap_find(&_state.map, ctx->id);
-            ASSERT(t == NULL);
-            t = (task_t *)tidmap_register(&_state.map, ctx->id);
-            ASSERT(t);
-            t->priority = 0;
-            break;
-        default:
-            if (ctx->cat != CAT_PRIORITY) {
-                break;
-            }
-            t = (task_t *)tidmap_find(&_state.map, ctx->id);
-            ASSERT(t);
-            t->priority = (int64_t)ctx->args[0].value.u64;
-            break;
+    if (cp->src_type == EVENT_TASK_FINI) {
+        tidmap_deregister(&_state.map, cp->id);
+        ASSERT(!tidset_has(&e->tset, cp->id));
+    } else if (cp->src_type == EVENT_TASK_INIT) {
+        t = (task_t *)tidmap_find(&_state.map, cp->id);
+        ASSERT(t == NULL);
+        t = (task_t *)tidmap_register(&_state.map, cp->id);
+        ASSERT(t);
+        t->priority = 0;
+    } else if (cp->src_type == EVENT_PRIORITY) {
+        t = (task_t *)tidmap_find(&_state.map, cp->id);
+        ASSERT(t);
+        t->priority = ((priority_event_t *)cp->payload)->priority;
     }
     if (e->readonly || e->skip) {
         return;
@@ -116,6 +105,6 @@ _priority_handle(const context_t *ctx, event_t *e)
             _max_priority < t->priority ? t->priority : _max_priority;
     }
     tidset_filter(&e->tset, _is_max_priority);
-    e->is_chpt |= !tidset_has(&e->tset, ctx->id);
+    e->is_chpt |= !tidset_has(&e->tset, cp->id);
 }
-REGISTER_HANDLER(_priority_handle)
+REGISTER_SEQUENCER_HANDLER(_priority_handle)

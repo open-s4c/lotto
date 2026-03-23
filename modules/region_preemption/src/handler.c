@@ -1,7 +1,9 @@
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
@@ -113,58 +115,47 @@ _region_check(task_id tid)
 }
 
 STATIC void
-_region_preemption_handle(const context_t *ctx, event_t *e)
+_region_preemption_handle(const capture_point *cp, event_t *e)
 {
-    ASSERT(ctx);
-    ASSERT(ctx->id != NO_TASK);
+    ASSERT(cp);
+    ASSERT(cp->id != NO_TASK);
     ASSERT(e);
 
     if (!region_preemption_config()->enabled) {
         return;
     }
 
-    _region_check(ctx->id);
+    _region_check(cp->id);
 
-    switch (ctx->cat) {
-        case CAT_REGION_PREEMPTION:
-            if (ctx->args[0].value.u64) {
-                break;
-            }
-            _exit_region(ctx->id);
+    switch (cp->src_type) {
+        case EVENT_REGION_OUT:
+            _exit_region(cp->id);
             break;
-        case CAT_TASK_FINI:
-            _exit_task(ctx->id);
+        case EVENT_TASK_FINI:
+            _exit_task(cp->id);
             break;
-
         default:
             break;
     }
 
-    bool in_region = tidmap_find(&_state, ctx->id) != NULL;
+    bool in_region = tidmap_find(&_state, cp->id) != NULL;
 
     if ((_warn = !e->readonly && e->selector == SELECTOR_UNDEFINED &&
                  in_region == region_preemption_config()->default_on &&
-                 tidset_has(&e->tset, ctx->id) && !e->skip)) {
+                 tidset_has(&e->tset, cp->id) && !e->skip)) {
         e->selector = SELECTOR_FIRST;
         e->readonly = true;
-        tidset_make_first(&e->tset, ctx->id);
+        tidset_make_first(&e->tset, cp->id);
     }
 
     _enter_region();
 
-    switch (ctx->cat) {
-        case CAT_REGION_PREEMPTION:
-            if (ctx->args[0].value.u64) {
-                ASSERT(_task == NO_TASK);
-                _task = ctx->id;
-            }
-            break;
-
-        default:
-            break;
+    if (cp->src_type == EVENT_REGION_IN) {
+        ASSERT(_task == NO_TASK);
+        _task = cp->id;
     }
 }
-REGISTER_HANDLER(_region_preemption_handle)
+REGISTER_SEQUENCER_HANDLER(_region_preemption_handle)
 
 /*******************************************************************************
  * marshaling implementation

@@ -2,7 +2,7 @@
 //! from the C side, and publish the events to the subscribed handlers.
 //!
 //!
-use crate::base::{TaskId, Value};
+use crate::base::{effective_category, effective_event_type, TaskId, Value};
 use crate::engine::handler::AbortReason::*;
 use crate::engine::handler::ShutdownReason::*;
 use crate::engine::handler::{ContextInfo, EventResult, Reason};
@@ -16,17 +16,15 @@ use crate::engine::handler::{
 use crate::raw::reason::REASON_DETERMINISTIC;
 use crate::raw::reason::*;
 use crate::raw::selector_SELECTOR_FIRST;
-use crate::raw::{
-    base_category, context_t, event_t, task_id, tidset_remove, tidset_t,
-};
+use crate::raw::{context_t, event_t, task_id, tidset_remove, tidset_t};
 use lotto_sys as raw;
 use std::mem::align_of;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-pub type CustomCatTable =
-    FxHashMap<u32, Box<dyn Fn(&context_t) -> Box<dyn CustomCatTrait> + Send + Sync>>;
+pub type CustomEventTable =
+    FxHashMap<u32, Box<dyn Fn(&context_t) -> Box<dyn CustomContextTrait> + Send + Sync>>;
 
-pub trait CustomCatTrait {
+pub trait CustomContextTrait {
     fn call_right_handler(&self, handler: &mut (dyn ArrivalOrExecuteHandler + Send + Sync));
 }
 
@@ -61,7 +59,7 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const context_t, event: *mut even
     // provide us with a properly initialized context.
     let ctx: &context_t = unsafe { ctx.as_ref() }.expect("Unexpected null pointer");
     let tid = TaskId::new(ctx.id);
-    let cat = ctx.cat;
+    let cat = effective_category(ctx);
     let ctx_info: ContextInfo = ContextInfo::new(ctx);
 
     // Call simple handlers
@@ -106,7 +104,7 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const context_t, event: *mut even
     // so we know that event can't be modified by anyone else while this mutable reference exists.
     let event: &mut event_t = unsafe { event.as_mut() }.expect("Unexpected null pointer");
     let active_tids = &mut event.tset;
-    let cat_table = &util_data.custom_cat_table;
+    let custom_event_table = &util_data.custom_event_table;
 
     for handler in &util_data.arrival_or_execute_handlers_list {
         let handler = unsafe { &mut **handler };
@@ -121,15 +119,10 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const context_t, event: *mut even
             .filter(|tid| !blocked_tasks.contains(tid))
             .collect();
 
-        let cat_num: u32 = cat.0;
-        let cat_end: u32 = base_category::CAT_END_.0;
-
-        // check if it's a custom category
-        if cat_num > cat_end {
-            if let Some(cat_fn) = cat_table.get(&(cat_num)) {
-                let custom_struct = cat_fn(ctx);
-                custom_struct.call_right_handler(handler);
-            }
+        let event_type = effective_event_type(ctx);
+        if let Some(cat_fn) = custom_event_table.get(&event_type) {
+            let custom_struct = cat_fn(ctx);
+            custom_struct.call_right_handler(handler);
         }
         let event_result: EventResult = handler.handle_arrival(tid, &ctx_info, &active_task_ids);
         let (cur_blocked_list, cur_is_chpt, cur_reason, read_only, cur_next_task_to_run) =
@@ -300,15 +293,9 @@ pub unsafe extern "C" fn publish_execute(
     raw::ps_err_PS_OK
 }
 
-/// Publish an execute event from a raw Lotto value.
-///
-/// # Safety
-///
-/// The caller must ensure `v` contains a valid `context_t` payload.
-pub unsafe fn publish_execute_value(v: raw::value) {
-    let ctx = &*(Value::from(v).as_any() as *const raw::context_t);
+pub unsafe fn publish_execute_ctx(ctx: *const raw::context_t) {
+    let ctx = &*ctx;
 
-    // For [`Handler::posthandle`] interface.
     {
         let mut handlers = crate::engine::handler::HANDLER_LIST
             .try_lock()
@@ -319,7 +306,6 @@ pub unsafe fn publish_execute_value(v: raw::value) {
         }
     }
 
-    // For [`ExecuteHandler`].
     let util_data = &mut crate::engine::handler::ENGINE_DATA
         .try_lock()
         .expect("single threaded");
@@ -359,6 +345,16 @@ pub unsafe fn publish_execute_value(v: raw::value) {
             }
         }
     }
+}
+
+/// Publish an execute event from a raw Lotto value.
+///
+/// # Safety
+///
+/// The caller must ensure `v` contains a valid `context_t` payload.
+pub unsafe fn publish_execute_value(v: raw::value) {
+    let ctx = Value::from(v).as_any() as *const raw::context_t;
+    publish_execute_ctx(ctx);
 }
 
 /// Legacy no-op kept for old call sites. Subscriptions now live in the C glue.

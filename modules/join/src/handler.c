@@ -3,8 +3,11 @@
 
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/join/events.h>
+#include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
@@ -175,30 +178,33 @@ _should_wait(task_id id)
  * handler
  ******************************************************************************/
 STATIC void
-_join_handle(const context_t *ctx, event_t *e)
+_join_handle(const capture_point *cp, event_t *e)
 {
-    ASSERT(ctx);
-    ASSERT(ctx->id != NO_TASK);
+    ASSERT(cp);
+    ASSERT(cp->id != NO_TASK);
     ASSERT(e);
 
-    switch (ctx->cat) {
-        case CAT_TASK_INIT:
-            _init(ctx->id, ctx->args[0].value.u64, ctx->args[1].value.u8);
+    switch (cp->src_type) {
+        case EVENT_TASK_INIT:
+            ASSERT(cp->task_init != NULL);
+            _init(cp->id, cp->task_init->thread, cp->task_init->detached);
             break;
-        case CAT_JOIN:
-            _join(ctx->id, ctx->args[0].value.ptr,
-                  (void **)ctx->args[1].value.ptr,
-                  (int *)ctx->args[2].value.ptr);
+        case EVENT_TASK_JOIN: {
+            ASSERT(cp->src_type == EVENT_TASK_JOIN);
+            task_join_event_t *join = (task_join_event_t *)cp->payload;
+            ASSERT(join != NULL);
+            _join(cp->id, join->thread, join->ptr, &join->ret);
             break;
-        case CAT_DETACH:
-            _detach(ctx->id, ctx->args[0].value.ptr,
-                    (int *)ctx->args[1].value.ptr);
+        }
+        case EVENT_TASK_DETACH:
+            ASSERT(cp->task_detach != NULL);
+            _detach(cp->id, cp->task_detach->thread, cp->task_detach->ret);
             break;
-        case CAT_EXIT:
-            _texit(ctx->id, (void *)ctx->args[0].value.ptr);
-            break;
-        case CAT_TASK_FINI:
-            _fini(ctx->id);
+        case EVENT_TASK_FINI:
+            if (cp->task_fini != NULL) {
+                _texit(cp->id, cp->task_fini->ptr);
+            }
+            _fini(cp->id);
             break;
         default:
             break;
@@ -207,10 +213,10 @@ _join_handle(const context_t *ctx, event_t *e)
         return;
     }
     tidset_remove_all_keys(&e->tset, &_state.waitees);
-    if (_should_wait(ctx->id)) {
+    if (_should_wait(cp->id)) {
         e->is_chpt = true;
         ASSERT(e->any_task_filter == NULL);
         e->any_task_filter = _should_wait;
     }
 }
-REGISTER_HANDLER(_join_handle)
+REGISTER_SEQUENCER_HANDLER(_join_handle)

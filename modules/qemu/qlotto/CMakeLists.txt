@@ -1,6 +1,5 @@
 sanitize()
 include_directories(include)
-add_subdirectory(frontend)
 add_subdirectory(gdb)
 add_subdirectory(measure)
 add_subdirectory(snapshot)
@@ -41,6 +40,3 @@ ExternalProject_Add(
     BUILD_COMMAND make -j
     BUILD_ALWAYS on
     INSTALL_COMMAND make install > install.log 2>&1)
-
-add_library(qlotto.o OBJECT qlotto.c)
-target_link_libraries(qlotto.o PRIVATE lotto.h dice.h)

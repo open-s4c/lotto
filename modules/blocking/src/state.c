@@ -4,11 +4,6 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/logger_block.h>
 
-
-/*******************************************************************************
- * persistent state
- ******************************************************************************/
-
 static tidset_t _returned;
 
 STATIC void _returned_print(const marshable_t *m);
@@ -18,10 +13,6 @@ REGISTER_PERSISTENT(_returned, {
     _returned.m.print = _returned_print;
 })
 
-/*******************************************************************************
- * marshaling implementation
- ******************************************************************************/
-
 STATIC void
 _returned_print(const marshable_t *m)
 {
@@ -29,9 +20,6 @@ _returned_print(const marshable_t *m)
     tidset_print(m);
 }
 
-/*******************************************************************************
- * getter
- ******************************************************************************/
 tidset_t *
 returned_tasks()
 {

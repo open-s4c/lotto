@@ -18,7 +18,6 @@ if(${LOTTO_RACKET_TESTS})
         sys_testing.o
         engine_prng_testing.o
         engine_state_testing.o
-        engine_dispatcher_testing.o
         brokers_statemgr_testing.o
         lotto-runtime-deadlock
         memmgr_runtime_libc.o

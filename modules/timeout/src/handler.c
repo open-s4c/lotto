@@ -2,7 +2,7 @@
 
 #include <dice/module.h>
 #include <lotto/engine/clock.h>
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/timeout/timeout.h>
@@ -79,8 +79,9 @@ _time_leap(tidset_t *tset)
 }
 
 STATIC void
-_timeout_handle(const context_t *ctx, event_t *e)
+_timeout_handle(const capture_point *cp, event_t *e)
 {
+    (void)cp;
     if (tidmap_size(&_state) == 0) {
         return;
     }
@@ -90,7 +91,7 @@ _timeout_handle(const context_t *ctx, event_t *e)
     }
     _time_leap(&e->tset);
 }
-REGISTER_HANDLER(_timeout_handle);
+REGISTER_SEQUENCER_HANDLER(_timeout_handle);
 
 /*******************************************************************************
  * interface

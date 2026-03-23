@@ -7,7 +7,7 @@
  ******************************************************************************/
 
 #define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/state.h>
 #include <lotto/modules/ichpt/ichpt.h>
@@ -71,27 +71,27 @@ it_is_ichpt()
  * handler
  * ****************************************************************************/
 STATIC void
-_ichpt_handle(const context_t *ctx, event_t *e)
+_ichpt_handle(const capture_point *cp, event_t *e)
 {
     ASSERT(e);
     if (e->skip || !ichpt_config()->enabled)
         return;
 
-    ASSERT(ctx);
-    ASSERT(ctx->id != NO_TASK);
+    ASSERT(cp);
+    ASSERT(cp->id != NO_TASK);
 
-    uint64_t tid = ctx->id;
-    if (ctx->vid)
-        tid = ctx->vid;
+    uint64_t tid = cp->id;
+    if (cp->vid)
+        tid = cp->vid;
 
     if (e->readonly)
         return;
 
-    if (is_ichpt(ctx->pc)) {
+    if (is_ichpt(cp->pc)) {
         it_is_ichpt();
         logger_infof("[%lx] instruction change point at pc %p\n", tid,
-                     (void *)ctx->pc);
+                     (void *)cp->pc);
         e->is_chpt = true;
     }
 }
-REGISTER_HANDLER(_ichpt_handle)
+REGISTER_SEQUENCER_HANDLER(_ichpt_handle)

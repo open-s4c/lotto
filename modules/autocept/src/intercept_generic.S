@@ -1,6 +1,6 @@
 /* Callback functions before and after executing an intercepted function. */
 .extern intercept_lookup_call
-.extern intercept_after_call
+.extern runtime_ingress_after
 .extern intercept_warn_call
 
 /*
@@ -32,7 +32,7 @@
         /* AFTER_CALL: Save return value and finish book keeping. */
         push_retval
         arg_func_name \name
-        call_func intercept_after_call
+        call_func runtime_ingress_after
 
         /* Restore return value from CALL and callee-save registers. */
         pop_retval

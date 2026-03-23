@@ -44,7 +44,6 @@ target_link_libraries(
     base_testing.o
     brokers_statemgr_testing.o
     engine_creation_testing.o
-    engine_dispatcher_testing.o
     engine_engine_testing.o
     engine_recorder_testing.o
     engine_sequencer_testing.o

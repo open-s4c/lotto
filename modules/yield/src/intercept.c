@@ -1,4 +1,5 @@
 #include <dice/chains/intercept.h>
+#include <dice/events/pthread.h>
 #include <dice/interpose.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>

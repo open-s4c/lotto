@@ -41,10 +41,10 @@
 
 ;; find the integer value of an enum symbol
 (define (action->integer a)
-  (cast a _action_t _ufixint))
+  (cast a _action _ufixint))
 
 ;; conver the allowed plans to a list of integers. The actual values used
-;; in the plan_t object
+;; in the plan object
 (define allowed-plans-vals
   (map (lambda (l)
          (define as-int (map action->integer l))

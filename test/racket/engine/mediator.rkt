@@ -127,7 +127,7 @@
   plan)
 
 (define (make-plan actions next)
-  (define plan (make-object (mdi 'plan_t)))
+  (define plan (make-object (mdi 'plan)))
   (plan-set! plan actions next))
 
 (define (plan-actions plan)

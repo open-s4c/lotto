@@ -8,4 +8,10 @@
 
 #define MODULE_SLOT @MODULE_SLOT@
 
+static inline int
+lotto_rusty_module_slot(void)
+{
+    return MODULE_SLOT;
+}
+
 #endif

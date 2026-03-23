@@ -5,6 +5,7 @@
 /* IWYU pragma: begin_keep */
 #include "dice/chains/capture.h"
 #include "dice/events/memaccess.h"
+#include "dice/pubsub.h"
 #include "dice/events/pthread.h"
 #include "dice/events/stacktrace.h"
 #include "lotto/base/cappt.h"
@@ -66,6 +67,4 @@
 #include <lotto/modules/rusty/rusty.h>
 #include <lotto/modules/termination/flags.h>
 #include <lotto/modules/termination/state.h>
-
-enum { LOTTO_RUSTY_MODULE_SLOT = MODULE_SLOT };
 /* IWYU pragma: end_keep */

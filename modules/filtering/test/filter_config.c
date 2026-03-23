@@ -1,7 +1,6 @@
 // clang-format off
-// RUN: echo "32=1" > %s.conf
-// RUN: echo "33=1" >> %s.conf
-// RUN: echo "34=1" >> %s.conf
+// RUN: %events -i dice/events/memaccess.h EVENT_MA_AREAD EVENT_MA_AWRITE EVENT_MA_RMW \
+// RUN:   | sed 's/^[^=]*=//; s/$/=1/' > %s.conf
 // RUN: %lotto %stress -r 200 -F --filtering-config %s.conf -- %b
 // clang-format on
 

@@ -9,6 +9,7 @@
 use bincode;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+include!(concat!(env!("OUT_DIR"), "/module_slot.rs"));
 
 impl reason {
     /// Whether the execution terminated due to Lotto runtime

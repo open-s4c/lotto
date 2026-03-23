@@ -46,11 +46,6 @@ add_driver_dependencies(cli_testing.o)
 
 file(GLOB DRIVER_SRCS "commands/*.c")
 
-foreach(HANDLER ${LOTTO_DISABLE_HANDLERS})
-    list(REMOVE_ITEM DRIVER_SRCS
-         "${CMAKE_CURRENT_SOURCE_DIR}/commands/cli_${HANDLER}.c")
-endforeach()
-
 file(GLOB_RECURSE FLAG_SRCS "flags/*.c")
 
 add_library(lotto-driver SHARED main.c ${FLAG_SRCS} ${DRIVER_SRCS})

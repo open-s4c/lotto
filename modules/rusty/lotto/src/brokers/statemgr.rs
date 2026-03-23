@@ -132,7 +132,7 @@ impl MarshableStateList {
     fn register(&self) {
         unsafe {
             raw::statemgr_register(
-                40,
+                raw::LOTTO_RUSTY_MODULE_SLOT as i32,
                 &self.m as *const _ as *mut _,
                 self.ty,
             );

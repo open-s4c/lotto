@@ -4,6 +4,7 @@
 //! - During execution, only counters are modified
 //! - Upon exit, the results are saved in FINAL states
 use lotto::base::reason::*;
+use lotto::base::CapturePoint;
 use lotto::base::TidSet;
 use lotto::base::Value;
 use lotto::brokers::statemgr::*;
@@ -60,7 +61,7 @@ pub struct OrderEnforcer {
 }
 
 impl Handler for OrderEnforcer {
-    fn handle(&mut self, ctx: &raw::capture_point, cappt: &mut raw::event_t) {
+    fn handle(&mut self, ctx: &CapturePoint, cappt: &mut raw::event_t) {
         if U64OrInf::from(cappt.clk) > self.max_clock {
             self.shutdown = true;
             cappt.reason = REASON_IGNORE;
@@ -138,11 +139,8 @@ impl Handler for OrderEnforcer {
         }
     }
 
-    fn posthandle(&mut self, ctx: &raw::capture_point) {
-        if self.shutdown
-            || ctx.src_type == 0
-            || self.fin.constraints.is_empty()
-        {
+    fn posthandle(&mut self, ctx: &CapturePoint) {
+        if self.shutdown || ctx.src_type == 0 || self.fin.constraints.is_empty() {
             return;
         }
 

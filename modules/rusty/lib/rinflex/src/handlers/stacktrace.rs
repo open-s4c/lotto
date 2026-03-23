@@ -1,11 +1,12 @@
 use crate::{Either, StackFrameId, StackTrace};
+use lotto::base::CapturePoint;
 use lotto::collections::FxHashMap;
 use lotto::{base::StableAddress, raw, Stateful};
 use lotto::{
-    base::Value,
+    base::{TaskId, Value},
     brokers::statemgr::*,
     cli::flags::{FlagKey, STR_CONVERTER_BOOL},
-    engine::handler::{self, get_stacktrace_caller_from_context, TaskId},
+    engine::handler,
     log::*,
 };
 use std::ffi::{c_void, CStr};
@@ -33,7 +34,7 @@ pub struct StackTraceHandler {
 }
 
 impl handler::Handler for StackTraceHandler {
-    fn handle(&mut self, ctx: &raw::capture_point, _event: &mut raw::event_t) {
+    fn handle(&mut self, ctx: &CapturePoint, _event: &mut raw::event_t) {
         if !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
@@ -41,8 +42,7 @@ impl handler::Handler for StackTraceHandler {
         match ctx.src_type as u32 {
             raw::EVENT_STACKTRACE_ENTER => {
                 let caller_pc =
-                    get_stacktrace_caller_from_context(ctx).expect("missing stacktrace caller")
-                        - call_insn_len();
+                    ctx.caller_pc().expect("missing stacktrace caller") - call_insn_len();
                 let (sname, fname) = self.get_pc_info(caller_pc as *const c_void);
                 let caller_pc = StableAddress::with_default_method(caller_pc);
                 let frame_id = StackFrameId {

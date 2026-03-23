@@ -21,7 +21,7 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
 
     let parse = quote! {
         impl #struct_name {
-            fn parse(context: &lotto::raw::capture_point) -> Self {
+            fn parse(context: &lotto::base::CapturePoint) -> Self {
                 let mut counter = 0;
                 #parse_method
             }
@@ -36,8 +36,8 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
     let parser_ident = syn::Ident::new(&parser_name, struct_name.span());
 
     let parse_function = quote! {
-        fn #parser_ident() -> Box<dyn Fn(&lotto::raw::capture_point) -> Box<dyn CustomContextTrait> + Send + Sync> {
-            Box::new(|context: &lotto::raw::capture_point| {
+        fn #parser_ident() -> Box<dyn Fn(&lotto::base::CapturePoint) -> Box<dyn CustomContextTrait> + Send + Sync> {
+            Box::new(|context: &lotto::base::CapturePoint| {
             Box::new(#struct_name::parse(context)) as Box<dyn CustomContextTrait>
         })
         }

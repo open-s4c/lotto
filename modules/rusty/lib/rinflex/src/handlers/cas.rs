@@ -11,12 +11,11 @@ use std::sync::Mutex;
 
 use crate::memory_access::{MemoryAccess, Modify, ModifyKind, Read, VAddr};
 use bincode::{Decode, Encode};
-use lotto::base::Value;
+use lotto::base::{CapturePoint, TaskId, Value};
 use lotto::brokers::{Marshable, Stateful};
 use lotto::cli::flags::{FlagKey, STR_CONVERTER_BOOL};
 use lotto::engine::handler::{
-    get_addr_from_context, get_rmw_operator_from_context, get_size_from_context,
-    get_value_from_context, Handler, TaskId,
+    get_addr_from_context, get_size_from_context, get_value_from_context, Handler,
 };
 use lotto::log::*;
 use lotto::raw;
@@ -45,7 +44,7 @@ struct CasPredictor {
 
 impl CasPredictor {
     #[inline]
-    fn update_task_from_ctx(&mut self, ctx: &raw::capture_point) {
+    fn update_task_from_ctx(&mut self, ctx: &CapturePoint) {
         if !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
@@ -72,11 +71,11 @@ impl CasPredictor {
 // Handler
 //
 impl Handler for CasPredictor {
-    fn handle(&mut self, ctx: &raw::capture_point, _event: &mut raw::event_t) {
+    fn handle(&mut self, ctx: &CapturePoint, _event: &mut raw::event_t) {
         self.update_task_from_ctx(ctx);
     }
 
-    fn posthandle(&mut self, ctx: &raw::capture_point) {
+    fn posthandle(&mut self, ctx: &CapturePoint) {
         // We need to save the "real" read value, which is only
         // available after the event is resumed.
         self.update_task_from_ctx(ctx);
@@ -84,14 +83,14 @@ impl Handler for CasPredictor {
 }
 
 #[inline]
-fn ctx_to_memory_access(ctx: &raw::capture_point) -> Option<MemoryAccess> {
+fn ctx_to_memory_access(ctx: &CapturePoint) -> Option<MemoryAccess> {
     ctx_to_modify(ctx)
         .map(MemoryAccess::Modify)
         .or_else(|| ctx_to_read(ctx).map(MemoryAccess::Read))
 }
 
 #[inline]
-fn ctx_to_modify(ctx: &raw::capture_point) -> Option<Modify> {
+fn ctx_to_modify(ctx: &CapturePoint) -> Option<Modify> {
     let event_type = ctx.src_type as u32;
     let is_after = u32::from(ctx.src_chain) == raw::CAPTURE_AFTER;
 
@@ -107,9 +106,8 @@ fn ctx_to_modify(ctx: &raw::capture_point) -> Option<Modify> {
         return None;
     }
 
-    let raw_addr = usize::from(
-        get_addr_from_context(ctx, 0).expect("missing memory-access address"),
-    );
+    let raw_addr =
+        usize::from(get_addr_from_context(ctx, 0).expect("missing memory-access address"));
     let addr = VAddr::get(ctx, raw_addr);
     let size = u64::from(get_size_from_context(ctx, 1));
     let kind: ModifyKind = match event_type {
@@ -123,8 +121,7 @@ fn ctx_to_modify(ctx: &raw::capture_point) -> Option<Modify> {
             is_after,
             delta: get_ctx_val(ctx, 2, size),
             operator: {
-                let val = get_rmw_operator_from_context(ctx)
-                    .expect("missing RMW operator from context");
+                let val = ctx.rmw_op().expect("missing RMW operator from context");
                 // Safety: it's coming from the interceptor directly
                 unsafe { std::mem::transmute(val) }
             },
@@ -196,7 +193,7 @@ fn ctx_to_read(_ctx: &raw::capture_point) -> Option<Read> {
     // })
 }
 
-fn get_ctx_val(ctx: &raw::capture_point, value_id: usize, size: u64) -> u64 {
+fn get_ctx_val(ctx: &CapturePoint, value_id: usize, size: u64) -> u64 {
     match get_value_from_context(ctx, value_id, lotto::engine::handler::AddrSize::new(size)) {
         lotto::engine::handler::ValuesTypes::U8(val) => val as u64,
         lotto::engine::handler::ValuesTypes::U16(val) => val as u64,

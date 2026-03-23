@@ -1,12 +1,13 @@
+use lotto::base::CapturePoint;
 use lotto::raw;
 use lotto::sync::HandlerWrapper;
 use lotto::Stateful;
 use lotto::{
-    base::Value,
+    base::{TaskId, Value},
     brokers::statemgr::*,
     cli::flags::{FlagKey, STR_CONVERTER_BOOL},
     collections::FxHashMap,
-    engine::handler::{self, TaskId},
+    engine::handler,
     log::*,
 };
 
@@ -55,7 +56,7 @@ pub struct EventHandler {
 }
 
 impl handler::Handler for EventHandler {
-    fn handle(&mut self, ctx: &raw::capture_point, e: &mut raw::event_t) {
+    fn handle(&mut self, ctx: &CapturePoint, e: &mut raw::event_t) {
         if !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
@@ -90,7 +91,7 @@ impl handler::Handler for EventHandler {
         self.pers.tasks.insert(id, event);
     }
 
-    fn posthandle(&mut self, ctx: &raw::capture_point) {
+    fn posthandle(&mut self, ctx: &CapturePoint) {
         if ctx.src_type == 0 || !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }

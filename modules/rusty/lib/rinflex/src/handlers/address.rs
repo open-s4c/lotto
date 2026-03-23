@@ -1,10 +1,10 @@
+use lotto::base::CapturePoint;
 use lotto::collections::FxHashMap;
 use lotto::{
-    base::StableAddress,
-    base::Value,
+    base::{StableAddress, TaskId, Value},
     brokers::statemgr::*,
     cli::{flags::STR_CONVERTER_BOOL, FlagKey},
-    engine::handler::{self, TaskId},
+    engine::handler,
     log::*,
 };
 use lotto::{raw, Stateful};
@@ -31,7 +31,7 @@ pub struct AddressHandler {
 }
 
 impl handler::Handler for AddressHandler {
-    fn handle(&mut self, ctx: &raw::capture_point, _event: &mut raw::event_t) {
+    fn handle(&mut self, ctx: &CapturePoint, _event: &mut raw::event_t) {
         if !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
@@ -76,7 +76,10 @@ pub struct Persistent {
 impl Marshable for Persistent {
     fn print(&self) {
         for (id, info) in self.tasks.iter() {
-            info!("task {} {} type={} after={}", id, info.addr, info.src_type, info.after);
+            info!(
+                "task {} {} type={} after={}",
+                id, info.addr, info.src_type, info.after
+            );
         }
     }
 }

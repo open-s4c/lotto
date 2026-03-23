@@ -46,8 +46,7 @@ fn assert_initialized() {
 
 /// Legacy no-op kept for old call sites. State-topic subscriptions now live in
 /// the C glue.
-pub fn subscribe_system() {
-}
+pub fn subscribe_system() {}
 
 /// Register the Rust state manager itself.
 ///

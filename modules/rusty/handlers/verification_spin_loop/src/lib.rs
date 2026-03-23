@@ -97,7 +97,7 @@
 
 use as_any::Downcast;
 use category_macro::CategoryMacro;
-use lotto::base::Value;
+use lotto::base::{TaskId, Value};
 use lotto::brokers::Marshable;
 use lotto::brokers::{Decode, Encode};
 use lotto::cli::flags::STR_CONVERTER_BOOL;
@@ -109,8 +109,6 @@ use lotto::engine::handler::{Address, ValuesTypes};
 use lotto::engine::handler::{ExecuteArrivalHandler, ExecuteHandler};
 use lotto::engine::pubsub::CustomContextTrait;
 use lotto::log::{debug, info, trace};
-
-use lotto::engine::handler::TaskId;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum AddressState {

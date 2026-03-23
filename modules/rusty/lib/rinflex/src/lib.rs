@@ -16,13 +16,12 @@ pub mod stats;
 pub mod trace;
 pub mod vaddr;
 
-use lotto::base::{effective_event_type, Clock, StableAddress, StableAddressMethod, TaskId};
+use lotto::base::{CapturePoint, Clock, EventType, StableAddress, StableAddressMethod, TaskId};
 use lotto::brokers::{Decode, Encode};
 use lotto::log::*;
 use lotto::raw;
 use memory_access::{MemoryAccess, Modify, ModifyKind};
 use report::Instruction;
-use std::ffi::CStr;
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::path::PathBuf;
@@ -37,37 +36,27 @@ use std::sync::atomic::{fence, Ordering};
 pub struct Transition {
     pub id: TaskId,
     pub pc: StableAddress,
-    pub src_type: u32,
+    pub src_type: EventType,
     pub after: bool,
 }
 
 impl Transition {
     /// Create a new [`Transition`] from a Lotto capture.
-    pub fn new(ctx: &raw::capture_point) -> Self {
+    pub fn new(ctx: &CapturePoint) -> Self {
         Transition {
             id: TaskId::new(ctx.id),
-            src_type: effective_event_type(ctx),
+            src_type: ctx.event_type(),
             after: u32::from(ctx.src_chain) == raw::CAPTURE_AFTER,
             pc: StableAddress::with_method(ctx.pc, StableAddressMethod::STABLE_ADDRESS_METHOD_MAP),
         }
     }
 
     pub fn event_name(&self) -> String {
-        let ty: raw::type_id = self
-            .src_type
-            .try_into()
-            .expect("semantic event id must fit into type_id");
-        let mut name = unsafe { CStr::from_ptr(raw::ps_type_str(ty)) }
-            .to_string_lossy()
-            .into_owned();
-        if let Some(stripped) = name.strip_prefix("EVENT_") {
-            name = stripped.to_owned();
-        }
+        let mut name = self.src_type.name();
         if self.after {
-            format!("{name}/AFTER")
-        } else {
-            name
+            name.push_str("/AFTER");
         }
+        name
     }
 
     pub fn is_before(&self) -> bool {
@@ -81,7 +70,13 @@ impl Transition {
 
 impl std::fmt::Display for Transition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, r"[id:{}, type:{}, pc:{}]", self.id, self.event_name(), self.pc)
+        write!(
+            f,
+            r"[id:{}, type:{}, pc:{}]",
+            self.id,
+            self.event_name(),
+            self.pc
+        )
     }
 }
 
@@ -339,7 +334,7 @@ impl Event {
     /// `t` and `clk`.
     ///
     /// Peripheral information is not provided.
-    pub fn new(ctx: &raw::capture_point, e: &raw::event_t, stacktrace: StackTrace) -> Self {
+    pub fn new(ctx: &CapturePoint, e: &raw::event_t, stacktrace: StackTrace) -> Self {
         Self {
             t: Transition::new(ctx),
             clk: e.clk,

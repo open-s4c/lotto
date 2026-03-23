@@ -1,6 +1,6 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use cmake_package::find_package;
-use std::{env, path::PathBuf};
+use std::{env, fs, path::PathBuf};
 
 fn get_lotto_dir() -> PathBuf {
     let pkg_dir = PathBuf::from(
@@ -28,6 +28,27 @@ fn get_lotto_build_dir() -> PathBuf {
     }
 
     get_lotto_dir().join("build")
+}
+
+fn get_rusty_module_slot(lotto_build_dir: &PathBuf) -> Result<i32> {
+    let rusty_header = lotto_build_dir
+        .join("modules")
+        .join("rusty")
+        .join("include")
+        .join("lotto")
+        .join("modules")
+        .join("rusty")
+        .join("rusty.h");
+    let content = fs::read_to_string(&rusty_header)
+        .with_context(|| format!("could not read {}", rusty_header.display()))?;
+    let define = content
+        .lines()
+        .find_map(|line| line.strip_prefix("#define MODULE_SLOT "))
+        .ok_or_else(|| anyhow!("could not find MODULE_SLOT in {}", rusty_header.display()))?;
+    define
+        .trim()
+        .parse::<i32>()
+        .with_context(|| format!("could not parse MODULE_SLOT from {}", rusty_header.display()))
 }
 
 fn main() -> Result<()> {
@@ -168,6 +189,13 @@ fn main() -> Result<()> {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+
+    let rusty_module_slot = get_rusty_module_slot(&lotto_build_dir)?;
+    fs::write(
+        out_path.join("module_slot.rs"),
+        format!("pub const LOTTO_RUSTY_MODULE_SLOT: i32 = {rusty_module_slot};\n"),
+    )
+    .context("could not write module_slot.rs")?;
 
     Ok(())
 }

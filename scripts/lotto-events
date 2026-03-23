@@ -1,0 +1,115 @@
+#!/bin/sh
+
+set -eu
+
+usage() {
+    cat <<'EOF' >&2
+usage: lotto-events [-I dir]... -i header ... MACRO ...
+
+Print preprocessor macro values by compiling a tiny C program against the Lotto
+tree. Output format is NAME=VALUE, one per line.
+EOF
+    exit 1
+}
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ROOT_DIR=$(CDPATH= cd -- "${SCRIPT_DIR}/.." && pwd)
+CC_BIN=${CC:-cc}
+
+include_args=
+header_args=
+macros=
+
+append_arg() {
+    value=$1
+    if [ -z "${2:-}" ]; then
+        printf '%s' "$value"
+    else
+        printf '%s
+%s' "$2" "$value"
+    fi
+}
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -I)
+            [ "$#" -ge 2 ] || usage
+            include_args=$(append_arg "$2" "${include_args}")
+            shift 2
+            ;;
+        -i)
+            [ "$#" -ge 2 ] || usage
+            header_args=$(append_arg "$2" "${header_args}")
+            shift 2
+            ;;
+        -h|--help)
+            usage
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage
+            ;;
+        *)
+            macros=$(append_arg "$1" "${macros}")
+            shift
+            ;;
+    esac
+done
+
+while [ "$#" -gt 0 ]; do
+    macros=$(append_arg "$1" "${macros}")
+    shift
+done
+
+[ -n "${header_args}" ] || usage
+[ -n "${macros}" ] || usage
+
+tmpdir=$(mktemp -d "${TMPDIR:-/tmp}/lotto-events.XXXXXX")
+trap 'rm -rf "$tmpdir"' EXIT HUP INT TERM
+
+src="${tmpdir}/main.c"
+bin="${tmpdir}/lotto-events"
+
+{
+    printf '#include <stdio.h>\n'
+    printf '#include <stdint.h>\n'
+    printf '#include <inttypes.h>\n'
+    printf '#include <stddef.h>\n'
+
+    printf '%s\n' "${header_args}" | while IFS= read -r header; do
+        [ -n "$header" ] || continue
+        printf '#include <%s>\n' "$header"
+    done
+
+    printf '\nint main(void)\n{\n'
+    printf '%s\n' "${macros}" | while IFS= read -r macro; do
+        [ -n "$macro" ] || continue
+        printf '    printf("%%s=%%" PRIu64 "\\n", "%s", (uint64_t)(%s));\n' \
+            "$macro" "$macro"
+    done
+    printf '    return 0;\n}\n'
+} > "$src"
+
+set -- \
+    -I "${ROOT_DIR}/include" \
+    -I "${ROOT_DIR}/deps/dice/include"
+
+for dir in "${ROOT_DIR}"/modules/*/include; do
+    [ -d "$dir" ] || continue
+    set -- "$@" -I "$dir"
+done
+
+if [ -n "${include_args}" ]; then
+    while IFS= read -r dir; do
+        [ -n "$dir" ] || continue
+        set -- "$@" -I "$dir"
+    done <<EOF
+${include_args}
+EOF
+fi
+
+"${CC_BIN}" "$@" "$src" -o "$bin"
+"$bin"

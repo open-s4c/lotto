@@ -20,6 +20,7 @@ show           = show %tmpdir %input
 stress         = stress %tmpdir %output
 stress4rinflex = stress %tmpdir %output -s random --stable-address-method MAP --handler-address enable --handler-cas enable --handler-stacktrace enable --handler-event enable
 trace          = trace %tmpdir %output
+events         = @PROJECT_SOURCE_DIR@/scripts/lotto-events
 
 # tikl flags
 -q

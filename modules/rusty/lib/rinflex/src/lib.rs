@@ -22,6 +22,7 @@ use lotto::log::*;
 use lotto::raw;
 use memory_access::{MemoryAccess, Modify, ModifyKind};
 use report::Instruction;
+use std::ffi::CStr;
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::path::PathBuf;
@@ -51,42 +52,21 @@ impl Transition {
         }
     }
 
-    pub fn event_name(&self) -> &'static str {
-        match self.src_type {
-            raw::EVENT_MA_READ => "MA_READ",
-            raw::EVENT_MA_WRITE => "MA_WRITE",
-            raw::EVENT_MA_AREAD => {
-                if self.after { "MA_AREAD/AFTER" } else { "MA_AREAD" }
-            }
-            raw::EVENT_MA_AWRITE => {
-                if self.after { "MA_AWRITE/AFTER" } else { "MA_AWRITE" }
-            }
-            raw::EVENT_MA_RMW => {
-                if self.after { "MA_RMW/AFTER" } else { "MA_RMW" }
-            }
-            raw::EVENT_MA_XCHG => {
-                if self.after { "MA_XCHG/AFTER" } else { "MA_XCHG" }
-            }
-            raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => {
-                if self.after { "MA_CMPXCHG/AFTER" } else { "MA_CMPXCHG" }
-            }
-            raw::EVENT_MA_FENCE => {
-                if self.after { "MA_FENCE/AFTER" } else { "MA_FENCE" }
-            }
-            raw::EVENT_MUTEX_ACQUIRE => "MUTEX_ACQUIRE",
-            raw::EVENT_MUTEX_TRYACQUIRE => "MUTEX_TRYACQUIRE",
-            raw::EVENT_MUTEX_RELEASE => "MUTEX_RELEASE",
-            raw::EVENT_STACKTRACE_ENTER => "STACKTRACE_ENTER",
-            raw::EVENT_STACKTRACE_EXIT => "STACKTRACE_EXIT",
-            raw::EVENT_TASK_CREATE => "TASK_CREATE",
-            raw::EVENT_TASK_INIT => "TASK_INIT",
-            raw::EVENT_TASK_FINI => "TASK_FINI",
-            raw::EVENT_TASK_JOIN => "TASK_JOIN",
-            raw::EVENT_ORDER => "ORDER",
-            raw::EVENT_SYS_YIELD => "SYS_YIELD",
-            raw::EVENT_USER_YIELD => "USER_YIELD",
-            raw::EVENT_SCHED_YIELD => "SCHED_YIELD",
-            _ => "UNKNOWN",
+    pub fn event_name(&self) -> String {
+        let ty: raw::type_id = self
+            .src_type
+            .try_into()
+            .expect("semantic event id must fit into type_id");
+        let mut name = unsafe { CStr::from_ptr(raw::ps_type_str(ty)) }
+            .to_string_lossy()
+            .into_owned();
+        if let Some(stripped) = name.strip_prefix("EVENT_") {
+            name = stripped.to_owned();
+        }
+        if self.after {
+            format!("{name}/AFTER")
+        } else {
+            name
         }
     }
 

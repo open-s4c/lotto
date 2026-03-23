@@ -2,9 +2,10 @@
 #include <lotto/engine/pubsub.h>
 
 void lotto_rust_subscribe();
-void lotto_rust_publish_execute(const context_t *ctx,
-                                const context_t *event);
-void lotto_rust_publish_arrival(const context_t *ctx, sequencer_decision *e);
+void lotto_rust_publish_execute(const capture_point *ctx,
+                                const capture_point *event);
+void lotto_rust_publish_arrival(const capture_point *ctx,
+                                sequencer_decision *e);
 void lotto_rust_after_unmarshal_config(void);
 void lotto_rust_after_unmarshal_persistent(void);
 void lotto_rust_after_unmarshal_final(void);
@@ -15,7 +16,7 @@ void lotto_rust_register();
 void lotto_rust_init();
 
 static void
-_rusty_capture_handle(const context_t *ctx, event_t *e)
+_rusty_capture_handle(const capture_point *ctx, event_t *e)
 {
     lotto_rust_publish_arrival(ctx, e);
 }
@@ -25,8 +26,8 @@ REGISTER_SEQUENCER_HANDLER(_rusty_capture_handle)
 LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT,
                                  {
                                      lotto_rust_publish_execute(
-                                         (const context_t *)md,
-                                         (const context_t *)event);
+                                         (const capture_point *)md,
+                                         (const capture_point *)event);
                                  })
 LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG,
                 { lotto_rust_after_unmarshal_config(); })

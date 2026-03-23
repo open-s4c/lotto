@@ -31,45 +31,33 @@ intercept_spin_end(uint32_t cond)
 void
 _lotto_spin_start()
 {
-    context_origin ctx = *ctx_origin(.self = self_md(), .func = __FUNCTION__);
-    capture_point cp   = {.src_type = EVENT_SPIN_START, .payload = NULL};
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_MODULE_INTERCEPT, &cp, (metadata_t *)&ctx);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_SPIN_START, NULL, 0);
 }
 
 void
 _lotto_spin_end(uint32_t cond)
 {
-    context_origin ctx  = *ctx_origin(.self = self_md(), .func = __FUNCTION__);
     spin_end_event_t ev = {.cond = cond};
-    capture_point cp    = {.src_type = EVENT_SPIN_END, .payload = &ev};
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_MODULE_INTERCEPT, &cp, (metadata_t *)&ctx);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_SPIN_END, &ev, 0);
 }
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SPIN_START, {
-    (void)event;
-    _lotto_spin_start();
+    capture_point cp   = {
+          .src_type = EVENT_SPIN_START,
+          .func = "spin_start",
+          .payload = NULL,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_SPIN_START, &cp, md);
     return PS_OK;
 })
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SPIN_END, {
     spin_end_event_t *ev = EVENT_PAYLOAD(event);
-    _lotto_spin_end(ev->cond);
-    return PS_OK;
-})
-
-PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, EVENT_MODULE_INTERCEPT, {
-    const context_origin *origin = (const context_origin *)md;
-    capture_point *cp            = (capture_point *)event;
-
-    switch (cp->src_type) {
-        case EVENT_SPIN_START:
-            runtime_ingress_module_submit_event(origin, cp, EVENT_SPIN_START);
-            break;
-        case EVENT_SPIN_END:
-            runtime_ingress_module_submit_event(origin, cp, EVENT_SPIN_END);
-            break;
-        default:
-            break;
-    }
+    capture_point cp     = {
+          .src_type = EVENT_SPIN_END,
+          .func = "spin_end",
+          .payload = ev,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_SPIN_END, &cp, md);
     return PS_OK;
 })

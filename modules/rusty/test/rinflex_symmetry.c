@@ -6,34 +6,34 @@
 // RUN: %lotto %rinflex -r 15 2>&1 | iconv -t utf-8 -f utf-8 -c | %check %s
 
 // CHECK: ------ . ------ . ------ . ------ . ------
-// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_AWRITE
+// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: MA_AWRITE
 // CHECK-NEXT: []
 // CHECK-NEXT: thread
-// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_AREAD
-// CHECK-NEXT: []
-// CHECK-NEXT: thread
-
-// CHECK: ------ . ------ . ------ . ------ . ------
-// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_AWRITE
-// CHECK-NEXT: []
-// CHECK-NEXT: thread
-// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_AREAD
+// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: MA_AREAD
 // CHECK-NEXT: []
 // CHECK-NEXT: thread
 
 // CHECK: ------ . ------ . ------ . ------ . ------
-// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_AREAD
+// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: MA_AWRITE
+// CHECK-NEXT: []
+// CHECK-NEXT: thread
+// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: MA_AREAD
+// CHECK-NEXT: []
+// CHECK-NEXT: thread
+
+// CHECK: ------ . ------ . ------ . ------ . ------
+// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: MA_AREAD
 // CHECK-NEXT: [thread]
 // CHECK-NEXT: get_unique_id
-// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_AWRITE
+// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: MA_AWRITE
 // CHECK-NEXT: [thread]
 // CHECK-NEXT: get_unique_id
 
 // CHECK: ------ . ------ . ------ . ------ . ------
-// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_AREAD
+// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: MA_AREAD
 // CHECK-NEXT: [thread]
 // CHECK-NEXT: get_unique_id
-// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: BEFORE_AWRITE
+// CHECK: event - tid: {{[23]}}, clk: {{[0-9]+}}, {{[0-9]+}} x pc: {{.*}}, cat: MA_AWRITE
 // CHECK-NEXT: [thread]
 // CHECK-NEXT: get_unique_id
 

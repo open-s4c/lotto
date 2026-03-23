@@ -120,7 +120,6 @@ fn main() -> Result<()> {
         .header("wrapper.h")
         .allowlist_file(".*lotto/.*")
         .allowlist_file(".*dice/.*")
-        .newtype_enum("base_category")
         .rustified_enum("reason")
         .rustified_enum("slot")
         .rustified_enum("event")

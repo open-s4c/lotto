@@ -53,7 +53,7 @@ impl VAddr {
     ///
     /// NOTE: This only reliably works when it's called from the same
     /// thread to whose stack this variable belongs.
-    pub fn get(ctx: &raw::context_t, addr: usize) -> VAddr {
+    pub fn get(ctx: &raw::capture_point, addr: usize) -> VAddr {
         let (stack_start, stack_end) = get_stack_range();
         if addr >= stack_start as usize && addr < stack_end as usize {
             VAddr::Stack(StableStackAddress {
@@ -91,8 +91,8 @@ mod tests {
     use super::*;
     use lotto::brokers::statemgr::Serializable;
 
-    fn fake_ctx() -> raw::context_t {
-        raw::context_t {
+    fn fake_ctx() -> raw::capture_point {
+        raw::capture_point {
             pc: 0xdeadbeef,
             func: c"UNKNOWN".as_ptr(),
             func_addr: 0xf114514f,

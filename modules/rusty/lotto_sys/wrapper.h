@@ -3,11 +3,11 @@
  * @brief Rust FFI declarations for wrapper.
  */
 /* IWYU pragma: begin_keep */
+#include "dice/chains/capture.h"
 #include "dice/events/memaccess.h"
 #include "dice/events/pthread.h"
 #include "dice/events/stacktrace.h"
 #include "lotto/base/cappt.h"
-#include "lotto/base/context.h"
 #include "lotto/base/envvar.h"
 #include "lotto/base/flag.h"
 #include "lotto/base/flags.h"
@@ -36,7 +36,6 @@
 #include "lotto/driver/subcmd.h"
 #include "lotto/driver/trace.h"
 #include "lotto/driver/utils.h"
-#include "lotto/engine/catmgr.h"
 #include "lotto/engine/sequencer.h"
 #include "lotto/engine/events.h"
 #include "lotto/engine/prng.h"

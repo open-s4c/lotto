@@ -9,9 +9,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::LazyLock;
 use std::sync::Mutex;
 
-use crate::memory_access::{MemoryAccess, MemoryOperationExt, Modify, ModifyKind, Read, VAddr};
+use crate::memory_access::{MemoryAccess, Modify, ModifyKind, Read, VAddr};
 use bincode::{Decode, Encode};
-use lotto::base::category::{effective_category, Category};
 use lotto::base::Value;
 use lotto::brokers::{Marshable, Stateful};
 use lotto::cli::flags::{FlagKey, STR_CONVERTER_BOOL};
@@ -46,7 +45,7 @@ struct CasPredictor {
 
 impl CasPredictor {
     #[inline]
-    fn update_task_from_ctx(&mut self, ctx: &raw::context_t) {
+    fn update_task_from_ctx(&mut self, ctx: &raw::capture_point) {
         if !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
@@ -73,11 +72,11 @@ impl CasPredictor {
 // Handler
 //
 impl Handler for CasPredictor {
-    fn handle(&mut self, ctx: &raw::context_t, _event: &mut raw::event_t) {
+    fn handle(&mut self, ctx: &raw::capture_point, _event: &mut raw::event_t) {
         self.update_task_from_ctx(ctx);
     }
 
-    fn posthandle(&mut self, ctx: &raw::context_t) {
+    fn posthandle(&mut self, ctx: &raw::capture_point) {
         // We need to save the "real" read value, which is only
         // available after the event is resumed.
         self.update_task_from_ctx(ctx);
@@ -85,16 +84,26 @@ impl Handler for CasPredictor {
 }
 
 #[inline]
-fn ctx_to_memory_access(ctx: &raw::context_t) -> Option<MemoryAccess> {
+fn ctx_to_memory_access(ctx: &raw::capture_point) -> Option<MemoryAccess> {
     ctx_to_modify(ctx)
         .map(MemoryAccess::Modify)
         .or_else(|| ctx_to_read(ctx).map(MemoryAccess::Read))
 }
 
 #[inline]
-fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
-    let cat = effective_category(ctx);
-    if !cat.is_write() {
+fn ctx_to_modify(ctx: &raw::capture_point) -> Option<Modify> {
+    let event_type = ctx.src_type as u32;
+    let is_after = u32::from(ctx.src_chain) == raw::CAPTURE_AFTER;
+
+    if !matches!(
+        event_type,
+        raw::EVENT_MA_WRITE
+            | raw::EVENT_MA_AWRITE
+            | raw::EVENT_MA_RMW
+            | raw::EVENT_MA_CMPXCHG
+            | raw::EVENT_MA_CMPXCHG_WEAK
+            | raw::EVENT_MA_XCHG
+    ) {
         return None;
     }
 
@@ -103,20 +112,14 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
     );
     let addr = VAddr::get(ctx, raw_addr);
     let size = u64::from(get_size_from_context(ctx, 1));
-    let is_after = cat.is_after();
-
-    let kind: ModifyKind = match cat {
-        // CAS
-        Category::CAT_BEFORE_CMPXCHG
-        | Category::CAT_AFTER_CMPXCHG_S
-        | Category::CAT_AFTER_CMPXCHG_F => ModifyKind::Cas {
+    let kind: ModifyKind = match event_type {
+        raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => ModifyKind::Cas {
             is_after,
             expected: get_ctx_val(ctx, 2, size),
             new: get_ctx_val(ctx, 3, size),
         },
 
-        // RMW
-        Category::CAT_BEFORE_RMW | Category::CAT_AFTER_RMW => ModifyKind::Rmw {
+        raw::EVENT_MA_RMW => ModifyKind::Rmw {
             is_after,
             delta: get_ctx_val(ctx, 2, size),
             operator: {
@@ -127,17 +130,14 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
             },
         },
 
-        // XCHG
-        Category::CAT_BEFORE_XCHG | Category::CAT_AFTER_XCHG => ModifyKind::Xchg {
+        raw::EVENT_MA_XCHG => ModifyKind::Xchg {
             is_after,
             value: get_ctx_val(ctx, 2, size),
         },
 
-        // Plain writes
-        Category::CAT_BEFORE_WRITE => ModifyKind::Write,
+        raw::EVENT_MA_WRITE => ModifyKind::Write,
 
-        // Atomic writes
-        Category::CAT_BEFORE_AWRITE | Category::CAT_AFTER_AWRITE => ModifyKind::AWrite {
+        raw::EVENT_MA_AWRITE => ModifyKind::AWrite {
             is_after,
             value: get_ctx_val(ctx, 2, size),
         },
@@ -148,10 +148,13 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
 
     // NOTE: We need to get the value early for the order enforcer to
     // detect whether the event should be blocked.
-    let read_value = if cat.is_read() {
+    let read_value = if matches!(
+        event_type,
+        raw::EVENT_MA_RMW | raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK | raw::EVENT_MA_XCHG
+    ) {
         // 1. Currently, only consider CAS, XCHG and RMW events.
         // 2. An AFTER event is understood as the same operation as the BEFORE event, so they use the same value.
-        if cat.is_before() && (cat.is_xchg() || cat.is_rmw() || cat.is_cas()) {
+        if !is_after {
             let value = unsafe { crate::sized_read(raw_addr as u64, size as usize) };
             Some(value)
         } else {
@@ -174,7 +177,7 @@ fn ctx_to_modify(ctx: &raw::context_t) -> Option<Modify> {
 
 /// `Read` events are not recorded.
 #[inline]
-fn ctx_to_read(_ctx: &raw::context_t) -> Option<Read> {
+fn ctx_to_read(_ctx: &raw::capture_point) -> Option<Read> {
     return None;
     // let (addr, size) = match ctx.cat {
     //     Category::CAT_BEFORE_READ | Category::CAT_BEFORE_AREAD | Category::CAT_AFTER_AREAD => {
@@ -193,7 +196,7 @@ fn ctx_to_read(_ctx: &raw::context_t) -> Option<Read> {
     // })
 }
 
-fn get_ctx_val(ctx: &raw::context_t, value_id: usize, size: u64) -> u64 {
+fn get_ctx_val(ctx: &raw::capture_point, value_id: usize, size: u64) -> u64 {
     match get_value_from_context(ctx, value_id, lotto::engine::handler::AddrSize::new(size)) {
         lotto::engine::handler::ValuesTypes::U8(val) => val as u64,
         lotto::engine::handler::ValuesTypes::U16(val) => val as u64,

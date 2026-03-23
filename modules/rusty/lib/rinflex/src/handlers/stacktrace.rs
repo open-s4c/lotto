@@ -1,6 +1,6 @@
 use crate::{Either, StackFrameId, StackTrace};
 use lotto::collections::FxHashMap;
-use lotto::{base::category::effective_category, base::StableAddress, raw, Stateful};
+use lotto::{base::StableAddress, raw, Stateful};
 use lotto::{
     base::Value,
     brokers::statemgr::*,
@@ -33,13 +33,13 @@ pub struct StackTraceHandler {
 }
 
 impl handler::Handler for StackTraceHandler {
-    fn handle(&mut self, ctx: &raw::context_t, _event: &mut raw::event_t) {
+    fn handle(&mut self, ctx: &raw::capture_point, _event: &mut raw::event_t) {
         if !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
         let id = TaskId(ctx.id);
-        match effective_category(ctx) {
-            raw::base_category::CAT_FUNC_ENTRY => {
+        match ctx.src_type as u32 {
+            raw::EVENT_STACKTRACE_ENTER => {
                 let caller_pc =
                     get_stacktrace_caller_from_context(ctx).expect("missing stacktrace caller")
                         - call_insn_len();
@@ -55,7 +55,7 @@ impl handler::Handler for StackTraceHandler {
                     .and_modify(|trace| trace.0.push(frame_id.clone()))
                     .or_insert(StackTrace(vec![frame_id]));
             }
-            raw::base_category::CAT_FUNC_EXIT => {
+            raw::EVENT_STACKTRACE_EXIT => {
                 if let Some(stacktrace) = self.tasks.get_mut(&id) {
                     stacktrace
                         .0

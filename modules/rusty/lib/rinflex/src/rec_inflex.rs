@@ -14,7 +14,6 @@ use lotto::sys::now;
 use crate::error::Error;
 use crate::handlers;
 use crate::inflex::{always, checked_execute, postexec, Outcome};
-use crate::memory_access::MemoryOperationExt;
 use crate::progress::ProgressBar;
 use crate::{inflex, trace, Constraint, ConstraintSet, Event, PrimitiveConstraint};
 
@@ -408,9 +407,9 @@ impl RecInflex {
         let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
         let event = trace::get_event_at_clk(flags, trace, clock)?;
 
-        if event.t.cat.is_after() {
+        if event.t.is_after() {
             let before_event = trace::get_event_at_clk(flags, trace, clock - 1)?;
-            if before_event.t.cat.is_before() {
+            if before_event.t.is_before() {
                 return Ok((before_event, -1));
             } else {
                 return Ok((event, 0));

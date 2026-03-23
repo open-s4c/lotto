@@ -24,15 +24,13 @@ pub fn rusty_subscribe() {
     });
 }
 
-/// Phase 1: register Rust CLI flags, categories, states, and command metadata.
+/// Phase 1: register Rust CLI flags, states, and command metadata.
 pub fn rusty_register() {
     REGISTER_ONCE.call_once(|| {
         lotto::log::init();
         rusty_subscribe();
         lotto::brokers::statemgr::register_system();
 
-        // Handler registration touches custom categories through their
-        // CategoryKey accessors, so it must happen before flags and commands.
         rusty_handlers::register();
 
         lotto::cli::flags::init();

@@ -23,26 +23,17 @@ intercept_await(void *addr)
 void
 _lotto_await(void *addr)
 {
-    context_origin ctx = *ctx_origin(.self = self_md(), .func = __func__);
-    await_event_t ev   = {.addr = addr};
-    capture_point cp   = {.src_type = EVENT_AWAIT, .payload = &ev};
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_MODULE_INTERCEPT, &cp, (metadata_t *)&ctx);
+    await_event_t ev = {.addr = addr};
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_AWAIT, &ev, 0);
 }
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_AWAIT, {
-    await_event_t *ev = EVENT_PAYLOAD(event);
-    _lotto_await(ev->addr);
-    return PS_OK;
-})
-
-PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, EVENT_MODULE_INTERCEPT, {
-    const context_origin *origin = (const context_origin *)md;
-    capture_point *cp            = (capture_point *)event;
-
-    if (cp->src_type != EVENT_AWAIT) {
-        return PS_OK;
-    }
-
-    runtime_ingress_module_submit_event(origin, cp, EVENT_AWAIT);
+    await_event_t *ev  = EVENT_PAYLOAD(event);
+    capture_point cp   = {
+          .src_type = EVENT_AWAIT,
+          .func = "await",
+          .payload = ev,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_AWAIT, &cp, md);
     return PS_OK;
 })

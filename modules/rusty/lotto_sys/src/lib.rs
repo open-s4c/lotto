@@ -6,47 +6,9 @@
 #![allow(unnecessary_transmutes)]
 #![allow(clippy::missing_safety_doc)]
 
-use std::ffi::CStr;
-
 use bincode;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-
-impl std::fmt::Display for base_category {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let ptr = unsafe { category_str(*self) };
-        let cstr = unsafe { CStr::from_ptr(ptr) };
-        let s = cstr.to_str().expect("valid utf-8");
-        write!(f, "{}", s)
-    }
-}
-
-impl bincode::Encode for base_category {
-    fn encode<E: bincode::enc::Encoder>(
-        &self,
-        encoder: &mut E,
-    ) -> Result<(), bincode::error::EncodeError> {
-        bincode::Encode::encode(&self.0, encoder)
-    }
-}
-
-impl bincode::Decode for base_category {
-    fn decode<D: bincode::de::Decoder>(
-        decoder: &mut D,
-    ) -> Result<Self, bincode::error::DecodeError> {
-        let val = std::ffi::c_uint::decode(decoder)?;
-        Ok(base_category(val))
-    }
-}
-
-impl<'de> bincode::BorrowDecode<'de> for base_category {
-    fn borrow_decode<D: bincode::de::BorrowDecoder<'de>>(
-        decoder: &mut D,
-    ) -> Result<Self, bincode::error::DecodeError> {
-        let val = std::ffi::c_uint::borrow_decode(decoder)?;
-        Ok(base_category(val))
-    }
-}
 
 impl reason {
     /// Whether the execution terminated due to Lotto runtime
@@ -99,17 +61,5 @@ impl std::fmt::Display for record {
             }
         }
         Ok(())
-    }
-}
-
-impl Ord for base_category {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.cmp(&other.0)
-    }
-}
-
-impl PartialOrd for base_category {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
     }
 }

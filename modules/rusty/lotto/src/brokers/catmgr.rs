@@ -1,10 +1,12 @@
 //! # Category Management
 use crate::base::category::Category;
 use core::ptr;
-use lotto_sys as raw;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Once;
+
+static NEXT_CATEGORY: AtomicU32 = AtomicU32::new(Category::CAT_END_.0);
 
 pub struct CategoryKey {
     name: &'static CStr,
@@ -23,7 +25,7 @@ impl CategoryKey {
 
     pub fn get(&self) -> Category {
         self.once.call_once(|| unsafe {
-            let cat = raw::new_category(self.name.as_ptr());
+            let cat = Category::from_raw(NEXT_CATEGORY.fetch_add(1, Ordering::Relaxed));
             let cat_ptr = self.cat.as_ptr() as *mut _;
             ptr::write(cat_ptr, cat);
         });

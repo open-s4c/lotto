@@ -1,6 +1,5 @@
 use lotto::collections::FxHashMap;
 use lotto::{
-    base::category::{effective_category, Category},
     base::StableAddress,
     base::Value,
     brokers::statemgr::*,
@@ -32,14 +31,17 @@ pub struct AddressHandler {
 }
 
 impl handler::Handler for AddressHandler {
-    fn handle(&mut self, ctx: &raw::context_t, _event: &mut raw::event_t) {
+    fn handle(&mut self, ctx: &raw::capture_point, _event: &mut raw::event_t) {
         if !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
         let tasks = &mut self.pers.tasks;
         let addr = StableAddress::with_default_method(ctx.pc);
-        let cat = effective_category(ctx);
-        let info = AddressInfo { addr, cat };
+        let info = AddressInfo {
+            addr,
+            src_type: ctx.src_type as u32,
+            after: u32::from(ctx.src_chain) == raw::CAPTURE_AFTER,
+        };
         tasks.insert(TaskId::new(ctx.id), info);
     }
 }
@@ -62,7 +64,8 @@ impl Marshable for Config {
 #[derive(Encode, Decode, Debug, Clone, MarshableNoPrint)]
 pub struct AddressInfo {
     pub addr: StableAddress,
-    pub cat: Category,
+    pub src_type: u32,
+    pub after: bool,
 }
 
 #[derive(Encode, Decode, Debug)]
@@ -73,7 +76,7 @@ pub struct Persistent {
 impl Marshable for Persistent {
     fn print(&self) {
         for (id, info) in self.tasks.iter() {
-            info!("task {} {} {}", id, info.addr, info.cat);
+            info!("task {} {} type={} after={}", id, info.addr, info.src_type, info.after);
         }
     }
 }

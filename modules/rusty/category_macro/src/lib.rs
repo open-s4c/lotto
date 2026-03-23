@@ -21,7 +21,7 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
 
     let parse = quote! {
         impl #struct_name {
-            fn parse(context: &lotto::raw::context_t) -> Self {
+            fn parse(context: &lotto::raw::capture_point) -> Self {
                 let mut counter = 0;
                 #parse_method
             }
@@ -36,8 +36,8 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
     let parser_ident = syn::Ident::new(&parser_name, struct_name.span());
 
     let parse_function = quote! {
-        fn #parser_ident() -> Box<dyn Fn(&lotto::raw::context_t) -> Box<dyn CustomContextTrait> + Send + Sync> {
-            Box::new(|context: &lotto::raw::context_t| {
+        fn #parser_ident() -> Box<dyn Fn(&lotto::raw::capture_point) -> Box<dyn CustomContextTrait> + Send + Sync> {
+            Box::new(|context: &lotto::raw::capture_point| {
             Box::new(#struct_name::parse(context)) as Box<dyn CustomContextTrait>
         })
         }
@@ -77,29 +77,10 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
         }
     };
 
-    let cat_name_str = struct_name_str.to_uppercase();
-    let cat_name = format!("CAT_{}", cat_name_str);
-    let cat_ident = syn::Ident::new(&cat_name, struct_name.span());
-
-    let cat_fn_name = format!("{}_cat", struct_name_str);
-    let cat_fn_ident = syn::Ident::new(&cat_fn_name, struct_name.span());
-
-    let cat_fn = quote! {
-        #[no_mangle]
-        pub extern "C" fn #cat_fn_ident() -> lotto::base::category::Category {
-            static #cat_ident: lotto::brokers::catmgr::CategoryKey = lotto::brokers::catmgr::CategoryKey::new(unsafe {
-                std::ffi::CStr::from_bytes_with_nul_unchecked(concat!(#cat_name, "\0").as_bytes())
-            });
-            #cat_ident.get()
-        }
-    };
-
     let implementation = quote! {
         #custom_cat_trait_implementation
 
         #trait_impl
-
-        #cat_fn
 
         #parse
 

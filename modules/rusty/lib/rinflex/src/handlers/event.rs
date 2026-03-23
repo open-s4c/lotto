@@ -2,7 +2,7 @@ use lotto::raw;
 use lotto::sync::HandlerWrapper;
 use lotto::Stateful;
 use lotto::{
-    base::{category::effective_category, Category, Value},
+    base::Value,
     brokers::statemgr::*,
     cli::flags::{FlagKey, STR_CONVERTER_BOOL},
     collections::FxHashMap,
@@ -55,7 +55,7 @@ pub struct EventHandler {
 }
 
 impl handler::Handler for EventHandler {
-    fn handle(&mut self, ctx: &raw::context_t, e: &mut raw::event_t) {
+    fn handle(&mut self, ctx: &raw::capture_point, e: &mut raw::event_t) {
         if !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
@@ -90,17 +90,13 @@ impl handler::Handler for EventHandler {
         self.pers.tasks.insert(id, event);
     }
 
-    fn posthandle(&mut self, ctx: &raw::context_t) {
-        if effective_category(ctx) == Category::CAT_NONE
-            || !self.cfg.enabled.load(Ordering::Relaxed)
-        {
+    fn posthandle(&mut self, ctx: &raw::capture_point) {
+        if ctx.src_type == 0 || !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
-        let entry = self
-            .pers
-            .tasks
-            .get_mut(&TaskId(ctx.id))
-            .expect("handler_event's posthandle expects event data from capture");
+        let Some(entry) = self.pers.tasks.get_mut(&TaskId(ctx.id)) else {
+            return;
+        };
         let mut ecore = ecore_from_event(&mut self.st_map, &*entry);
 
         let Some(ref oldm) = entry.m else {

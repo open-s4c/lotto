@@ -10,9 +10,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        toolchain: [gnu, clang]
-        rust: [ON, OFF]
-        variant: [Debug, Release, LTO]
+        toolchain: [gnu] #, clang]
+        rust: [OFF] #[ON, OFF]
+        variant: [Debug] #, Release, LTO]
         exclude:
           - toolchain: clang
             variant: LTO

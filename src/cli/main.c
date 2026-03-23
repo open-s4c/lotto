@@ -27,6 +27,8 @@ static void driver_options(int argc, char **argv, const char **module_dir,
                            const char **module_list);
 static int add_driver_module(module_t *module, void *arg);
 static void prepend_env_path(const char *name, const char *value);
+static bool join_path(char *dst, size_t dst_size, const char *left,
+                      const char *right);
 static void append_preload(preload_state_t *state, const char *path);
 static bool path_is_readable(const char *path);
 static int exec_self(char **argv);
@@ -65,16 +67,21 @@ main(int argc, char **argv)
         }
 
         snprintf(binary_dir, sizeof(binary_dir), "%s", dirname(resolved_path));
-        const char *fmtstr = "%s/liblotto-driver.so";
-        snprintf(driver_path, sizeof(driver_path) - strlen(fmtstr), fmtstr,
-                 binary_dir);
+        if (!join_path(driver_path, sizeof(driver_path), binary_dir,
+                       "/liblotto-driver.so")) {
+            fprintf(stderr, "error: lotto driver path too long\n");
+            return 1;
+        }
         if (!path_is_readable(driver_path)) {
-            const char *fmt_libdir     = "%s/../lib";
-            const char *fmt_driverpath = "%s/liblotto-driver.so";
-            snprintf(lib_dir, sizeof(lib_dir) - strlen(fmt_libdir), fmt_libdir,
-                     binary_dir);
-            snprintf(driver_path, sizeof(driver_path) - strlen(fmt_driverpath),
-                     fmt_driverpath, lib_dir);
+            if (!join_path(lib_dir, sizeof(lib_dir), binary_dir, "/../lib")) {
+                fprintf(stderr, "error: lotto library path too long\n");
+                return 1;
+            }
+            if (!join_path(driver_path, sizeof(driver_path), lib_dir,
+                           "/liblotto-driver.so")) {
+                fprintf(stderr, "error: lotto driver path too long\n");
+                return 1;
+            }
         } else {
             snprintf(lib_dir, sizeof(lib_dir), "%s", binary_dir);
         }
@@ -169,6 +176,27 @@ prepend_env_path(const char *name, const char *value)
         snprintf(buf, sizeof(buf), "%s", value);
     }
     setenv(name, buf, true);
+}
+
+static bool
+join_path(char *dst, size_t dst_size, const char *left, const char *right)
+{
+    size_t left_len;
+    size_t right_len;
+
+    if (dst == NULL || dst_size == 0 || left == NULL || right == NULL) {
+        return false;
+    }
+
+    left_len  = strlen(left);
+    right_len = strlen(right);
+    if (left_len + right_len + 1 > dst_size) {
+        return false;
+    }
+
+    memcpy(dst, left, left_len);
+    memcpy(dst + left_len, right, right_len + 1);
+    return true;
 }
 
 static bool

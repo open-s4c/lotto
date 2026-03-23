@@ -1,7 +1,8 @@
 # prepare base component add_library(base_component SHARED base_mock.c)
 add_library(base_component SHARED)
 target_link_libraries(base_component base_testing.o sys_testing.o
-                      memmgr_runtime_libc.o memmgr_user_libc.o)
+                      memmgr_runtime_libc.o memmgr_user_libc.o
+                      plan_testing.o)
 
 add_binding(
     TARGET tidmap.rkt
@@ -28,7 +29,7 @@ add_binding(
 
 add_binding(
     TARGET plan.rkt
-    INCLUDE lotto/base/plan.h
+    INCLUDE lotto/engine/plan.h
     EXCLUDE sys/types.h)
 
 add_binding(

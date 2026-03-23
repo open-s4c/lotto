@@ -8,8 +8,10 @@
 #include "../../src/plotto/intercept_tsan.c" // NOLINT(bugprone-suspicious-include)
 
 void
-intercept_capture(context_t *ctx)
+runtime_ingress(capture_point *ctx, metadata_t *md)
 {
+    (void)ctx;
+    (void)md;
 }
 
 int

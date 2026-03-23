@@ -3,23 +3,24 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <lotto/base/cappt.h>
-#include <lotto/base/context.h>
+#include <dice/events/memaccess.h>
 #include <lotto/base/trace_flat.h>
-#include <lotto/engine/dispatcher.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress_events.h>
 
 // NOLINTBEGIN(bugprone-suspicious-memory-comparison)
 
 #define new_ctx(...)                                                           \
-    (&(context_t){.func = "UNKNOWN",                                           \
-                  .cat  = CAT_NONE,                                            \
-                  .id   = NO_TASK,                                             \
-                  .args = {0},                                                 \
-                  __VA_ARGS__})
+    (&(capture_point){.func      = "UNKNOWN",                                  \
+                      .src_chain = CAPTURE_EVENT,                              \
+                      .src_type  = 0,                                          \
+                      .id        = NO_TASK,                                    \
+                      .vid       = NO_TASK,                                    \
+                      __VA_ARGS__})
 void sequencer_reset(void);
 
 /*******************************************************************************
@@ -29,7 +30,7 @@ typedef struct {
     int exit_err;
     task_id wake_id;
     task_id yield_id;
-    context_t *ctx;
+    capture_point *cp;
     bool skip;
 } expect_t;
 
@@ -44,41 +45,56 @@ typedef struct {
 } mock_t;
 static mock_t mock;
 
-task_id
-dispatch_event(const context_t *ctx, event_t *e)
+static bool
+capture_point_eq(const capture_point *lhs, const capture_point *rhs)
 {
-    assert(mock.expect.ctx);
-    assert(memcmp(mock.expect.ctx, ctx, sizeof(context_t)) == 0);
+    return lhs->src_chain == rhs->src_chain &&
+           lhs->src_type == rhs->src_type &&
+           lhs->blocking == rhs->blocking && lhs->id == rhs->id &&
+           lhs->vid == rhs->vid && lhs->pc == rhs->pc &&
+#if defined(QLOTTO_ENABLED)
+           lhs->icount == rhs->icount && lhs->pstate == rhs->pstate &&
+#endif
+           lhs->func == rhs->func && lhs->func_addr == rhs->func_addr &&
+           lhs->payload == rhs->payload;
+}
+
+bool
+sequencer_dispatch_override(const capture_point *cp, event_t *e, task_id *next)
+{
+    assert(mock.expect.cp);
+    assert(capture_point_eq(mock.expect.cp, cp));
     assert(mock.expect.skip == e->skip);
 
-    free(mock.expect.ctx);
-    mock.expect.ctx  = NULL;
+    free(mock.expect.cp);
+    mock.expect.cp   = NULL;
     mock.expect.skip = false;
 
-    return mock.next;
+    *next = mock.next;
+    return true;
 }
 void
-scheduler_postprocess(const context_t *ctx)
+scheduler_postprocess(const capture_point *cp)
 {
-    assert(mock.expect.ctx);
-    assert(memcmp(mock.expect.ctx, ctx, sizeof(context_t)) == 0);
+    assert(mock.expect.cp);
+    assert(capture_point_eq(mock.expect.cp, cp));
 
-    free(mock.expect.ctx);
-    mock.expect.ctx = NULL;
+    free(mock.expect.cp);
+    mock.expect.cp = NULL;
 }
 void
-expect_process(const context_t *ctx, bool skip)
+expect_process(const capture_point *cp, bool skip)
 {
-    if (mock.expect.ctx != NULL)
-        free(mock.expect.ctx);
-    mock.expect.ctx  = (context_t *)malloc(sizeof(context_t));
-    *mock.expect.ctx = *ctx;
+    if (mock.expect.cp != NULL)
+        free(mock.expect.cp);
+    mock.expect.cp   = (capture_point *)malloc(sizeof(capture_point));
+    *mock.expect.cp  = *cp;
     mock.expect.skip = skip;
 }
 bool
 expect_processed()
 {
-    return mock.expect.ctx == NULL;
+    return mock.expect.cp == NULL;
 }
 
 size_t
@@ -200,11 +216,11 @@ test_main_task()
     printf("Test: %s\n", __FUNCTION__);
     task_id tid = 1;
 
-    context_t *ctx = new_ctx(.id = tid, .cat = CAT_TASK_INIT);
-    expect_process(ctx, false);
-    mock.next  = tid;
-    mock.now   = 5 * NOW_SECOND;
-    plan_t act = sequencer_capture(ctx);
+    capture_point *cp = new_ctx(.id = tid, .src_type = EVENT_TASK_INIT);
+    expect_process(cp, false);
+    mock.next       = tid;
+    mock.now        = 5 * NOW_SECOND;
+    struct plan act = sequencer_capture(cp);
     assert(act.next == tid);
     // assert(act.reason == REASON_CALL);
     assert(act.actions == (ACTION_WAKE | ACTION_YIELD | ACTION_RESUME));
@@ -219,12 +235,12 @@ test_replay()
     LOTTO_PUBLISH(EVENT_ENGINE__START, nil);
     logger(LOGGER_DEBUG, STDERR_FILENO);
     printf("Test: %s\n", __FUNCTION__);
-    task_id tid          = 1;
-    task_id other        = 2;
-    record_t *r          = NULL;
-    context_t *ctx_tid   = NULL;
-    context_t *ctx_other = NULL;
-    plan_t plan          = {0};
+    task_id tid              = 1;
+    task_id other            = 2;
+    record_t *r              = NULL;
+    capture_point *ctx_tid   = NULL;
+    capture_point *ctx_other = NULL;
+    struct plan plan         = {0};
 
     trace_t *t = trace_flat_create(NULL);
 
@@ -250,7 +266,7 @@ test_replay()
     trace_append(t, r);
 
     /* capture point 1 */
-    ctx_tid = new_ctx(.id = tid, .cat = CAT_TASK_INIT);
+    ctx_tid = new_ctx(.id = tid, .src_type = EVENT_TASK_INIT);
     expect_process(ctx_tid, false);
     plan = sequencer_capture(ctx_tid);
     assert(plan.next == tid);
@@ -261,7 +277,8 @@ test_replay()
     assert(!expect_marshaled());
 
     /* capture point 2 */
-    ctx_tid = new_ctx(.id = tid, .cat = CAT_BEFORE_WRITE);
+    ctx_tid = new_ctx(.id = tid, .src_chain = CAPTURE_BEFORE,
+                      .src_type = EVENT_MA_WRITE, .src_type = EVENT_MA_WRITE);
     expect_process(ctx_tid, false);
     mock.next = ANY_TASK;
     plan      = sequencer_capture(ctx_tid);
@@ -275,11 +292,13 @@ test_replay()
     assert(!expect_marshaled());
 
     /* capture point 3 */
-    ctx_tid = new_ctx(.id = tid, .cat = CAT_BEFORE_AREAD);
+    ctx_tid = new_ctx(.id = tid, .src_chain = CAPTURE_BEFORE,
+                      .src_type = EVENT_MA_AREAD, .src_type = EVENT_MA_AREAD);
     expect_process(ctx_tid, false);
     plan = sequencer_capture(ctx_tid);
     assert(plan.next == other);
-    ctx_other = new_ctx(.id = other, .cat = CAT_BEFORE_AREAD);
+    ctx_other = new_ctx(.id = other, .src_chain = CAPTURE_BEFORE,
+                        .src_type = EVENT_MA_AREAD, .src_type = EVENT_MA_AREAD);
     sequencer_resume(ctx_other);
     assert(plan.actions == (ACTION_WAKE | ACTION_YIELD | ACTION_RESUME));
     assert(trace_last(t) == NULL);
@@ -290,7 +309,8 @@ test_replay()
 
 
     /* replay is over now it should call scheduler_process */
-    ctx_other = new_ctx(.id = other, .cat = CAT_BEFORE_AREAD);
+    ctx_other = new_ctx(.id = other, .src_chain = CAPTURE_BEFORE,
+                        .src_type = EVENT_MA_AREAD, .src_type = EVENT_MA_AREAD);
     expect_process(ctx_other, false);
     mock.next = tid;
 
@@ -314,11 +334,11 @@ test_record()
 {
     LOTTO_PUBLISH(EVENT_ENGINE__START, nil);
     printf("Test: %s\n", __FUNCTION__);
-    task_id tid    = 1;
-    task_id other  = 2;
-    record_t *r    = NULL;
-    context_t *ctx = NULL;
-    plan_t plan    = {0};
+    task_id tid       = 1;
+    task_id other     = 2;
+    record_t *r       = NULL;
+    capture_point *cp = NULL;
+    struct plan plan  = {0};
 
     trace_t *t = trace_flat_create(NULL);
 
@@ -328,19 +348,19 @@ test_record()
     // LOTTO_PUBLISH(FLAG_CLI_REPLAY_GOAL, val);
 
     /* send last event */
-    ctx = new_ctx(.id = tid, .cat = CAT_TASK_FINI);
-    expect_process(ctx, false);
+    cp = new_ctx(.id = tid, .src_type = EVENT_TASK_FINI);
+    expect_process(cp, false);
     mock.next = ANY_TASK;
     r         = record_alloc(0);
     r->id     = other;
     r->clk    = 1;
     r->kind   = RECORD_SCHED;
-    plan      = sequencer_capture(ctx);
+    plan      = sequencer_capture(cp);
     assert(plan.next == ANY_TASK);
     // assert(plan.reason == REASON_NDET);
     assert(plan.actions == ACTION_WAKE);
-    ctx->id = other;
-    sequencer_resume(ctx);
+    cp->id = other;
+    sequencer_resume(cp);
     assert(trace_last(t) != NULL);
     assert(trace_next(t, RECORD_ANY) != NULL);
     assert(memcmp(r, trace_last(t), sizeof(record_t)) != 0);
@@ -350,14 +370,14 @@ test_record()
 
 
     /* send another last event */
-    ctx = new_ctx(.id = other, .cat = CAT_TASK_FINI);
-    expect_process(ctx, false);
+    cp = new_ctx(.id = other, .src_type = EVENT_TASK_FINI);
+    expect_process(cp, false);
     mock.next = ANY_TASK;
-    plan      = sequencer_capture(ctx);
+    plan      = sequencer_capture(cp);
     assert(plan.next == ANY_TASK);
     // assert(plan.reason == REASON_NDET);
     assert(plan.actions == ACTION_WAKE);
-    sequencer_resume(ctx);
+    sequencer_resume(cp);
     assert(trace_last(t) != NULL);
     assert(trace_next(t, RECORD_ANY) != NULL);
     assert(memcmp(r, trace_last(t), sizeof(record_t)) != 0);

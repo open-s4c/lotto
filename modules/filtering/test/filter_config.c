@@ -1,7 +1,7 @@
 // clang-format off
-// RUN: echo "BEFORE_AREAD=1" > %s.conf
-// RUN: echo "BEFORE_AWRITE=1" >> %s.conf
-// RUN: echo "BEFORE_RMW=1" >> %s.conf
+// RUN: echo "32=1" > %s.conf
+// RUN: echo "33=1" >> %s.conf
+// RUN: echo "34=1" >> %s.conf
 // RUN: %lotto %stress -r 200 -F --filtering-config %s.conf -- %b
 // clang-format on
 

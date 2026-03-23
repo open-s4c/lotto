@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <lotto/base/context.h>
+#include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/switcher.h>
 #include <lotto/sys/ensure.h>
 

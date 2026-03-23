@@ -5,13 +5,12 @@
 #include <string.h>
 #include <time.h>
 
-#include <lotto/base/context.h>
-#include <lotto/base/plan.h>
 #include <lotto/base/record.h>
-#include <lotto/engine/catmgr.h>
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/plan.h>
 #include <lotto/engine/pubsub.h>
-#include <lotto/runtime/intercept.h>
+#include <lotto/engine/sequencer.h>
+#include <lotto/runtime/context_payload.h>
+#include <lotto/runtime/ingress.h>
 #include <lotto/runtime/mediator.h>
 #include <lotto/states/handlers/deadlock.h>
 #include <lotto/states/handlers/mutex.h>
@@ -20,7 +19,7 @@
 #include <lotto/sys/stdlib.h>
 
 static mediator_t _mediator =
-    (mediator_t){.id = 1, .registration_status = MEDIATOR_REGISTRATION_DONE};
+    (mediator_t){.id = 1};
 
 /*******************************************************************************
  * pthread_mutex_lock
@@ -84,7 +83,10 @@ typedef struct {
     foo mock;
 } testcase_t;
 
-#define TESTCASE(N) {.func = #N, .test = (foo)test_##N, .mock = (foo)mock_##N}
+#define TESTCASE(N)                                                            \
+    {                                                                          \
+        .func = #N, .test = (foo)test_##N, .mock = (foo)mock_##N               \
+    }
 
 testcase_t tests[] = {
     TESTCASE(pthread_mutex_lock),
@@ -109,7 +111,7 @@ main()
 }
 
 void
-lotto_exit(context_t *ctx, reason_t reason)
+lotto_exit(capture_point *ctx, reason_t reason)
 {
 }
 
@@ -159,24 +161,25 @@ prng_next(void)
 }
 
 bool
-mediator_capture(mediator_t *m, context_t *ctx)
+mediator_capture(mediator_t *m, capture_point *ctx)
 {
-    printf("intercept %s cat: %s\n", ctx->func, category_str(ctx->cat));
+    printf("intercept %s cat: %s\n", ctx->func,
+           category_str(context_effective_category(ctx)));
     static int calls = 0;
     switch (calls++) {
         case 0:
-            ENSURE(ctx->cat == CAT_TASK_INIT);
+            ENSURE(context_effective_category(ctx) == CAT_TASK_INIT);
             return false;
         case 1:
-            ENSURE(ctx->cat == CAT_RSRC_ACQUIRING);
-            m->plan = (plan_t){
+            ENSURE(context_effective_category(ctx) == CAT_RSRC_ACQUIRING);
+            m->plan = (struct plan){
                 .next    = ctx->id,
                 .actions = ACTION_CONTINUE,
             };
             return true;
         default:
-            ENSURE(ctx->cat == CAT_CALL);
-            m->plan = (plan_t){
+            ENSURE(context_effective_category(ctx) == CAT_CALL);
+            m->plan = (struct plan){
                 .next    = ANY_TASK,
                 .actions = ACTION_RETURN | ACTION_YIELD | ACTION_RESUME,
             };
@@ -186,23 +189,23 @@ mediator_capture(mediator_t *m, context_t *ctx)
 }
 
 mediator_status_t
-mediator_resume(mediator_t *m, context_t *ctx)
+mediator_resume(mediator_t *m, capture_point *ctx)
 {
     static unsigned int counter = 0;
     switch (counter++) {
         case 0:
-            ENSURE(ctx->cat == CAT_NONE);
+            ENSURE(context_effective_category(ctx) == CAT_NONE);
             return MEDIATOR_OK;
             break;
         case 1:
-            ENSURE(ctx->cat == CAT_TASK_INIT);
+            ENSURE(context_effective_category(ctx) == CAT_TASK_INIT);
             return MEDIATOR_OK;
             break;
         default:
             break;
     }
 
-    ENSURE(ctx->cat == CAT_CALL && "expecting CAT_CALL");
+    ENSURE(context_effective_category(ctx) == CAT_CALL && "expecting CAT_CALL");
     printf("return %s\n", ctx->func);
 
     ENSURE(plan_next(m->plan) == ACTION_YIELD && "wrong plan");
@@ -211,29 +214,23 @@ mediator_resume(mediator_t *m, context_t *ctx)
 }
 
 void
-mediator_return(mediator_t *m, context_t *ctx)
+mediator_return(mediator_t *m, capture_point *ctx)
 {
-    ENSURE(ctx->cat == CAT_CALL && "expecting CAT_CALL");
+    ENSURE(context_effective_category(ctx) == CAT_CALL && "expecting CAT_CALL");
     ENSURE(plan_next(m->plan) == ACTION_RETURN && "wrong plan");
     plan_done(&m->plan);
 }
 
 mediator_t *
-mediator_init()
+mediator_get(metadata_t *md, bool bootstrap)
 {
-    mediator_t *m = sys_malloc(sizeof(mediator_t));
-    (*m)          = (mediator_t){.id = 1};
-    return m;
-}
-
-mediator_t *
-mediator_get_data(bool new_task)
-{
+    (void)md;
+    (void)bootstrap;
     return &_mediator;
 }
 
 void
-engine_resume(const context_t *ctx)
+engine_resume(const capture_point *ctx)
 {
 }
 

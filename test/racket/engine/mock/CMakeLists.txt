@@ -4,12 +4,12 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 add_mock(
     TARGET engine_mock.c
     INCLUDE lotto/engine/engine.h #
-            lotto/base/context.h #
+            lotto/runtime/capture_point.h #
             lotto/engine/pubsub.h #
             lotto/engine/statemgr.h #
             lotto/engine/sequencer.h #
             lotto/engine/prng.h #
-            lotto/engine/dispatcher.h #
+            lotto/engine/sequencer.h #
             lotto/engine/recorder.h #
     EXCLUDE io.h
             logger.h
@@ -36,13 +36,17 @@ add_binding(
             lotto/driver/events.h #
             lotto/engine/engine.h #
             lotto/engine/sequencer.h #
-    EXCLUDE sys/types.h)
+    EXCLUDE sys/types.h
+            pthread.h
+            unistd.h
+            bits/confname.h)
 
 add_binding(
     TARGET sequencer.rkt
     INCLUDE lotto/engine/sequencer.h lotto/base/trace_flat.h
-            lotto/engine/recorder.h lotto/engine/dispatcher.h
-    EXCLUDE sys/types.h)
+            lotto/engine/recorder.h lotto/engine/sequencer.h
+    EXCLUDE sys/types.h
+            pthread.h)
 add_library(mocked_sequencer SHARED)
 target_link_libraries(
     mocked_sequencer

@@ -1,4 +1,5 @@
 pub mod arg;
+pub mod capture_point;
 pub mod category;
 pub mod envvar;
 pub mod flags;
@@ -15,6 +16,7 @@ pub mod value;
 pub mod trace_ext;
 
 pub use arg::*;
+pub use capture_point::*;
 pub use category::*;
 pub use envvar::*;
 pub use flags::*;

@@ -45,10 +45,12 @@ fn get_rusty_module_slot(lotto_build_dir: &PathBuf) -> Result<i32> {
         .lines()
         .find_map(|line| line.strip_prefix("#define MODULE_SLOT "))
         .ok_or_else(|| anyhow!("could not find MODULE_SLOT in {}", rusty_header.display()))?;
-    define
-        .trim()
-        .parse::<i32>()
-        .with_context(|| format!("could not parse MODULE_SLOT from {}", rusty_header.display()))
+    define.trim().parse::<i32>().with_context(|| {
+        format!(
+            "could not parse MODULE_SLOT from {}",
+            rusty_header.display()
+        )
+    })
 }
 
 fn main() -> Result<()> {
@@ -127,9 +129,17 @@ fn main() -> Result<()> {
         .into_iter()
         .map(|m| get_lotto_dir().join("modules").join(m).join("include"))
         .collect();
-    let rusty_include_dir = lotto_build_dir.join("modules").join("rusty").join("include");
+    let rusty_include_dir = lotto_build_dir
+        .join("modules")
+        .join("rusty")
+        .join("include");
     modules_include_dirs.push(rusty_include_dir);
-    modules_include_dirs.push(get_lotto_dir().join("modules").join("rusty").join("include"));
+    modules_include_dirs.push(
+        get_lotto_dir()
+            .join("modules")
+            .join("rusty")
+            .join("include"),
+    );
 
     println!("Modules include dir is {:?}", modules_include_dirs);
     modules_include_dirs

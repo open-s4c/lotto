@@ -2,7 +2,7 @@
 //! from the C side, and publish the events to the subscribed handlers.
 //!
 //!
-use crate::base::{effective_event_type, TaskId, Value};
+use crate::base::{CapturePoint, TaskId, Value};
 use crate::engine::handler::AbortReason::*;
 use crate::engine::handler::ShutdownReason::*;
 use crate::engine::handler::{ContextInfo, EventResult, Reason};
@@ -22,7 +22,7 @@ use std::mem::align_of;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub type CustomEventTable =
-    FxHashMap<u32, Box<dyn Fn(&capture_point) -> Box<dyn CustomContextTrait> + Send + Sync>>;
+    FxHashMap<u32, Box<dyn Fn(&CapturePoint) -> Box<dyn CustomContextTrait> + Send + Sync>>;
 
 pub trait CustomContextTrait {
     fn call_right_handler(&self, handler: &mut (dyn ArrivalOrExecuteHandler + Send + Sync));
@@ -57,9 +57,8 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const capture_point, event: *mut 
 
     // SAFETY: We checked the alignment, that the pointer is not-null and trust the caller to
     // provide us with a properly initialized context.
-    let ctx: &capture_point = unsafe { ctx.as_ref() }.expect("Unexpected null pointer");
+    let ctx = unsafe { CapturePoint::wrap(ctx) };
     let tid = TaskId::new(ctx.id);
-    let ctx_info: ContextInfo = ContextInfo::new(ctx);
 
     // Call simple handlers
     {
@@ -73,14 +72,7 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const capture_point, event: *mut 
         }
     }
 
-    // Call complex handlers
-    trace!(
-        "Saving to table: task {:?} with event {:?}. src_type = {:?}",
-        tid,
-        ctx_info,
-        effective_event_type(ctx)
-    );
-
+    // Skip the following logic if there are no legacy handlers registered.
     let table = &mut crate::engine::handler::TASK_EVENT_TABLE
         .try_lock()
         .expect("Single threaded appliaction");
@@ -89,7 +81,22 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const capture_point, event: *mut 
         .try_lock()
         .expect("single threaded");
 
+    let num_complex_handlers = util_data.arrival_or_execute_handlers_list.len();
+    if num_complex_handlers == 0 {
+        return;
+    }
+
+    // Call complex handlers
+    let ctx_info: ContextInfo = ContextInfo::new(ctx);
+    trace!(
+        "Saving to table: task {:?} with event {:?}. src_type = {:?}",
+        tid,
+        ctx_info,
+        ctx.event_type()
+    );
+
     assert!(!event.is_null());
+
     // SAFETY: We checked the alignment, that the pointer is not-null and trust the caller to
     // provide us with a properly initialized event.
     let received_read_only = unsafe { (*event).readonly };
@@ -118,8 +125,8 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const capture_point, event: *mut 
             .filter(|tid| !blocked_tasks.contains(tid))
             .collect();
 
-        let event_type = effective_event_type(ctx);
-        if let Some(cat_fn) = custom_event_table.get(&event_type) {
+        let event_type = ctx.event_type();
+        if let Some(cat_fn) = custom_event_table.get(&event_type.to_raw_value()) {
             let custom_struct = cat_fn(ctx);
             custom_struct.call_right_handler(handler);
         }
@@ -293,7 +300,7 @@ pub unsafe extern "C" fn publish_execute(
 }
 
 pub unsafe fn publish_execute_ctx(ctx: *const raw::capture_point) {
-    let ctx = &*ctx;
+    let ctx = CapturePoint::wrap(ctx);
 
     {
         let mut handlers = crate::engine::handler::HANDLER_LIST
@@ -357,16 +364,13 @@ pub unsafe fn publish_execute_value(v: raw::value) {
 }
 
 /// Legacy no-op kept for old call sites. Subscriptions now live in the C glue.
-pub fn subscribe_phase() {
-}
+pub fn subscribe_phase() {}
 
 /// Register the capture point handler with Lotto.
-pub fn register_phase() {
-}
+pub fn register_phase() {}
 
 /// Perform runtime initialization after Lotto registration is complete.
-pub fn initialization_phase() {
-}
+pub fn initialization_phase() {}
 
 /// Get the task ids as a Vec from a tidset.
 ///

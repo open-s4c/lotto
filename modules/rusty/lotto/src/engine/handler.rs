@@ -1,16 +1,12 @@
 #![allow(clippy::ptr_arg)]
 
-pub use crate::base::TaskId;
-
-use crate::base::effective_event_type;
+use crate::base::{CapturePoint, TaskId};
 use crate::collections::FxHashMap;
 use crate::engine::pubsub::CustomEventTable;
 use as_any::AsAny;
 use lazy_static::lazy_static;
 use log::{trace, warn};
 use lotto_sys as raw;
-use raw::capture_point;
-use std::ffi::CStr;
 use std::num::NonZeroUsize;
 use std::sync::{Mutex, MutexGuard, TryLockResult};
 
@@ -20,10 +16,10 @@ type DynHandler = dyn Handler + Sync;
 /// counterpart.
 pub trait Handler {
     /// Called during capture.
-    fn handle(&mut self, _ctx: &raw::capture_point, _event: &mut raw::event_t) {}
+    fn handle(&mut self, _ctx: &CapturePoint, _event: &mut raw::event_t) {}
 
     /// Called during resume.
-    fn posthandle(&mut self, _ctx: &raw::capture_point) {}
+    fn posthandle(&mut self, _ctx: &CapturePoint) {}
 }
 
 pub(crate) struct HandlerList {
@@ -102,11 +98,11 @@ pub struct ContextInfo {
 }
 
 impl ContextInfo {
-    pub fn new(ctx: &capture_point) -> Self {
+    pub fn new(ctx: &CapturePoint) -> Self {
         Self {
             event_args: EventArgs::new(ctx),
             pc: ctx.pc,
-            src_type: effective_event_type(ctx),
+            src_type: ctx.event_type().to_raw_value(),
         }
     }
 
@@ -318,8 +314,8 @@ pub enum EventArgs {
 }
 
 impl EventArgs {
-    pub fn new(ctx: &capture_point) -> Self {
-        match source_event_type(ctx) {
+    pub fn new(ctx: &CapturePoint) -> Self {
+        match ctx.event_type().to_raw_value() {
             raw::EVENT_MA_AREAD if u32::from(ctx.src_chain) != raw::CAPTURE_AFTER => {
                 let addr = get_addr_from_context(ctx, /* addr_id */ 0);
                 let size = get_size_from_context(ctx, /* size_id */ 1);
@@ -413,7 +409,7 @@ impl EventArgs {
                 }
             }
             _ => {
-                trace!("Unknown event type for EventArgs: {:?}", source_event_type(ctx));
+                trace!("Unknown event type for EventArgs: {:?}", ctx.event_type());
                 EventArgs::NoChanges
             }
         }
@@ -426,14 +422,6 @@ pub enum AddressFromContextError {
     InvalidType(#[allow(dead_code)] String),
 }
 
-unsafe fn capture_payload<T>(ctx: &capture_point) -> Option<&T> {
-    (ctx.__bindgen_anon_1.payload as *const T).as_ref()
-}
-
-fn source_event_type(ctx: &capture_point) -> u32 {
-    ctx.src_type as u32
-}
-
 fn value_from_size(size: AddrSize, value: u64) -> ValuesTypes {
     match u64::from(size) {
         1 => ValuesTypes::U8(value as u8),
@@ -444,49 +432,44 @@ fn value_from_size(size: AddrSize, value: u64) -> ValuesTypes {
     }
 }
 
-fn get_function_name_from_context(ctx: &capture_point) -> &'static str {
-    // Safety: from_ptr must only be called on valid C null-terminated strings,
-    // and its lifetime must exceed the requested lifetime.
-    // This string is assigned from the C side to __func__ which
-    // is a valid C string with static lifetime.
-    let name = unsafe { CStr::from_ptr(ctx.func) };
-    name.to_str().unwrap()
-}
-
-pub fn get_stacktrace_caller_from_context(ctx: &capture_point) -> Option<usize> {
-    unsafe { capture_payload::<raw::stacktrace_event_t>(ctx).map(|ev| ev.caller as usize) }
-}
-
 pub fn get_addr_from_context(
-    ctx: &capture_point,
+    ctx: &CapturePoint,
     addr_id: usize,
 ) -> Result<NonZeroUsize, AddressFromContextError> {
-    let addr = match source_event_type(ctx) {
+    let addr = match ctx.event_type().to_raw_value() {
         raw::EVENT_AWAIT => unsafe {
-            capture_payload::<raw::await_event_t>(ctx).map(|ev| ev.addr as usize)
+            ctx.payload_unchecked::<raw::await_event_t>()
+                .map(|ev| ev.addr as usize)
         },
-        raw::EVENT_STACKTRACE_ENTER => get_stacktrace_caller_from_context(ctx),
+        raw::EVENT_STACKTRACE_ENTER => ctx.caller_pc(),
         raw::EVENT_MA_READ => unsafe {
-            capture_payload::<raw::ma_read_event>(ctx).map(|ev| ev.addr as usize)
+            ctx.payload_unchecked::<raw::ma_read_event>()
+                .map(|ev| ev.addr as usize)
         },
         raw::EVENT_MA_WRITE => unsafe {
-            capture_payload::<raw::ma_write_event>(ctx).map(|ev| ev.addr as usize)
+            ctx.payload_unchecked::<raw::ma_write_event>()
+                .map(|ev| ev.addr as usize)
         },
         raw::EVENT_MA_AREAD => unsafe {
-            capture_payload::<raw::ma_aread_event>(ctx).map(|ev| ev.addr as usize)
+            ctx.payload_unchecked::<raw::ma_aread_event>()
+                .map(|ev| ev.addr as usize)
         },
         raw::EVENT_MA_AWRITE => unsafe {
-            capture_payload::<raw::ma_awrite_event>(ctx).map(|ev| ev.addr as usize)
+            ctx.payload_unchecked::<raw::ma_awrite_event>()
+                .map(|ev| ev.addr as usize)
         },
         raw::EVENT_MA_RMW => unsafe {
-            capture_payload::<raw::ma_rmw_event>(ctx).map(|ev| ev.addr as usize)
+            ctx.payload_unchecked::<raw::ma_rmw_event>()
+                .map(|ev| ev.addr as usize)
         },
         raw::EVENT_MA_XCHG => unsafe {
-            capture_payload::<raw::ma_xchg_event>(ctx).map(|ev| ev.addr as usize)
+            ctx.payload_unchecked::<raw::ma_xchg_event>()
+                .map(|ev| ev.addr as usize)
         },
-        raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => {
-            unsafe { capture_payload::<raw::ma_cmpxchg_event>(ctx).map(|ev| ev.addr as usize) }
-        }
+        raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => unsafe {
+            ctx.payload_unchecked::<raw::ma_cmpxchg_event>()
+                .map(|ev| ev.addr as usize)
+        },
         _ => None,
     };
 
@@ -496,32 +479,43 @@ pub fn get_addr_from_context(
 
     let msg = format!(
         "Handler received no address payload for event type {}",
-        source_event_type(ctx)
+        ctx.event_type()
     );
     warn!("{msg}");
     let _ = addr_id;
     Err(AddressFromContextError::InvalidType(msg))
 }
 
-pub fn get_size_from_context(ctx: &capture_point, size_id: usize) -> AddrSize {
-    let size = match source_event_type(ctx) {
-        raw::EVENT_MA_READ => unsafe { capture_payload::<raw::ma_read_event>(ctx).map(|ev| ev.size as u64) },
-        raw::EVENT_MA_WRITE => unsafe { capture_payload::<raw::ma_write_event>(ctx).map(|ev| ev.size as u64) },
-        raw::EVENT_MA_AREAD => {
-            unsafe { capture_payload::<raw::ma_aread_event>(ctx).map(|ev| ev.size as u64) }
-        }
-        raw::EVENT_MA_AWRITE => {
-            unsafe { capture_payload::<raw::ma_awrite_event>(ctx).map(|ev| ev.size as u64) }
-        }
-        raw::EVENT_MA_RMW => {
-            unsafe { capture_payload::<raw::ma_rmw_event>(ctx).map(|ev| ev.size as u64) }
-        }
-        raw::EVENT_MA_XCHG => {
-            unsafe { capture_payload::<raw::ma_xchg_event>(ctx).map(|ev| ev.size as u64) }
-        }
-        raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => {
-            unsafe { capture_payload::<raw::ma_cmpxchg_event>(ctx).map(|ev| ev.size as u64) }
-        }
+pub fn get_size_from_context(ctx: &CapturePoint, size_id: usize) -> AddrSize {
+    let size = match ctx.event_type().to_raw_value() {
+        raw::EVENT_MA_READ => unsafe {
+            ctx.payload_unchecked::<raw::ma_read_event>()
+                .map(|ev| ev.size as u64)
+        },
+        raw::EVENT_MA_WRITE => unsafe {
+            ctx.payload_unchecked::<raw::ma_write_event>()
+                .map(|ev| ev.size as u64)
+        },
+        raw::EVENT_MA_AREAD => unsafe {
+            ctx.payload_unchecked::<raw::ma_aread_event>()
+                .map(|ev| ev.size as u64)
+        },
+        raw::EVENT_MA_AWRITE => unsafe {
+            ctx.payload_unchecked::<raw::ma_awrite_event>()
+                .map(|ev| ev.size as u64)
+        },
+        raw::EVENT_MA_RMW => unsafe {
+            ctx.payload_unchecked::<raw::ma_rmw_event>()
+                .map(|ev| ev.size as u64)
+        },
+        raw::EVENT_MA_XCHG => unsafe {
+            ctx.payload_unchecked::<raw::ma_xchg_event>()
+                .map(|ev| ev.size as u64)
+        },
+        raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => unsafe {
+            ctx.payload_unchecked::<raw::ma_cmpxchg_event>()
+                .map(|ev| ev.size as u64)
+        },
         _ => None,
     };
     if let Some(size) = size {
@@ -531,32 +525,23 @@ pub fn get_size_from_context(ctx: &capture_point, size_id: usize) -> AddrSize {
     let _ = size_id;
     panic!(
         "Unsupported size payload for event type {}",
-        source_event_type(ctx)
+        ctx.event_type()
     );
 }
 
-pub fn get_rmw_operator_from_context(ctx: &capture_point) -> Option<u32> {
-    match source_event_type(ctx) {
-        raw::EVENT_MA_RMW => unsafe {
-            capture_payload::<raw::ma_rmw_event>(ctx).map(|ev| ev.op as u32)
-        },
-        _ => None,
-    }
-}
-
-pub fn get_value_from_context(ctx: &capture_point, value_id: usize, size: AddrSize) -> ValuesTypes {
-    let event_type = source_event_type(ctx);
-    let value = match event_type {
+pub fn get_value_from_context(ctx: &CapturePoint, value_id: usize, size: AddrSize) -> ValuesTypes {
+    let event_type = ctx.event_type();
+    let value = match event_type.to_raw_value() {
         raw::EVENT_SPIN_END => unsafe {
-            capture_payload::<raw::spin_end_event_t>(ctx)
+            ctx.payload_unchecked::<raw::spin_end_event_t>()
                 .map(|ev| ValuesTypes::U32(ev.cond))
         },
         raw::EVENT_MA_AWRITE => unsafe {
-            capture_payload::<raw::ma_awrite_event>(ctx)
+            ctx.payload_unchecked::<raw::ma_awrite_event>()
                 .map(|ev| value_from_size(size, ev.val.u64_))
         },
         raw::EVENT_MA_RMW => unsafe {
-            capture_payload::<raw::ma_rmw_event>(ctx).map(|ev| {
+            ctx.payload_unchecked::<raw::ma_rmw_event>().map(|ev| {
                 if value_id == 2 {
                     value_from_size(size, ev.val.u64_)
                 } else {
@@ -565,20 +550,18 @@ pub fn get_value_from_context(ctx: &capture_point, value_id: usize, size: AddrSi
             })
         },
         raw::EVENT_MA_XCHG => unsafe {
-            capture_payload::<raw::ma_xchg_event>(ctx)
+            ctx.payload_unchecked::<raw::ma_xchg_event>()
                 .map(|ev| value_from_size(size, ev.val.u64_))
         },
-        raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => {
-            unsafe {
-                capture_payload::<raw::ma_cmpxchg_event>(ctx).map(|ev| {
-                    if value_id == 2 {
-                        value_from_size(size, ev.cmp.u64_)
-                    } else {
-                        value_from_size(size, ev.val.u64_)
-                    }
-                })
-            }
-        }
+        raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => unsafe {
+            ctx.payload_unchecked::<raw::ma_cmpxchg_event>().map(|ev| {
+                if value_id == 2 {
+                    value_from_size(size, ev.cmp.u64_)
+                } else {
+                    value_from_size(size, ev.val.u64_)
+                }
+            })
+        },
         _ => None,
     };
     if let Some(value) = value {
@@ -587,7 +570,7 @@ pub fn get_value_from_context(ctx: &capture_point, value_id: usize, size: AddrSi
 
     panic!(
         "Unsupported value payload for event type {} (value_id={value_id}, size={})",
-        crate::base::category::effective_event_type(ctx),
+        ctx.event_type(),
         u64::from(size)
     );
 }
@@ -625,12 +608,12 @@ pub fn get_value_from_addr(addr: &Address, length: &AddrSize) -> ValuesTypes {
 }
 
 fn get_new_value_after_rmw(
-    &ctx: &capture_point,
+    ctx: &CapturePoint,
     addr: &Address,
     length: &AddrSize,
     rmw_value: ValuesTypes,
 ) -> ValuesTypes {
-    let name = get_function_name_from_context(&ctx);
+    let name = ctx.function_name();
     let cur_value = get_value_from_addr(addr, length);
 
     if cur_value == ValuesTypes::None {

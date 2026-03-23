@@ -1,11 +1,10 @@
 #![allow(clippy::ptr_arg)]
 
-pub use crate::base::TaskId;
+pub use crate::base::{effective_category, TaskId};
 
 use crate::base::Category;
-use crate::base::HandlerArg;
 use crate::collections::FxHashMap;
-use crate::engine::pubsub::CustomCatTable;
+use crate::engine::pubsub::CustomEventTable;
 use as_any::AsAny;
 use lazy_static::lazy_static;
 use log::{trace, warn};
@@ -107,7 +106,7 @@ impl ContextInfo {
         Self {
             event_args: EventArgs::new(ctx),
             pc: ctx.pc,
-            cat: ctx.cat,
+            cat: effective_category(ctx),
         }
     }
 
@@ -320,7 +319,7 @@ pub enum EventArgs {
 
 impl EventArgs {
     pub fn new(ctx: &context) -> Self {
-        match ctx.cat {
+        match effective_category(ctx) {
             Category::CAT_BEFORE_AREAD => {
                 let addr = get_addr_from_context(ctx, /* addr_id */ 0);
                 let size = get_size_from_context(ctx, /* size_id */ 1);
@@ -412,19 +411,45 @@ impl EventArgs {
                 }
             }
             _ => {
-                trace!("Unknown CAT for EventArgs: {:?}", ctx.cat);
+                trace!("Unknown CAT for EventArgs: {:?}", effective_category(ctx));
                 EventArgs::NoChanges
             }
         }
     }
 }
 
+#[derive(Debug)]
 pub enum AddressFromContextError {
     NullAddress,
     InvalidType(#[allow(dead_code)] String),
 }
 
-fn get_function_name_from_context(&ctx: &context_t) -> &'static str {
+unsafe fn capture_payload<T>(ctx: &context_t) -> Option<&T> {
+    let cp = ctx.cp.as_ref()?;
+    (cp.__bindgen_anon_1.payload as *const T).as_ref()
+}
+
+fn source_event_type(ctx: &context_t) -> u32 {
+    if !ctx.cp.is_null() && ctx.src_type != 0 {
+        ctx.src_type as u32
+    } else if ctx.type_ != 0 {
+        ctx.type_ as u32
+    } else {
+        ctx.src_type as u32
+    }
+}
+
+fn value_from_size(size: AddrSize, value: u64) -> ValuesTypes {
+    match u64::from(size) {
+        1 => ValuesTypes::U8(value as u8),
+        2 => ValuesTypes::U16(value as u16),
+        4 => ValuesTypes::U32(value as u32),
+        8 => ValuesTypes::U64(value),
+        _ => panic!("Unsupported value width {}", u64::from(size)),
+    }
+}
+
+fn get_function_name_from_context(ctx: &context_t) -> &'static str {
     // Safety: from_ptr must only be called on valid C null-terminated strings,
     // and its lifetime must exceed the requested lifetime.
     // This string is assigned from the C side to __func__ which
@@ -433,69 +458,143 @@ fn get_function_name_from_context(&ctx: &context_t) -> &'static str {
     name.to_str().unwrap()
 }
 
+pub fn get_stacktrace_caller_from_context(ctx: &context_t) -> Option<usize> {
+    unsafe { capture_payload::<raw::stacktrace_event_t>(ctx).map(|ev| ev.caller as usize) }
+}
+
 pub fn get_addr_from_context(
-    &ctx: &context_t,
+    ctx: &context_t,
     addr_id: usize,
 ) -> Result<NonZeroUsize, AddressFromContextError> {
-    let addr_to_watch = HandlerArg::from(ctx.args[addr_id]);
-    if let HandlerArg::Addr(addr) = addr_to_watch {
-        if let Ok(addr) = NonZeroUsize::try_from(addr) {
-            Ok(addr)
-        } else {
-            Err(AddressFromContextError::NullAddress)
+    let addr = match source_event_type(ctx) {
+        raw::EVENT_AWAIT => unsafe {
+            capture_payload::<raw::await_event_t>(ctx).map(|ev| ev.addr as usize)
+        },
+        raw::EVENT_STACKTRACE_ENTER => get_stacktrace_caller_from_context(ctx),
+        raw::EVENT_MA_READ => unsafe {
+            capture_payload::<raw::ma_read_event>(ctx).map(|ev| ev.addr as usize)
+        },
+        raw::EVENT_MA_WRITE => unsafe {
+            capture_payload::<raw::ma_write_event>(ctx).map(|ev| ev.addr as usize)
+        },
+        raw::EVENT_MA_AREAD => unsafe {
+            capture_payload::<raw::ma_aread_event>(ctx).map(|ev| ev.addr as usize)
+        },
+        raw::EVENT_MA_AWRITE => unsafe {
+            capture_payload::<raw::ma_awrite_event>(ctx).map(|ev| ev.addr as usize)
+        },
+        raw::EVENT_MA_RMW => unsafe {
+            capture_payload::<raw::ma_rmw_event>(ctx).map(|ev| ev.addr as usize)
+        },
+        raw::EVENT_MA_XCHG => unsafe {
+            capture_payload::<raw::ma_xchg_event>(ctx).map(|ev| ev.addr as usize)
+        },
+        raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => {
+            unsafe { capture_payload::<raw::ma_cmpxchg_event>(ctx).map(|ev| ev.addr as usize) }
         }
-    } else {
-        let msg = format!("Handler received unexpected arg {:?}", addr_to_watch);
-        warn!("{msg}");
-        Err(AddressFromContextError::InvalidType(msg))
-    }
-}
-
-pub fn get_size_from_context(&ctx: &context_t, size_id: usize) -> AddrSize {
-    // it is passed like this on C: arg(size_t, SIZE)
-    let size = match HandlerArg::from(ctx.args[size_id]) {
-        HandlerArg::U64(lenght) => lenght,
-        HandlerArg::U32(lenght) => lenght as u64,
-        _ => {
-            panic!(
-                "Unsupported size_t parameter: {:?}. Expected to be U32 or U64",
-                HandlerArg::from(ctx.args[size_id])
-            );
-        }
+        _ => None,
     };
-    AddrSize(size)
+
+    if let Some(addr) = addr {
+        return NonZeroUsize::try_from(addr).map_err(|_| AddressFromContextError::NullAddress);
+    }
+
+    let msg = format!(
+        "Handler received no address payload for event type {}",
+        source_event_type(ctx)
+    );
+    warn!("{msg}");
+    let _ = addr_id;
+    Err(AddressFromContextError::InvalidType(msg))
 }
 
-pub fn get_value_from_context(&ctx: &context_t, value_id: usize, size: AddrSize) -> ValuesTypes {
-    match HandlerArg::from(ctx.args[value_id]) {
-        HandlerArg::None => ValuesTypes::None,
-        HandlerArg::U8(val) => {
-            assert_eq!(size, AddrSize(1));
-            ValuesTypes::U8(val)
+pub fn get_size_from_context(ctx: &context_t, size_id: usize) -> AddrSize {
+    let size = match source_event_type(ctx) {
+        raw::EVENT_MA_READ => unsafe { capture_payload::<raw::ma_read_event>(ctx).map(|ev| ev.size as u64) },
+        raw::EVENT_MA_WRITE => unsafe { capture_payload::<raw::ma_write_event>(ctx).map(|ev| ev.size as u64) },
+        raw::EVENT_MA_AREAD => {
+            unsafe { capture_payload::<raw::ma_aread_event>(ctx).map(|ev| ev.size as u64) }
         }
-        HandlerArg::U16(val) => {
-            assert_eq!(size, AddrSize(2));
-            ValuesTypes::U16(val)
+        raw::EVENT_MA_AWRITE => {
+            unsafe { capture_payload::<raw::ma_awrite_event>(ctx).map(|ev| ev.size as u64) }
         }
-        HandlerArg::U32(val) => {
-            assert_eq!(size, AddrSize(4));
-            ValuesTypes::U32(val)
+        raw::EVENT_MA_RMW => {
+            unsafe { capture_payload::<raw::ma_rmw_event>(ctx).map(|ev| ev.size as u64) }
         }
-        HandlerArg::U64(val) => {
-            assert_eq!(size, AddrSize(8));
-            ValuesTypes::U64(val)
+        raw::EVENT_MA_XCHG => {
+            unsafe { capture_payload::<raw::ma_xchg_event>(ctx).map(|ev| ev.size as u64) }
         }
-        HandlerArg::U128(val) => {
-            assert_eq!(size, AddrSize(16));
-            ValuesTypes::U128(val)
+        raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => {
+            unsafe { capture_payload::<raw::ma_cmpxchg_event>(ctx).map(|ev| ev.size as u64) }
         }
-        _ => {
-            panic!(
-                "Unsupported value type: {:?}. Expected to be U8, U16, U32, U64 or U128",
-                HandlerArg::from(ctx.args[value_id])
-            );
-        }
+        _ => None,
+    };
+    if let Some(size) = size {
+        return AddrSize(size);
     }
+
+    let _ = size_id;
+    panic!(
+        "Unsupported size payload for event type {}",
+        source_event_type(ctx)
+    );
+}
+
+pub fn get_rmw_operator_from_context(ctx: &context_t) -> Option<u32> {
+    match source_event_type(ctx) {
+        raw::EVENT_MA_RMW => unsafe {
+            capture_payload::<raw::ma_rmw_event>(ctx).map(|ev| ev.op as u32)
+        },
+        _ => None,
+    }
+}
+
+pub fn get_value_from_context(ctx: &context_t, value_id: usize, size: AddrSize) -> ValuesTypes {
+    let event_type = source_event_type(ctx);
+    let value = match event_type {
+        raw::EVENT_SPIN_END => unsafe {
+            capture_payload::<raw::spin_end_event_t>(ctx)
+                .map(|ev| ValuesTypes::U32(ev.cond))
+        },
+        raw::EVENT_MA_AWRITE => unsafe {
+            capture_payload::<raw::ma_awrite_event>(ctx)
+                .map(|ev| value_from_size(size, ev.val.u64_))
+        },
+        raw::EVENT_MA_RMW => unsafe {
+            capture_payload::<raw::ma_rmw_event>(ctx).map(|ev| {
+                if value_id == 2 {
+                    value_from_size(size, ev.val.u64_)
+                } else {
+                    ValuesTypes::U32(ev.op as u32)
+                }
+            })
+        },
+        raw::EVENT_MA_XCHG => unsafe {
+            capture_payload::<raw::ma_xchg_event>(ctx)
+                .map(|ev| value_from_size(size, ev.val.u64_))
+        },
+        raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK => {
+            unsafe {
+                capture_payload::<raw::ma_cmpxchg_event>(ctx).map(|ev| {
+                    if value_id == 2 {
+                        value_from_size(size, ev.cmp.u64_)
+                    } else {
+                        value_from_size(size, ev.val.u64_)
+                    }
+                })
+            }
+        }
+        _ => None,
+    };
+    if let Some(value) = value {
+        return value;
+    }
+
+    panic!(
+        "Unsupported value payload for event type {} (value_id={value_id}, size={})",
+        crate::base::category::effective_event_type(ctx),
+        u64::from(size)
+    );
 }
 
 pub fn get_value_from_addr(addr: &Address, length: &AddrSize) -> ValuesTypes {
@@ -612,7 +711,7 @@ pub type DynArrivalOrExecuteHandler = dyn ArrivalOrExecuteHandler + Send + Sync;
 pub struct InternalState {
     pub execute_handlers_list: Vec<*mut DynExecuteHandler>,
     pub arrival_or_execute_handlers_list: Vec<*mut DynArrivalOrExecuteHandler>,
-    pub custom_cat_table: CustomCatTable,
+    pub custom_event_table: CustomEventTable,
 }
 
 unsafe impl Send for InternalState {}

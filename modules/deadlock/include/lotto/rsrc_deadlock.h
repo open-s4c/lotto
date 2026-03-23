@@ -12,6 +12,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+void intercept_rsrc_acquiring(void *addr) __attribute__((weak));
+void intercept_rsrc_released(void *addr) __attribute__((weak));
+
 void _lotto_rsrc_acquiring(void *addr) __attribute__((weak));
 void _lotto_rsrc_released(void *addr) __attribute__((weak));
 
@@ -28,8 +31,8 @@ void _lotto_rsrc_released(void *addr) __attribute__((weak));
 static inline void
 lotto_rsrc_acquiring(void *addr)
 {
-    if (_lotto_rsrc_acquiring != NULL) {
-        _lotto_rsrc_acquiring(addr);
+    if (intercept_rsrc_acquiring != NULL) {
+        intercept_rsrc_acquiring(addr);
     }
 }
 
@@ -64,8 +67,8 @@ lotto_rsrc_tried_acquiring(void *addr, bool success)
 static inline void
 lotto_rsrc_released(void *addr)
 {
-    if (_lotto_rsrc_released != NULL) {
-        _lotto_rsrc_released(addr);
+    if (intercept_rsrc_released != NULL) {
+        intercept_rsrc_released(addr);
     }
 }
 

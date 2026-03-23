@@ -18,14 +18,23 @@ enum lotto_timed_wait_status {
     TIMED_WAIT_INVALID
 };
 
-void _lotto_evec_prepare(void *addr) __attribute__((weak));
-void _lotto_evec_wait(void *addr) __attribute__((weak));
-enum lotto_timed_wait_status
-_lotto_evec_timed_wait(void *addr, const struct timespec *restrict abstime)
+void intercept_evec_prepare(const char *func, void *addr, const void *pc)
     __attribute__((weak));
-void _lotto_evec_cancel(void *addr) __attribute__((weak));
-void _lotto_evec_wake(void *addr, uint32_t cnt) __attribute__((weak));
-void _lotto_evec_move(void *src, void *dst) __attribute__((weak));
+void intercept_evec_wait(const char *func, void *addr, const void *pc)
+    __attribute__((weak));
+enum lotto_timed_wait_status
+intercept_evec_timed_wait(const char *func, void *addr,
+                          const struct timespec *restrict abstime,
+                          const void *pc)
+    __attribute__((weak));
+void intercept_evec_cancel(const char *func, void *addr, const void *pc)
+    __attribute__((weak));
+void intercept_evec_wake(const char *func, void *addr, uint32_t cnt,
+                         const void *pc)
+    __attribute__((weak));
+void intercept_evec_move(const char *func, void *src, void *dst,
+                         const void *pc)
+    __attribute__((weak));
 
 /**
  * Registers intent to wait for event.
@@ -35,8 +44,8 @@ void _lotto_evec_move(void *src, void *dst) __attribute__((weak));
 static inline void
 lotto_evec_prepare(void *addr)
 {
-    if (_lotto_evec_prepare != NULL) {
-        _lotto_evec_prepare(addr);
+    if (intercept_evec_prepare != NULL) {
+        intercept_evec_prepare(__FUNCTION__, addr, __builtin_return_address(0));
     }
 }
 
@@ -48,8 +57,8 @@ lotto_evec_prepare(void *addr)
 static inline void
 lotto_evec_wait(void *addr)
 {
-    if (_lotto_evec_wait != NULL) {
-        _lotto_evec_wait(addr);
+    if (intercept_evec_wait != NULL) {
+        intercept_evec_wait(__FUNCTION__, addr, __builtin_return_address(0));
     }
 }
 
@@ -65,8 +74,9 @@ lotto_evec_wait(void *addr)
 static inline enum lotto_timed_wait_status
 lotto_evec_timed_wait(void *addr, const struct timespec *restrict abstime)
 {
-    if (_lotto_evec_timed_wait != NULL) {
-        return _lotto_evec_timed_wait(addr, abstime);
+    if (intercept_evec_timed_wait != NULL) {
+        return intercept_evec_timed_wait(__FUNCTION__, addr, abstime,
+                                         __builtin_return_address(0));
     }
     return TIMED_WAIT_TIMEOUT;
 }
@@ -79,8 +89,8 @@ lotto_evec_timed_wait(void *addr, const struct timespec *restrict abstime)
 static inline void
 lotto_evec_cancel(void *addr)
 {
-    if (_lotto_evec_cancel != NULL) {
-        _lotto_evec_cancel(addr);
+    if (intercept_evec_cancel != NULL) {
+        intercept_evec_cancel(__FUNCTION__, addr, __builtin_return_address(0));
     }
 }
 
@@ -95,8 +105,9 @@ lotto_evec_cancel(void *addr)
 static inline void
 lotto_evec_wake(void *addr, uint32_t cnt)
 {
-    if (_lotto_evec_wake != NULL) {
-        _lotto_evec_wake(addr, cnt);
+    if (intercept_evec_wake != NULL) {
+        intercept_evec_wake(__FUNCTION__, addr, cnt,
+                            __builtin_return_address(0));
     }
 }
 
@@ -109,8 +120,9 @@ lotto_evec_wake(void *addr, uint32_t cnt)
 static inline void
 lotto_evec_move(void *src, void *dst)
 {
-    if (_lotto_evec_move != NULL) {
-        _lotto_evec_move(src, dst);
+    if (intercept_evec_move != NULL) {
+        intercept_evec_move(__FUNCTION__, src, dst,
+                            __builtin_return_address(0));
     }
 }
 

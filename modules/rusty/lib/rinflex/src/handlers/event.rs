@@ -2,7 +2,7 @@ use lotto::raw;
 use lotto::sync::HandlerWrapper;
 use lotto::Stateful;
 use lotto::{
-    base::{Category, Value},
+    base::{category::effective_category, Category, Value},
     brokers::statemgr::*,
     cli::flags::{FlagKey, STR_CONVERTER_BOOL},
     collections::FxHashMap,
@@ -91,7 +91,9 @@ impl handler::Handler for EventHandler {
     }
 
     fn posthandle(&mut self, ctx: &raw::context_t) {
-        if ctx.cat == Category::CAT_NONE || !self.cfg.enabled.load(Ordering::Relaxed) {
+        if effective_category(ctx) == Category::CAT_NONE
+            || !self.cfg.enabled.load(Ordering::Relaxed)
+        {
             return;
         }
         let entry = self

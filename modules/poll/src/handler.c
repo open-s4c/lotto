@@ -2,9 +2,10 @@
 
 #include "poll.h"
 #include <lotto/engine/clock.h>
-#include <lotto/engine/dispatcher.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/poll/events.h>
 #include <lotto/modules/timeout/timeout.h>
 #include <lotto/sys/poll.h>
 
@@ -233,28 +234,24 @@ _should_wait(task_id id)
  * handler
  ******************************************************************************/
 STATIC void
-_poll_handle(const context_t *ctx, event_t *e)
+_poll_handle(const capture_point *cp, event_t *e)
 {
-    ASSERT(ctx);
+    ASSERT(cp);
     ASSERT(e);
     if (_state.should_cleanup) {
         _state.should_cleanup = false;
         _cleanup_fds();
     }
-    switch (ctx->cat) {
-        case CAT_POLL:
-            _wait(ctx->id, (poll_args_t *)ctx->args[0].value.ptr);
-            break;
-        default:
-            break;
+    if (cp->src_type == EVENT_POLL) {
+        _wait(cp->id, ((poll_event_t *)cp->payload)->args);
     }
     _poll();
     _cleanup();
     tidset_remove_all_keys(&e->tset, &_state.polls);
-    if (_should_wait(ctx->id)) {
+    if (_should_wait(cp->id)) {
         e->is_chpt = true;
         ASSERT(e->any_task_filter == NULL);
         e->any_task_filter = _should_wait;
     }
 }
-REGISTER_HANDLER(_poll_handle)
+REGISTER_SEQUENCER_HANDLER(_poll_handle)

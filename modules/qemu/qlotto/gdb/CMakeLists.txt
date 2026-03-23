@@ -15,7 +15,7 @@ target_include_directories(
     plugin-gdb-server PUBLIC /usr/include/glib-2.0
                              /usr/lib/x86_64-linux-gnu/glib-2.0/include)
 
-target_link_libraries(plugin-gdb-server PRIVATE capstone elf plugin-lotto)
+target_link_libraries(plugin-gdb-server PRIVATE capstone elf)
 
 add_dependencies(
     plugin-gdb-server
@@ -23,8 +23,7 @@ add_dependencies(
     blob-aarch64-core
     blob-aarch64-fpu
     blob-system-registers
-    blob-target
-    plugin-lotto)
+    blob-target)
 
 set_target_properties(plugin-gdb-server PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                                    "${QLOTTO_MODULE_BUILD_DIR}")

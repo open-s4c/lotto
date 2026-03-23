@@ -36,9 +36,9 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
     let parser_ident = syn::Ident::new(&parser_name, struct_name.span());
 
     let parse_function = quote! {
-        fn #parser_ident() -> Box<dyn Fn(&lotto::raw::context_t) -> Box<dyn CustomCatTrait> + Send + Sync> {
+        fn #parser_ident() -> Box<dyn Fn(&lotto::raw::context_t) -> Box<dyn CustomContextTrait> + Send + Sync> {
             Box::new(|context: &lotto::raw::context_t| {
-            Box::new(#struct_name::parse(context)) as Box<dyn CustomCatTrait>
+            Box::new(#struct_name::parse(context)) as Box<dyn CustomContextTrait>
         })
         }
     };
@@ -68,7 +68,7 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
         .expect("Missing or invalid handler_type attribute");
 
     let custom_cat_trait_implementation = quote! {
-        impl CustomCatTrait for #struct_name {
+        impl CustomContextTrait for #struct_name {
             fn call_right_handler(&self, handler: &mut (dyn lotto::engine::handler::ArrivalOrExecuteHandler + Send + Sync)) {
                 if let Some(h) = handler.downcast_mut::<#handler_type>() {
                     h.#function_ident(self);

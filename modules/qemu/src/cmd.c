@@ -76,7 +76,8 @@ _plugin_path(const char *plugin_dir, const char *fallback_dir,
 }
 
 static void
-_derive_default_paths(const args_t *args, char *qemu_bin, char *plugin_dir,
+_derive_default_paths(const args_t *args, char *qemu_bin, char *module_dir,
+                      char *module_fallback_dir, char *plugin_dir,
                       char *plugin_fallback_dir)
 {
     char resolved_path[PATH_MAX];
@@ -102,6 +103,8 @@ _derive_default_paths(const args_t *args, char *qemu_bin, char *plugin_dir,
         _existing_path(candidate_qemu_build, candidate_qemu_install);
     sys_sprintf(qemu_bin, "%s", selected_qemu);
 
+    sys_sprintf(module_dir, "%s/modules", lotto_dir_buf);
+    sys_sprintf(module_fallback_dir, "%s/share/lotto/modules", prefix_dir_buf);
     sys_sprintf(plugin_dir, "%s/qlotto/modules", lotto_dir_buf);
     sys_sprintf(plugin_fallback_dir, "%s/share/lotto/qlotto/modules",
                 prefix_dir_buf);
@@ -131,9 +134,12 @@ qemu(args_t *args, flags_t *flags)
     }
 
     char default_qemu_bin[PATH_MAX];
+    char default_module_dir[PATH_MAX];
+    char fallback_module_dir[PATH_MAX];
     char default_plugin_dir[PATH_MAX];
     char fallback_plugin_dir[PATH_MAX];
-    _derive_default_paths(args, default_qemu_bin, default_plugin_dir,
+    _derive_default_paths(args, default_qemu_bin, default_module_dir,
+                          fallback_module_dir, default_plugin_dir,
                           fallback_plugin_dir);
 
     const char *qemu_bin = flags_get_sval(flags, FLAG_QEMU_BIN);
@@ -149,8 +155,8 @@ qemu(args_t *args, flags_t *flags)
     const char *plugins[4];
     int nplugins = 0;
 
-    plugins[nplugins++] =
-        _plugin_path(plugin_dir, fallback_plugin_dir, "libplugin-lotto.so");
+    plugins[nplugins++] = _plugin_path(default_module_dir, fallback_module_dir,
+                                       "lotto-runtime-qemu.so");
     if (with_gdb_server) {
         plugins[nplugins++] = _plugin_path(plugin_dir, fallback_plugin_dir,
                                            "libplugin-gdb-server.so");

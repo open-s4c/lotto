@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+void intercept_await(void *addr) __attribute__((weak));
 void _lotto_await(void *addr) __attribute__((weak));
 
 /**
@@ -26,8 +27,8 @@ void _lotto_await(void *addr) __attribute__((weak));
 static inline void
 lotto_await(void *addr)
 {
-    if (_lotto_await != NULL) {
-        _lotto_await(addr);
+    if (intercept_await != NULL) {
+        intercept_await(addr);
     }
 }
 

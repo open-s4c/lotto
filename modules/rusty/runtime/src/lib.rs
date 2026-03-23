@@ -57,8 +57,11 @@ pub unsafe extern "C" fn lotto_rust_publish_arrival(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn lotto_rust_publish_execute(v: *const lotto::raw::value) {
-    lotto::engine::pubsub::publish_execute_value(*v);
+pub unsafe extern "C" fn lotto_rust_publish_execute(
+    ctx: *const lotto::raw::context_t,
+    _event: *const lotto::raw::context_t,
+) {
+    lotto::engine::pubsub::publish_execute_ctx(ctx);
 }
 
 #[no_mangle]

@@ -8,10 +8,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <lotto/base/arg.h>
 #include <lotto/base/clk.h>
-#include <lotto/base/context.h>
 #include <lotto/base/stable_address.h>
 #include <lotto/modules/enforce/events.h>
+#include <lotto/runtime/capture_point.h>
 #include <lotto/util/macros.h>
 
 #define FOR_EACH_ENFORCE_MODE                                                  \
@@ -56,7 +57,8 @@ typedef struct enforce_config {
 
 typedef struct enforce_state {
     marshable_t m;
-    context_t ctx;
+    capture_point cp;
+    uintptr_t addr;
     arg_t val;
     clk_t clk;
     stable_address_t pc;

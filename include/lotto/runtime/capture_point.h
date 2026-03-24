@@ -19,11 +19,6 @@ typedef struct source_event {
     const void *pc;
 } source_event;
 
-typedef struct capture_task_block_event {
-    const char *func;
-    bool is_call;
-} capture_task_block_event;
-
 typedef struct capture_task_init_event {
     uintptr_t thread;
     bool detached;
@@ -61,7 +56,7 @@ typedef struct capture_set_specific_event {
 typedef struct capture_point {
     chain_id src_chain; ///< Ingress phase carried from ingress chains
     type_id src_type;   ///< Normalized source event type
-    bool blocking; ///< Whether this ingress event represents a blocking call
+    bool blocking; ///< Whether this semantic ingress event can block
     task_id id;    ///< Task ID
     task_id vid;   ///< Virtual task ID (NO_TASK if not available)
     uintptr_t pc;  ///< Program counter at the interception
@@ -69,13 +64,12 @@ typedef struct capture_point {
     uint64_t icount; ///< Time shifter
     uint32_t pstate; ///< Processor state (EL at bits 2-3)
 #endif
-    const char *func;    ///< Debugging information
-    uintptr_t func_addr; ///< Address of intercepted call
+    const char *func;    ///< Debugging information for the intercepted operation
+    uintptr_t func_addr; ///< Address associated with the intercepted operation
     struct sequencer_decision *decision; ///< Sequencer-only decision context
     union {
         void *payload;
         source_event *source;
-        capture_task_block_event *task_block;
         capture_task_init_event *task_init;
         capture_task_fini_event *task_fini;
         capture_task_create_event *task_create;
@@ -87,9 +81,5 @@ typedef struct capture_point {
 } capture_point;
 
 #define CP_PAYLOAD(ev) ((__typeof__(ev))cp->payload)
-
-#define context_is_task_block(ctx)                                             \
-    ((ctx)->blocking && (ctx)->type == EVENT_TASK_BLOCK)
-#define context_is_blocking(ctx) ((ctx)->blocking)
 
 #endif

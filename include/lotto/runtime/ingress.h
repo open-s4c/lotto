@@ -24,7 +24,7 @@ get_task_id(void)
     return (m->id);
 }
 
-/* called before executing an asm-intercepted external function. */
+/* Resolve the real implementation for an intercepted external function. */
 void *intercept_lookup_call(const char *func);
 
 /*

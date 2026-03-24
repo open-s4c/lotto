@@ -222,7 +222,7 @@ test_main_task()
     mock.now        = 5 * NOW_SECOND;
     struct plan act = sequencer_capture(cp);
     assert(act.next == tid);
-    // assert(act.reason == REASON_CALL);
+    // assert(act.reason == REASON_BLOCKING);
     assert(act.actions == (ACTION_WAKE | ACTION_YIELD | ACTION_RESUME));
 }
 

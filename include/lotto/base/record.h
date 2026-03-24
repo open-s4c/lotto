@@ -50,7 +50,7 @@ typedef struct record_s {
     type_id type;          /**< Semantic ingress event type. */
     type_id src_type;      /**< Normalized source event type. */
     reason_t reason;       /**< Reason for record. */
-    enum record kind;      /**< Kind of payload: INFO, SCHED, CALL */
+    enum record kind;      /**< Kind of record payload. */
     size_t size;           /**< Size of payload. */
     uintptr_t pc;          /**< Programme counter. */
     char data[];           /**< Payload content. */

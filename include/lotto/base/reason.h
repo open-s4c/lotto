@@ -11,7 +11,7 @@
     GEN_REASON(UNKNOWN)                                                        \
     GEN_REASON(DETERMINISTIC)                                                  \
     GEN_REASON(NONDETERMINISTIC)                                               \
-    GEN_REASON(CALL)                                                           \
+    GEN_REASON(BLOCKING)                                                       \
     GEN_REASON(WATCHDOG)                                                       \
     GEN_REASON(SYS_YIELD)                                                      \
     GEN_REASON(USER_YIELD)                                                     \

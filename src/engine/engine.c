@@ -40,7 +40,7 @@ CONTRACT_GHOST({
     /* ghost state for contract check */
     caslock_t lock;
     vatomic32_t state;
-    vatomic32_t pending_calls;
+    vatomic32_t pending_blocking_returns;
     vatomic32_t exiting;
     task_id running_id;
     clk_t clk;
@@ -48,7 +48,7 @@ CONTRACT_GHOST({
 
 CONTRACT_INIT({
     vatomic_init(&_ghost.state, INIT);
-    vatomic_init(&_ghost.pending_calls, 0);
+    vatomic_init(&_ghost.pending_blocking_returns, 0);
     vatomic_init(&_ghost.exiting, 0);
     caslock_init(&_ghost.lock);
     _ghost.running_id = NO_TASK;
@@ -167,7 +167,7 @@ engine_capture(const capture_point *cp)
         }
 
         if (plan_has(p, ACTION_BLOCK) && cp->src_type != EVENT_TASK_CREATE) {
-            vatomic_inc(&_ghost.pending_calls);
+            vatomic_inc(&_ghost.pending_blocking_returns);
         }
 
         ASSERT(_ghost.running_id == cp->id);
@@ -211,7 +211,7 @@ engine_return(const capture_point *cp)
                          cp->id);
             return;
         }
-        ASSERT(vatomic_get_dec(&_ghost.pending_calls) > 0);
+        ASSERT(vatomic_get_dec(&_ghost.pending_blocking_returns) > 0);
     })
 
     log(cp, "RETURN   %s\t%s", ps_type_str(cp->src_type), cp->func);

@@ -18,9 +18,9 @@
 
 ;; plans allowed in the correct sequence of actions
 (define allowed-plans
-  ;; CAT_CALL
+  ;; CAT_TASK_BLOCK
   ;; CAT_TASK_CREATE
-  '((WAKE CALL RETURN YIELD RESUME) (CALL YIELD RESUME)
+  '((WAKE BLOCK RETURN YIELD RESUME) (BLOCK YIELD RESUME)
                                     ;; CAT_TASK_INIT
                                     (WAKE YIELD RESUME)
                                     ;; CAT_TASK_JOIN

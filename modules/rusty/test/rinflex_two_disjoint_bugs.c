@@ -92,7 +92,3 @@ main()
 // y ++ -> y *= 2       4 5
 // y *= 2 -> y ++       5 4
 
-#include "lotto/qemu/lotto_qemu_sighandler.h"
-QLOTTO_SIGHANDLER
-#include "lotto/qemu/lotto_qemu_deconstructor.h"
-QLOTTO_DECONSTRUCTOR

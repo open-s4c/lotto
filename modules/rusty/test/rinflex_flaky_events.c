@@ -92,7 +92,3 @@ main()
 
 // z ++ -> z *= 2       6 7
 
-#include "lotto/qemu/lotto_qemu_sighandler.h"
-QLOTTO_SIGHANDLER
-#include "lotto/qemu/lotto_qemu_deconstructor.h"
-QLOTTO_DECONSTRUCTOR

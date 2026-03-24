@@ -128,6 +128,8 @@ _load(trace_t *t)
            header_size) {
         // create record with enough space
         record_t *record = record_alloc(header.size);
+        if (record == NULL)
+            logger_fatalf("could not allocate record (size: %lu)", header.size);
         // copy header
         sys_memcpy(record, &header, sizeof(record_t));
         // read data from stream

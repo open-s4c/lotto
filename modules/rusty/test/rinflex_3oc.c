@@ -61,7 +61,3 @@ main()
 // x ++ -> x *= 2       2 3
 // x *= 2 -> x ++       3 2
 
-#include "lotto/qemu/lotto_qemu_sighandler.h"
-QLOTTO_SIGHANDLER
-#include "lotto/qemu/lotto_qemu_deconstructor.h"
-QLOTTO_DECONSTRUCTOR

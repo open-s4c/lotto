@@ -50,7 +50,3 @@ main()
 
 // x ++ -> assert(x != 0b1)    2 3
 
-#include "lotto/qemu/lotto_qemu_sighandler.h"
-QLOTTO_SIGHANDLER
-#include "lotto/qemu/lotto_qemu_deconstructor.h"
-QLOTTO_DECONSTRUCTOR

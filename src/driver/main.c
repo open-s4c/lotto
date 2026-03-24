@@ -15,28 +15,52 @@
 #include <lotto/sys/modules.h>
 #include <lotto/sys/stdio.h>
 
-#define MAX_COMMAND_ARGS 2
+#define LOTTO_LOAD_RUNTIME "LOTTO_LOAD_RUNTIME"
+#define MAX_LIST_STR       ((size_t)(32 * 1024))
+
+typedef struct driver_options_s {
+    const char *module_dir;
+    const char *module_list;
+    char runtime_loads[MAX_LIST_STR];
+    char driver_loads[MAX_LIST_STR];
+    int subcmd_pos;
+} driver_options_t;
+
+static void append_option_value(char *buf, size_t cap, const char *value);
 
 static void
-driver_options(int argc, char **argv, const char **module_dir,
-               const char **module_list, int *subcmd_pos)
+driver_options(int argc, char **argv, driver_options_t *opts)
 {
-    *module_dir  = NULL;
-    *module_list = NULL;
-    *subcmd_pos  = 0;
+    opts->module_dir       = NULL;
+    opts->module_list      = NULL;
+    opts->runtime_loads[0] = '\0';
+    opts->driver_loads[0]  = '\0';
+    opts->subcmd_pos       = 0;
 
-    for (int argv_idx = 1; argv_idx <= MAX_COMMAND_ARGS * 2 - 1;
-         argv_idx += 2) {
-        if (argc > argv_idx + 1) {
-            if (strcmp(argv[argv_idx], "--plugin-dir") == 0) {
-                *module_dir = argv[argv_idx + 1];
-                *subcmd_pos = argv_idx + 1;
-            }
-            if (strcmp(argv[argv_idx], "--plugins") == 0) {
-                *module_list = argv[argv_idx + 1];
-                *subcmd_pos  = argv_idx + 1;
-            }
+    for (int argv_idx = 1; argv_idx + 1 < argc; argv_idx += 2) {
+        if (strcmp(argv[argv_idx], "--plugin-dir") == 0) {
+            opts->module_dir = argv[argv_idx + 1];
+            opts->subcmd_pos = argv_idx + 1;
+            continue;
         }
+        if (strcmp(argv[argv_idx], "--plugins") == 0) {
+            opts->module_list = argv[argv_idx + 1];
+            opts->subcmd_pos  = argv_idx + 1;
+            continue;
+        }
+        if (strcmp(argv[argv_idx], "--load-runtime") == 0) {
+            append_option_value(opts->runtime_loads,
+                                sizeof(opts->runtime_loads), argv[argv_idx + 1]);
+            opts->subcmd_pos = argv_idx + 1;
+            continue;
+        }
+        if (strcmp(argv[argv_idx], "--load-driver") == 0) {
+            append_option_value(opts->driver_loads,
+                                sizeof(opts->driver_loads), argv[argv_idx + 1]);
+            opts->subcmd_pos = argv_idx + 1;
+            continue;
+        }
+        break;
     }
 }
 
@@ -45,7 +69,10 @@ describe(subcmd_t *scmd)
 {
     sys_fprintf(stdout, "Description:\n    %s\n\n", scmd->desc);
     sys_fprintf(stdout, "Usage:\n");
-    sys_fprintf(stdout, "    lotto [--plugin-dir DIR] %s [<options>] %s\n\n",
+    sys_fprintf(stdout,
+                "    lotto [--plugin-dir DIR] [--plugins P1[,P2]] "
+                "[--load-runtime PATH[:PATH...]] [--load-driver PATH[:PATH...]] "
+                "%s [<options>] %s\n\n",
                 scmd->name, scmd->args);
     flags_help(scmd->defaults(), scmd->runtime_sel, scmd->sel);
 }
@@ -53,16 +80,17 @@ describe(subcmd_t *scmd)
 int
 driver_main(int argc, char **argv)
 {
-    const char *module_dir  = NULL;
-    const char *module_list = NULL;
-    int subcmd_pos          = 0;
+    driver_options_t opts   = {0};
     char *arg0              = argv[0];
 
-    driver_options(argc, argv, &module_dir, &module_list, &subcmd_pos);
+    driver_options(argc, argv, &opts);
+    if (opts.runtime_loads[0] != '\0') {
+        setenv(LOTTO_LOAD_RUNTIME, opts.runtime_loads, true);
+    }
 
     lotto_module_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
-                      module_dir);
-    if (0 != lotto_module_enable_only(module_list))
+                      opts.module_dir);
+    if (0 != lotto_module_enable_only(opts.module_list))
         return 1;
 
 #if defined(LOTTO_EMBED_LIB) && LOTTO_EMBED_LIB == 0
@@ -75,7 +103,7 @@ driver_main(int argc, char **argv)
     }
 #endif
 
-    const char *scmd_str = argv[subcmd_pos + 1];
+    const char *scmd_str = argv[opts.subcmd_pos + 1];
     subcmd_t *scmd       = subcmd_find(scmd_str != NULL ? scmd_str : "-h");
     if (scmd == NULL) {
         if (scmd_str != NULL) {
@@ -92,8 +120,9 @@ driver_main(int argc, char **argv)
     exec_info_t *exec_info = get_exec_info();
     exec_info->hash_actual = get_lotto_hash(arg0);
     exec_info->args        = (scmd->group != SUBCMD_GROUP_OTHER) ?
-                                 ARGS(argc - subcmd_pos - 1, argv + subcmd_pos + 1) :
-                                 ARGS(argc - subcmd_pos, argv + subcmd_pos);
+                                 ARGS(argc - opts.subcmd_pos - 1,
+                                      argv + opts.subcmd_pos + 1) :
+                                 ARGS(argc - opts.subcmd_pos, argv + opts.subcmd_pos);
 
     exec_info->args.arg0 = arg0;
     flags_t *flags       = scmd->defaults();
@@ -131,4 +160,23 @@ driver_main(int argc, char **argv)
         default:
             ASSERT(0 && "should never reach here");
     }
+}
+
+static void
+append_option_value(char *buf, size_t cap, const char *value)
+{
+    int written;
+    size_t len = strlen(buf);
+
+    if (value == NULL || value[0] == '\0') {
+        return;
+    }
+
+    if (len > 0) {
+        written = snprintf(buf + len, cap - len, ":%s", value);
+    } else {
+        written = snprintf(buf + len, cap - len, "%s", value);
+    }
+
+    ASSERT(written >= 0 && (size_t)written < cap - len);
 }

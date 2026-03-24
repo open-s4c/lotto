@@ -26,6 +26,10 @@ DECLARE_COMMAND_FLAG(PLUGIN_DIRECTORY, "", "plugin-directory", "DIR",
                      "plugin directory to load Lotto plugins", flag_sval(""))
 DECLARE_COMMAND_FLAG(PLUGIN_LIST, "", "plugins", "P1[,P2]",
                      "list of plugins to load, comma seperated", flag_sval(""))
+DECLARE_COMMAND_FLAG(LOAD_RUNTIME, "", "load-runtime", "PATH[:PATH...]",
+                     "extra runtime .so libraries to preload", flag_sval(""))
+DECLARE_COMMAND_FLAG(LOAD_DRIVER, "", "load-driver", "PATH[:PATH...]",
+                     "extra driver .so libraries to preload", flag_sval(""))
 DECLARE_COMMAND_FLAG(LIST_COMMANDS, "", "list-commands", "",
                      "list available commands", flag_off())
 
@@ -91,8 +95,9 @@ describe_usage(FILE *fp)
 {
     sys_fprintf(fp, "Usage:\n");
     sys_fprintf(fp,
-                "    lotto [--version|--help]|[--plugin-dir DIR]|[--plugins "
-                "P1[,P2]] <command> <args>]\n\n");
+                "    lotto [--version|--help] [--plugin-dir DIR] [--plugins "
+                "P1[,P2]] [--load-runtime PATH[:PATH...]] "
+                "[--load-driver PATH[:PATH...]] <command> <args>\n\n");
     subcmds_help(fp);
 }
 
@@ -122,7 +127,8 @@ lotto(args_t *args, flags_t *flags)
 ON_DRIVER_REGISTER_COMMANDS({
     flag_t sel[] = {FLAG_VERSION,       flag_temporary_directory(),
                     FLAG_LIST_COMMANDS, FLAG_PLUGIN_DIRECTORY,
-                    FLAG_PLUGIN_LIST,   0};
+                    FLAG_PLUGIN_LIST,   FLAG_LOAD_RUNTIME,
+                    FLAG_LOAD_DRIVER,   0};
     subcmd_register(lotto, "-", "", "Show details of lotto itself", false, sel,
                     flags_default, SUBCMD_GROUP_OTHER);
 })

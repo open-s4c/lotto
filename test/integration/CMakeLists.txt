@@ -18,6 +18,27 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_dependencies(tikl-test tikl-integration)
 
+file(GLOB PROBE_SRCS probes/*.c)
+set(INTEGRATION_PROBE_TARGETS)
+foreach(PROBE_SRC ${PROBE_SRCS})
+    get_filename_component(PROBE ${PROBE_SRC} NAME_WLE)
+    add_library(${PROBE} SHARED ${PROBE_SRC})
+    target_link_libraries(${PROBE} PRIVATE lotto.h dice.h ${CMAKE_DL_LIBS})
+    target_compile_definitions(
+        ${PROBE}
+        PRIVATE DICE_MULTIFILE_MODULE
+                LOTTO_RUNTIME_MODULE=1
+                LOTTO_DRIVER_MODULE=0
+                DICE_MODULE_SLOT=999
+                LOGGER_PREFIX="${PROBE}")
+    set_target_properties(
+        ${PROBE}
+        PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tikl")
+    add_dependencies(tikl-test ${PROBE})
+    add_dependencies(tikl-integration ${PROBE})
+    list(APPEND INTEGRATION_PROBE_TARGETS ${PROBE})
+endforeach()
+
 foreach(SRC ${SRCS})
     get_filename_component(TEST ${SRC} NAME_WLE)
     set(TARGET bin-${TEST})
@@ -55,6 +76,7 @@ foreach(SRC ${SRCS})
         COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRC}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     add_dependencies(tikl-${TEST} ${TARGET} tikl-build lotto-cli)
+    add_dependencies(tikl-${TEST} ${INTEGRATION_PROBE_TARGETS})
     add_dependencies(tikl-integration tikl-${TEST})
 endforeach()
 

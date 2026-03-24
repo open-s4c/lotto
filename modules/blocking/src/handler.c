@@ -82,7 +82,7 @@ _blocking_handle(const capture_point *cp, event_t *e)
         if (e->replay) {
             tidset_insert(&_state.blocked_replay, cp->id);
         }
-        e->reason  = REASON_CALL;
+        e->reason  = REASON_BLOCKING;
         e->is_chpt = true;
     }
 

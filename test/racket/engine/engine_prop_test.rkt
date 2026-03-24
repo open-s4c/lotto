@@ -42,11 +42,11 @@
 (define ANY_TASK (cast -1 _int64 _task_id))
 
 (define CAPTURE_BEFORE 5)
+(define EVENT_MA_READ 30)
+(define EVENT_MA_WRITE 31)
 (define EVENT_TASK_INIT 170)
 (define EVENT_TASK_FINI 171)
 (define EVENT_TASK_CREATE 172)
-(define EVENT_CALL 173)
-(define EVENT_TASK_BLOCK 197)
 
 (define-cstruct _capture_point
   ([src_chain _chain_id]
@@ -74,32 +74,31 @@
 (define NULL (cast 0 _uint64 _pointer))
 
 ;; return actions
-(define (make-plan cat prev next)
+(define (make-plan cat blocking)
   (apply gen-action
-         (match cat
-           ['CAT_TASK_CREATE '(CALL YIELD RESUME)]
-           ['CAT_TASK_INIT '(WAKE YIELD RESUME)]
-           ['CAT_TASK_FINI '(WAKE)]
-           ['CAT_TASK_BLOCK '(WAKE CALL RETURN YIELD RESUME)]
-           ['CAT_CALL '(WAKE CALL RETURN YIELD RESUME)]
-           [_ '(WAKE YIELD RESUME)])))
+         (cond
+           [(equal? cat 'CAT_TASK_CREATE) '(BLOCK YIELD RESUME)]
+           [(equal? cat 'CAT_TASK_INIT) '(WAKE YIELD RESUME)]
+           [(equal? cat 'CAT_TASK_FINI) '(WAKE)]
+           [blocking '(WAKE BLOCK RETURN YIELD RESUME)]
+           [else '(WAKE YIELD RESUME)])))
 
 (define (cat->type cat)
   (match cat
+    ['CAT_BEFORE_READ EVENT_MA_READ]
+    ['CAT_BEFORE_WRITE EVENT_MA_WRITE]
     ['CAT_TASK_CREATE EVENT_TASK_CREATE]
     ['CAT_TASK_INIT EVENT_TASK_INIT]
     ['CAT_TASK_FINI EVENT_TASK_FINI]
-    ['CAT_TASK_BLOCK EVENT_TASK_BLOCK]
-    ['CAT_CALL EVENT_CALL]
     [_ 0]))
 
 (define (cp-cat cp)
   (match (capture_point-src_type cp)
+    [EVENT_MA_READ 'CAT_BEFORE_READ]
+    [EVENT_MA_WRITE 'CAT_BEFORE_WRITE]
     [EVENT_TASK_CREATE 'CAT_TASK_CREATE]
     [EVENT_TASK_INIT 'CAT_TASK_INIT]
     [EVENT_TASK_FINI 'CAT_TASK_FINI]
-    [EVENT_TASK_BLOCK 'CAT_TASK_BLOCK]
-    [EVENT_CALL 'CAT_CALL]
     [_ 'CAT_NONE]))
 
 (define (make-cp cat id [blocking #f])
@@ -112,7 +111,10 @@
     (set-capture_point-func! cp "func")
     cp))
 
-(define cats '((CAPTURE . CAT_BEFORE_WRITE) (CAPTURE . CAT_BEFORE_READ)))
+(define cats '((CAPTURE . CAT_BEFORE_WRITE)
+               (CAPTURE . CAT_BEFORE_READ)
+               (BLOCK . CAT_BEFORE_WRITE)
+               (BLOCK . CAT_BEFORE_READ)))
 
 ;; -----------------------------------------------------------------------------
 ;; mocks
@@ -121,13 +123,19 @@
 (define param-id (make-parameter 'INVALID))
 (define param-clk (make-parameter 'INVALID))
 (define param-cat (make-parameter 'INVALID))
+(define param-blocking (make-parameter #f))
 (define param-loop-cont (make-parameter 'INVALID))
+
+(mock plan_has
+      (lambda (p a)
+        (let ([action (cast a _action _uint32)])
+          (= (bitwise-and (plan-actions p) action) action))))
 
 (mock sequencer_capture
       (lambda (cp)
         (check-equal? (capture_point-id cp) (param-id))
         (let* ([next-id (call/cc (lambda (cont) ((param-loop-cont) cont)))]
-               [actions (make-plan (param-cat) (capture_point-id cp) next-id)]
+               [actions (make-plan (param-cat) (param-blocking))]
                [plan (alloc-plan)])
           (set-plan-next! plan next-id)
           (set-plan-actions! plan actions)
@@ -181,36 +189,34 @@
       [loop-cont #f]
       [capture-cont #f])
   (let-syntax ([capture (syntax-rules ()
-                          [(capture cat id)
+                          [(capture cat id blocking)
                            (begin
                              (set! clock (+ 1 clock))
                              (set! capture-cont
                                    (call/cc (lambda (cont)
                                                 (parameterize ([param-clk clock]
                                                              [param-cat cat]
+                                                             [param-blocking blocking]
                                                              [param-id id]
                                                              [param-loop-cont cont])
                                                 (call engine_capture
-                                                      (make-cp cat id
-                                                               (or (equal? cat 'CAT_TASK_BLOCK)
-                                                                   (equal? cat 'CAT_CALL))))
+                                                      (make-cp cat id blocking))
                                                 #f))))
                              (cond
                                [(not capture-cont)
                                 (check-false (aborted?))
                                 (loop-cont)]))]
-                          [(capture cat id next)
+                          [(capture cat id blocking next)
                            (begin
                              (set! clock (+ 1 clock))
                              (let ([capture-cont (call/cc (lambda (cont)
                                                             (parameterize ([param-clk clock]
                                                                            [param-cat cat]
+                                                                           [param-blocking blocking]
                                                                            [param-id id]
                                                                            [param-loop-cont cont])
                                                               (call engine_capture
-                                                                    (make-cp cat id
-                                                                             (or (equal? cat 'CAT_TASK_BLOCK)
-                                                                                 (equal? cat 'CAT_CALL))))
+                                                                    (make-cp cat id blocking))
                                                               #f)))])
                                (cond
                                  [(not capture-cont) (check-false (aborted?))]
@@ -227,23 +233,23 @@
                               (call engine_resume (make-cp cat id)))
                             (check-false (aborted?)))])]
                [return (syntax-rules ()
-                         [(return id)
+                         [(return cat id)
                           (begin
                             (parameterize ([param-id id])
-                              (call engine_return (make-cp 'CAT_CALL id #t)))
+                              (call engine_return (make-cp cat id #t)))
                             (check-false (aborted?)))])])
     (for ([i c])
       (printf "===> ~a\n" i)
       (match i
         [(cons (SUTTransition 'WAKE 'ANY_TASK) _) (wake ANY_TASK)]
-        [(cons (SUTTransition 'CAPTURE id) cat) (capture cat id)]
+        [(cons (SUTTransition 'CAPTURE id) cat) (capture cat id #f)]
         [(cons (SUTTransition 'WAKE id) cat)
          (wake id)
          (resume cat id)]
         [(cons (SUTTransition 'CREATE id) cat) (resume cat id)]
-        [(cons (SUTTransition 'INITIALIZE id) cat) (capture cat id)]
+        [(cons (SUTTransition 'INITIALIZE id) cat) (capture cat id #f)]
         [(cons (SUTTransition 'PICK id) cat) (resume cat id)]
-        [(cons (SUTTransition 'FORK id) cat) (capture cat id ANY_TASK)]
-        [(cons (SUTTransition 'BLOCK id) cat) (capture cat id)]
-        [(cons (SUTTransition 'FINALIZE id) cat) (capture cat id)]
-        [(cons (SUTTransition 'UNBLOCK id) cat) (return id)]))))
+        [(cons (SUTTransition 'FORK id) cat) (capture cat id #f ANY_TASK)]
+        [(cons (SUTTransition 'BLOCK id) cat) (capture cat id #t)]
+        [(cons (SUTTransition 'FINALIZE id) cat) (capture cat id #f)]
+        [(cons (SUTTransition 'UNBLOCK id) cat) (return cat id)]))))

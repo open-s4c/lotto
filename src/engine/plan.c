@@ -35,7 +35,7 @@ plan_has(struct plan p, enum action a)
 
 const char *_action_to_str[] = {
     [ACTION_NONE] = "NONE",         [ACTION_WAKE] = "WAKE",
-    [ACTION_CALL] = "CALL",         [ACTION_BLOCK] = "BLOCK",
+    [ACTION_DETACH] = "DETACH",     [ACTION_BLOCK] = "BLOCK",
     [ACTION_RETURN] = "RETURN",     [ACTION_YIELD] = "YIELD",
     [ACTION_RESUME] = "RESUME",     [ACTION_CONTINUE] = "CONTINUE",
     [ACTION_SNAPSHOT] = "SNAPSHOT", [ACTION_SHUTDOWN] = "SHUTDOWN",

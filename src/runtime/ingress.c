@@ -84,29 +84,10 @@ PS_SUBSCRIBE(CHAIN_INGRESS_AFTER, ANY_EVENT, {
     return PS_STOP_CHAIN;
 })
 
-/*******************************************************************************
- * TODO: older stuff
- ******************************************************************************/
-
 void *
 intercept_lookup_call(const char *func)
 {
-    void *foo = real_func(func, 0);
-    //    capture_point cp = {
-    //        // .type      = EVENT_CALL,
-    //        .src_chain = CAPTURE_BEFORE,
-    //        //.src_type  = EVENT_CALL,
-    //        .vid  = NO_TASK,
-    //        .func = func,
-    //    };
-    //    runtime_ingress(&cp, self_md());
-    //
-    //    logger_debugf("[%lu] lookup call '%s'\n", cp.id, func);
-    //    /* search for real function and return its pointer */
-    //    if (foo == NULL)
-    //        logger_fatalf("could not find function '%s'\n", func);
-    //    logger_debugf("[%lu] found function '%s'\n", cp.id, func);
-    return foo;
+    return real_func(func, 0);
 }
 
 void *

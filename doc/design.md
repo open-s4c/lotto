@@ -107,15 +107,15 @@ The Lotto engine is a domain-agnostic component seeing SUT execution on an abstr
 
 - no simultaneous capture/resume calls
 - resume must be followed by capture and vice versa
-- returns can happen only in detached tasks
-- plan must match the category semantic
+- returns can happen only in tasks detached for blocking ingress
+- plan must match the active event semantic
 
 The plan consists of a sequence of actions, the order of which is predetermined by their enum bit (same as the order in this list):
 
 - `WAKE` - lets the next task inside `BLOCK` or `YIELD` execute, `ANY_TASK` picks a task in `YIELD` nondeterministically
-- `CALL` - performs a potentially blocking call
+- `DETACH` - detaches around a potentially blocking semantic ingress event
 - `BLOCK` - blocks a task inside Lotto (equivalent to `YIELD` irresponsive to `WAKE` of `ANY_TASK`)
-- `RETURN` - informs the engine that `CALL` finished
+- `RETURN` - informs the engine that the detached blocking ingress completed
 - `YIELD` - blocks the task inside Lotto, is subject to `WAKE` of `ANY_TASK`
 - `RESUME` - informs the engine that the task resumed and continues execution
 - `CONTINUE` - continue execution
@@ -126,7 +126,7 @@ These actions are used to express the following base scenarios:
 
 - `WAKE|YIELD|RESUME` - generic preemption
 - `WAKE|BLOCK|RESUME` - preemption before blocking inside Lotto, e.g., for locks implemented in the engine
-- `WAKE|CALL|RETURN|YIELD|RESUME` - preemption before external blocking call
+- `WAKE|DETACH|RETURN|YIELD|RESUME` - preemption around external blocking ingress
 
 All of these scenarios can be complemented with `SNAPSHOT` and `SHUTDOWN`. While the actions may seem independent of each other, the design of runtime is tailored for efficient execution of these three scenarios.
 
@@ -143,7 +143,7 @@ The capture interface processes the intercepted event. It lets the recorder load
 
 The resume interface informs the sequencer that some task continues its execution. The sequencer updates its internal information and lets the recorder create a trace record.
 
-The return interface is used by detached tasks upon returning from a blocking call. The sequencer adds all returns into a queue which is processed during the next capture event. Unlike the other two interfaces, this interface can be called at any point of time by any detached task, i.e, it is concurrent.
+The return interface is used by detached tasks once a blocking semantic ingress event completes. The sequencer adds all returns into a queue which is processed during the next capture event. Unlike the other two interfaces, this interface can be called at any point of time by any detached task, i.e, it is concurrent.
 
 These interfaces together with plan allow the engine to process SUT on an [abstract level](#system-under-test-sut).
 
@@ -155,7 +155,7 @@ A handler is a logic unit implementing either a partial scheduling decision or i
 
 - populators: add tids to the tidset. After they're executed the tidset reaches its maximum size for a dispatched event.
 - determinators: take care of nondeterministic events. After them a sensible input subset to the handler chain is deterministic.
-- blockers/waiters: may strongly block the current task (either with WAIT or CALL)
+- blockers/waiters: may strongly block the current task (either with WAIT or DETACH)
 - adjusters: influence performance of handlers which come after
 - constrainers: constrain the schedule by making partial decisions
 - strategies: make the final decision on the next task
@@ -193,7 +193,7 @@ The main runtime initializes the engine and enables the sighandler. The intercep
 > TODO: be agnostic to pthread or put it as a limitation
 
 ### `mediator`
-Mediator is the only part of runtime communicating with the engine and switcher directly. It passes captured event to the engine and is responsible for executing `WAKE`, `BLOCK`, `YIELD`, and `RESUME` actions. Since the mediator interfaces mirror the ones of the engine, and some actions like `CALL` can be executed by the outermost interceptor only, the plan execution is interrupted by returning back to the interceptor. The mediator communicates to the interceptor whether the latter needs to call the mediator again through its return values:
+Mediator is the only part of runtime communicating with the engine and switcher directly. It passes captured event to the engine and is responsible for executing `WAKE`, `BLOCK`, `YIELD`, and `RESUME` actions. Since the mediator interfaces mirror the ones of the engine, and detached blocking ingress must be completed by the outermost interceptor, the plan execution is interrupted by returning back to the interceptor. The mediator communicates to the interceptor whether the latter needs to call the mediator again through its return values:
 
 - `mediator_capture()` returns a boolean of whether `mediator_resume()` should be called by the interceptor
 - `mediator_resume()` returns mediator status, which can be either
@@ -328,6 +328,10 @@ This component mirrors `states` and includes all engine flags which are part of 
 # System under test (SUT)
 
 Lotto sees SUT as a set of parallel tasks, each of which follow a specific life cycle ensured by the runtime:
+
+The diagram below is historical and still uses category-oriented labels such as
+`CAT_CALL`. The active non-QEMU runtime now carries semantic event ids in
+`capture_point.src_type`.
 
 ```
                                                                                                   return

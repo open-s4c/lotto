@@ -121,11 +121,11 @@
 ;;      (and (not (equal? id tid)) ;
 ;;           (any-id tid))))
 ;;  (match cat
-;;    ['CAT_TASK_CREATE (seq-plan '(CALL YIELD RESUME) id)]
+;;    ['CAT_TASK_CREATE (seq-plan '(BLOCK YIELD RESUME) id)]
 ;;    ['CAT_TASK_INIT (seq-plan '(WAKE YIELD RESUME) (get-last-id (seqgen-seq gen) id))]
 ;;    ['CAT_TASK_FINI (seq-plan '(WAKE) (pick-task except-id gen))]
-;;    ['CAT_TASK_BLOCK (seq-plan '(WAKE CALL RETURN YIELD RESUME) (pick-task except-id gen))]
-;;    ['CAT_CALL (seq-plan '(WAKE CALL RETURN YIELD RESUME) (pick-task except-id gen))]
+;;    ;; Blocking is a capture_point flag, not a separate category.
+;;    ['CAT_BEFORE_READ (seq-plan '(WAKE BLOCK RETURN YIELD RESUME) (pick-task except-id gen))]
 ;;    [_ (seq-plan '(WAKE YIELD RESUME) (pick-task any-id gen))]
 ;;    ;;;;    ;;[_ (seq-plan '(RESUME CONTINUE) id)]
 ;;    ;;;;    [_ (seq-plan '(RESUME ABORT) id)]
@@ -229,7 +229,7 @@
 ;;            [nT (hash-set T id 'RUNNING)])
 ;;       (seqgen nT S id nseq))]
 ;;    ['RUNNING
-;;     (let* ([cat (rnd-one-of '(CAT_BEFORE_WRITE CAT_CALL CAT_BEFORE_READ CAT_TASK_CREATE))]
+;;     (let* ([cat (rnd-one-of '(CAT_BEFORE_WRITE CAT_BEFORE_READ CAT_TASK_CREATE))]
 ;;            [plan (seq-plan-step id cat G)]
 ;;            [step (list id 'capture cat plan)]
 ;;            [nseq (cons step (seqgen-seq G))] ;
@@ -242,8 +242,8 @@
 ;;          (begin ;; create new task and initialize state
 ;;            (set! next (+ 1 (length (hash-keys (seqgen-task-states G)))))
 ;;            (set! nT (hash-set nT next 'ZERO)))]
-;;         ;;[(list _ _ 'CAT_TASK_BLOCK _) (set! nT (hash-set nT id 'BLOCKED))]
-;;         [(list _ _ 'CAT_CALL _)
+;;         ;; A blocking semantic capture would mark the task blocked here.
+;;         [(list _ _ 'CAT_BEFORE_READ _)
 ;;          (set! nT (hash-set nT id 'BLOCKED))
 ;;          (set! next (pick-task (nonblocked-id nT) G))]
 ;;         [_ '()])

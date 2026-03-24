@@ -60,7 +60,8 @@ struct plan sequencer_capture(const capture_point *cp);
 void sequencer_resume(const capture_point *cp);
 
 /**
- * Informs the sequencer that the task has returned from a call.
+ * Informs the sequencer that a previously blocking semantic ingress event has
+ * completed for the task.
  */
 void sequencer_return(const capture_point *cp);
 

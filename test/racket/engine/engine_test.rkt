@@ -28,11 +28,10 @@
   (foldl + 0 (for/list ([sym syms]) (get-sym sym))))
 
 (define CAPTURE_BEFORE 5)
+(define EVENT_MA_WRITE 31)
 (define EVENT_TASK_INIT 170)
 (define EVENT_TASK_FINI 171)
 (define EVENT_TASK_CREATE 172)
-(define EVENT_CALL 173)
-(define EVENT_TASK_BLOCK 197)
 
 (define-cstruct _capture_point
   ([src_chain _chain_id]
@@ -57,13 +56,17 @@
 (define _engine_return (_fun _capture_point-pointer -> _void))
 (define _sequencer_capture (_fun _capture_point-pointer -> _plan))
 
+(mock plan_has
+      (lambda (p a)
+        (let ([action (cast a _action _uint32)])
+          (= (bitwise-and (plan-actions p) action) action))))
+
 (define (cat->type cat)
   (match cat
-    ['CAT_TASK_BLOCK EVENT_TASK_BLOCK]
+    ['CAT_BEFORE_WRITE EVENT_MA_WRITE]
     ['CAT_TASK_INIT EVENT_TASK_INIT]
     ['CAT_TASK_FINI EVENT_TASK_FINI]
     ['CAT_TASK_CREATE EVENT_TASK_CREATE]
-    ['CAT_CALL EVENT_CALL]
     [_ 0]))
 
 (define (new-cp id [cat 'CAT_NONE] [blocking #f])
@@ -98,13 +101,13 @@
           (set-plan-next! p ANY_TASK)
           (set-plan-actions! p (actions->int 'WAKE 'BLOCK 'RETURN 'YIELD 'RESUME))
           (ptr-ref p _plan))))
-(void (call engine_capture (new-cp 1 'CAT_TASK_BLOCK #t)))
+(void (call engine_capture (new-cp 1 'CAT_BEFORE_WRITE #t)))
 
 ;; STEP 3. another task resumes
 (call engine_resume (new-cp 2))
 
 ;; STEP 4. some task returns
-(void (call engine_capture (new-cp 2 'CAT_TASK_BLOCK #t)))
+(void (call engine_capture (new-cp 2 'CAT_BEFORE_WRITE #t)))
 
 ;; STEP 5. let's finish the engine
 (define r (call engine_fini (new-cp 1) 'REASON_SUCCESS))
@@ -113,5 +116,5 @@
 
 ;; STEP 6. another task returns;
 ;; we should not fail here. If return is called after fini, we should just ignore it.
-(call engine_return (new-cp 2 'CAT_CALL #t))
+(call engine_return (new-cp 2 'CAT_BEFORE_WRITE #t))
 (check-false (aborted?))

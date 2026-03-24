@@ -36,7 +36,8 @@ struct plan engine_capture(const capture_point *cp);
 void engine_resume(const capture_point *cp);
 
 /**
- * Informs engine that the task has returned from a call.
+ * Informs engine that a previously blocking semantic ingress event has
+ * completed for the task.
  */
 void engine_return(const capture_point *cp);
 

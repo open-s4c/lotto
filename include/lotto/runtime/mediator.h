@@ -40,15 +40,17 @@ typedef enum mediator_status {
  */
 bool mediator_capture(mediator_t *m, capture_point *cp);
 
-/* first call by each task must be with CAT_NONE
- * mediation will be then reset when CAT_NONE is given.
+/* Resume executes the remainder of the current plan for the given semantic
+ * capture point.
  *
- * resume decides whether execution should continue or not
- *
+ * On first access, mediator_get(..., true) bootstraps engine resume before any
+ * semantic ingress is captured for the task.
  */
 mediator_status_t mediator_resume(mediator_t *m, capture_point *cp);
 
-/* shall be called once task available again. */
+/* Complete a previously blocking semantic ingress event once the task becomes
+ * runnable again.
+ */
 void mediator_return(mediator_t *m, capture_point *cp);
 
 void mediator_fini(mediator_t *m);

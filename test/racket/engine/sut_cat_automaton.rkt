@@ -53,9 +53,12 @@
                                      (list (let ([cat (hash-ref c id)])
                                              (assert cat symbol?)
                                              cat))]
-                                    [(SUTTransition 'BLOCK _) '(CAT_CALL)]
+                                    [(SUTTransition 'BLOCK _) '()]
                                     [(SUTTransition 'WAIT _) '()]
-                                    [(SUTTransition 'UNBLOCK _) '(NONE)]
+                                    [(SUTTransition 'UNBLOCK id)
+                                     (list (let ([cat (hash-ref c id)])
+                                             (assert cat symbol?)
+                                             cat))]
                                     [(SUTTransition 'FORK _) '(CAT_TASK_CREATE)]
                                     [(SUTTransition 'FINALIZE _) '(CAT_TASK_FINI)])]
                          [custom (map (lambda ([pair : (Pairof Action Category)]) (cdr pair))
@@ -69,12 +72,19 @@
 (define/match (SUTCat-take-transition s t)
   [((cons ss sc) (cons ts tc))
    (SUT-take-transition ss ts)
-   (match* (tc (SUTTransition-tid ts))
-     [('NONE _) (void)]
-     [('CAT_TASK_FINI id) (hash-remove! sc id)]
-     [(_ id)
-      (assert id RealTaskId?)
-      (hash-set! sc id (Cat-take-transition (hash-ref sc id (lambda () 'CAT_NONE)) tc))])])
+   (let ([action (SUTTransition-action ts)]
+         [id (SUTTransition-tid ts)])
+     (cond
+       [(equal? action 'UNBLOCK) (void)]
+       [(equal? tc 'NONE) (void)]
+       [(equal? tc 'CAT_TASK_FINI)
+        (assert id RealTaskId?)
+        (hash-remove! sc id)]
+       [else
+        (assert id RealTaskId?)
+        (hash-set! sc id
+                   (Cat-take-transition (hash-ref sc id (lambda () 'CAT_NONE))
+                                        tc))]))])
 
 ;; -----------------------------------------------------------------------------
 ;; SUTCat simulation

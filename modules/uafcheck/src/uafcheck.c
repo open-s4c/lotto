@@ -2,15 +2,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <sys/mman.h>
-#include <vsync/queue/bounded_spsc.h>
-#include <vsync/queue/internal/bounded_ret.h>
-#undef ASSERT
-
 #include "uafcheck.h"
 #include <lotto/sys/logger.h>
 #include <lotto/sys/real.h>
 #include <lotto/sys/string.h>
+#include <sys/mman.h>
+#include <vsync/queue/bounded_spsc.h>
+#include <vsync/queue/internal/bounded_ret.h>
 
 #define UAFC_CANARY 0xBEEFFEED
 #define UAFC_MAXP   16

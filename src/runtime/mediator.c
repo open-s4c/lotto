@@ -211,6 +211,10 @@ mediator_fini(mediator_t *m)
 bool
 mediator_in_capture(const mediator_t *m)
 {
-    // TODO: extract information from self component
-    return false;
+    if (m == NULL)
+        return false;
+
+    // TODO: mediator should point to md already
+    struct metadata *md = self_md();
+    return self_guard_get(md) == SELF_GUARD_SERVING;
 }

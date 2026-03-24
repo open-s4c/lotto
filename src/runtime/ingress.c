@@ -92,23 +92,8 @@ PS_SUBSCRIBE(CHAIN_INGRESS_AFTER, ANY_EVENT, {
     return PS_STOP_CHAIN;
 })
 
-void *
-intercept_lookup_call(const char *func)
-{
-    return real_func(func, 0);
-}
+// PS_SUBSCRIBE(CAPTURE_BEFORE, ANY_EVENT, { logger_printf("warning\n"); })
 
-void *
-intercept_warn_call(const char *func)
-{
-    /* search for the real function and return its pointer */
-    void *foo = real_func(func, 0);
-
-    logger_warnf("warn call '%s'\n", func);
-    if (foo == NULL)
-        logger_fatalf("could not find function '%s'\n", func);
-    return foo;
-}
 
 typedef struct fini_node {
     fini_t func;

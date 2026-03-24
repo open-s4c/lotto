@@ -23,6 +23,7 @@ include_directories(task_velocity/include)
 include_directories(yield/include)
 include_directories(available/include)
 include_directories(explore/include)
+include_directories(autocept/include)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LOTTO_MODULE_BUILD_DIR}")
 
@@ -75,6 +76,7 @@ add_module(enforce)
 add_module(inactivity)
 
 # other components
+add_module(autocept)
 add_module(time)
 add_module(random)
 add_module(tsan)

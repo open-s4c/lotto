@@ -358,7 +358,9 @@ _scandir(const char *scan_dir)
             kind |= MODULE_KIND_MEMMGR;
         }
         if (kind == MODULE_KIND_NONE) {
-            logger_fatalf("unknown kind of module %s\n", entry->d_name);
+            logger_debugf("Ignoring non-Lotto shared object '%s'\n",
+                          entry->d_name);
+            continue;
         }
         for (size_t i = 0; i < _next; ++i) {
             if (!strcmp(name, _modules[i].name) && kind == _modules[i].kind) {

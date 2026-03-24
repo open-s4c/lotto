@@ -24,9 +24,6 @@ get_task_id(void)
     return (m->id);
 }
 
-/* Resolve the real implementation for an intercepted external function. */
-void *intercept_lookup_call(const char *func);
-
 /*
  * Return the mediator of the current task, init flag also initializes
  * mediator if not yet.
@@ -37,8 +34,6 @@ mediator_t *get_mediator(bool new_task);
  * Like get_mediator but does not initialize mediator if not yet.
  */
 mediator_t *get_existing_mediator();
-
-void *intercept_warn_call(const char *func);
 
 typedef void (*fini_t)();
 void lotto_intercept_register_fini(fini_t func);

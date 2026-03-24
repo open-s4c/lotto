@@ -14,7 +14,7 @@
 #define LOTTO_BOOTSTRAP_ENV "LOTTO_DRIVER_BOOTSTRAPPED"
 #define DICE_PLUGIN_MODULES "DICE_PLUGIN_MODULES"
 #define LOTTO_CLI_PRELOAD   "LOTTO_CLI_PRELOAD"
-#define MAX_COMMAND_ARGS    2
+#define LOTTO_LOAD_RUNTIME  "LOTTO_LOAD_RUNTIME"
 #define MAX_LIST_STR        ((size_t)(32 * 1024))
 
 typedef struct preload_state_s {
@@ -23,11 +23,19 @@ typedef struct preload_state_s {
     size_t cap;
 } preload_state_t;
 
-static void driver_options(int argc, char **argv, const char **module_dir,
-                           const char **module_list);
+typedef struct driver_options_s {
+    const char *module_dir;
+    const char *module_list;
+    char runtime_loads[MAX_LIST_STR];
+    char driver_loads[MAX_LIST_STR];
+} driver_options_t;
+
+static void driver_options(int argc, char **argv, driver_options_t *opts);
 static int add_driver_module(module_t *module, void *arg);
 static void prepend_env_path(const char *name, const char *value);
 static void append_preload(preload_state_t *state, const char *path);
+static void append_preload_list(preload_state_t *state, const char *paths);
+static void append_option_value(char *buf, size_t cap, const char *value);
 static bool path_is_readable(const char *path);
 static int exec_self(char **argv);
 
@@ -41,17 +49,16 @@ main(int argc, char **argv)
     }
 
     if (getenv(LOTTO_BOOTSTRAP_ENV) == NULL) {
-        const char *module_dir  = NULL;
-        const char *module_list = NULL;
+        driver_options_t opts   = {0};
         char resolved_path[PATH_MAX];
         char driver_path[PATH_MAX];
         char binary_dir[PATH_MAX];
         char lib_dir[PATH_MAX];
 
-        driver_options(argc, argv, &module_dir, &module_list);
+        driver_options(argc, argv, &opts);
         lotto_module_scan(LOTTO_MODULE_BUILD_DIR, LOTTO_MODULE_INSTALL_DIR,
-                          module_dir);
-        if (lotto_module_enable_only(module_list) != 0) {
+                          opts.module_dir);
+        if (lotto_module_enable_only(opts.module_list) != 0) {
             return 1;
         }
 
@@ -111,6 +118,13 @@ main(int argc, char **argv)
         } else {
             unsetenv(LOTTO_CLI_PRELOAD);
         }
+        append_preload_list(&preload, opts.driver_loads);
+
+        if (opts.runtime_loads[0] != '\0') {
+            setenv(LOTTO_LOAD_RUNTIME, opts.runtime_loads, true);
+        } else {
+            unsetenv(LOTTO_LOAD_RUNTIME);
+        }
 
         setenv("LD_PRELOAD", preload.buf, true);
         setenv(DICE_PLUGIN_MODULES, plugin_modules.buf, true);
@@ -126,22 +140,33 @@ main(int argc, char **argv)
 }
 
 static void
-driver_options(int argc, char **argv, const char **module_dir,
-               const char **module_list)
+driver_options(int argc, char **argv, driver_options_t *opts)
 {
-    *module_dir  = NULL;
-    *module_list = NULL;
+    opts->module_dir         = NULL;
+    opts->module_list        = NULL;
+    opts->runtime_loads[0]   = '\0';
+    opts->driver_loads[0]    = '\0';
 
-    for (int argv_idx = 1; argv_idx <= MAX_COMMAND_ARGS * 2 - 1;
-         argv_idx += 2) {
-        if (argc > argv_idx + 1) {
-            if (strcmp(argv[argv_idx], "--plugin-dir") == 0) {
-                *module_dir = argv[argv_idx + 1];
-            }
-            if (strcmp(argv[argv_idx], "--plugins") == 0) {
-                *module_list = argv[argv_idx + 1];
-            }
+    for (int argv_idx = 1; argv_idx + 1 < argc; argv_idx += 2) {
+        if (strcmp(argv[argv_idx], "--plugin-dir") == 0) {
+            opts->module_dir = argv[argv_idx + 1];
+            continue;
         }
+        if (strcmp(argv[argv_idx], "--plugins") == 0) {
+            opts->module_list = argv[argv_idx + 1];
+            continue;
+        }
+        if (strcmp(argv[argv_idx], "--load-runtime") == 0) {
+            append_option_value(opts->runtime_loads, sizeof(opts->runtime_loads),
+                                argv[argv_idx + 1]);
+            continue;
+        }
+        if (strcmp(argv[argv_idx], "--load-driver") == 0) {
+            append_option_value(opts->driver_loads, sizeof(opts->driver_loads),
+                                argv[argv_idx + 1]);
+            continue;
+        }
+        break;
     }
 }
 
@@ -195,6 +220,44 @@ append_preload(preload_state_t *state, const char *path)
         exit(1);
     }
     state->len += (size_t)written;
+}
+
+static void
+append_preload_list(preload_state_t *state, const char *paths)
+{
+    char paths_copy[MAX_LIST_STR];
+
+    if (paths == NULL || paths[0] == '\0') {
+        return;
+    }
+
+    snprintf(paths_copy, sizeof(paths_copy), "%s", paths);
+    for (char *path = strtok(paths_copy, ":"); path != NULL;
+         path       = strtok(NULL, ":")) {
+        append_preload(state, path);
+    }
+}
+
+static void
+append_option_value(char *buf, size_t cap, const char *value)
+{
+    int written;
+    size_t len = strlen(buf);
+
+    if (value == NULL || value[0] == '\0') {
+        return;
+    }
+
+    if (len > 0) {
+        written = snprintf(buf + len, cap - len, ":%s", value);
+    } else {
+        written = snprintf(buf + len, cap - len, "%s", value);
+    }
+
+    if (written < 0 || (size_t)written >= cap - len) {
+        fprintf(stderr, "error: option list too long\n");
+        exit(1);
+    }
 }
 
 static int

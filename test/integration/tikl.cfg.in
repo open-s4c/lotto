@@ -27,7 +27,7 @@ mask_addr      = --stable-address-method MASK
 
 # tikl flags
 -q
--vv
+-v
 -j 1
 # -j @TIKL_WORKERS@
 -t @TIKL_TIMEOUT@

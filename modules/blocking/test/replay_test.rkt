@@ -119,9 +119,9 @@
        (call engine_resume (make-context cat id))
        (check-false (aborted?)))]))
 
-(define-syntax-rule (return id)
+(define-syntax-rule (return cat id)
   (begin
-    (call engine_return (make-context 'CAT_CALL id))
+    (call engine_return (make-context cat id))
     (check-false (aborted?))))
 
 (define (simulate)
@@ -138,7 +138,7 @@
          [(cons (SUTTransition 'FORK id) cat) (capture cat id)]
          [(cons (SUTTransition 'BLOCK id) cat) (capture cat id)]
          [(cons (SUTTransition 'FINALIZE id) cat) (capture cat id)]
-         [(cons (SUTTransition 'UNBLOCK id) cat) (return id)])
+         [(cons (SUTTransition 'UNBLOCK id) cat) (return cat id)])
        t))
    (new-SUTCatState)
    1000))

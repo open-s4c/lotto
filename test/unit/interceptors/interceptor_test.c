@@ -21,6 +21,15 @@
 static mediator_t _mediator =
     (mediator_t){.id = 1};
 
+/* This disabled test still exercises the legacy context/category interceptor
+ * path, where generic intercepted operations are modeled as CAT_CALL. */
+static void
+expect_legacy_call_category(const capture_point *ctx)
+{
+    ENSURE(context_effective_category(ctx) == CAT_CALL &&
+           "expecting legacy CAT_CALL");
+}
+
 /*******************************************************************************
  * pthread_mutex_lock
  ******************************************************************************/
@@ -178,7 +187,7 @@ mediator_capture(mediator_t *m, capture_point *ctx)
             };
             return true;
         default:
-            ENSURE(context_effective_category(ctx) == CAT_CALL);
+            expect_legacy_call_category(ctx);
             m->plan = (struct plan){
                 .next    = ANY_TASK,
                 .actions = ACTION_RETURN | ACTION_YIELD | ACTION_RESUME,
@@ -205,7 +214,7 @@ mediator_resume(mediator_t *m, capture_point *ctx)
             break;
     }
 
-    ENSURE(context_effective_category(ctx) == CAT_CALL && "expecting CAT_CALL");
+    expect_legacy_call_category(ctx);
     printf("return %s\n", ctx->func);
 
     ENSURE(plan_next(m->plan) == ACTION_YIELD && "wrong plan");
@@ -216,7 +225,7 @@ mediator_resume(mediator_t *m, capture_point *ctx)
 void
 mediator_return(mediator_t *m, capture_point *ctx)
 {
-    ENSURE(context_effective_category(ctx) == CAT_CALL && "expecting CAT_CALL");
+    expect_legacy_call_category(ctx);
     ENSURE(plan_next(m->plan) == ACTION_RETURN && "wrong plan");
     plan_done(&m->plan);
 }

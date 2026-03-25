@@ -28,9 +28,9 @@
                   _trace_save
                   _trace_load
                   _stream_close))
-(require "sut_cat_automaton.rkt")
-(require "sut_automaton.rkt")
-(require "automaton.rkt")
+(require "../../../test/conformance/model/sut_cat_automaton.rkt")
+(require "../../../test/conformance/model/sut_automaton.rkt")
+(require "../../../test/conformance/model/automaton.rkt")
 
 (capture-signal! 'SIGABRT)
 (define (aborted?)

@@ -1,5 +1,3 @@
-add_subdirectory(util)
-
 add_executable(sequencer_test sequencer_test.c)
 target_link_libraries(
     sequencer_test

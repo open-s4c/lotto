@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <lotto/recorder/recorder_flat.h>
+#include <lotto/base/trace_flat.h>
 #include <lotto/sys/stream_impl.h>
 
 #define BUF_SIZE 2048
@@ -50,27 +50,27 @@ main()
                        .read  = test_buf_read,
                        .close = NULL};
 
-    trace_t *recorder = recorder_flat_create(&stream);
+    trace_t *trace = trace_flat_create(&stream);
 
     const char *msg = "hello";
 
     record_t *r = record_alloc(strlen(msg));
     r->kind     = RECORD_INFO;
-    int v       = trace_append(recorder, r);
-    assert(v == RECORDER_OK);
+    int v       = trace_append(trace, r);
+    assert(v == TRACE_OK);
     memcpy(r->data, msg, strlen(msg));
 
-    recorder_save(recorder);
+    trace_save(trace);
     r = (record_t *)test_buf;
     assert(strcmp(r->data, "hello") == 0);
 
-    recorder = recorder_flat_create(&stream);
-    recorder_load(recorder);
+    trace = trace_flat_create(&stream);
+    trace_load(trace);
 
-    record_t *record = trace_next(recorder, RECORD_ANY);
+    record_t *record = trace_next(trace, RECORD_ANY);
     assert(record != NULL);
     printf("%s\n", record->data);
-    trace_advance(recorder);
+    trace_advance(trace);
 
     return 0;
 }

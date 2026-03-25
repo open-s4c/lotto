@@ -25,7 +25,7 @@
 #include <lotto/modules/qemu/stubs.h>
 #include <lotto/unsafe/_sys.h>
 #include <lotto/unsafe/ghost.h>
-#include <lotto/unsafe/rogue.h>
+#include <lotto/unsafe/concurrent.h>
 
 #define LOGGER_FILE  "qemu_inst_measure.log"
 #define MAX_MEASURES 10000000ULL
@@ -136,7 +136,7 @@ measure_thread(void *data)
     uint64_t report_freq = WINDOW_SIZE;
 
     uint64_t counter = 0;
-    lotto_rogue({
+    lotto_concurrent({
         while (1) {
             rl_nanosleep(&duration, NULL);
             counter++;

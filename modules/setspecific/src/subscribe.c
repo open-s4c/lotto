@@ -22,7 +22,6 @@
 #include <lotto/sys/real.h>
 #include <lotto/sys/stdlib.h>
 #include <lotto/unsafe/ghost.h>
-#include <lotto/unsafe/rogue.h>
 #include <lotto/yield.h>
 #include <vsync/atomic/core.h>
 #include <vsync/atomic/dispatch.h>

@@ -10,7 +10,7 @@
 #include <lotto/qlotto/gdb/halter.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/time.h>
-#include <lotto/unsafe/rogue.h>
+#include <lotto/unsafe/concurrent.h>
 #include <vsync/atomic/core.h>
 
 #define INIT   0
@@ -24,7 +24,7 @@ void *
 gdb_server_thread(void *data)
 {
     vatomic32_write(&server_thread_created, INITED);
-    lotto_rogue({
+    lotto_concurrent({
         while (1) {
             if (gdb_execution_has_halted()) {
                 gdb_srv_handle_halted();

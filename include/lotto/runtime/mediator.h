@@ -57,16 +57,6 @@ void mediator_fini(mediator_t *m);
 
 bool mediator_is_any_task(mediator_t *m);
 
-/* returns true if it is the first detach call.
- */
-bool mediator_detach(mediator_t *m);
-
-/* returns true if not yet all nesting is over */
-bool mediator_attach(mediator_t *m);
-
-/* return true if between detach and attach */
-bool mediator_detached(const mediator_t *m);
-
 /* returns true if between capture and resume */
 bool mediator_in_capture(const mediator_t *m);
 

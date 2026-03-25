@@ -135,23 +135,6 @@ mediator_tls(struct metadata *md)
 }
 
 bool
-mediator_detach(mediator_t *m)
-{
-    return true;
-}
-bool
-mediator_attach(mediator_t *m)
-{
-    return true;
-}
-
-bool
-mediator_detached(const mediator_t *m)
-{
-    return false;
-}
-
-bool
 mediator_in_capture(const mediator_t *m)
 {
     return false;

@@ -21,7 +21,6 @@
 enum action {
     ACTION_NONE     = 0x000,
     ACTION_WAKE     = 0x001,
-    ACTION_DETACH   = 0x002,
     ACTION_BLOCK    = 0x004,
     ACTION_RETURN   = 0x008,
     ACTION_YIELD    = 0x010,

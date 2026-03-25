@@ -24,7 +24,7 @@
 // lotto
 #include <lotto/modules/qemu/stubs.h>
 #include <lotto/unsafe/_sys.h>
-#include <lotto/unsafe/disable.h>
+#include <lotto/unsafe/ghost.h>
 #include <lotto/unsafe/rogue.h>
 
 #define LOGGER_FILE  "qemu_inst_measure.log"

@@ -56,15 +56,15 @@ typedef struct capture_set_specific_event {
 typedef struct capture_point {
     chain_id src_chain; ///< Ingress phase carried from ingress chains
     type_id src_type;   ///< Normalized source event type
-    bool blocking; ///< Whether this semantic ingress event can block
-    task_id id;    ///< Task ID
-    task_id vid;   ///< Virtual task ID (NO_TASK if not available)
-    uintptr_t pc;  ///< Program counter at the interception
+    bool blocking;      ///< Whether this semantic ingress event can block
+    task_id id;         ///< Task ID
+    task_id vid;        ///< Virtual task ID (NO_TASK if not available)
+    uintptr_t pc;       ///< Program counter at the interception
 #if defined(QLOTTO_ENABLED)
     uint64_t icount; ///< Time shifter
     uint32_t pstate; ///< Processor state (EL at bits 2-3)
 #endif
-    const char *func;    ///< Debugging information for the intercepted operation
+    const char *func; ///< Debugging information for the intercepted operation
     uintptr_t func_addr; ///< Address associated with the intercepted operation
     struct sequencer_decision *decision; ///< Sequencer-only decision context
     union {

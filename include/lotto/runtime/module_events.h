@@ -36,9 +36,6 @@
 #ifndef EVENT_FORK_EXECVE
     #define EVENT_FORK_EXECVE 157
 #endif
-#ifndef EVENT_ROGUE
-    #define EVENT_ROGUE 158
-#endif
 #ifndef EVENT_AWAIT
     #define EVENT_AWAIT      159
     #define EVENT_SPIN_START 160

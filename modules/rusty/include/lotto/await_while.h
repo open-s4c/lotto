@@ -40,7 +40,7 @@
  * - Local variables can be compiled to use only a register, so again,
  *   please use ATOMICS for loop conditions!
  * - It looks for **ALL** the reads/writes, so avoid using extra `assert`s.
- *   If needed, add it to a lotto_disable region: "lotto/unsafe/disable.h".
+ *   If needed, add it to a lotto_ghost region: "lotto/unsafe/ghost.h".
  * - CMP_XCHG counts as a Read (or a Read+Write) only for the modified atomic.
  *   The local variable is ignored.
  *

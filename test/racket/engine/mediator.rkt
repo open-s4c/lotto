@@ -262,9 +262,9 @@
        (gen-ids-sequence ids n)))
 
 (define valid-actions
-  (list (gen-actions 'DETACH 'YIELD 'RESUME)
+  (list (gen-actions 'YIELD 'RESUME)
         (gen-actions 'WAKE 'YIELD 'RESUME)
-        (gen-actions 'WAKE 'DETACH 'RETURN 'YIELD 'RESUME)
+        (gen-actions 'WAKE 'RETURN 'YIELD 'RESUME)
         (gen-actions 'RETURN 'YIELD 'RESUME)
         (gen-actions 'YIELD 'RESUME)
         (gen-actions 'WAKE)
@@ -354,7 +354,7 @@
              (printf "~a\n" seq)
              (cond
                [(equal? cat 'CAT_TASK_CREATE)
-                (and (actions-match? act 'DETACH 'YIELD 'RESUME)
+                (and (actions-match? act 'YIELD 'RESUME)
                      (my-equal? nxt id)
                      (is-valid-resume cat (rest seq) kk))]
                [(equal? cat 'CAT_TASK_INIT)
@@ -362,7 +362,7 @@
                [(equal? cat 'CAT_TASK_FINI)
                 (and (actions-match? act 'WAKE) (my-not-equal? nxt id) (null? (rest seq)))]
                [(equal? cat 'CAT_TASK_BLOCK)
-                (and (actions-match? act 'WAKE 'DETACH 'RETURN 'YIELD 'RESUME)
+                (and (actions-match? act 'WAKE 'RETURN 'YIELD 'RESUME)
                      (my-not-equal? nxt id)
                      (is-valid-return cat (rest seq) kk))]
                [else

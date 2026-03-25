@@ -11,5 +11,4 @@ if(NOT ${LOTTO_RACKET_TESTS})
     return()
 endif()
 
-add_subdirectory(base)
 add_subdirectory(engine)

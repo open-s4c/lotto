@@ -9,7 +9,7 @@ function_test()
 {
     map_address_t addr;
     memory_map_address_lookup((uintptr_t)function_test, &addr);
-    assert(strstr(addr.name, "test/unit/engine/util/memory_map_test"));
+    assert(strstr(addr.name, "test/unit/base/memory_map_test"));
 }
 
 void

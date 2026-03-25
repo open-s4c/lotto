@@ -5,9 +5,9 @@
          ffi/unsafe)
 
 (require "mock/engine.rkt")
-(require "sut_automaton.rkt")
-(require "automaton.rkt")
-(require "resource.rkt")
+(require "../model/sut_automaton.rkt")
+(require "../model/automaton.rkt")
+(require "../model/resource.rkt")
 
 (capture-signal! 'SIGABRT)
 (define (aborted?)

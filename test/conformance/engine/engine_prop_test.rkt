@@ -5,9 +5,9 @@
          ffi/unsafe)
 
 (require "mock/engine.rkt")
-(require "sut_automaton.rkt")
-(require "sut_cat_automaton.rkt")
-(require "automaton.rkt")
+(require "../model/sut_automaton.rkt")
+(require "../model/sut_cat_automaton.rkt")
+(require "../model/automaton.rkt")
 (load-lib "libengine_component")
 
 (capture-signal! 'SIGABRT)

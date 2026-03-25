@@ -6,7 +6,7 @@
 #include <string.h>
 #include <time.h>
 
-#include <lotto/recorder/recorder_chunked.h>
+#include <lotto/base/trace_chunked.h>
 #include <lotto/sys/stream_chunked_impl.h>
 
 #define CHUNK_SIZE 4096
@@ -137,24 +137,23 @@ rand64()
 void
 write_test(stream_chunked_mock_t *mock)
 {
-    trace_t *recorder = recorder_chunked_create(&mock->s.s, 1);
-    const char *msg1  = "first";
-    record_t *r       = record_alloc(strlen(msg1) + 1);
-    r->kind           = RECORD_INFO;
+    trace_t *trace  = trace_chunked_create(&mock->s.s, 1);
+    const char *msg1 = "first";
+    record_t *r      = record_alloc(strlen(msg1) + 1);
+    r->kind          = RECORD_INFO;
     memcpy(r->data, msg1, strlen(msg1) + 1);
-    int v = trace_append(recorder, r);
-    assert(v == RECORDER_OK);
+    int v = trace_append(trace, r);
+    assert(v == TRACE_OK);
     const char *msg2 = "second";
     r                = record_alloc(strlen(msg2) + 1);
     r->kind          = RECORD_INFO;
     memcpy(r->data, msg2, strlen(msg2) + 1);
-    v = trace_append(recorder, r);
-    assert(v == RECORDER_OK);
-    // first chunk is already written
+    v = trace_append(trace, r);
+    assert(v == TRACE_OK);
     r = (record_t *)mock->test_buf[0];
     assert(strcmp(r->data, msg1) == 0);
-    recorder_save(recorder);
-    trace_destroy(recorder);
+    trace_save(trace);
+    trace_destroy(trace);
     r = (record_t *)mock->test_buf[1];
     assert(strcmp(r->data, msg2) == 0);
 }
@@ -166,50 +165,52 @@ read_test(stream_chunked_mock_t *mock)
     mock->current_chunk = 0;
     const char *msg1    = "first";
     const char *msg2    = "second";
-    trace_t *recorder   = recorder_chunked_create(&mock->s.s, 1);
-    recorder_load(recorder);
-    record_t *r = trace_next(recorder, RECORD_ANY);
+    trace_t *trace      = trace_chunked_create(&mock->s.s, 1);
+    trace_load(trace);
+    record_t *r = trace_next(trace, RECORD_ANY);
     assert(r);
     assert(strcmp(r->data, msg1) == 0);
-    trace_advance(recorder);
-    r = trace_next(recorder, RECORD_ANY);
+    trace_advance(trace);
+    r = trace_next(trace, RECORD_ANY);
     assert(r);
     assert(strcmp(r->data, msg2) == 0);
-    trace_destroy(recorder);
+    trace_destroy(trace);
 }
 
 static void
-_stress_fill(stream_chunked_mock_t *mock, trace_t *recorder,
+_stress_fill(stream_chunked_mock_t *mock, trace_t *trace,
              uint64_t total_records)
 {
+    (void)mock;
     for (uint64_t i = 0; i < total_records; i++) {
         uint64_t wiggle = rand64() % 32 + 1;
         for (uint64_t j = 0; j < wiggle; j++) {
             record_t *r = record_alloc(0);
             r->kind     = RECORD_INFO;
             r->clk      = 0;
-            assert(trace_append(recorder, r) == RECORDER_OK);
+            assert(trace_append(trace, r) == TRACE_OK);
         }
         for (uint64_t j = 0; j < wiggle; j++) {
-            trace_forget(recorder);
+            trace_forget(trace);
         }
         record_t *r = record_alloc(0);
         r->kind     = RECORD_INFO;
         r->clk      = i + 1;
-        assert(trace_append(recorder, r) == RECORDER_OK);
+        assert(trace_append(trace, r) == TRACE_OK);
     }
 }
 
 static void
-_stress_check(stream_chunked_mock_t *mock, trace_t *recorder,
+_stress_check(stream_chunked_mock_t *mock, trace_t *trace,
               uint64_t total_records)
 {
+    (void)mock;
     for (uint64_t i = 0; i < total_records; i++) {
-        record_t *r = trace_next(recorder, RECORD_ANY);
+        record_t *r = trace_next(trace, RECORD_ANY);
         assert(r && r->clk == i + 1);
-        trace_advance(recorder);
+        trace_advance(trace);
     }
-    assert(!trace_next(recorder, RECORD_ANY));
+    assert(!trace_next(trace, RECORD_ANY));
 }
 
 void
@@ -217,9 +218,9 @@ stress_update_test(stream_chunked_mock_t *mock)
 {
     uint64_t chunk_size    = rand64() % 8 + 1;
     uint64_t total_records = rand64() % 32 + 1;
-    trace_t *recorder      = recorder_chunked_create(&mock->s.s, chunk_size);
-    _stress_fill(mock, recorder, total_records);
-    _stress_check(mock, recorder, total_records);
+    trace_t *trace         = trace_chunked_create(&mock->s.s, chunk_size);
+    _stress_fill(mock, trace, total_records);
+    _stress_check(mock, trace, total_records);
 }
 
 void
@@ -227,14 +228,14 @@ stress_reload_test(stream_chunked_mock_t *mock)
 {
     uint64_t chunk_size    = rand64() % 8 + 1;
     uint64_t total_records = rand64() % 32 + 1;
-    trace_t *recorder      = recorder_chunked_create(&mock->s.s, chunk_size);
-    _stress_fill(mock, recorder, total_records);
-    recorder_save(recorder);
-    trace_destroy(recorder);
+    trace_t *trace         = trace_chunked_create(&mock->s.s, chunk_size);
+    _stress_fill(mock, trace, total_records);
+    trace_save(trace);
+    trace_destroy(trace);
     stream_close(&mock->s.s);
-    recorder = recorder_chunked_create(&mock->s.s, chunk_size);
-    recorder_load(recorder);
-    _stress_check(mock, recorder, total_records);
+    trace = trace_chunked_create(&mock->s.s, chunk_size);
+    trace_load(trace);
+    _stress_check(mock, trace, total_records);
 }
 
 int

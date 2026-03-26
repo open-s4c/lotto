@@ -7,9 +7,8 @@
 
 #include <stdint.h>
 
-#include <dice/events/memaccess.h>
 #include <lotto/base/arg.h>
-#include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/events.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 
@@ -71,51 +70,13 @@ context_memaccess_sized_arg(size_t size, uint64_t value)
 static inline uintptr_t
 context_memaccess_addr(const capture_point *cp)
 {
-    switch (cp->src_type) {
-        case EVENT_MA_READ:
-            return (uintptr_t)((struct ma_read_event *)cp->payload)->addr;
-        case EVENT_MA_WRITE:
-            return (uintptr_t)((struct ma_write_event *)cp->payload)->addr;
-        case EVENT_MA_AREAD:
-            return (uintptr_t)((struct ma_aread_event *)cp->payload)->addr;
-        case EVENT_MA_AWRITE:
-            return (uintptr_t)((struct ma_awrite_event *)cp->payload)->addr;
-        case EVENT_MA_RMW:
-            return (uintptr_t)((struct ma_rmw_event *)cp->payload)->addr;
-        case EVENT_MA_XCHG:
-            return (uintptr_t)((struct ma_xchg_event *)cp->payload)->addr;
-        case EVENT_MA_CMPXCHG:
-        case EVENT_MA_CMPXCHG_WEAK:
-            return (uintptr_t)((struct ma_cmpxchg_event *)cp->payload)->addr;
-        default:
-            ASSERT(0);
-            return 0;
-    }
+    return memaccess_addr(cp);
 }
 
 static inline size_t
 context_memaccess_size(const capture_point *cp)
 {
-    switch (cp->src_type) {
-        case EVENT_MA_READ:
-            return ((struct ma_read_event *)cp->payload)->size;
-        case EVENT_MA_WRITE:
-            return ((struct ma_write_event *)cp->payload)->size;
-        case EVENT_MA_AREAD:
-            return ((struct ma_aread_event *)cp->payload)->size;
-        case EVENT_MA_AWRITE:
-            return ((struct ma_awrite_event *)cp->payload)->size;
-        case EVENT_MA_RMW:
-            return ((struct ma_rmw_event *)cp->payload)->size;
-        case EVENT_MA_XCHG:
-            return ((struct ma_xchg_event *)cp->payload)->size;
-        case EVENT_MA_CMPXCHG:
-        case EVENT_MA_CMPXCHG_WEAK:
-            return ((struct ma_cmpxchg_event *)cp->payload)->size;
-        default:
-            ASSERT(0);
-            return 0;
-    }
+    return memaccess_size(cp);
 }
 
 static inline arg_t

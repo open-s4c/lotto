@@ -6,14 +6,19 @@ macro(add_runtime_module)
     set(RUNTIME_MODULE_LTO ON)
     if(DEFINED RUNTIME_MODULE_LTO_${MODULE_NAME})
         set(RUNTIME_MODULE_LTO ${RUNTIME_MODULE_LTO_${MODULE_NAME}})
-	endif()
+    endif()
     set(RUNTIME_MODULE_SOURCES ${ARGV})
     set(RUNTIME_MODULE_TARGET lotto-runtime-${MODULE_NAME})
+    set(RUNTIME_VERBOSE_MODULE_TARGET lotto-runtime-verbose-${MODULE_NAME})
     message(STATUS "Module ${MODULE_SLOT} (runtime): ${MODULE_NAME}")
 
     add_library(${RUNTIME_MODULE_TARGET} ${RUNTIME_MODULE_TYPE}
                                          ${RUNTIME_MODULE_SOURCES})
+    add_library(${RUNTIME_VERBOSE_MODULE_TARGET} ${RUNTIME_MODULE_TYPE}
+                                                 ${RUNTIME_MODULE_SOURCES})
     target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto.h dice.h)
+    target_link_libraries(${RUNTIME_VERBOSE_MODULE_TARGET} PRIVATE lotto.h
+                                                                 dice.h)
 
     # enable LTO for this module?
     set(LTO FALSE)
@@ -24,9 +29,19 @@ macro(add_runtime_module)
 	endif()
 	set_property(TARGET ${RUNTIME_MODULE_TARGET}
 		PROPERTY INTERPROCEDURAL_OPTIMIZATION ${LTO})
+	set_property(TARGET ${RUNTIME_VERBOSE_MODULE_TARGET}
+		PROPERTY INTERPROCEDURAL_OPTIMIZATION ${LTO})
 
     target_compile_definitions(
         ${RUNTIME_MODULE_TARGET}
+        PRIVATE DICE_MULTIFILE_MODULE #
+                LOTTO_RUNTIME_MODULE=1 #
+                LOTTO_DRIVER_MODULE=0 #
+                DICE_MODULE_SLOT=${MODULE_SLOT} #
+                LOGGER_PREFIX="${MODULE_NAME}" #
+                LOGGER_DISABLE)
+    target_compile_definitions(
+        ${RUNTIME_VERBOSE_MODULE_TARGET}
         PRIVATE DICE_MULTIFILE_MODULE #
                 LOTTO_RUNTIME_MODULE=1 #
                 LOTTO_DRIVER_MODULE=0 #
@@ -37,13 +52,21 @@ macro(add_runtime_module)
             ${RUNTIME_MODULE_TARGET}
             PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
                                  "${LOTTO_MODULE_BUILD_DIR}")
+        set_target_properties(
+            ${RUNTIME_VERBOSE_MODULE_TARGET}
+            PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
+                                 "${LOTTO_MODULE_BUILD_DIR}")
         install(TARGETS ${RUNTIME_MODULE_TARGET}
+                DESTINATION "${LOTTO_MODULE_INSTALL_DIR}")
+        install(TARGETS ${RUNTIME_VERBOSE_MODULE_TARGET}
                 DESTINATION "${LOTTO_MODULE_INSTALL_DIR}")
         if(TARGET lotto-cli)
             add_dependencies(lotto-cli ${RUNTIME_MODULE_TARGET})
+            add_dependencies(lotto-cli ${RUNTIME_VERBOSE_MODULE_TARGET})
         endif()
     else()
-        add_lotto_builtin(${RUNTIME_MODULE_TARGET})
+        add_lotto_builtin(${RUNTIME_MODULE_TARGET}
+                          ${RUNTIME_VERBOSE_MODULE_TARGET})
     endif()
 endmacro()
 

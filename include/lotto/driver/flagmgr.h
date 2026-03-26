@@ -11,6 +11,7 @@
 #include <lotto/driver/args.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/sys/assert.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/string.h>
 #include <lotto/util/macros.h>
 
@@ -134,6 +135,49 @@ flag_t flag_before_run();
 flag_t flag_after_run();
 flag_t flag_logger_file();
 
+static inline uint64_t
+flag_verbose_count(const flags_t *flags)
+{
+    return flags_get_uval(flags, flag_verbose());
+}
+
+static inline bool
+flag_verbose_enabled(const flags_t *flags)
+{
+    return flag_verbose_count(flags) > 0;
+}
+
+static inline enum logger_level
+flag_verbose_logger_level(const flags_t *flags)
+{
+    uint64_t verbose = flag_verbose_count(flags);
+    if (verbose >= 2) {
+        return LOGGER_DEBUG;
+    }
+    if (verbose >= 1) {
+        return LOGGER_INFO;
+    }
+    return LOGGER_ERROR;
+}
+
+static inline const char *
+flag_verbose_logger_level_str(const flags_t *flags)
+{
+    switch (flag_verbose_logger_level(flags)) {
+        case LOGGER_DEBUG:
+            return "debug";
+        case LOGGER_INFO:
+            return "info";
+        case LOGGER_WARN:
+            return "warn";
+        case LOGGER_ERROR:
+            return "error";
+        default:
+            ASSERT(false && "unexpected logger level");
+            return "error";
+    }
+}
+
 #define _FLAGMGR_CALLBACK(name, CALLBACK)                                      \
     static void _flagmgr_callback_##name(struct value v, void *__)             \
     {                                                                          \
@@ -222,7 +266,9 @@ flag_t flag_logger_file();
                          "maximum number of rounds", flag_uval(MAX_ROUNDS))
 
 #define DECLARE_FLAG_VERBOSE                                                   \
-    DECLARE_COMMAND_FLAG(VERBOSE, "v", "verbose", "", "verbose", flag_off())
+    DECLARE_COMMAND_FLAG(VERBOSE, "v", "verbose", "",                          \
+                         "increase verbosity (repeat for more detail)",        \
+                         flag_uval(0))
 
 #define DECLARE_FLAG_REPLAY_GOAL                                               \
     DECLARE_COMMAND_FLAG(REPLAY_GOAL, "g", "goal", "INT", "replay goal",       \

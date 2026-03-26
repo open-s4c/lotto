@@ -53,6 +53,7 @@ typedef bool (*module_predicate_f)(const module_t *, void *);
 typedef struct preload_module_arg_s {
     module_predicate_f module_predicate;
     void *module_predicate_arg;
+    bool runtime_verbose;
 } preload_module_arg_t;
 
 typedef struct module_preloadable_memory_arg_s {
@@ -172,6 +173,10 @@ _preload_module(module_t *module, void *arg)
     preload_module_arg_t *args          = (preload_module_arg_t *)arg;
     module_predicate_f module_predicate = args->module_predicate;
     void *module_predicate_arg          = args->module_predicate_arg;
+    if ((module->kind & MODULE_KIND_RUNTIME) &&
+        module->verbose != args->runtime_verbose) {
+        return 0;
+    }
     if (module_predicate == NULL ||
         module_predicate(module, module_predicate_arg)) {
         _preload_lib(module->path, true);
@@ -196,7 +201,7 @@ _preload_libs(const char *dir, const libspec_t libspecs[])
 }
 
 static void
-_preload_memmgr_plugins(const char *chain, bool runtime)
+_preload_memmgr_plugins(const char *chain, bool runtime, bool verbose)
 {
     if (chain == NULL || chain[0] == '\0') {
         return;
@@ -212,7 +217,8 @@ _preload_memmgr_plugins(const char *chain, bool runtime)
         lotto_module_foreach_reverse(
             _preload_module, &(preload_module_arg_t){
                                  .module_predicate = module_preloadable_memory,
-                                 .module_predicate_arg = &arg});
+                                 .module_predicate_arg = &arg,
+                                 .runtime_verbose      = verbose});
         //        ENSURE(arg.counter == 1 && "could not load a memory plugin");
     }
 }
@@ -305,7 +311,7 @@ _set_dice_plugin_modules_from_preload(void)
 }
 
 void
-preload(const char *dir, bool verbose, bool do_preload_plotto,
+preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
         const char *memmgr_chain_runtime, const char *memmgr_chain_user)
 {
     const char *cli_preload = getenv(LOTTO_CLI_PRELOAD);
@@ -317,7 +323,7 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
          .content = libtsano_so,
          .len     = libtsano_so_len},
 #if !defined(LOTTO_EMBED_LIB) || LOTTO_EMBED_LIB == 1
-        verbose ?
+        verbose > 0 ?
         (driver_file_t){.path    = LIBLOTTO,
                         .content = liblotto_runtime_verbose_so,
                         .len     = liblotto_runtime_verbose_so_len} :
@@ -332,7 +338,9 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
                  (const char *[]){LIBTSAN0, LIBTSAN2, LIBCLANG_RT_TSAN, NULL});
     /* preload libraries */
 
-    const char *logger_level = verbose ? "debug" : "error";
+    const char *logger_level = verbose >= 2 ? "debug" :
+                               verbose >= 1 ? "info" :
+                                              "error";
     envvar_t vars[]          = {{"LOTTO_LOGGER_LEVEL", logger_level},
                                 {"LOTTO_TEMP_DIR", dir},
                                 {NULL}};
@@ -354,8 +362,8 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
     _preload_lib(LIBASAN, true);
 #endif
     /* preload memmgr chains */
-    _preload_memmgr_plugins(memmgr_chain_runtime, true);
-    _preload_memmgr_plugins(memmgr_chain_user, false);
+    _preload_memmgr_plugins(memmgr_chain_runtime, true, verbose > 0);
+    _preload_memmgr_plugins(memmgr_chain_user, false, verbose > 0);
 
     /* explicit runtime loads should have first-preload precedence */
     _preload_list(getenv(LOTTO_LOAD_RUNTIME));
@@ -371,7 +379,8 @@ preload(const char *dir, bool verbose, bool do_preload_plotto,
         lotto_module_foreach_reverse(
             _preload_module,
             &(preload_module_arg_t){.module_predicate =
-                                        module_preloadable_not_memory});
+                                        module_preloadable_not_memory,
+                                    .runtime_verbose = verbose > 0});
     }
     _set_dice_plugin_modules_from_preload();
 

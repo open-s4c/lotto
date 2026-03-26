@@ -28,7 +28,8 @@ fn replay(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
     envvar_set! {
         "LOTTO_LOGGER_FILE" => flags.get_sval(&FLAG_LOGGER_FILE),
     };
-    cli::logger();
+    let verbose = flags.get_uval(&FLAG_VERBOSE);
+    cli::logger(verbose);
 
     println!("trace file: {}", flags.get_sval(&FLAG_INPUT));
 
@@ -82,7 +83,7 @@ fn replay(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
 
     preload(
         flags.get_sval(&FLAG_TEMPORARY_DIRECTORY),
-        flags.is_on(&FLAG_VERBOSE),
+        verbose,
         !flags.is_on(&FLAG_NO_PRELOAD),
         flags.get_sval(&flag_memmgr_runtime()),
         flags.get_sval(&flag_memmgr_user()),

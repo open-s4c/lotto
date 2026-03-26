@@ -151,8 +151,8 @@ pub static FLAG_VERBOSE: FlagKey = FlagKey::new(
     c"v",
     c"verbose",
     c"",
-    c"verbose",
-    Value::Bool(false),
+    c"increase verbosity (repeat for more detail)",
+    Value::U64(0),
     &StrConverter::None,
     None,
 );

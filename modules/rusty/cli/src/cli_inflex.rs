@@ -33,7 +33,8 @@ use rinflex::error::Error;
 )]
 fn inflex(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
     envvar_set!("LOTTO_LOGGER_FILE" => flags.get_sval(&FLAG_LOGGER_FILE));
-    cli::logger();
+    let verbose = flags.get_uval(&FLAG_VERBOSE);
+    cli::logger(verbose);
 
     let input = flags.get_sval(&FLAG_INPUT).to_string();
     let output = flags.get_sval(&FLAG_INPUT).to_string();
@@ -45,7 +46,7 @@ fn inflex(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
 
     preload(
         &tempdir,
-        flags.is_on(&FLAG_VERBOSE),
+        verbose,
         !flags.is_on(&FLAG_NO_PRELOAD),
         flags.get_sval(&flag_memmgr_runtime()),
         flags.get_sval(&flag_memmgr_user()),

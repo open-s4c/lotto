@@ -64,11 +64,11 @@ endmacro()
 
 add_runtime(lotto lotto-runtime)
 add_runtime(lotto-verbose lotto-runtime-verbose)
-target_compile_definitions(lotto-verbose PRIVATE -DLOTTO_VERBOSE)
+target_compile_definitions(lotto PRIVATE -DLOGGER_DISABLE)
 
 add_library(runtime-module.o OBJECT module.c)
 
-function(add_lotto_builtin LIB)
+function(add_lotto_builtin LIB VERBOSE_LIB)
     target_link_libraries(lotto PRIVATE ${LIB})
-    target_link_libraries(lotto-verbose PRIVATE ${LIB})
+    target_link_libraries(lotto-verbose PRIVATE ${VERBOSE_LIB})
 endfunction()

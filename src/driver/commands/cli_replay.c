@@ -26,6 +26,8 @@
 int
 replay(args_t *args, flags_t *flags)
 {
+    uint64_t verbose = flag_verbose_count(flags);
+
     setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, flag_logger_file()),
            true);
 
@@ -48,8 +50,7 @@ replay(args_t *args, flags_t *flags)
 
     args = record_args(first);
 
-    preload(flags_get_sval(flags, flag_temporary_directory()),
-            flags_is_on(flags, flag_verbose()),
+    preload(flags_get_sval(flags, flag_temporary_directory()), verbose,
             !flags_is_on(flags, flag_no_preload()),
             flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
@@ -73,7 +74,7 @@ replay(args_t *args, flags_t *flags)
     char var[RECORD_GRANULARITIES_MAX_LEN];
     record_granularities_str(record_granularity, var);
     setenv("LOTTO_RECORD_GRANULARITY", var, true);
-    if (flags_is_on(flags, flag_verbose())) {
+    if (verbose > 0) {
         sys_fprintf(stdout, "[lotto] replaying: ");
         args_print(args);
         sys_fprintf(stdout, "\n");

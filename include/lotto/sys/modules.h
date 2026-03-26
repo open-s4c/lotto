@@ -21,6 +21,7 @@ typedef struct module_s {
     char *name; //< module name, e.g. 'priority'
     char *path; //< module path, e.g. '/PATH/TO/liblotto_priority_engine.so'
     module_kind_t kind; //< module kind
+    bool dbg;           //< runtime dbg variant
     bool shadowed;      //< whether it is shadowed by another module lib file
     bool disabled; //< disabled by explicit user module selection, or failed to
                    // load

@@ -28,7 +28,7 @@ macro(add_driver_dependencies TARGET)
         "${TARGET}"
         blob-tsano
         blob-lotto
-        blob-lotto-verbose
+        blob-lotto-dbg
         ${ARGN})
     target_include_directories(${TARGET} PUBLIC ${CMAKE_BINARY_DIR}/include)
 endmacro()

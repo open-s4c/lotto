@@ -28,6 +28,16 @@ set(ENGINE_DRIVER_SRCS
 message(STATUS "Module ${MODULE_SLOT} (runtime): ${MODULE_NAME}")
 add_module_object(lotto-runtime-engine.o ${MODULE_SLOT} ${ENGINE_RUNTIME_SRCS})
 target_link_libraries(lotto-runtime-engine.o PRIVATE lotto.h lotto-src.h dice.h)
+target_compile_definitions(lotto-runtime-engine.o PRIVATE LOGGER_PREFIX="engine"
+                                                        LOGGER_DISABLE)
+
+message(STATUS "Module ${MODULE_SLOT} (runtime-dbg): ${MODULE_NAME}")
+add_module_object(lotto-runtime-dbg-engine.o ${MODULE_SLOT}
+                  ${ENGINE_RUNTIME_SRCS})
+target_link_libraries(lotto-runtime-dbg-engine.o PRIVATE lotto.h lotto-src.h
+                                                       dice.h)
+target_compile_definitions(lotto-runtime-dbg-engine.o PRIVATE
+                                                         LOGGER_PREFIX="engine")
 
 message(STATUS "Module ${MODULE_SLOT} (driver) : ${MODULE_NAME}")
 add_module_object(lotto-driver-engine.o ${MODULE_SLOT} ${ENGINE_DRIVER_SRCS})

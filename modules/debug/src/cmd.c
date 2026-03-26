@@ -38,7 +38,8 @@ DECLARE_COMMAND_FLAG(GDB_COMMAND, "", "gdb-command", "",
 int
 debug(args_t *args, flags_t *flags)
 {
-    const char *cmd = flags_get_sval(flags, flag_before_run());
+    uint64_t verbose = flag_verbose_count(flags);
+    const char *cmd  = flags_get_sval(flags, flag_before_run());
     if (cmd && cmd[0]) {
         sys_setenv("LOTTO_DISABLE", "true", true);
         int ret = sys_system(cmd);
@@ -63,21 +64,25 @@ debug(args_t *args, flags_t *flags)
     sys_setenv("LOTTO_DEBUG_SYMBOL_FILE",
                flags_get_sval(flags, FLAG_SYMBOL_FILE), true);
     sys_setenv("LOTTO_DEBUG_PLUGIN_PATHS", DEBUG_PLUGIN_PATHS, true);
-    const char *argv[] = {gdb,
-                          "-x",
-                          filename,
-                          "--args",
-                          args->arg0,
-                          "replay",
-                          "-i",
-                          input,
-                          "--temporary-directory",
-                          flags_get_sval(flags, flag_temporary_directory()),
-                          flags_is_on(flags, flag_verbose()) ? "-v" : NULL,
-                          NULL,
-                          NULL};
+    size_t argc = 11 + (size_t)verbose + 2;
+    char **argv = sys_calloc(argc, sizeof(char *));
+    size_t i    = 0;
+    argv[i++]   = (char *)gdb;
+    argv[i++]   = "-x";
+    argv[i++]   = filename;
+    argv[i++]   = "--args";
+    argv[i++]   = args->arg0;
+    argv[i++]   = "replay";
+    argv[i++]   = "-i";
+    argv[i++]   = (char *)input;
+    argv[i++]   = "--temporary-directory";
+    argv[i++]   = (char *)flags_get_sval(flags, flag_temporary_directory());
+    for (uint64_t n = 0; n < verbose; n++) {
+        argv[i++] = "-v";
+    }
+    argv[i] = NULL;
     if (flags_is_on(flags, FLAG_GDB_USE_MI)) {
-        sys_memmove(&argv[2], &argv[1], sizeof(argv) - 2 * sizeof(argv[0]));
+        sys_memmove(&argv[2], &argv[1], i * sizeof(argv[0]));
         argv[1] = "-i=mi";
     }
     int res = sys_system("command -v gdb > /dev/null 2>&1");
@@ -85,6 +90,7 @@ debug(args_t *args, flags_t *flags)
         sys_fprintf(
             stderr,
             "Unable to find gdb. Please install gdb or add it to PATH.\n");
+        sys_free(argv);
         return res;
     }
 
@@ -92,6 +98,7 @@ debug(args_t *args, flags_t *flags)
     if (res != 0) {
         sys_fprintf(stderr, "gdb unexpectedly quit with: %d\n", res);
     }
+    sys_free(argv);
 
     cmd = flags_get_sval(flags, flag_after_run());
     if (cmd && cmd[0]) {

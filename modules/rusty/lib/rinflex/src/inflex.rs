@@ -369,7 +369,7 @@ pub fn postexec(
 pub fn preload(flags: &Flags) {
     lotto::cli::preload(
         flags.get_sval(&FLAG_TEMPORARY_DIRECTORY),
-        flags.is_on(&FLAG_VERBOSE),
+        flags.get_uval(&FLAG_VERBOSE),
         !flags.is_on(&FLAG_NO_PRELOAD),
         flags.get_sval(&flag_memmgr_runtime()),
         flags.get_sval(&flag_memmgr_user()),

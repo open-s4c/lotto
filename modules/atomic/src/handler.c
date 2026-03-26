@@ -1,9 +1,8 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
+#include <dice/events/memaccess.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/sequencer.h>
-#include <lotto/runtime/memaccess_payload.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
 #include <lotto/util/macros.h>
 
 STATIC void
@@ -38,8 +37,30 @@ _atomic_handle(const capture_point *cp, event_t *e)
             }
             break;
 
+        case CHAIN_INGRESS_AFTER:
+            /* _AFTER atomic events are informative: the operation has already
+             * happened, so handlers may observe its result, but the sequencer
+             * should not treat this point as a scheduling decision. Keep it
+             * non-change-point and readonly. */
+            switch (cp->src_type) {
+                case EVENT_MA_AREAD:
+                case EVENT_MA_AWRITE:
+                case EVENT_MA_XCHG:
+                case EVENT_MA_CMPXCHG:
+                case EVENT_MA_RMW:
+                case EVENT_MA_FENCE:
+                    if (!e->is_chpt) {
+                        e->is_chpt  = false;
+                        e->readonly = true;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            break;
+
         default:
             break;
     }
 }
-REGISTER_SEQUENCER_HANDLER(_atomic_handle)
+ON_SEQUENCER_CAPTURE(_atomic_handle)

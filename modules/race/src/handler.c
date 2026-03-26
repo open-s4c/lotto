@@ -248,7 +248,7 @@ race_check(const capture_point *cp, clk_t clk)
             }
             break;
 
-        case CAPTURE_AFTER:
+        case CHAIN_INGRESS_AFTER:
             switch (cp->src_type) {
                 case EVENT_MA_CMPXCHG:
                 case EVENT_MA_AWRITE:

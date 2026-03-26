@@ -73,14 +73,15 @@ PS_SUBSCRIBE(CHAIN_INGRESS_BEFORE, ANY_EVENT, {
 })
 PS_SUBSCRIBE(CHAIN_INGRESS_AFTER, ANY_EVENT, {
     capture_point *cp = EVENT_PAYLOAD(cp);
-    ASSERT(cp->src_type == type);
+    cp->src_chain     = chain;
+    cp->src_type      = type;
 
+    mediator_t *m = mediator_get(md, true);
     if (cp->blocking) {
-        mediator_t *m = mediator_get(md, true);
         logger_debugf("[%lu] return from '%s'\n", m->id, cp->func);
         mediator_return(m, cp);
-        _intercept_resume(m, cp);
     }
+    _intercept_resume(m, cp);
     return PS_STOP_CHAIN;
 })
 

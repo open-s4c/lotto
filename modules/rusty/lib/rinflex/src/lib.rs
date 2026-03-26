@@ -46,7 +46,7 @@ impl Transition {
         Transition {
             id: TaskId::new(ctx.id),
             src_type: ctx.event_type(),
-            after: u32::from(ctx.src_chain) == raw::CAPTURE_AFTER,
+            after: u32::from(ctx.src_chain) == raw::CHAIN_INGRESS_AFTER,
             pc: StableAddress::with_method(ctx.pc, StableAddressMethod::STABLE_ADDRESS_METHOD_MAP),
         }
     }

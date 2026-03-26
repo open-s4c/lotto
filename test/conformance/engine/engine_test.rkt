@@ -27,7 +27,8 @@
         (cast (prefix-symbol "ACTION_" sym) _action _uint32)))
   (foldl + 0 (for/list ([sym syms]) (get-sym sym))))
 
-(define CAPTURE_BEFORE 5)
+(define CHAIN_INGRESS_EVENT 9)
+(define CHAIN_INGRESS_BEFORE 10)
 (define EVENT_MA_WRITE 31)
 (define EVENT_TASK_INIT 170)
 (define EVENT_TASK_FINI 171)
@@ -42,8 +43,8 @@
    [pc _uintptr_t]
    [func _string]
    [func_addr _uintptr_t]
-   [payload _pointer]
-   [decision _pointer]))
+   [decision _pointer]
+   [payload _pointer]))
 (define (alloc-capture_point)
   (cast (malloc 'raw (ctype-sizeof _capture_point))
         _pointer
@@ -72,7 +73,9 @@
 (define (new-cp id [cat 'CAT_NONE] [blocking #f])
   (let ([cp (alloc-capture_point)])
     (call sys_memset cp 0 (ctype-sizeof _capture_point))
-    (set-capture_point-src_chain! cp (if (equal? cat 'CAT_NONE) 0 CAPTURE_BEFORE))
+    (set-capture_point-src_chain! cp (if (equal? cat 'CAT_NONE)
+                                         CHAIN_INGRESS_EVENT
+                                         CHAIN_INGRESS_BEFORE))
     (set-capture_point-src_type! cp (cat->type cat))
     (set-capture_point-blocking! cp (if blocking 1 0))
     (set-capture_point-id! cp id)

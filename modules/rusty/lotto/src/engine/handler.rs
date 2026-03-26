@@ -316,7 +316,9 @@ pub enum EventArgs {
 impl EventArgs {
     pub fn new(ctx: &CapturePoint) -> Self {
         match ctx.event_type().to_raw_value() {
-            raw::EVENT_MA_AREAD if u32::from(ctx.src_chain) != raw::CAPTURE_AFTER => {
+            raw::EVENT_MA_AREAD
+                if u32::from(ctx.src_chain) != raw::CHAIN_INGRESS_AFTER =>
+            {
                 let addr = get_addr_from_context(ctx, /* addr_id */ 0);
                 let size = get_size_from_context(ctx, /* size_id */ 1);
                 match addr {
@@ -336,7 +338,7 @@ impl EventArgs {
                     _ => EventArgs::NoChanges,
                 }
             }
-            raw::EVENT_MA_RMW if u32::from(ctx.src_chain) != raw::CAPTURE_AFTER => {
+            raw::EVENT_MA_RMW if u32::from(ctx.src_chain) != raw::CHAIN_INGRESS_AFTER => {
                 let addr = match get_addr_from_context(ctx, /* addr_id */ 0) {
                     Ok(addr) => Address(addr),
                     _ => return EventArgs::NoChanges,
@@ -348,7 +350,9 @@ impl EventArgs {
                 let new_value = get_new_value_after_rmw(ctx, &addr, &size, value_in_ctx);
                 EventArgs::AddressValue(AddressValueCatEvent::BeforeRMW, addr, size, new_value)
             }
-            raw::EVENT_MA_AWRITE if u32::from(ctx.src_chain) != raw::CAPTURE_AFTER => {
+            raw::EVENT_MA_AWRITE
+                if u32::from(ctx.src_chain) != raw::CHAIN_INGRESS_AFTER =>
+            {
                 let addr = get_addr_from_context(ctx, /* addr_id */ 0);
                 let size = get_size_from_context(ctx, /* size_id */ 1);
                 let value =
@@ -374,7 +378,7 @@ impl EventArgs {
                 }
             }
             raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK
-                if u32::from(ctx.src_chain) != raw::CAPTURE_AFTER =>
+                if u32::from(ctx.src_chain) != raw::CHAIN_INGRESS_AFTER =>
             {
                 let addr = get_addr_from_context(ctx, /* addr_id */ 0);
                 let size = get_size_from_context(ctx, /* size_id */ 1);
@@ -394,7 +398,7 @@ impl EventArgs {
                     _ => EventArgs::NoChanges,
                 }
             }
-            raw::EVENT_MA_XCHG if u32::from(ctx.src_chain) != raw::CAPTURE_AFTER => {
+            raw::EVENT_MA_XCHG if u32::from(ctx.src_chain) != raw::CHAIN_INGRESS_AFTER => {
                 let addr = get_addr_from_context(ctx, /* addr_id */ 0);
                 let size = get_size_from_context(ctx, /* size_id */ 1);
                 let value = get_value_from_context(ctx, /* value_id */ 2, size);

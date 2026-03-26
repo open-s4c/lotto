@@ -6,8 +6,6 @@
 #include <dice/chains/intercept.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>
-
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/callrec.h>
 #include <lotto/base/record.h>
 #include <lotto/base/trace.h>
@@ -16,7 +14,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/modules/time/events.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/real.h>
 #include <lotto/sys/sched.h>
 #include <lotto/unsafe/time.h>

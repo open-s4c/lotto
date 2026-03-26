@@ -1,4 +1,3 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
 #include <lotto/engine/sequencer.h>
 #include <lotto/modules/blocking/blocking.h>
@@ -13,4 +12,4 @@ _impasse_handle(const capture_point *cp, event_t *e)
     logger_errorf("Deadlock detected! (impasse)\n");
     e->reason = REASON_IMPASSE;
 }
-REGISTER_SEQUENCER_HANDLER(_impasse_handle);
+ON_SEQUENCER_CAPTURE(_impasse_handle);

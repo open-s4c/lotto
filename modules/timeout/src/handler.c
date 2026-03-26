@@ -1,9 +1,8 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
 #include <dice/module.h>
 #include <lotto/engine/clock.h>
-#include <lotto/engine/sequencer.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/timeout/timeout.h>
 
@@ -91,7 +90,7 @@ _timeout_handle(const capture_point *cp, event_t *e)
     }
     _time_leap(&e->tset);
 }
-REGISTER_SEQUENCER_HANDLER(_timeout_handle);
+ON_SEQUENCER_CAPTURE(_timeout_handle);
 
 /*******************************************************************************
  * interface

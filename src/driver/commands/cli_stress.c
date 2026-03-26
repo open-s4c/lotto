@@ -53,8 +53,6 @@ stress(args_t *args, flags_t *flags)
 
     envvar_t vars[] = {
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
-        {"LOTTO_LOGGER_BLOCK",
-         .sval = flags_get_sval(flags, flag_logger_block())},
         {NULL}};
     envvar_set(vars, true);
 
@@ -108,7 +106,6 @@ ON_DRIVER_REGISTER_COMMANDS({
                     flag_rounds(),
                     flag_temporary_directory(),
                     flag_no_preload(),
-                    flag_logger_block(),
                     flag_before_run(),
                     flag_after_run(),
                     flag_logger_file(),

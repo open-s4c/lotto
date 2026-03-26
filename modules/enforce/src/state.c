@@ -1,9 +1,8 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/marshable.h>
 #include <lotto/base/string.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/enforce/state.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 /*******************************************************************************

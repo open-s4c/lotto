@@ -200,4 +200,4 @@ _handle(const capture_point *ctx, event_t *cp)
     }
     _save(ctx, cp);
 }
-REGISTER_SEQUENCER_HANDLER(_handle)
+ON_SEQUENCER_CAPTURE(_handle)

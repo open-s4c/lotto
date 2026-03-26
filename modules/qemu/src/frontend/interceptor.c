@@ -6,8 +6,8 @@
 #include <lotto/base/context.h>
 #include <lotto/base/reason.h>
 #include <lotto/base/task_id.h>
-#include <lotto/engine/sequencer.h>
 #include <lotto/engine/prng.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/modules/qemu/cpustatecc.h>
 #include <lotto/modules/qemu/perf.h>
 #include <lotto/modules/qemu/util.h>
@@ -119,7 +119,7 @@ _handler(const context_t *ctx, event_t *e)
             break;
     }
 }
-REGISTER_HANDLER_EXTERNAL(_handler);
+ON_SEQUENCER_CAPTURE(_handler);
 
 void
 qlotto_set_armcpu(unsigned int cpu_index, void *armcpu_v)

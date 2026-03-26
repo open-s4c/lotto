@@ -1,15 +1,15 @@
 #include <errno.h>
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
+
 #include "state.h"
-#include <lotto/engine/sequencer.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/mutex/events.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 struct mtx {
@@ -201,26 +201,6 @@ _mutex_event_type(const capture_point *cp)
     return cp->src_type;
 }
 
-static uint64_t
-_mutex_addr(const capture_point *cp)
-{
-    ASSERT(cp != NULL);
-    switch (_mutex_event_type(cp)) {
-        case EVENT_MUTEX_ACQUIRE:
-            return (uint64_t)(uintptr_t)((struct mutex_acquire_event *)cp->payload)
-                ->addr;
-        case EVENT_MUTEX_TRYACQUIRE:
-            return (uint64_t)(uintptr_t)((struct mutex_tryacquire_event *)cp->payload)
-                ->addr;
-        case EVENT_MUTEX_RELEASE:
-            return (uint64_t)(uintptr_t)((struct mutex_release_event *)cp->payload)
-                ->addr;
-        default:
-            ASSERT(0);
-            return 0;
-    }
-}
-
 static void
 _mutex_try_set_ret(const capture_point *cp, int ret)
 {
@@ -239,7 +219,7 @@ _mutex_handle(const capture_point *cp, event_t *e)
     ASSERT(cp->id != NO_TASK);
     switch (_mutex_event_type(cp)) {
         case EVENT_MUTEX_ACQUIRE:
-            _handle_acquire(cp->id, _mutex_addr(cp));
+            _handle_acquire(cp->id, (uint64_t)mutex_event_addr(cp));
             ASSERT(e->any_task_filter == NULL);
             e->any_task_filter = _should_wait;
             // fallthru
@@ -255,12 +235,12 @@ _mutex_handle(const capture_point *cp, event_t *e)
     bool should_wait = _remove_waiters(&e->tset, cp->id);
     if (_mutex_event_type(cp) != 0 && should_wait &&
         mutex_config()->deadlock_check &&
-        _check_deadlock(cp->id, _mutex_addr(cp), NO_TASK)) {
+        _check_deadlock(cp->id, (uint64_t)mutex_event_addr(cp), NO_TASK)) {
         logger_errorf("Aborting on deadlock\n");
         e->reason = REASON_RSRC_DEADLOCK;
     }
 }
-REGISTER_SEQUENCER_HANDLER(_mutex_handle)
+ON_SEQUENCER_CAPTURE(_mutex_handle)
 
 LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {
     const capture_point *cp = (const capture_point *)md;
@@ -268,14 +248,14 @@ LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {
 
     switch (_mutex_event_type(cp)) {
         case EVENT_MUTEX_ACQUIRE:
-            _posthandle_acquire(cp->id, _mutex_addr(cp));
+            _posthandle_acquire(cp->id, (uint64_t)mutex_event_addr(cp));
             break;
         case EVENT_MUTEX_TRYACQUIRE: {
-            _mutex_try_set_ret(
-                cp, _posthandle_tryacquire(cp->id, _mutex_addr(cp)));
+            _mutex_try_set_ret(cp, _posthandle_tryacquire(
+                                       cp->id, (uint64_t)mutex_event_addr(cp)));
         } break;
         case EVENT_MUTEX_RELEASE:
-            _posthandle_release(cp->id, _mutex_addr(cp));
+            _posthandle_release(cp->id, (uint64_t)mutex_event_addr(cp));
             break;
         default:
             break;

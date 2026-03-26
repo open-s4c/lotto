@@ -20,7 +20,6 @@ use rinflex::error::Error;
         FLAG_ROUNDS.get(),
         FLAG_TEMPORARY_DIRECTORY.get(),
         FLAG_NO_PRELOAD.get(),
-        FLAG_LOGGER_BLOCK.get(),
         FLAG_BEFORE_RUN.get(),
         FLAG_AFTER_RUN.get(),
         // FLAG_INFLEX_MIN.get(),

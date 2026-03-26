@@ -1,6 +1,5 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/engine/statemgr.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 
 typedef struct task_velocity_config {
     marshable_t m;

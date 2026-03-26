@@ -1,14 +1,13 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <limits.h>
 #include <signal.h>
 #include <time.h>
 #include <unistd.h>
 
 #include "state.h"
-#include <lotto/engine/sequencer.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 
 static struct event_data {
     task_id id;
@@ -92,4 +91,4 @@ _inactivity_alarm(const capture_point *cp, event_t *e)
     }
 }
 
-REGISTER_SEQUENCER_HANDLER(_inactivity_alarm)
+ON_SEQUENCER_CAPTURE(_inactivity_alarm)

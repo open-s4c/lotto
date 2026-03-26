@@ -3,7 +3,6 @@
 #include <stdbool.h>
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
 #include <dice/module.h>
 #include <dice/pubsub.h>

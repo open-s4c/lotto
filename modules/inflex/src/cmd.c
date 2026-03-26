@@ -144,8 +144,6 @@ _binary_probablistic(args_t *args, flags_t *flags, uint64_t last_clk)
     envvar_t vars[] = {
         {"LOTTO_REPLAY", .sval = flags_get_sval(flags, flag_input())},
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
-        {"LOTTO_LOGGER_BLOCK",
-         .sval = flags_get_sval(flags, flag_logger_block())},
         {"LOTTO_LOGGER_LEVEL", .sval = "silent"},
         {NULL}};
     envvar_set(vars, true);
@@ -197,8 +195,6 @@ _binary_explore(args_t *args, flags_t *flags, uint64_t last_clk)
     envvar_t vars[] = {
         {"LOTTO_REPLAY", .sval = flags_get_sval(flags, flag_input())},
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
-        {"LOTTO_LOGGER_BLOCK",
-         .sval = flags_get_sval(flags, flag_logger_block())},
         {"LOTTO_LOGGER_LEVEL", .sval = "silent"},
         {NULL}};
     envvar_set(vars, true);
@@ -251,8 +247,6 @@ _linear_inflex(args_t *args, flags_t *flags, uint64_t last_clk,
     envvar_t vars[] = {
         {"LOTTO_REPLAY", .sval = flags_get_sval(flags, flag_input())},
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
-        {"LOTTO_LOGGER_BLOCK",
-         .sval = flags_get_sval(flags, flag_logger_block())},
         {"LOTTO_LOGGER_LEVEL", .sval = "silent"},
         {NULL}};
     envvar_set(vars, true);
@@ -463,7 +457,6 @@ ON_DRIVER_REGISTER_COMMANDS({
                     flag_rounds(),
                     flag_temporary_directory(),
                     flag_no_preload(),
-                    flag_logger_block(),
                     flag_before_run(),
                     flag_after_run(),
                     FLAG_INFLEX_MIN,

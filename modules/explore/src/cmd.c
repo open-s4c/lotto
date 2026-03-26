@@ -18,7 +18,6 @@ ON_DRIVER_REGISTER_COMMANDS({
                     flag_verbose(),
                     flag_temporary_directory(),
                     flag_no_preload(),
-                    flag_logger_block(),
                     FLAG_EXPLORE_EXPECT_FAILURE,
                     FLAG_EXPLORE_MIN,
                     flag_logger_file(),

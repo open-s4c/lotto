@@ -1,5 +1,4 @@
 
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/map.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
@@ -8,7 +7,7 @@
 #include <lotto/evec.h>
 #include <lotto/modules/evec/events.h>
 #include <lotto/modules/timeout/timeout.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/casts.h>
 #include <lotto/util/macros.h>
 
@@ -309,7 +308,7 @@ _evec_handle(const capture_point *cp, event_t *e)
         e->any_task_filter = _should_wait;
     }
 }
-REGISTER_SEQUENCER_HANDLER(_evec_handle);
+ON_SEQUENCER_CAPTURE(_evec_handle);
 
 LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {
     const capture_point *cp = EVENT_PAYLOAD(cp);

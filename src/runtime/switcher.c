@@ -20,11 +20,10 @@
 // clang-format on
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/task_id.h>
 #include <lotto/runtime/switcher.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/real.h>
 
 #ifndef LOTTO_SWITCHER_NBUCKETS

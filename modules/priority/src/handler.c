@@ -7,7 +7,6 @@
  * - If the event is mutable, the handler filters out all tasks whose priority
  * is not maximum
  */
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <dice/module.h>
 #include <lotto/base/tidmap.h>
@@ -16,7 +15,7 @@
 #include <lotto/modules/priority/events.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 typedef struct {
@@ -107,4 +106,4 @@ _priority_handle(const capture_point *cp, event_t *e)
     tidset_filter(&e->tset, _is_max_priority);
     e->is_chpt |= !tidset_has(&e->tset, cp->id);
 }
-REGISTER_SEQUENCER_HANDLER(_priority_handle)
+ON_SEQUENCER_CAPTURE(_priority_handle)

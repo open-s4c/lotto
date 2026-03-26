@@ -12,7 +12,7 @@ use rinflex::handlers::flags::*;
     engine_flags=true,
     cli_flags=[
         FLAG_INPUT.get(), FLAG_OUTPUT.get(), FLAG_VERBOSE.get(), FLAG_REPLAY_GOAL.get(),
-        FLAG_TEMPORARY_DIRECTORY.get(), FLAG_NO_PRELOAD.get(), FLAG_LOGGER_BLOCK.get(), FLAG_BEFORE_RUN.get(), FLAG_AFTER_RUN.get()
+        FLAG_TEMPORARY_DIRECTORY.get(), FLAG_NO_PRELOAD.get(), FLAG_BEFORE_RUN.get(), FLAG_AFTER_RUN.get()
     ],
     defaults=|flags: &mut Flags| {
         flags.set_default(&flag_stable_address_method(),
@@ -63,7 +63,6 @@ fn replay(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
 
     envvar_set! {
         "LOTTO_REPLAY" => flags.get_sval(&FLAG_INPUT),
-        "LOTTO_LOGGER_BLOCK" => flags.get_sval(&FLAG_LOGGER_BLOCK),
     };
 
     let output_fn = flags.get_sval(&FLAG_OUTPUT);

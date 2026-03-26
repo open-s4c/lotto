@@ -1,11 +1,10 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 /*******************************************************************************
@@ -155,7 +154,7 @@ _region_preemption_handle(const capture_point *cp, event_t *e)
         _task = cp->id;
     }
 }
-REGISTER_SEQUENCER_HANDLER(_region_preemption_handle)
+ON_SEQUENCER_CAPTURE(_region_preemption_handle)
 
 /*******************************************************************************
  * marshaling implementation

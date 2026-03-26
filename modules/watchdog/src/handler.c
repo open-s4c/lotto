@@ -1,11 +1,10 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <lotto/engine/prng.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/modules/yield/events.h>
 #include <lotto/runtime/memaccess_payload.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 /*******************************************************************************
@@ -111,4 +110,4 @@ _watchdog_handle(const capture_point *cp, event_t *e)
             break;
     }
 }
-REGISTER_SEQUENCER_HANDLER(_watchdog_handle)
+ON_SEQUENCER_CAPTURE(_watchdog_handle)

@@ -212,17 +212,6 @@ pub static FLAG_NO_PRELOAD: FlagKey = FlagKey::new(
     None,
 );
 
-pub static FLAG_LOGGER_BLOCK: FlagKey = FlagKey::new(
-    c"FLAG_LOGGER_BLOCK",
-    c"",
-    c"logger-block",
-    c"NAME1|NAME2|...",
-    c"set file name without suffix to disable logger message",
-    Value::Sval(c""),
-    &StrConverter::None,
-    None,
-);
-
 pub static FLAG_BEFORE_RUN: FlagKey = FlagKey::new(
     c"FLAG_BEFORE_RUN",
     c"",
@@ -411,7 +400,6 @@ pub fn init() {
     let _ = FLAG_REPLAY_GOAL.get();
     let _ = FLAG_TEMPORARY_DIRECTORY.get();
     let _ = FLAG_NO_PRELOAD.get();
-    let _ = FLAG_LOGGER_BLOCK.get();
     let _ = FLAG_BEFORE_RUN.get();
     let _ = FLAG_AFTER_RUN.get();
     let _ = FLAG_LOGGER_FILE.get();

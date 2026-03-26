@@ -1,4 +1,3 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <lotto/base/reason.h>
 #include <lotto/base/tidbag.h>
@@ -12,7 +11,7 @@
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/casts.h>
 #include <lotto/util/macros.h>
 struct rsrc {
@@ -224,22 +223,6 @@ _mark_lost(task_id id)
     return ret;
 }
 
-static uintptr_t
-_mutex_addr(const capture_point *cp)
-{
-    switch (cp->src_type) {
-        case EVENT_MUTEX_ACQUIRE:
-            return (uintptr_t)((struct mutex_acquire_event *)cp->payload)->addr;
-        case EVENT_MUTEX_TRYACQUIRE:
-            return (uintptr_t)((struct mutex_tryacquire_event *)cp->payload)->addr;
-        case EVENT_MUTEX_RELEASE:
-            return (uintptr_t)((struct mutex_release_event *)cp->payload)->addr;
-        default:
-            ASSERT(0);
-            return 0;
-    }
-}
-
 static bool
 _mutex_try_ok(const capture_point *cp)
 {
@@ -276,16 +259,16 @@ _deadlock_handle(const capture_point *cp, event_t *e)
     ASSERT(tid != NO_TASK);
     switch (cp->src_type) {
         case EVENT_MUTEX_ACQUIRE:
-            if (_check_deadlock(tid, _mutex_addr(cp))) {
+            if (_check_deadlock(tid, mutex_event_addr(cp))) {
                 e->reason = REASON_RSRC_DEADLOCK;
             }
-            if (_is_lost(tid, _mutex_addr(cp))) {
+            if (_is_lost(tid, mutex_event_addr(cp))) {
                 e->reason = REASON_RSRC_DEADLOCK;
             }
-            _acquiring(tid, _mutex_addr(cp));
+            _acquiring(tid, mutex_event_addr(cp));
             break;
         case EVENT_MUTEX_TRYACQUIRE: {
-            uintptr_t addr = _mutex_addr(cp);
+            uintptr_t addr = mutex_event_addr(cp);
             if (_is_lost(tid, addr)) {
                 e->reason = REASON_RSRC_DEADLOCK;
             }
@@ -302,7 +285,7 @@ _deadlock_handle(const capture_point *cp, event_t *e)
             }
             break;
         case EVENT_MUTEX_RELEASE:
-            if (!_released(tid, _mutex_addr(cp))) {
+            if (!_released(tid, mutex_event_addr(cp))) {
                 e->reason = REASON_RSRC_DEADLOCK;
             }
             break;
@@ -326,7 +309,7 @@ _deadlock_handle(const capture_point *cp, event_t *e)
 }
 
 LOTTO_ADVERTISE_TYPE(EVENT_DEADLOCK__DETECTED)
-REGISTER_SEQUENCER_HANDLER(_deadlock_handle)
+ON_SEQUENCER_CAPTURE(_deadlock_handle)
 
 static tidset_t _dbg_set;
 

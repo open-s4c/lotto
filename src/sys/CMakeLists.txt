@@ -16,11 +16,6 @@ set(SRCS
     stream_file.c
     stream_impl.c)
 
-if("${LOTTO_LOGGER_BLOCK}")
-    list(APPEND SRCS logger_block.c)
-else()
-    list(APPEND SRCS logger_block_stub.c)
-endif()
 
 add_library(abort.o OBJECT abort.c)
 

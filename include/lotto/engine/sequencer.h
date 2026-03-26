@@ -70,25 +70,24 @@ void sequencer_return(const capture_point *cp);
  */
 clk_t sequencer_get_clk();
 
-#define REGISTER_HANDLER(handle)                                               \
-    PS_SUBSCRIBE(CHAIN_SEQUENCER_CAPTURE, ANY_EVENT, {                         \
+/* Run a handler for each sequencer capture event. */
+#define ON_SEQUENCER_CAPTURE(HANDLE)                                           \
+    LOTTO_SUBSCRIBE_SEQUENCER_CAPTURE(ANY_EVENT, {                             \
         const capture_point *cp = EVENT_PAYLOAD(cp);                           \
         sequencer_decision *e   = cp->decision;                                \
-        handle(cp, e);                                                         \
+        HANDLE(cp, e);                                                         \
         if (e->skip)                                                           \
             return PS_STOP_CHAIN;                                              \
     })
 
-#define REGISTER_HANDLER_EXTERNAL(handle)                                      \
-    PS_SUBSCRIBE(CHAIN_SEQUENCER_CAPTURE, ANY_EVENT, {                         \
+/* Run a handler for each sequencer resume event. */
+#define ON_SEQUENCER_RESUME(HANDLE)                                            \
+    LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {                              \
         const capture_point *cp = EVENT_PAYLOAD(cp);                           \
         sequencer_decision *e   = cp->decision;                                \
-        if (lotto_loaded())                                                    \
-            handle(cp, e);                                                     \
-        if (e->skip)                                                           \
+        HANDLE(cp, e);                                                         \
+        if (e && e->skip)                                                      \
             return PS_STOP_CHAIN;                                              \
     })
-
-#define REGISTER_SEQUENCER_HANDLER(handle) ON_SEQUENCER_CAPTURE(handle)
 
 #endif

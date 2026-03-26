@@ -5,17 +5,16 @@
  * - If the event is mutable, the handler remove the given task from a tidset
  * according to the probability
  */
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
 #include "state.h"
 #include <lotto/base/tidmap.h>
-#include <lotto/engine/sequencer.h>
 #include <lotto/engine/prng.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/task_velocity/events.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 #include <lotto/velocity.h>
 
@@ -95,7 +94,8 @@ _task_velocity_handle(const capture_point *cp, event_t *e)
     } else if (cp->src_type == EVENT_TASK_VELOCITY) {
         t = (task_t *)tidmap_find(&_state.map, cp->id);
         ASSERT(t);
-        t->probability = (uint64_t)((task_velocity_event_t *)cp->payload)->probability;
+        t->probability =
+            (uint64_t)((task_velocity_event_t *)cp->payload)->probability;
     }
     if (e->readonly || e->skip) {
         return;
@@ -104,4 +104,4 @@ _task_velocity_handle(const capture_point *cp, event_t *e)
     tidset_filter(&e->tset, _filter_by_probability);
     e->is_chpt |= !tidset_has(&e->tset, cp->id);
 }
-REGISTER_SEQUENCER_HANDLER(_task_velocity_handle)
+ON_SEQUENCER_CAPTURE(_task_velocity_handle)

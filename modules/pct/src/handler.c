@@ -5,14 +5,14 @@
  ******************************************************************************/
 
 #include <math.h>
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
+
 #include "state.h"
-#include <lotto/engine/sequencer.h>
 #include <lotto/engine/prng.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/state.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/runtime/ingress_events.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 #include <lotto/util/once.h>
 
@@ -116,4 +116,4 @@ _pct_handle(const capture_point *cp, event_t *e)
     if (tidmap_size(&pct_state()->map) > pct_state()->counts.nmax)
         pct_state()->counts.nmax = tidmap_size(&pct_state()->map);
 }
-REGISTER_SEQUENCER_HANDLER(_pct_handle)
+ON_SEQUENCER_CAPTURE(_pct_handle)

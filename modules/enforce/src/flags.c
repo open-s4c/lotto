@@ -1,4 +1,3 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/driver/flagmgr.h>
 #include <lotto/modules/enforce/state.h>
 

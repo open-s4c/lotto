@@ -3,15 +3,14 @@
  *
  * http://www.cs.columbia.edu/~junfeng/papers/pos-cav18.pdf
  ******************************************************************************/
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <lotto/base/tidmap.h>
-#include <lotto/engine/sequencer.h>
 #include <lotto/engine/prng.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/state.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/runtime/memaccess_payload.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 #include <lotto/util/once.h>
 
@@ -184,7 +183,7 @@ _pos_handle(const capture_point *cp, event_t *e)
     e->readonly = true;
     e->reason   = REASON_DETERMINISTIC;
 }
-REGISTER_SEQUENCER_HANDLER(_pos_handle);
+ON_SEQUENCER_CAPTURE(_pos_handle);
 
 /*******************************************************************************
  * marshaling implementation

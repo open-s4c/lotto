@@ -1,11 +1,10 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
 #include "state.h"
 #include <dice/chains/intercept.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/fork/events.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/unistd.h>
 
 typedef struct {

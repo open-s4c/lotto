@@ -6,13 +6,12 @@
  * @brief Dynamically convert instructions into change points.
  ******************************************************************************/
 
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
-#include <lotto/engine/sequencer.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/state.h>
 #include <lotto/modules/ichpt/ichpt.h>
 #include <lotto/modules/ichpt/state.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 /* *****************************************************************************
@@ -94,4 +93,4 @@ _ichpt_handle(const capture_point *cp, event_t *e)
         e->is_chpt = true;
     }
 }
-REGISTER_SEQUENCER_HANDLER(_ichpt_handle)
+ON_SEQUENCER_CAPTURE(_ichpt_handle)

@@ -16,7 +16,6 @@ flag_t flag_verbose();
 flag_t flag_rounds();
 flag_t flag_temporary_directory();
 flag_t flag_no_preload();
-flag_t flag_logger_block();
 flag_t flag_before_run();
 flag_t flag_after_run();
 flag_t flag_logger_file();

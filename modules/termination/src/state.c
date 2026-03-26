@@ -1,4 +1,3 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/termination/state.h>
 #include <lotto/util/macros.h>

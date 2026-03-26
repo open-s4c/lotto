@@ -1,11 +1,9 @@
 #include <stdlib.h>
 
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
-
 #include "mempool.h"
 #include <lotto/driver/flagmgr.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/util/macros.h>
 

@@ -6,7 +6,6 @@
 #include <unistd.h>
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
 #include "sighandler.h"
 #include <dice/events/self.h>
@@ -23,7 +22,7 @@
 #include <lotto/runtime/mediator.h>
 #include <lotto/runtime/runtime.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/memory.h>
 #include <lotto/sys/now.h>
 #include <lotto/sys/real.h>
@@ -116,11 +115,6 @@ logger_init_(void)
     } else {
         logger(level, STDOUT_FILENO);
     }
-
-    var = getenv("LOTTO_LOGGER_BLOCK");
-    if (var) {
-        logger_block_init((char *)var);
-    }
 }
 
 static void *
@@ -145,7 +139,6 @@ fini_cb_(void *arg)
         }
 
         lotto_intercept_fini();
-        logger_block_fini();
         sys_memory_fini();
         nanosec_t elapsed = now() - _start;
         logger_debugf("Elapsed time = %.2fs\n", in_sec(elapsed));

@@ -7,7 +7,6 @@
 
 #include <vsync/atomic.h>
 #define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 
 #include <lotto/base/cappt.h>
 #include <lotto/base/envvar.h>
@@ -23,7 +22,7 @@
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/real.h>
 #include <lotto/sys/stream_file.h>
 #include <lotto/util/once.h>
@@ -411,13 +410,15 @@ _add_pending_unblocked(task_id id)
     caslock_release(&_seq.pending.lock);
 }
 
-void __attribute__((noinline)) sequencer_clk_met()
+void __attribute__((noinline))
+sequencer_clk_met()
 {
     logger_debugf("clk met\n");
     clk_bound = 0;
 }
 
-void __attribute__((noinline)) sequencer_time_met()
+void __attribute__((noinline))
+sequencer_time_met()
 {
     logger_debugf("time met\n");
     time_bound_ns = 0;

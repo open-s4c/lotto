@@ -1,15 +1,13 @@
 #include <unistd.h>
 
-#include <sys/types.h>
-#include <vsync/atomic/core.h>
-#include <vsync/spinlock/caslock.h>
-
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "uafcheck.h"
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/memmgr_impl.h>
 #include <lotto/sys/real.h>
+#include <sys/types.h>
+#include <vsync/atomic/core.h>
+#include <vsync/spinlock/caslock.h>
 
 static caslock_t _lock;
 static pid_t _owner;

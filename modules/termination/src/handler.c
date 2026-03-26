@@ -1,10 +1,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/base/reason.h>
-#include <lotto/engine/sequencer.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/termination/state.h>
 #include <lotto/util/macros.h>
@@ -56,4 +55,4 @@ _termination_handle(const capture_point *cp, event_t *e)
             break;
     }
 }
-REGISTER_SEQUENCER_HANDLER(_termination_handle);
+ON_SEQUENCER_CAPTURE(_termination_handle);

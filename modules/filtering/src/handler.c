@@ -1,6 +1,5 @@
 #include <string.h>
 
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
@@ -9,7 +8,7 @@
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
@@ -139,7 +138,7 @@ _parse_config()
         if (*line != '\0' && *line != '#') {
             char *eq = strchr(line, '=');
             if (eq != NULL) {
-                *eq = '\0';
+                *eq          = '\0';
                 type_id type = _type_from_number(line);
                 if (type != ANY_EVENT) {
                     _drop[type] = atof(eq + 1);
@@ -164,7 +163,8 @@ _print_config()
     }
 }
 
-STATIC void _load_state()
+STATIC void
+_load_state()
 {
     _load_configfile(filtering_config()->filename);
     _parse_config();
@@ -205,4 +205,4 @@ _filtering_handle(const capture_point *cp, event_t *e)
     e->readonly = true;
     e->skip     = true;
 }
-REGISTER_SEQUENCER_HANDLER(_filtering_handle)
+ON_SEQUENCER_CAPTURE(_filtering_handle)

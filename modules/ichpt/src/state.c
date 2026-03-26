@@ -1,7 +1,6 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/ichpt/state.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 
 /* config contains the initial state of the handler */
 static ichpt_config_t _config;

@@ -55,6 +55,19 @@ CONTRACT_INIT({
     _ghost.clk        = 0;
 })
 
+static inline bool
+_engine_is_ingress_chain(chain_id chain)
+{
+    switch (chain) {
+        case CHAIN_INGRESS_EVENT:
+        case CHAIN_INGRESS_BEFORE:
+        case CHAIN_INGRESS_AFTER:
+            return true;
+        default:
+            return false;
+    }
+}
+
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__START)
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__BEFORE_CAPTURE)
 
@@ -139,6 +152,7 @@ engine_fini(const capture_point *cp, reason_t reason)
 struct plan
 engine_capture(const capture_point *cp)
 {
+    ASSERT(_engine_is_ingress_chain(cp->src_chain));
     CONTRACT({
         ASSERT(vatomic_read(&_ghost.state) != FINISHED);
         ASSERT(cp->func != NULL);
@@ -185,6 +199,7 @@ engine_capture(const capture_point *cp)
 void
 engine_resume(const capture_point *cp)
 {
+    ASSERT(_engine_is_ingress_chain(cp->src_chain));
     log(cp, "RESUME   %s\t%s", ps_type_str(cp->src_type), cp->func);
 
     CONTRACT({
@@ -204,6 +219,7 @@ engine_resume(const capture_point *cp)
 void
 engine_return(const capture_point *cp)
 {
+    ASSERT(_engine_is_ingress_chain(cp->src_chain));
     CONTRACT({
         ASSERT(cp->id != NO_TASK);
         if (vatomic_read(&_ghost.state) == FINISHED) {

@@ -52,8 +52,9 @@ _intercept_resume(mediator_t *m, capture_point *cp)
 
 PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, ANY_EVENT, {
     capture_point *cp = EVENT_PAYLOAD(cp);
-    ASSERT(cp->src_type == type);
-    mediator_t *m = mediator_get(md, true);
+    cp->src_chain     = chain;
+    cp->src_type      = type;
+    mediator_t *m     = mediator_get(md, true);
 
     if (!mediator_capture(m, cp)) {
         _intercept_resume(m, cp);
@@ -62,8 +63,9 @@ PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, ANY_EVENT, {
 })
 PS_SUBSCRIBE(CHAIN_INGRESS_BEFORE, ANY_EVENT, {
     capture_point *cp = EVENT_PAYLOAD(cp);
-    ASSERT(cp->src_type == type);
-    mediator_t *m = mediator_get(md, true);
+    cp->src_chain     = chain;
+    cp->src_type      = type;
+    mediator_t *m     = mediator_get(md, true);
 
     if (!mediator_capture(m, cp)) {
         ENSURE(!cp->blocking);
@@ -80,8 +82,14 @@ PS_SUBSCRIBE(CHAIN_INGRESS_AFTER, ANY_EVENT, {
     if (cp->blocking) {
         logger_debugf("[%lu] return from '%s'\n", m->id, cp->func);
         mediator_return(m, cp);
+        _intercept_resume(m, cp);
+    } else {
+        // If not a blocking return, this is an individual event and has to be
+        // handled so.
+        bool block = mediator_capture(m, cp);
+        ASSERT(!block);
+        _intercept_resume(m, cp);
     }
-    _intercept_resume(m, cp);
     return PS_STOP_CHAIN;
 })
 

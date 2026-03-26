@@ -1,16 +1,16 @@
 #include <errno.h>
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
+
 #include "state.h"
 #include <dice/events/pthread.h>
-#include <lotto/engine/sequencer.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/rwlock/events.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 struct reader {
@@ -98,7 +98,7 @@ _rwlock_handle(const capture_point *cp, event_t *e)
         }
     }
 }
-REGISTER_SEQUENCER_HANDLER(_rwlock_handle)
+ON_SEQUENCER_CAPTURE(_rwlock_handle)
 
 LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {
     const capture_point *cp = EVENT_PAYLOAD(cp);
@@ -149,17 +149,21 @@ _rwlock_addr(const capture_point *cp)
             return (uint64_t)(uintptr_t)CP_PAYLOAD(struct rwlock_unlock_event *)
                 ->lock;
         case EVENT_RWLOCK_TRYRDLOCK:
-            return (uint64_t)(uintptr_t)
-                CP_PAYLOAD(struct rwlock_tryrdlock_event *)->lock;
+            return (uint64_t)(uintptr_t)CP_PAYLOAD(
+                       struct rwlock_tryrdlock_event *)
+                ->lock;
         case EVENT_RWLOCK_TRYWRLOCK:
-            return (uint64_t)(uintptr_t)
-                CP_PAYLOAD(struct rwlock_trywrlock_event *)->lock;
+            return (uint64_t)(uintptr_t)CP_PAYLOAD(
+                       struct rwlock_trywrlock_event *)
+                ->lock;
         case EVENT_RWLOCK_TIMEDRDLOCK:
-            return (uint64_t)(uintptr_t)
-                CP_PAYLOAD(struct rwlock_timedrdlock_event *)->lock;
+            return (uint64_t)(uintptr_t)CP_PAYLOAD(
+                       struct rwlock_timedrdlock_event *)
+                ->lock;
         case EVENT_RWLOCK_TIMEDWRLOCK:
-            return (uint64_t)(uintptr_t)
-                CP_PAYLOAD(struct rwlock_timedwrlock_event *)->lock;
+            return (uint64_t)(uintptr_t)CP_PAYLOAD(
+                       struct rwlock_timedwrlock_event *)
+                ->lock;
         default:
             ASSERT(0);
             return 0;

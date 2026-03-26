@@ -130,7 +130,6 @@ flag_t flag_verbose();
 flag_t flag_replay_goal();
 flag_t flag_temporary_directory();
 flag_t flag_no_preload();
-flag_t flag_logger_block();
 flag_t flag_before_run();
 flag_t flag_after_run();
 flag_t flag_logger_file();
@@ -245,12 +244,6 @@ flag_t flag_logger_file();
 
 #define DECLARE_FLAG_VERSION                                                   \
     DECLARE_COMMAND_FLAG(VERSION, "", "version", "", "", flag_off())
-
-#define DECLARE_FLAG_LOGGER_BLOCK                                              \
-    DECLARE_COMMAND_FLAG(                                                      \
-        LOGGER_BLOCK, "", "logger-block", "NAME1|NAME2|...",                   \
-        "set file name without suffix to disable logger message",              \
-        flag_sval(""))
 
 #define DECLARE_FLAG_BEFORE_RUN                                                \
     DECLARE_COMMAND_FLAG(BEFORE_RUN, "", "before-run", "CMD",                  \

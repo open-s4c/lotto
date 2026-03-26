@@ -24,7 +24,6 @@ use rinflex::*;
         FLAG_ROUNDS.get(),
         FLAG_TEMPORARY_DIRECTORY.get(),
         FLAG_NO_PRELOAD.get(),
-        FLAG_LOGGER_BLOCK.get(),
     ],
     group=raw::subcmd_group::SUBCMD_GROUP_TRACE,
     defaults=|flags: &mut Flags| {
@@ -47,7 +46,6 @@ fn main(args: &mut Args, flags: &mut Flags) -> SubCmdResult {
 fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Error> {
     envvar_set! {
         "LOTTO_MODIFY_RETURN_CODE" => 1 as u64,
-        "LOTTO_LOGGER_BLOCK" => flags.get_sval(&FLAG_LOGGER_BLOCK),
     };
     cli::logger();
 

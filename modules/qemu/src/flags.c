@@ -1,4 +1,3 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <stdlib.h>
 
 #include "state.h"

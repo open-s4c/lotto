@@ -1,7 +1,6 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/engine/sequencer.h>
 #include <lotto/modules/available/state.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 STATIC void
@@ -14,4 +13,4 @@ _available_handle(const capture_point *cp, event_t *e)
     ASSERT(e);
     tidset_copy(get_available_tasks(), &e->tset);
 }
-REGISTER_SEQUENCER_HANDLER(_available_handle);
+ON_SEQUENCER_CAPTURE(_available_handle);

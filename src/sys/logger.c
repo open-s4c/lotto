@@ -1,7 +1,5 @@
 #include <stdarg.h>
-#include <stdbool.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 #define LOGGER_IMPL
 #include <lotto/sys/abort.h>

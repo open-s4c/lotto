@@ -3,9 +3,8 @@
 #include <stdlib.h>
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/memory.h>
 #include <lotto/sys/mempool.h>
 #include <lotto/sys/string.h>

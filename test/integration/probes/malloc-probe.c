@@ -37,4 +37,4 @@ handler_(const capture_point *cp, event_t *e)
         malloc_after_calls_++;
     }
 }
-REGISTER_SEQUENCER_HANDLER(handler_)
+ON_SEQUENCER_CAPTURE(handler_)

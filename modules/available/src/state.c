@@ -1,7 +1,6 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/available/state.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 static tidset_t _available_tasks;

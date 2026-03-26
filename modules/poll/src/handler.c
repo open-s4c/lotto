@@ -1,9 +1,8 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 
 #include "poll.h"
 #include <lotto/engine/clock.h>
-#include <lotto/engine/sequencer.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/poll/events.h>
 #include <lotto/modules/timeout/timeout.h>
@@ -254,4 +253,4 @@ _poll_handle(const capture_point *cp, event_t *e)
         e->any_task_filter = _should_wait;
     }
 }
-REGISTER_SEQUENCER_HANDLER(_poll_handle)
+ON_SEQUENCER_CAPTURE(_poll_handle)

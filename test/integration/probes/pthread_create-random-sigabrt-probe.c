@@ -21,4 +21,4 @@ pthread_create_random_sigabrt_probe_handle_(const capture_point *cp, event_t *e)
         raise(SIGABRT);
     }
 }
-REGISTER_SEQUENCER_HANDLER(pthread_create_random_sigabrt_probe_handle_)
+ON_SEQUENCER_CAPTURE(pthread_create_random_sigabrt_probe_handle_)

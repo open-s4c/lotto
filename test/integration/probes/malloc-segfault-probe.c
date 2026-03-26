@@ -1,5 +1,5 @@
-#include <dice/interpose.h>
 #include <dice/events/malloc.h>
+#include <dice/interpose.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/runtime/capture_point.h>
@@ -39,7 +39,7 @@ handler_(const capture_point *cp, event_t *e)
         malloc_after_calls_++;
     }
 }
-REGISTER_SEQUENCER_HANDLER(handler_)
+ON_SEQUENCER_CAPTURE(handler_)
 
 INTERPOSE(void *, malloc, size_t size)
 {

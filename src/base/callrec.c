@@ -2,10 +2,9 @@
 #include <string.h>
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <lotto/base/callrec.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>

@@ -1,11 +1,10 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <lotto/base/tidbag.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress_events.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 static tidbag_t _in_region;
@@ -44,4 +43,4 @@ _region_filter_handle(const capture_point *cp, event_t *e)
         e->filter_less = true;
     }
 }
-REGISTER_SEQUENCER_HANDLER(_region_filter_handle)
+ON_SEQUENCER_CAPTURE(_region_filter_handle)

@@ -116,8 +116,6 @@ explore(args_t *args, flags_t *flags)
          .sval = flags_get_sval(flags, flag_logger_file())},
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
         {"LOTTO_REPLAY", .sval = "temp.trace"},
-        {"LOTTO_LOGGER_BLOCK",
-         .sval = flags_get_sval(flags, flag_logger_block())},
         NULL};
     envvar_set(vars, true);
 

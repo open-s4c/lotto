@@ -44,7 +44,6 @@ void logger_printf(const char *fmt, ...) PRINTFLIKE;
 
     #define LOGGER_CUR_FILE                                                    \
         (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-
     #ifdef LOGGER_PREFIX
         #define logger_fatalf(fmt, ...)                                        \
             logger_fatalf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__)
@@ -62,7 +61,6 @@ void logger_printf(const char *fmt, ...) PRINTFLIKE;
             logger_debugf("[%21s] " fmt, LOGGER_PREFIX, ##__VA_ARGS__)
 
     #endif /* LOGGER_PREFIX */
-
     #ifdef LOGGER_DISABLE
         #include <lotto/util/unused.h>
 

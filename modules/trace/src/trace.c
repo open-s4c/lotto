@@ -32,8 +32,6 @@ trace(args_t *args, flags_t *flags)
     envvar_t vars[] = {
         {"LOTTO_REPLAY", .sval = flags_get_sval(flags, flag_input())},
         {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
-        {"LOTTO_LOGGER_BLOCK",
-         .sval = flags_get_sval(flags, flag_logger_block())},
         {NULL}};
     envvar_set(vars, true);
 
@@ -69,10 +67,13 @@ _default_flags()
 }
 
 ON_DRIVER_REGISTER_COMMANDS({
-    flag_t sel[] = {flag_input(),       flag_output(),
-                    flag_verbose(),     flag_temporary_directory(),
-                    flag_no_preload(),  flag_logger_block(),
-                    flag_replay_goal(), 0};
+    flag_t sel[] = {flag_input(),
+                    flag_output(),
+                    flag_verbose(),
+                    flag_temporary_directory(),
+                    flag_no_preload(),
+                    flag_replay_goal(),
+                    0};
     subcmd_register(trace, "trace", "[--] <command line>",
                     "Create an initial trace for running Lotto without CLI",
                     true, sel, _default_flags, SUBCMD_GROUP_RUN);

@@ -9,7 +9,6 @@
 #include <vsync/spinlock/caslock.h>
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
-#define LOGGER_BLOCK  LOGGER_CUR_BLOCK
 #include <dice/chains/capture.h>
 #include <lotto/base/reason.h>
 #include <lotto/engine/pubsub.h>
@@ -17,7 +16,7 @@
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/runtime/ingress_events.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/now.h>
 #include <lotto/util/contract.h>
 #include <lotto/util/once.h>

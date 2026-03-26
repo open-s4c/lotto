@@ -1,9 +1,8 @@
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <lotto/engine/sequencer.h>
 #include <lotto/modules/yield/events.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 STATIC void
@@ -39,4 +38,4 @@ _yield_handle(const capture_point *cp, event_t *e)
             break;
     }
 }
-REGISTER_SEQUENCER_HANDLER(_yield_handle)
+ON_SEQUENCER_CAPTURE(_yield_handle)

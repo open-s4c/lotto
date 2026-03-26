@@ -1,15 +1,13 @@
 #include <errno.h>
 #include <pthread.h>
 
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
-
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/join/events.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 /*******************************************************************************
@@ -219,4 +217,4 @@ _join_handle(const capture_point *cp, event_t *e)
         e->any_task_filter = _should_wait;
     }
 }
-REGISTER_SEQUENCER_HANDLER(_join_handle)
+ON_SEQUENCER_CAPTURE(_join_handle)

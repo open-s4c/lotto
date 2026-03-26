@@ -16,11 +16,15 @@ record(args_t *args, flags_t *flags)
 }
 
 ON_DRIVER_REGISTER_COMMANDS({
-    flag_t sel[] = {flag_output(),      flag_input(),
-                    flag_verbose(),     flag_temporary_directory(),
-                    flag_no_preload(),  flag_logger_block(),
-                    flag_before_run(),  flag_after_run(),
-                    flag_logger_file(), 0};
+    flag_t sel[] = {flag_output(),
+                    flag_input(),
+                    flag_verbose(),
+                    flag_temporary_directory(),
+                    flag_no_preload(),
+                    flag_before_run(),
+                    flag_after_run(),
+                    flag_logger_file(),
+                    0};
     subcmd_register(record, "record", "[--] <command line>",
                     "Record a single execution of a program", true, sel,
                     stress_default_flags, SUBCMD_GROUP_RUN);

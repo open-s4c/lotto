@@ -22,4 +22,4 @@ pthread_create_probe_handle_(const capture_point *cp, event_t *e)
     log_printf("HANDLER: %" PRIu64 "\n", cp->id);
     handler_calls_++;
 }
-REGISTER_SEQUENCER_HANDLER(pthread_create_probe_handle_)
+ON_SEQUENCER_CAPTURE(pthread_create_probe_handle_)

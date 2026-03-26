@@ -21,7 +21,7 @@
 #include <lotto/driver/preload.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/sys/modules.h>
 #include <lotto/sys/stdio.h>
 #include <sys/stat.h>
@@ -267,7 +267,7 @@ _append_path_list(char *buf, size_t buf_size, size_t *len, const char *paths)
 static void
 _set_dice_plugin_modules_from_preload(void)
 {
-    const char *ld_preload = getenv("LD_PRELOAD");
+    const char *ld_preload    = getenv("LD_PRELOAD");
     const char *runtime_loads = getenv(LOTTO_LOAD_RUNTIME);
     char plugin_modules[MAX_LIST_STR];
     size_t len = 0;

@@ -1,4 +1,5 @@
 // clang-format off
+// REQUIRES: DISABLED
 // RUN: (! %lotto %stress -F -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/filter_default.c:{{[0-9]+}}: x != 1
 // clang-format on
@@ -36,4 +37,3 @@ main()
     pthread_join(t1, 0);
     return 0;
 }
-

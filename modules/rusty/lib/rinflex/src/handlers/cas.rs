@@ -92,7 +92,7 @@ fn ctx_to_memory_access(ctx: &CapturePoint) -> Option<MemoryAccess> {
 #[inline]
 fn ctx_to_modify(ctx: &CapturePoint) -> Option<Modify> {
     let event_type = ctx.src_type as u32;
-    let is_after = u32::from(ctx.src_chain) == raw::CAPTURE_AFTER;
+    let is_after = u32::from(ctx.src_chain) == raw::CHAIN_INGRESS_AFTER;
 
     if !matches!(
         event_type,

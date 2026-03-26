@@ -77,6 +77,16 @@
     LOTTO_SUBSCRIBE_WITH_K_(CHAIN_SEQUENCER_RESUME, TYPE, __COUNTER__,         \
                             LOTTO_BODY({__VA_ARGS__}))
 
+/* Run a handler for each sequencer capture event. */
+#define ON_SEQUENCER_CAPTURE(HANDLE)                                           \
+    LOTTO_SUBSCRIBE_SEQUENCER_CAPTURE(ANY_EVENT, {                             \
+        const capture_point *cp = EVENT_PAYLOAD(cp);                           \
+        sequencer_decision *e   = cp->decision;                                \
+        HANDLE(cp, e);                                                         \
+        if (e->skip)                                                           \
+            return PS_STOP_CHAIN;                                              \
+    })
+
 /*
  * Run code during Lotto Phase 2: registration.
  *

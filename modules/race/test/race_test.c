@@ -48,19 +48,19 @@ typedef struct {
 #define cp_read(ID, ADDR, PC)                                                  \
     (capture_point)                                                            \
     {                                                                          \
-        .id = (ID), .vid = NO_TASK, .pc = (PC), .src_chain = CAPTURE_EVENT,    \
-        .src_type = EVENT_MA_READ,                                             \
-        .payload  = &(struct ma_read_event){.addr = (void *)(ADDR),            \
-                                            .size = sizeof(uintptr_t)},        \
+        .id = (ID), .vid = NO_TASK, .pc = (PC),                                \
+        .src_chain = CHAIN_INGRESS_EVENT, .src_type = EVENT_MA_READ,           \
+        .payload = &(struct ma_read_event){.addr = (void *)(ADDR),             \
+                                           .size = sizeof(uintptr_t)},         \
     }
 
 #define cp_write(ID, ADDR, PC)                                                 \
     (capture_point)                                                            \
     {                                                                          \
-        .id = (ID), .vid = NO_TASK, .pc = (PC), .src_chain = CAPTURE_EVENT,    \
-        .src_type = EVENT_MA_WRITE,                                            \
-        .payload  = &(struct ma_write_event){.addr = (void *)(ADDR),           \
-                                             .size = sizeof(uintptr_t)},       \
+        .id = (ID), .vid = NO_TASK, .pc = (PC),                                \
+        .src_chain = CHAIN_INGRESS_EVENT, .src_type = EVENT_MA_WRITE,          \
+        .payload = &(struct ma_write_event){.addr = (void *)(ADDR),            \
+                                            .size = sizeof(uintptr_t)},        \
     }
 
 #define NORACE race(0, 0, 0)

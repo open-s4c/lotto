@@ -16,7 +16,7 @@
 
 #define new_ctx(...)                                                           \
     (&(capture_point){.func      = "UNKNOWN",                                  \
-                      .src_chain = CAPTURE_EVENT,                              \
+                      .src_chain = CHAIN_INGRESS_EVENT,                        \
                       .src_type  = 0,                                          \
                       .id        = NO_TASK,                                    \
                       .vid       = NO_TASK,                                    \
@@ -48,8 +48,7 @@ static mock_t mock;
 static bool
 capture_point_eq(const capture_point *lhs, const capture_point *rhs)
 {
-    return lhs->src_chain == rhs->src_chain &&
-           lhs->src_type == rhs->src_type &&
+    return lhs->src_chain == rhs->src_chain && lhs->src_type == rhs->src_type &&
            lhs->blocking == rhs->blocking && lhs->id == rhs->id &&
            lhs->vid == rhs->vid && lhs->pc == rhs->pc &&
 #if defined(QLOTTO_ENABLED)
@@ -277,7 +276,7 @@ test_replay()
     assert(!expect_marshaled());
 
     /* capture point 2 */
-    ctx_tid = new_ctx(.id = tid, .src_chain = CAPTURE_BEFORE,
+    ctx_tid = new_ctx(.id = tid, .src_chain = CHAIN_INGRESS_BEFORE,
                       .src_type = EVENT_MA_WRITE, .src_type = EVENT_MA_WRITE);
     expect_process(ctx_tid, false);
     mock.next = ANY_TASK;
@@ -292,12 +291,12 @@ test_replay()
     assert(!expect_marshaled());
 
     /* capture point 3 */
-    ctx_tid = new_ctx(.id = tid, .src_chain = CAPTURE_BEFORE,
+    ctx_tid = new_ctx(.id = tid, .src_chain = CHAIN_INGRESS_BEFORE,
                       .src_type = EVENT_MA_AREAD, .src_type = EVENT_MA_AREAD);
     expect_process(ctx_tid, false);
     plan = sequencer_capture(ctx_tid);
     assert(plan.next == other);
-    ctx_other = new_ctx(.id = other, .src_chain = CAPTURE_BEFORE,
+    ctx_other = new_ctx(.id = other, .src_chain = CHAIN_INGRESS_BEFORE,
                         .src_type = EVENT_MA_AREAD, .src_type = EVENT_MA_AREAD);
     sequencer_resume(ctx_other);
     assert(plan.actions == (ACTION_WAKE | ACTION_YIELD | ACTION_RESUME));
@@ -309,7 +308,7 @@ test_replay()
 
 
     /* replay is over now it should call scheduler_process */
-    ctx_other = new_ctx(.id = other, .src_chain = CAPTURE_BEFORE,
+    ctx_other = new_ctx(.id = other, .src_chain = CHAIN_INGRESS_BEFORE,
                         .src_type = EVENT_MA_AREAD, .src_type = EVENT_MA_AREAD);
     expect_process(ctx_other, false);
     mock.next = tid;

@@ -38,11 +38,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_MUTEX_LOCK, {
         .addr = ev->mutex,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_MUTEX_ACQUIRE,
-        .payload   = &mev,
-        .func      = mev.func,
-        .pc        = (uintptr_t)ev->pc,
+        .payload = &mev,
+        .func    = mev.func,
+        .pc      = (uintptr_t)ev->pc,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_MUTEX_ACQUIRE, &cp, md);
     ev->func = (void *)pthread_nop_zero_;
@@ -60,11 +58,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_MUTEX_TRYLOCK, {
         .ret  = 0,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_MUTEX_TRYACQUIRE,
-        .payload   = &mev,
-        .func      = mev.func,
-        .pc        = (uintptr_t)ev->pc,
+        .payload = &mev,
+        .func    = mev.func,
+        .pc      = (uintptr_t)ev->pc,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_MUTEX_TRYACQUIRE, &cp, md);
     ev->func =
@@ -81,11 +77,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_MUTEX_UNLOCK, {
         .addr = ev->mutex,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_MUTEX_RELEASE,
-        .payload   = &mev,
-        .func      = mev.func,
-        .pc        = (uintptr_t)ev->pc,
+        .payload = &mev,
+        .func    = mev.func,
+        .pc      = (uintptr_t)ev->pc,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_MUTEX_RELEASE, &cp, md);
     ev->func = (void *)pthread_nop_zero_;
@@ -102,11 +96,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_MUTEX_TIMEDLOCK, {
         .addr = ev->mutex,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_MUTEX_ACQUIRE,
-        .payload   = &mev,
-        .func      = mev.func,
-        .pc        = (uintptr_t)ev->pc,
+        .payload = &mev,
+        .func    = mev.func,
+        .pc      = (uintptr_t)ev->pc,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_MUTEX_ACQUIRE, &cp, md);
     ev->func = (void *)pthread_nop_zero_;

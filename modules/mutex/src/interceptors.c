@@ -20,11 +20,9 @@ intercept_mutex_acquire(const char *func, void *addr, const void *pc)
         .addr = addr,
     };
     capture_point cp = {
-        .src_chain = INTERCEPT_EVENT,
-        .src_type  = EVENT_MUTEX_ACQUIRE,
-        .payload   = &ev,
-        .func      = func,
-        .pc        = (uintptr_t)pc,
+        .payload = &ev,
+        .func    = func,
+        .pc      = (uintptr_t)pc,
     };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_MUTEX_ACQUIRE, &cp, 0);
 }
@@ -39,11 +37,9 @@ intercept_mutex_tryacquire(const char *func, void *addr, const void *pc)
         .ret  = 0,
     };
     capture_point cp = {
-        .src_chain = INTERCEPT_EVENT,
-        .src_type  = EVENT_MUTEX_TRYACQUIRE,
-        .payload   = &ev,
-        .func      = func,
-        .pc        = (uintptr_t)pc,
+        .payload = &ev,
+        .func    = func,
+        .pc      = (uintptr_t)pc,
     };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_MUTEX_TRYACQUIRE, &cp, 0);
     return ev.ret;
@@ -58,11 +54,9 @@ intercept_mutex_release(const char *func, void *addr, const void *pc)
         .addr = addr,
     };
     capture_point cp = {
-        .src_chain = INTERCEPT_EVENT,
-        .src_type  = EVENT_MUTEX_RELEASE,
-        .payload   = &ev,
-        .func      = func,
-        .pc        = (uintptr_t)pc,
+        .payload = &ev,
+        .func    = func,
+        .pc      = (uintptr_t)pc,
     };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_MUTEX_RELEASE, &cp, 0);
 }

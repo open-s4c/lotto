@@ -89,13 +89,6 @@ clk_t sequencer_get_clk();
             return PS_STOP_CHAIN;                                              \
     })
 
-#define REGISTER_SEQUENCER_HANDLER(handle)                                     \
-    PS_SUBSCRIBE(CHAIN_SEQUENCER_CAPTURE, ANY_EVENT, {                         \
-        const capture_point *cp = EVENT_PAYLOAD(cp);                           \
-        sequencer_decision *e   = cp->decision;                                \
-        handle(cp, e);                                                         \
-        if (e->skip)                                                           \
-            return PS_STOP_CHAIN;                                              \
-    })
+#define REGISTER_SEQUENCER_HANDLER(handle) ON_SEQUENCER_CAPTURE(handle)
 
 #endif

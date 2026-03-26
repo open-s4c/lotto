@@ -40,7 +40,7 @@ impl handler::Handler for AddressHandler {
         let info = AddressInfo {
             addr,
             src_type: ctx.src_type as u32,
-            after: u32::from(ctx.src_chain) == raw::CAPTURE_AFTER,
+            after: u32::from(ctx.src_chain) == raw::CHAIN_INGRESS_AFTER,
         };
         tasks.insert(TaskId::new(ctx.id), info);
     }

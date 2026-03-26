@@ -44,8 +44,9 @@ mediator_get(struct metadata *md, bool bootstrap)
         };
         if (bootstrap) {
             capture_point cp = {
-                .func     = __FUNCTION__,
-                .src_type = EVENT_DICE_NOP,
+                .func      = __FUNCTION__,
+                .src_chain = CHAIN_INGRESS_EVENT,
+                .src_type  = EVENT_DICE_NOP,
             };
             mediator_status_t status = mediator_resume(m, &cp);
             ASSERT(status == MEDIATOR_OK && "mediator bootstrap failed");

@@ -19,9 +19,8 @@ _atomic_handle(const capture_point *cp, event_t *e)
     if (e->readonly)
         return;
 
-    // NOLINTBEGIN(bugprone-branch-clone): Fixme - Fix and remove no lint line
     switch (cp->src_chain) {
-        case CAPTURE_BEFORE:
+        case CHAIN_INGRESS_BEFORE:
             switch (cp->src_type) {
                 case EVENT_MA_AREAD:
                 case EVENT_MA_AWRITE:
@@ -37,9 +36,10 @@ _atomic_handle(const capture_point *cp, event_t *e)
                 default:
                     break;
             }
+            break;
+
         default:
             break;
-            // NOLINTEND(bugprone-branch-clone)
     }
 }
 REGISTER_SEQUENCER_HANDLER(_atomic_handle)

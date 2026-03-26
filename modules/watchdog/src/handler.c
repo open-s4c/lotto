@@ -71,7 +71,9 @@ _watchdog_handle(const capture_point *cp, event_t *e)
         case EVENT_MA_CMPXCHG:
         case EVENT_MA_RMW:
         case EVENT_MA_FENCE:
-            if (cp->src_chain != CHAIN_INGRESS_AFTER)
+            /* cp of _AFTER chain are marked with e->is_chpt = false. There is
+             * no reason why to consider them for watchdog-forced scheduling. */
+            if (cp->src_chain == CHAIN_INGRESS_AFTER)
                 break;
             // fallthru
         case EVENT_MA_READ:

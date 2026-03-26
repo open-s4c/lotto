@@ -12,15 +12,25 @@ use std::num::NonZeroI32;
 use std::path::Path;
 
 /// Default initialization of the logger.
-pub fn logger() {
+fn logger_level(verbose: u64) -> raw::logger_level {
+    if verbose >= 2 {
+        raw::logger_level_LOGGER_DEBUG
+    } else if verbose >= 1 {
+        raw::logger_level_LOGGER_INFO
+    } else {
+        raw::logger_level_LOGGER_ERROR
+    }
+}
+
+pub fn logger(verbose: u64) {
     unsafe {
-        raw::logger(raw::logger_level_LOGGER_INFO, libc::STDOUT_FILENO);
+        raw::logger(logger_level(verbose), libc::STDOUT_FILENO);
     }
 }
 
 pub fn preload<P: AsRef<Path>>(
     tempdir: P,
-    verbose: bool,
+    verbose: u64,
     plotto: bool,
     memmgr_chain_runtime: &str,
     memmgr_chain_user: &str,

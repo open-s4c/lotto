@@ -3,7 +3,7 @@ set(RUNTIME_MODULE_TYPE_memmgr_runtime_mempool SHARED)
 
 new_module(memmgr_user_mempool)
 add_runtime_module(mempool_memmgr.c)
-target_compile_definitions(${RUNTIME_MODULE_TARGET} PRIVATE LOTTO_MEMMGR_USER)
+runtime_module_compile_definitions(PRIVATE LOTTO_MEMMGR_USER)
 
 add_driver_module(mempool_flag.c)
-target_compile_definitions(${DRIVER_MODULE_TARGET} PRIVATE LOTTO_MEMMGR_USER)
+driver_module_compile_definitions(PRIVATE LOTTO_MEMMGR_USER)

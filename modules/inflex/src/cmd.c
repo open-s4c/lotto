@@ -73,6 +73,8 @@ static bool _always_fails_at_clk_explore(args_t *args, flags_t *flags,
 int
 inflex(args_t *args, flags_t *flags)
 {
+    uint64_t verbose = flag_verbose_count(flags);
+
     setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, flag_logger_file()),
            true);
 
@@ -91,14 +93,13 @@ inflex(args_t *args, flags_t *flags)
     uint64_t k = last->clk;
     trace_destroy(rec);
 
-    if (flags_is_on(flags, flag_verbose())) {
+    if (verbose > 0) {
         sys_fprintf(stdout, "[lotto] inflex: ");
         args_print(args);
         sys_fprintf(stdout, "\n");
     }
 
-    preload(flags_get_sval(flags, flag_temporary_directory()),
-            flags_is_on(flags, flag_verbose()),
+    preload(flags_get_sval(flags, flag_temporary_directory()), verbose,
             !flags_is_on(flags, flag_no_preload()),
             flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));

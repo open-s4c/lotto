@@ -210,7 +210,7 @@ qemu(args_t *args, flags_t *flags)
     }
     argv[i] = NULL;
 
-    if (flags_is_on(flags, flag_verbose())) {
+    if (flag_verbose_enabled(flags)) {
         sys_fprintf(stdout, "[lotto] exec:");
         for (int j = 0; argv[j] != NULL; j++) {
             sys_fprintf(stdout, " %s", argv[j]);

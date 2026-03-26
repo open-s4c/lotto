@@ -15,16 +15,15 @@
 
 #define MAX_MODULES            100
 #define MAX_MODULE_NAME_LENGTH 1023
-#define MODULE_PREFIX          "lotto-"
-#define MODULE_PREFIX_LEN      (sizeof(MODULE_PREFIX) - 1)
+#define SO_SUFFIX              ".so"
+#define SO_SUFFIX_LEN          (sizeof(SO_SUFFIX) - 1)
 
-#define SO_SUFFIX     ".so"
-#define SO_SUFFIX_LEN (sizeof(SO_SUFFIX) - 1)
-
-#define DRIVER_MODULE_PREFIX      "lotto-driver-"
-#define DRIVER_MODULE_PREFIX_LEN  (sizeof(DRIVER_MODULE_PREFIX) - 1)
-#define RUNTIME_MODULE_PREFIX     "lotto-runtime-"
-#define RUNTIME_MODULE_PREFIX_LEN (sizeof(DRIVER_MODULE_PREFIX) - 1)
+#define DRIVER_MODULE_PREFIX          "lotto-driver-"
+#define DRIVER_MODULE_PREFIX_LEN      (sizeof(DRIVER_MODULE_PREFIX) - 1)
+#define RUNTIME_MODULE_PREFIX         "lotto-runtime-"
+#define RUNTIME_MODULE_PREFIX_LEN     (sizeof(RUNTIME_MODULE_PREFIX) - 1)
+#define RUNTIME_DBG_MODULE_PREFIX     "lotto-runtime-dbg-"
+#define RUNTIME_DBG_MODULE_PREFIX_LEN (sizeof(RUNTIME_DBG_MODULE_PREFIX) - 1)
 
 #define STARTS_WITH(s, LITERAL_NAME)                                           \
     (sys_strncmp((s), LITERAL_NAME, LITERAL_NAME##_LEN) == 0)
@@ -318,9 +317,16 @@ lotto_module_print()
 static char *
 _module_name(const char *filename)
 {
-    filename += MODULE_PREFIX_LEN;
-    size_t len = strrchr(filename, '.') - filename;
-    return sys_strndup(filename, len);
+    const char *name = filename;
+    if (STARTS_WITH(filename, DRIVER_MODULE_PREFIX)) {
+        name += DRIVER_MODULE_PREFIX_LEN;
+    } else if (STARTS_WITH(filename, RUNTIME_DBG_MODULE_PREFIX)) {
+        name += RUNTIME_DBG_MODULE_PREFIX_LEN;
+    } else if (STARTS_WITH(filename, RUNTIME_MODULE_PREFIX)) {
+        name += RUNTIME_MODULE_PREFIX_LEN;
+    }
+    size_t len = strrchr(name, '.') - name;
+    return sys_strndup(name, len);
 }
 
 static bool
@@ -348,10 +354,14 @@ _scandir(const char *scan_dir)
         }
         char *name         = _module_name(entry->d_name);
         module_kind_t kind = MODULE_KIND_NONE;
+        bool dbg           = false;
         if (STARTS_WITH(entry->d_name, DRIVER_MODULE_PREFIX)) {
             kind |= MODULE_KIND_CLI;
         }
-        if (STARTS_WITH(entry->d_name, RUNTIME_MODULE_PREFIX)) {
+        if (STARTS_WITH(entry->d_name, RUNTIME_DBG_MODULE_PREFIX)) {
+            kind |= MODULE_KIND_RUNTIME;
+            dbg = true;
+        } else if (STARTS_WITH(entry->d_name, RUNTIME_MODULE_PREFIX)) {
             kind |= MODULE_KIND_RUNTIME;
         }
         if (strstr(entry->d_name, "memmgr")) {
@@ -363,7 +373,8 @@ _scandir(const char *scan_dir)
             continue;
         }
         for (size_t i = 0; i < _next; ++i) {
-            if (!strcmp(name, _modules[i].name) && kind == _modules[i].kind) {
+            if (!strcmp(name, _modules[i].name) && kind == _modules[i].kind &&
+                dbg == _modules[i].dbg) {
                 _modules[i].shadowed = true;
                 _modules[i].disabled = true;
             }
@@ -372,6 +383,7 @@ _scandir(const char *scan_dir)
         module_t module = {.name     = name,
                            .path     = sys_strdup(path),
                            .kind     = kind,
+                           .dbg      = dbg,
                            .shadowed = false,
                            .disabled = false};
         logger_debugf("Found new module '%s'\n", module.path);

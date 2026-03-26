@@ -47,7 +47,8 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
     envvar_set! {
         "LOTTO_MODIFY_RETURN_CODE" => 1 as u64,
     };
-    cli::logger();
+    let verbose = flags.get_uval(&FLAG_VERBOSE);
+    cli::logger(verbose);
 
     info!("rinflex trace: {}", flags.get_sval(&FLAG_INPUT));
 
@@ -55,7 +56,7 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
 
     cli::preload(
         flags.get_sval(&FLAG_TEMPORARY_DIRECTORY),
-        flags.is_on(&FLAG_VERBOSE),
+        verbose,
         !flags.is_on(&FLAG_NO_PRELOAD),
         flags.get_sval(&flag_memmgr_runtime()),
         flags.get_sval(&flag_memmgr_user()),

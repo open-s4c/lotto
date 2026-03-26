@@ -63,12 +63,13 @@ macro(add_runtime TARGET OUTPUT_NAME)
 endmacro()
 
 add_runtime(lotto lotto-runtime)
-add_runtime(lotto-verbose lotto-runtime-verbose)
-target_compile_definitions(lotto-verbose PRIVATE -DLOTTO_VERBOSE)
+list(TRANSFORM LIBS REPLACE "^lotto-runtime-engine\\.o$" "lotto-runtime-dbg-engine.o")
+add_runtime(lotto-dbg lotto-runtime-dbg)
+target_compile_definitions(lotto PRIVATE -DLOGGER_DISABLE)
 
 add_library(runtime-module.o OBJECT module.c)
 
-function(add_lotto_builtin LIB)
+function(add_lotto_builtin LIB DBG_LIB)
     target_link_libraries(lotto PRIVATE ${LIB})
-    target_link_libraries(lotto-verbose PRIVATE ${LIB})
+    target_link_libraries(lotto-dbg PRIVATE ${DBG_LIB})
 endfunction()

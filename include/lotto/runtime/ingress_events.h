@@ -24,5 +24,4 @@ typedef struct task_join_event {
     int ret;
 } task_join_event_t;
 
-
 #endif

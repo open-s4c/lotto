@@ -1,16 +1,16 @@
 #include <stddef.h>
 #include <string.h>
 
-#define LOGGER_BLOCK LOGGER_CUR_BLOCK
 #include "state.h"
 #include <lotto/base/tidmap.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/ichpt/ichpt.h>
+#include <lotto/modules/mutex/events.h>
 #include <lotto/modules/race/race_result.h>
-#include <lotto/runtime/memaccess_payload.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/assert.h>
-#include <lotto/sys/logger_block.h>
+#include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 
 /* deregister item in tidmap after 100 clk ticks */
@@ -211,7 +211,7 @@ race_check(const capture_point *cp, clk_t clk)
                     e.readonly = true;
                     // fallthru
                 case EVENT_MA_WRITE:
-                    e.addr = context_memaccess_addr(cp);
+                    e.addr = memaccess_addr(cp);
                     if (e.addr == 0)
                         return race;
 #ifndef RACE_DEFAULT
@@ -229,7 +229,7 @@ race_check(const capture_point *cp, clk_t clk)
                 case EVENT_MA_CMPXCHG:
                 case EVENT_MA_XCHG:
                 case EVENT_MA_RMW:
-                    e.addr = context_memaccess_addr(cp);
+                    e.addr = memaccess_addr(cp);
                     if (e.addr == 0)
                         return race;
 #ifndef RACE_DEFAULT
@@ -317,4 +317,30 @@ _race_handle(const capture_point *cp, event_t *e)
             add_ichpt(race.loc2.pc);
     }
 }
-REGISTER_SEQUENCER_HANDLER(_race_handle)
+ON_SEQUENCER_CAPTURE(_race_handle)
+
+STATIC void
+_race_resume_handle(const capture_point *cp, event_t *e)
+{
+    (void)e;
+    ASSERT(cp && cp->id != NO_TASK);
+
+    if (!race_config()->enabled)
+        return;
+    switch (cp->src_type) {
+        default:
+            return;
+        case EVENT_TASK_CREATE:
+        case EVENT_MUTEX_RELEASE:
+            break;
+    }
+
+    task_id id = cp->vid != NO_TASK ? cp->vid : cp->id;
+
+    tiditem_t *item = tidmap_find(&_state, id);
+    if (item == NULL)
+        return;
+
+    ot_clear((ot_set *)item);
+}
+ON_SEQUENCER_RESUME(_race_resume_handle)

@@ -87,6 +87,16 @@
             return PS_STOP_CHAIN;                                              \
     })
 
+/* Run a handler for each sequencer resume event. */
+#define ON_SEQUENCER_RESUME(HANDLE)                                            \
+    LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {                              \
+        const capture_point *cp = EVENT_PAYLOAD(cp);                           \
+        sequencer_decision *e   = cp->decision;                                \
+        HANDLE(cp, e);                                                         \
+        if (e && e->skip)                                                      \
+            return PS_STOP_CHAIN;                                              \
+    })
+
 /*
  * Run code during Lotto Phase 2: registration.
  *

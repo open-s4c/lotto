@@ -10,6 +10,7 @@
 
 #include <dice/events/memaccess.h>
 #include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 
 #define EVENT_RUNTIME__MEMMGR_INIT 129

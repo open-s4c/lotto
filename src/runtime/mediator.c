@@ -101,8 +101,6 @@ mediator_capture(mediator_t *m, capture_point *cp)
     _plan_optimize(&m->plan, cp, m->optimization);
 
     do {
-        logger_debugln("[%lu] %s mediator_capture", m->id,
-                       action_str(plan_next(m->plan)));
         switch (plan_next(m->plan)) {
             case ACTION_WAKE:
                 switcher_wake(m->plan.next,
@@ -113,7 +111,7 @@ mediator_capture(mediator_t *m, capture_point *cp)
 
             case ACTION_BLOCK:
                 if (plan_done(&m->plan))
-                    ASSERT(0 && "expected plan not to be done");
+                    logger_fatalf("expected plan not to be done");
                 return true;
 
             case ACTION_CONTINUE:
@@ -147,8 +145,6 @@ mediator_resume(mediator_t *m, capture_point *cp)
     mediator_status_t st = MEDIATOR_OK;
 
     do {
-        logger_debugln("[%lu] %s mediator_resume", m->id,
-                       action_str(plan_next(m->plan)));
         switch (plan_next(m->plan)) {
             case ACTION_YIELD:
                 switcher_yield(cp->id, m->plan.any_task_filter);

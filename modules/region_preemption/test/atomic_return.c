@@ -40,4 +40,3 @@ main()
     pthread_join(thread2, 0);
     return 0;
 }
-

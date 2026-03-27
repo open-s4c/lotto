@@ -51,6 +51,9 @@ function(add_mockoto)
                 -I ${PROJECT_SOURCE_DIR}/deps/dice/deps/libvsync/include #
                 ${__FLAGS} #
                 > ${CMAKE_CURRENT_SOURCE_DIR}/${__TARGET}
+            COMMAND
+                /bin/sh ${PROJECT_SOURCE_DIR}/scripts/mockoto-rkt-sanitize.sh
+                ${CMAKE_CURRENT_SOURCE_DIR}/${__TARGET}
             BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/${__TARGET})
     else()
         string(REGEX REPLACE "[.]c$" ".h" HEADER ${__TARGET})

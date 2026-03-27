@@ -105,8 +105,9 @@ _explore_interval(args_t *args, flags_t *flags, trace_t *input, uint64_t from,
 int
 explore(args_t *args, flags_t *flags)
 {
-    preload(flags_get_sval(flags, flag_temporary_directory()),
-            flags_is_on(flags, flag_verbose()),
+    uint64_t verbose = flag_verbose_count(flags);
+
+    preload(flags_get_sval(flags, flag_temporary_directory()), verbose,
             !flags_is_on(flags, flag_no_preload()),
             flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
@@ -119,7 +120,7 @@ explore(args_t *args, flags_t *flags)
         NULL};
     envvar_set(vars, true);
 
-    if (flags_is_on(flags, flag_verbose())) {
+    if (verbose > 0) {
         sys_fprintf(stdout, "[lotto] starting:");
         args_print(args);
         sys_fprintf(stdout, "\n");

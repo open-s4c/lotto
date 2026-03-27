@@ -160,6 +160,10 @@ static flags_t *_default_flags;
 static bool
 _entry_has_argument(const option_t *e)
 {
+    if (_entry_has_short_opt(e) && e->opt[0] == 'v' &&
+        sys_strcmp(e->long_opt, "verbose") == 0) {
+        return false;
+    }
     return flag_type(e->val) != VALUE_TYPE_BOOL ||
            STR_CONVERTER_IS_PRESENT(e->str_converter);
 }
@@ -473,6 +477,11 @@ flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
 
         switch (flags_get_type(flags, fnum)) {
             case VALUE_TYPE_UINT64:
+                if (fnum == flag_verbose() && optarg == NULL) {
+                    flags_set_by_opt(flags, fnum,
+                                     uval(flags_get_uval(flags, fnum) + 1));
+                    break;
+                }
                 flags_set_by_opt(
                     flags, fnum,
                     uval(

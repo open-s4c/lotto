@@ -34,7 +34,12 @@ mediator_get(struct metadata *md, bool bootstrap)
     }
     ASSERT(md != NULL);
 
-    mediator_t *m = SELF_TLS(md, &mediator_key_);
+    mediator_t *m = self_tls_get(md, (uintptr_t)&mediator_key_);
+    if (m == NULL) {
+        if (!bootstrap)
+            return NULL;
+        m = SELF_TLS(md, &mediator_key_);
+    }
     if (m->id == NO_TASK) {
         *m = (mediator_t){
             .id           = self_id(md),

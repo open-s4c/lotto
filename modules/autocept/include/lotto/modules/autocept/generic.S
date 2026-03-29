@@ -9,7 +9,7 @@
  *
  * @param name name of intercepted function, epoll_wait
  */
-.macro add_interceptor name
+.macro add_interceptor name, event=0
         .section .rodata
 .func_\name:
         .string "\name"
@@ -28,7 +28,7 @@
          * the event, including ev->retpc, into self TLS before the wrapper
          * restores the real call ABI.
          */
-        prepare_before_event \name
+        prepare_before_event \name, \event
         publish_before_event \name
         cleanup_before_event
 
@@ -44,7 +44,7 @@
          */
         cleanup_fptr_call
 
-        prepare_after_event \name
+        prepare_after_event \name, \event
         publish_after_event
         cleanup_after_event
 

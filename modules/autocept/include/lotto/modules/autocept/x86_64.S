@@ -12,8 +12,9 @@
 
 .set AUTOCEPT_CALL_NAME_OFFSET, 64
 .set AUTOCEPT_CALL_FUNC_OFFSET, 72
-.set AUTOCEPT_CALL_RET_OFFSET, 80
-.set AUTOCEPT_CALL_RETPC_OFFSET, 96
+.set AUTOCEPT_CALL_SRC_TYPE_OFFSET, 80
+.set AUTOCEPT_CALL_RET_OFFSET, 88
+.set AUTOCEPT_CALL_RETPC_OFFSET, 104
 .set AUTOCEPT_CALL_FRAME_SIZE, 112
 .set AUTOCEPT_VALUE_TYPE_UINT64, 2
 .set AUTOCEPT_FP_CALL_ARGS_SIZE, 128
@@ -22,7 +23,7 @@
 /* Build the BEFORE event on the current stack and pass it as the first C
  * argument to autocept_before.
  */
-.macro prepare_before_event name
+.macro prepare_before_event name, event
         /* Save the callee-save registers that autocept itself uses as scratch
          * across helper calls. r14 also keeps the original incoming rax/al so
          * variadic calls can restore the SysV vector-argument count later.
@@ -63,6 +64,7 @@
         movq  %rax, AUTOCEPT_CALL_NAME_OFFSET(%rsp)
         movq  .autocept_fptr_\name(%rip), %rax
         movq  %rax, AUTOCEPT_CALL_FUNC_OFFSET(%rsp)
+        movw  $\event, AUTOCEPT_CALL_SRC_TYPE_OFFSET(%rsp)
         movq  $0, AUTOCEPT_CALL_RET_OFFSET(%rsp)
         movq  $0, AUTOCEPT_CALL_RET_OFFSET + 8(%rsp)
         movq  AUTOCEPT_CALL_FRAME_SIZE + AUTOCEPT_FP_CALL_ARGS_SIZE + 40(%rsp), %rax
@@ -162,7 +164,7 @@
  * return into ev->ret, and pass the rebuilt event to autocept_after. The extra
  * 8-byte pad keeps the helper call 16-byte aligned on x86_64.
  */
-.macro prepare_after_event name
+.macro prepare_after_event name, event
         /* Build a fresh event frame from the post-call register state. */
         subq  $AUTOCEPT_CALL_FRAME_SIZE, %rsp
         movq  %rdi, 0(%rsp)
@@ -177,6 +179,7 @@
         movq  %rax, AUTOCEPT_CALL_NAME_OFFSET(%rsp)
         movq  .autocept_fptr_\name(%rip), %rax
         movq  %rax, AUTOCEPT_CALL_FUNC_OFFSET(%rsp)
+        movw  $\event, AUTOCEPT_CALL_SRC_TYPE_OFFSET(%rsp)
         movq  $0, AUTOCEPT_CALL_RET_OFFSET(%rsp)
         movq  $0, AUTOCEPT_CALL_RET_OFFSET + 8(%rsp)
         movq  AUTOCEPT_CALL_FRAME_SIZE + AUTOCEPT_FP_CALL_ARGS_SIZE + 40(%rsp), %rax

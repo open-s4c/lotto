@@ -14,8 +14,9 @@ void *
 autocept_before(struct autocept_call_event *ev)
 {
     metadata_t md = {0};
-
-    PS_PUBLISH(INTERCEPT_BEFORE, EVENT_AUTOCEPT_CALL, ev, &md);
+    if (ev->src_type == ANY_EVENT)
+        ev->src_type = EVENT_AUTOCEPT_CALL;
+    PS_PUBLISH(INTERCEPT_BEFORE, ev->src_type, ev, &md);
 
     if (ev->func == NULL) {
 #if defined(__APPLE__)
@@ -32,5 +33,7 @@ void
 autocept_after(struct autocept_call_event *ev)
 {
     metadata_t md = {0};
-    PS_PUBLISH(INTERCEPT_AFTER, EVENT_AUTOCEPT_CALL, ev, &md);
+    if (ev->src_type == ANY_EVENT)
+        ev->src_type = EVENT_AUTOCEPT_CALL;
+    PS_PUBLISH(INTERCEPT_AFTER, ev->src_type, ev, &md);
 }

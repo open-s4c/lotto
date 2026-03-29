@@ -1,7 +1,8 @@
 .set AUTOCEPT_CALL_NAME_OFFSET, 64
 .set AUTOCEPT_CALL_FUNC_OFFSET, 72
-.set AUTOCEPT_CALL_RET_OFFSET, 80
-.set AUTOCEPT_CALL_RETPC_OFFSET, 96
+.set AUTOCEPT_CALL_SRC_TYPE_OFFSET, 80
+.set AUTOCEPT_CALL_RET_OFFSET, 88
+.set AUTOCEPT_CALL_RETPC_OFFSET, 104
 .set AUTOCEPT_CALL_FRAME_SIZE, 112
 .set AUTOCEPT_VALUE_TYPE_UINT64, 2
 .set AUTOCEPT_FP_CALL_ARGS_SIZE, 128
@@ -10,7 +11,7 @@
 /* Build the BEFORE event on the current stack and pass it as the first C
  * argument to autocept_before.
  */
-.macro prepare_before_event name
+.macro prepare_before_event name, event
 	/* Save the callee-save registers that the wrapper uses as scratch. */
 	stp	x29, x30, [sp, #-16]!
 	stp	x19, x20, [sp, #-16]!
@@ -33,6 +34,8 @@
 	adrp	x9, .autocept_fptr_\name
 	ldr	x9, [x9, #:lo12:.autocept_fptr_\name]
 	str	x9, [sp, #AUTOCEPT_CALL_FUNC_OFFSET]
+	mov	w9, #\event
+	strh	w9, [sp, #AUTOCEPT_CALL_SRC_TYPE_OFFSET]
 	str	xzr, [sp, #AUTOCEPT_CALL_RET_OFFSET]
 	str	xzr, [sp, #AUTOCEPT_CALL_RET_OFFSET + 8]
 	str	x30, [sp, #AUTOCEPT_CALL_RETPC_OFFSET]
@@ -99,7 +102,7 @@
 /* Build the AFTER event from the real return path, write the captured scalar
  * return into ev->ret, and pass the rebuilt event to autocept_after.
  */
-.macro prepare_after_event name
+.macro prepare_after_event name, event
 	/* Build a fresh event frame from the post-call register state. */
 	sub	sp, sp, #AUTOCEPT_CALL_FRAME_SIZE
 	stp	x0, x1, [sp, #0]
@@ -111,6 +114,8 @@
 	adrp	x9, .autocept_fptr_\name
 	ldr	x9, [x9, #:lo12:.autocept_fptr_\name]
 	str	x9, [sp, #AUTOCEPT_CALL_FUNC_OFFSET]
+	mov	w9, #\event
+	strh	w9, [sp, #AUTOCEPT_CALL_SRC_TYPE_OFFSET]
 	str	xzr, [sp, #AUTOCEPT_CALL_RET_OFFSET]
 	str	xzr, [sp, #AUTOCEPT_CALL_RET_OFFSET + 8]
 	str	x30, [sp, #AUTOCEPT_CALL_RETPC_OFFSET]

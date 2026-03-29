@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <dice/types.h>
 #include <lotto/base/value.h>
 
 #define EVENT_AUTOCEPT_CALL 181
@@ -39,6 +40,7 @@ struct autocept_call_event {
     struct autocept_call_regs regs;
     const char *name;
     void (*func)(void);
+    type_id src_type;
     struct value ret;
     uintptr_t retpc;
 };

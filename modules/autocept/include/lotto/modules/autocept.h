@@ -21,6 +21,6 @@
 
 #include <lotto/modules/autocept/generic.S>
 
-#define ADD_INTERCEPTOR(name) add_interceptor name
+#define ADD_INTERCEPTOR(...) add_interceptor __VA_ARGS__
 
 #endif

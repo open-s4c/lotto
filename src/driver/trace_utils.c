@@ -179,7 +179,7 @@ cli_trace_init(const char *record, const args_t *args, const char *replay,
     char *var = sys_getenv("LOTTO_RECORDER_TYPE");
 
     if (!var) {
-        const char *real_fn = detect_record_type(replay ? replay : record);
+        const char *real_fn = detect_record_type(is_replay ? replay : record);
         record              = real_fn;
         var                 = sys_getenv("LOTTO_RECORDER_TYPE");
         ASSERT(var);
@@ -236,7 +236,7 @@ cli_trace_init(const char *record, const args_t *args, const char *replay,
         } else {
             ASSERT(0 && "unknown recorder type");
         }
-        if (!replay) {
+        if (!is_replay) {
             // add record start to the trace
             record_t *r = record_start(args);
             if (!is_file && TRACE_OK != trace_append(rec, r))

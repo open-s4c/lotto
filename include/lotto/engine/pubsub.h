@@ -31,7 +31,7 @@
     PS_SUBSCRIBE(CAPTURE_##SUFFIX, TYPE, {                                     \
         capture_point *cp = EVENT_PAYLOAD(event);                              \
         PS_PUBLISH(CHAIN_INGRESS_##SUFFIX, TYPE, cp, md);                      \
-        return PS_OK;                                                          \
+        return PS_STOP_CHAIN;                                                  \
     })
 
 /* Advertise a Lotto event type name for debugging and tracing output. */

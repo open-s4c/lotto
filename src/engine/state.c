@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#define LOGGER_PREFIX "engine"
 #include <dice/module.h>
 #include <lotto/base/marshable.h>
 #include <lotto/engine/pubsub.h>
@@ -7,8 +8,6 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
-
-#define LOGGER_PREFIX LOGGER_CUR_FILE
 
 struct engine_state {
     prng_t prng;
@@ -56,7 +55,7 @@ STATEMGR_REGISTER(CONFIG, {
 
 LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
     (void)v;
-    logger_debugf("seed = %u\n", _engine_state.prng.seed);
+    logger_debugf("engine loaded seed = %u\n", _engine_state.prng.seed);
     const char *var = getenv("LOTTO_SEED");
     if (var) {
         _engine_state.prng.seed = atoi(var);

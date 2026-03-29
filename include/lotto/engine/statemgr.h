@@ -11,7 +11,6 @@
 
 #include <lotto/base/marshable.h>
 #include <lotto/base/record.h>
-#include <lotto/base/slot.h>
 #include <lotto/engine/events.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/sys/assert.h>

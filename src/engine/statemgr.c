@@ -3,7 +3,6 @@
 
 #define LOGGER_PREFIX LOGGER_CUR_FILE
 #include <lotto/base/marshable.h>
-#include <lotto/base/slot.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/assert.h>

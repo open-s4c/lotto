@@ -19,7 +19,6 @@
 #include <lotto/velocity.h>
 
 #define NAME "TASK VELOCITY"
-#define SLOT SLOT_TASK_VELOCITY
 
 typedef struct {
     tiditem_t t;

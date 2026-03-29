@@ -80,8 +80,11 @@ typedef struct str_converter_s {
 #define STR_CONVERTER_BOOL                                                     \
     (str_converter_t)                                                          \
     {                                                                          \
-        STR_CONVERTER_TYPE_BOOL,                                               \
-            ._bool = {enabled_str, enabled_from, "enable|disable"}             \
+        STR_CONVERTER_TYPE_BOOL, ._bool = {                                    \
+            enabled_str,                                                       \
+            enabled_from,                                                      \
+            "enable|disable"                                                   \
+        }                                                                      \
     }
 
 static inline const char *
@@ -134,10 +137,10 @@ flag_t flag_before_run();
 flag_t flag_after_run();
 flag_t flag_logger_file();
 
-#define _FLAGMGR_CALLBACK(name, CALLBACK)                                      \
+#define _FLAGMGR_CALLBACK(name, ...)                                           \
     static void _flagmgr_callback_##name(struct value v, void *__)             \
     {                                                                          \
-        (CALLBACK);                                                            \
+        __VA_ARGS__;                                                           \
     }
 
 #define ON_DRIVER_REGISTER_FLAGS(...)                                          \
@@ -149,33 +152,32 @@ flag_t flag_logger_file();
 #define _FLAGMGR_SUBSCRIBE(...) ON_DRIVER_REGISTER_FLAGS(__VA_ARGS__)
 
 #define NEW_PRETTY_CALLBACK_FLAG(name, opt, long_opt, desc, val,               \
-                                 str_converter, CALLBACK)                      \
-    _FLAGMGR_CALLBACK(name, CALLBACK)                                          \
+                                 str_converter, ...)                           \
+    _FLAGMGR_CALLBACK(name, __VA_ARGS__)                                       \
     _FLAGMGR_SUBSCRIBE({                                                       \
         new_flag(#name, (opt), (long_opt), "", (desc), (val), (str_converter), \
                  _flagmgr_callback_##name);                                    \
     })
 
 #define NEW_PUBLIC_PRETTY_CALLBACK_FLAG(var, opt, long_opt, desc, val,         \
-                                        str_converter, CALLBACK)               \
+                                        str_converter, ...)                    \
     static flag_t FLAG_##var;                                                  \
-    _FLAGMGR_CALLBACK(var, CALLBACK)                                           \
+    _FLAGMGR_CALLBACK(var, __VA_ARGS__)                                        \
     _FLAGMGR_SUBSCRIBE({                                                       \
         FLAG_##var = new_flag(#var, (opt), (long_opt), "", (desc), (val),      \
                               (str_converter), _flagmgr_callback_##var);       \
     })
 
-#define NEW_CALLBACK_FLAG(name, opt, long_opt, help, desc, val, CALLBACK)      \
-    _FLAGMGR_CALLBACK(name, CALLBACK)                                          \
+#define NEW_CALLBACK_FLAG(name, opt, long_opt, help, desc, val, ...)           \
+    _FLAGMGR_CALLBACK(name, __VA_ARGS__)                                       \
     _FLAGMGR_SUBSCRIBE({                                                       \
         new_flag(#name, (opt), (long_opt), (help), (desc), (val),              \
                  (str_converter_t){}, CONCAT(_flagmgr_callback_, name));       \
     })
 
-#define NEW_PUBLIC_CALLBACK_FLAG(var, opt, long_opt, help, desc, val,          \
-                                 CALLBACK)                                     \
+#define NEW_PUBLIC_CALLBACK_FLAG(var, opt, long_opt, help, desc, val, ...)     \
     static flag_t FLAG_##var;                                                  \
-    _FLAGMGR_CALLBACK(var, CALLBACK)                                           \
+    _FLAGMGR_CALLBACK(var, __VA_ARGS__)                                        \
     _FLAGMGR_SUBSCRIBE({                                                       \
         FLAG_##var = new_flag(#var, (opt), (long_opt), (help), (desc), (val),  \
                               (str_converter_t){}, _flagmgr_callback_##var);   \

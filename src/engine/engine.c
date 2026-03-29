@@ -22,10 +22,10 @@
 #include <lotto/util/once.h>
 
 #define log(cp, fmt, ...)                                                      \
-    logger_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx, type:%u, "       \
-                  "src:%u] " fmt "\n",                                         \
-                  cp->id, CONTRACT(_ghost.clk, ) cp->pc & 0xfff, cp->src_type,  \
-                  cp->src_type, ##__VA_ARGS__)
+    logger_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx, type:%s] " fmt   \
+                                                   "\n",                       \
+                  cp->id, CONTRACT(_ghost.clk, ) cp->pc & 0xfff,               \
+                  ps_type_str(cp->src_type), ##__VA_ARGS__)
 
 
 CONTRACT(enum state{

@@ -43,6 +43,7 @@ add_module(cxa)
 # hard filters                                                                 #
 add_module(region_preemption)
 add_module(region_filter)
+add_module(sampling SLOT 3)
 add_module(filtering)
 
 # feature handlers

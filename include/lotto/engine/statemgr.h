@@ -58,7 +58,6 @@ void statemgr_record_unmarshal(const record_t *r);
         } while (0);                                                           \
     }                                                                          \
     ON_REGISTRATION_PHASE({                                                    \
-        log_printf("registering state mgr %s \n", #type);                      \
         (var).m =                                                              \
             MARSHABLE_STATIC_PRINTABLE(sizeof(var), STATEMGR_PRINT(type));     \
         statemgr_register(DICE_MODULE_SLOT, &(var).m, STATE_TYPE_##type);      \

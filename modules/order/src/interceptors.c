@@ -1,4 +1,13 @@
 // clang-format off
+#if defined(__linux__) && !defined(FUTEX_USERSPACE)
+/* Mirror the runtime switcher workaround: force libvsync futex.h to use the
+ * external vfutex_wait/wake declarations so this module goes through
+ * src/runtime/futex.c and the lotto_futex override path.
+ */
+#undef __linux__
+#include <vsync/thread/internal/futex.h>
+#define __linux__
+#endif
 #include <vsync/thread/mutex.h>
 #include <vsync/thread/cond.h>
 // clang-format on

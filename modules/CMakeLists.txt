@@ -27,6 +27,7 @@ include_directories(autocept/include)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LOTTO_MODULE_BUILD_DIR}")
 
+set(RUNTIME_MODULE_TYPE_syscall OBJECT)
 set(RUNTIME_MODULE_TYPE_rusty SHARED)
 set(RUNTIME_MODULE_LTO_rusty OFF)
 
@@ -77,6 +78,7 @@ add_module(inactivity)
 
 # other components
 add_module(autocept)
+add_module(syscall SLOT 2)
 add_module(time)
 add_module(random)
 add_module(tsan)

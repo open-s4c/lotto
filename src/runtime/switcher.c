@@ -15,6 +15,16 @@
 #include <stdbool.h>
 #include <stdio.h>
 // clang-format off
+#if defined(__linux__) && !defined(FUTEX_USERSPACE)
+/* If we are in Linux, we want to replace the vfutex_wait/wake functions.
+ * Libvsync does not expose an option for that unless the OS is NOT Linux.
+ * Hence, we pretend to be an unknown OS, and in this way futex.h will look for
+ * external implementations of vfutex_wake/wait
+ */
+#undef __linux__
+#include <vsync/thread/internal/futex.h>
+#define __linux__
+#endif
 #include <vsync/thread/mutex.h>
 #include <vsync/thread/cond.h>
 // clang-format on

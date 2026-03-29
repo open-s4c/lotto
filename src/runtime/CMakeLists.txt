@@ -11,7 +11,7 @@ target_compile_definitions(mediator_testing.o PRIVATE -DLOTTO_TEST)
 target_compile_options(mediator.o PRIVATE -Wno-uninitialized)
 target_compile_options(mediator_testing.o PRIVATE -Wno-uninitialized)
 
-set(SRCS switcher.c)
+set(SRCS switcher.c futex.c)
 add_library(switcher.o OBJECT ${SRCS})
 add_library(switcher_testing.o OBJECT ${SRCS})
 target_compile_definitions(switcher_testing.o PRIVATE -DLOTTO_TEST)

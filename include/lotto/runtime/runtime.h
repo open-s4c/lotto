@@ -7,6 +7,7 @@
 
 #include <lotto/base/reason.h>
 #include <lotto/runtime/capture_point.h>
+#include <lotto/util/macros.h>
 
 void lotto_exit(capture_point *cp, reason_t reason) NORETURN;
 

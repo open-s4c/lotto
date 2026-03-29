@@ -1,6 +1,7 @@
 /*******************************************************************************
  * trace
  ******************************************************************************/
+#include <errno.h>
 #include <limits.h>
 #include <sched.h>
 #include <stddef.h>
@@ -52,7 +53,11 @@ trace(args_t *args, flags_t *flags)
                         flags_get_sval(flags, flag_input())[0] ?
                     flags_get_sval(flags, flag_input()) :
                     flags_get_sval(flags, flag_output()));
-    rename(tmp_name, flags_get_sval(flags, flag_output()));
+    if (rename(tmp_name, flags_get_sval(flags, flag_output())) != 0) {
+        sys_fprintf(stderr, "error: could not rename %s to %s: %s\n", tmp_name,
+                    flags_get_sval(flags, flag_output()), strerror(errno));
+        return 1;
+    }
 
     return 0;
 }

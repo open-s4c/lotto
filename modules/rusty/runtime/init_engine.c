@@ -1,5 +1,6 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/sequencer.h>
+#include <lotto/modules/rusty/events.h>
 
 void lotto_rust_subscribe();
 void lotto_rust_publish_execute(const capture_point *ctx,
@@ -14,6 +15,10 @@ void lotto_rust_before_marshal_persistent(void);
 void lotto_rust_before_marshal_final(void);
 void lotto_rust_register();
 void lotto_rust_init();
+
+LOTTO_ADVERTISE_TYPE(EVENT_AWAIT)
+LOTTO_ADVERTISE_TYPE(EVENT_SPIN_START)
+LOTTO_ADVERTISE_TYPE(EVENT_SPIN_END)
 
 static void
 _rusty_capture_handle(const capture_point *ctx, event_t *e)

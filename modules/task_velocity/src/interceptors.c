@@ -5,8 +5,6 @@
 #include <lotto/sys/assert.h>
 #include <lotto/velocity.h>
 
-PS_ADVERTISE_TYPE(EVENT_TASK_VELOCITY)
-
 static void
 intercept_task_velocity(int64_t probability)
 {

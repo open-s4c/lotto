@@ -25,8 +25,6 @@ typedef struct {
     const char *func;
 } time_yield_event_t;
 
-PS_ADVERTISE_TYPE(EVENT_TIME_YIELD)
-
 static inline void
 intercept_time_yield(const char *func)
 {

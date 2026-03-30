@@ -79,8 +79,6 @@ ghost_filter_(metadata_t *md, chain_id chain, type_id type)
     return PS_STOP_CHAIN;
 }
 
-LOTTO_ADVERTISE_TYPE(EVENT_GHOST_START)
-LOTTO_ADVERTISE_TYPE(EVENT_GHOST_END)
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_GHOST_START, {
     capture_point cp = {

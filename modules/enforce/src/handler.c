@@ -127,7 +127,6 @@ _report(const capture_point *cp)
     }
 }
 
-LOTTO_ADVERTISE_TYPE(EVENT_ENFORCE__VIOLATED)
 
 void
 _save(const capture_point *cp, const event_t *e)

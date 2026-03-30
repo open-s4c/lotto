@@ -4,9 +4,6 @@
 #include <lotto/modules/deadlock/events.h>
 #include <lotto/rsrc_deadlock.h>
 
-PS_ADVERTISE_TYPE(EVENT_RSRC_ACQUIRING)
-PS_ADVERTISE_TYPE(EVENT_RSRC_RELEASED)
-
 void
 intercept_rsrc_acquiring(void *addr)
 {

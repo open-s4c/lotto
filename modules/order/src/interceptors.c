@@ -27,8 +27,6 @@ typedef struct {
     uint64_t order;
 } order_event_t;
 
-PS_ADVERTISE_TYPE(EVENT_ORDER)
-
 void
 lotto_order(uint64_t order)
 {

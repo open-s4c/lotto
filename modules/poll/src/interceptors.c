@@ -22,8 +22,6 @@
 #include <lotto/util/casts.h>
 #include <sys/types.h>
 
-PS_ADVERTISE_TYPE(EVENT_POLL)
-
 static void
 intercept_poll(poll_args_t *args)
 {

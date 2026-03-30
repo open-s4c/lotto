@@ -208,12 +208,12 @@ recorder_record(const capture_point *cp, clk_t clk)
 
     record_t *r = record_alloc(statemgr_size(STATE_TYPE_PERSISTENT));
     ASSERT(r != NULL);
-    r->kind      = RECORD_SCHED;
-    r->id        = cp->id;
-    r->src_chain = cp->src_chain;
-    r->src_type  = cp->src_type;
-    r->pc        = cp->pc;
-    r->clk       = clk;
+    r->kind     = RECORD_SCHED;
+    r->id       = cp->id;
+    r->chain_id = cp->chain_id;
+    r->type_id  = cp->type_id;
+    r->pc       = cp->pc;
+    r->clk      = clk;
     statemgr_marshal(&r->data, STATE_TYPE_PERSISTENT);
     _recorder_out(r);
 

@@ -46,9 +46,8 @@ typedef struct record_s {
     struct record_s *next; /**< Shall not be used. */
     task_id id;            /**< Thread creating record. */
     clk_t clk;             /**< Clock value of record. */
-    chain_id src_chain;    /**< Source event chain. */
-    type_id type;          /**< Semantic ingress event type. */
-    type_id src_type;      /**< Normalized source event type. */
+    chain_id chain_id;     /**< Source event chain. */
+    type_id type_id;       /**< Normalized source event type. */
     reason_t reason;       /**< Reason for record. */
     enum record kind;      /**< Kind of record payload. */
     size_t size;           /**< Size of payload. */

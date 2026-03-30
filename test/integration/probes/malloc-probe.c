@@ -26,14 +26,14 @@ static void
 handler_(const capture_point *cp, event_t *e)
 {
     (void)e;
-    if (cp->src_type != EVENT_MALLOC) {
+    if (cp->type_id != EVENT_MALLOC) {
         return;
     }
-    if (cp->src_chain == CHAIN_INGRESS_BEFORE) {
+    if (cp->chain_id == CHAIN_INGRESS_BEFORE) {
         malloc_before_calls_++;
         return;
     }
-    if (cp->src_chain == CHAIN_INGRESS_AFTER) {
+    if (cp->chain_id == CHAIN_INGRESS_AFTER) {
         malloc_after_calls_++;
     }
 }

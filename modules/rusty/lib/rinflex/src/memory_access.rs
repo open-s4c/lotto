@@ -543,7 +543,7 @@ pub trait MemoryOperationExt {
 impl MemoryOperationExt for Transition {
     fn is_read(&self) -> bool {
         matches!(
-            self.src_type.to_raw_value(),
+            self.type_id.to_raw_value(),
             raw::EVENT_MA_READ
                 | raw::EVENT_MA_AREAD
                 | raw::EVENT_MA_RMW
@@ -555,7 +555,7 @@ impl MemoryOperationExt for Transition {
 
     fn is_write(&self) -> bool {
         matches!(
-            self.src_type.to_raw_value(),
+            self.type_id.to_raw_value(),
             raw::EVENT_MA_WRITE
                 | raw::EVENT_MA_AWRITE
                 | raw::EVENT_MA_RMW
@@ -567,7 +567,7 @@ impl MemoryOperationExt for Transition {
 
     fn is_atomic(&self) -> bool {
         matches!(
-            self.src_type.to_raw_value(),
+            self.type_id.to_raw_value(),
             raw::EVENT_MA_AWRITE
                 | raw::EVENT_MA_AREAD
                 | raw::EVENT_MA_RMW
@@ -587,17 +587,17 @@ impl MemoryOperationExt for Transition {
 
     fn is_cas(&self) -> bool {
         matches!(
-            self.src_type.to_raw_value(),
+            self.type_id.to_raw_value(),
             raw::EVENT_MA_CMPXCHG | raw::EVENT_MA_CMPXCHG_WEAK
         )
     }
 
     fn is_rmw(&self) -> bool {
-        matches!(self.src_type.to_raw_value(), raw::EVENT_MA_RMW)
+        matches!(self.type_id.to_raw_value(), raw::EVENT_MA_RMW)
     }
 
     fn is_xchg(&self) -> bool {
-        matches!(self.src_type.to_raw_value(), raw::EVENT_MA_XCHG)
+        matches!(self.type_id.to_raw_value(), raw::EVENT_MA_XCHG)
     }
 }
 

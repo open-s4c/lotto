@@ -41,7 +41,7 @@ _types_has(const type_id types[], type_id type)
 static inline type_id
 _record_effective_type(const record_t *r)
 {
-    return r->type != 0 ? r->type : r->src_type;
+    return r->type_id;
 }
 
 static record_t *

@@ -82,7 +82,7 @@ context_memaccess_size(const capture_point *cp)
 static inline arg_t
 context_memaccess_value(const capture_point *cp)
 {
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_MA_AWRITE:
             return context_memaccess_sized_arg(
                 ((struct ma_awrite_event *)cp->payload)->size,
@@ -108,7 +108,7 @@ context_memaccess_value(const capture_point *cp)
 static inline arg_t
 context_memaccess_cmp(const capture_point *cp)
 {
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_MA_CMPXCHG:
         case EVENT_MA_CMPXCHG_WEAK:
             return context_memaccess_sized_arg(
@@ -122,7 +122,7 @@ context_memaccess_cmp(const capture_point *cp)
 static inline uint32_t
 context_memaccess_rmw_op(const capture_point *cp)
 {
-    ASSERT(cp->src_type == EVENT_MA_RMW);
+    ASSERT(cp->type_id == EVENT_MA_RMW);
     return (uint32_t)((struct ma_rmw_event *)cp->payload)->op;
 }
 

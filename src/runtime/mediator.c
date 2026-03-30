@@ -49,9 +49,9 @@ mediator_get(struct metadata *md, bool bootstrap)
         };
         if (bootstrap) {
             capture_point cp = {
-                .func      = __FUNCTION__,
-                .src_chain = CHAIN_INGRESS_EVENT,
-                .src_type  = EVENT_DICE_NOP,
+                .func     = __FUNCTION__,
+                .chain_id = CHAIN_INGRESS_EVENT,
+                .type_id  = EVENT_DICE_NOP,
             };
             mediator_status_t status = mediator_resume(m, &cp);
             ASSERT(status == MEDIATOR_OK && "mediator bootstrap failed");
@@ -132,7 +132,7 @@ mediator_capture(mediator_t *m, capture_point *cp)
     } while (!plan_done(&m->plan));
 
     // only when the task finishes
-    ASSERT(cp->src_type == EVENT_TASK_FINI);
+    ASSERT(cp->type_id == EVENT_TASK_FINI);
 
     return true;
 }
@@ -192,7 +192,7 @@ mediator_return(mediator_t *m, capture_point *cp)
     ASSERT(!m->finito);
     cp->id = m->id;
 
-    if (cp->src_type == EVENT_TASK_CREATE) {
+    if (cp->type_id == EVENT_TASK_CREATE) {
         ASSERT(_should_resume(m));
         return;
     }

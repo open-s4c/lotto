@@ -28,13 +28,13 @@
 static bool
 _uses_current_mem_value(const capture_point *cp)
 {
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_MA_READ:
         case EVENT_MA_WRITE:
-            return cp->src_chain == CHAIN_INGRESS_EVENT;
+            return cp->chain_id == CHAIN_INGRESS_EVENT;
         case EVENT_MA_AREAD:
         case EVENT_MA_AWRITE:
-            return cp->src_chain == CHAIN_INGRESS_BEFORE;
+            return cp->chain_id == CHAIN_INGRESS_BEFORE;
         default:
             return false;
     }
@@ -71,7 +71,7 @@ _as_expected(const capture_point *cp)
     stable_address_t pc;
     bool has_addr = has_memaccess_addr(cp);
     if ((MODE(TID) && !EQUAL_CP(id)) ||
-        (MODE(CAT) && enforce_state()->cp.src_type != cp->src_type) ||
+        (MODE(CAT) && enforce_state()->cp.type_id != cp->type_id) ||
         (MODE(PC) && !EQUAL_PC) || (MODE(ADDRESS) && has_addr && !EQUAL_ADDR) ||
         (MODE(SEED) && !EQUAL_SEED))
         return false;
@@ -106,9 +106,9 @@ _report(const capture_point *cp)
     stable_address_t pc;
     if (!EQUAL_CP(id))
         REPORT_CTX("%lu", _, id);
-    if (MODE(CAT) && enforce_state()->cp.src_type != cp->src_type)
-        REPORT("%s", ps_type_str, cat, enforce_state()->cp.src_type,
-               cp->src_type);
+    if (MODE(CAT) && enforce_state()->cp.type_id != cp->type_id)
+        REPORT("%s", ps_type_str, cat, enforce_state()->cp.type_id,
+               cp->type_id);
     if (MODE(ADDRESS) && has_addr && !EQUAL_ADDR)
         REPORT("%lx", _, addr, enforce_state()->addr, memaccess_addr(cp));
     if (MODE(DATA) && _uses_current_mem_value(cp)) {
@@ -131,7 +131,7 @@ _report(const capture_point *cp)
 void
 _save(const capture_point *cp, const event_t *e)
 {
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_MA_READ:
         case EVENT_MA_AREAD:
         case EVENT_MA_WRITE:
@@ -191,7 +191,7 @@ _handle(const capture_point *ctx, event_t *cp)
             logger_errorf(
                 "Replay mismatch! cappt = [clk: %lu, id: %lu, type: %s, pc: "
                 "%p]\n",
-                cp->clk, ctx->id, ps_type_str(ctx->src_type), (void *)ctx->pc);
+                cp->clk, ctx->id, ps_type_str(ctx->type_id), (void *)ctx->pc);
             _report(ctx);
             logger_fatalf("unexpected capture point\n");
             sys_abort();

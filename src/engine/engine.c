@@ -25,7 +25,7 @@
     logger_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx, type:%s] " fmt   \
                                                    "\n",                       \
                   cp->id, CONTRACT(_ghost.clk, ) cp->pc & 0xfff,               \
-                  ps_type_str(cp->src_type), ##__VA_ARGS__)
+                  ps_type_str(cp->type_id), ##__VA_ARGS__)
 
 
 CONTRACT(enum state{
@@ -87,10 +87,10 @@ CONTRACT(static void _check_plan(const capture_point *cp, struct plan p) {
         case ACTION_CONTINUE:
             // fallthru
         case ACTION_WAKE | ACTION_YIELD | ACTION_RESUME:
-            ASSERT(cp->src_type != EVENT_TASK_FINI);
+            ASSERT(cp->type_id != EVENT_TASK_FINI);
             break;
         case ACTION_BLOCK | ACTION_YIELD | ACTION_RESUME:
-            ASSERT(cp->src_type == EVENT_TASK_CREATE);
+            ASSERT(cp->type_id == EVENT_TASK_CREATE);
             break;
         case ACTION_WAKE | ACTION_BLOCK | ACTION_RETURN | ACTION_YIELD |
             ACTION_RESUME:
@@ -99,15 +99,14 @@ CONTRACT(static void _check_plan(const capture_point *cp, struct plan p) {
             break;
         case ACTION_WAKE:
             ASSERT(p.next != cp->id);
-            ASSERT(cp->src_type == EVENT_TASK_FINI);
+            ASSERT(cp->type_id == EVENT_TASK_FINI);
             break;
         case ACTION_SHUTDOWN:
             break;
         default:
             plan_print(p);
             logger_fatalf("(cat: %s, type:%u, src:%u) plan mismatch\n",
-                          ps_type_str(cp->src_type), cp->src_type,
-                          cp->src_type);
+                          ps_type_str(cp->type_id), cp->type_id, cp->type_id);
     }
 })
 
@@ -151,7 +150,7 @@ engine_fini(const capture_point *cp, reason_t reason)
 struct plan
 engine_capture(const capture_point *cp)
 {
-    ASSERT(_engine_is_ingress_chain(cp->src_chain));
+    ASSERT(_engine_is_ingress_chain(cp->chain_id));
     CONTRACT({
         ASSERT(vatomic_read(&_ghost.state) != FINISHED);
         ASSERT(cp->func != NULL);
@@ -163,7 +162,7 @@ engine_capture(const capture_point *cp)
         ASSERT(caslock_tryacquire(&_ghost.lock));
     })
 
-    log(cp, "CAPTURE  %s\t%s", ps_type_str(cp->src_type), cp->func);
+    log(cp, "CAPTURE  %s\t%s", ps_type_str(cp->type_id), cp->func);
 
     struct value val = any(cp);
     LOTTO_PUBLISH(EVENT_ENGINE__BEFORE_CAPTURE, val);
@@ -179,7 +178,7 @@ engine_capture(const capture_point *cp)
             vatomic_write(&_ghost.state, CAPTURED);
         }
 
-        if (plan_has(p, ACTION_BLOCK) && cp->src_type != EVENT_TASK_CREATE) {
+        if (plan_has(p, ACTION_BLOCK) && cp->type_id != EVENT_TASK_CREATE) {
             vatomic_inc(&_ghost.pending_blocking_returns);
         }
 
@@ -190,7 +189,7 @@ engine_capture(const capture_point *cp)
     })
 
     if (plan_next(p) == ACTION_CONTINUE)
-        log(cp, "CONTINUE %s\t%s", ps_type_str(cp->src_type), cp->func);
+        log(cp, "CONTINUE %s\t%s", ps_type_str(cp->type_id), cp->func);
 
     return p;
 }
@@ -198,8 +197,8 @@ engine_capture(const capture_point *cp)
 void
 engine_resume(const capture_point *cp)
 {
-    ASSERT(_engine_is_ingress_chain(cp->src_chain));
-    log(cp, "RESUME   %s\t%s", ps_type_str(cp->src_type), cp->func);
+    ASSERT(_engine_is_ingress_chain(cp->chain_id));
+    log(cp, "RESUME   %s\t%s", ps_type_str(cp->type_id), cp->func);
 
     CONTRACT({
         ASSERT(caslock_tryacquire(&_ghost.lock));
@@ -218,7 +217,7 @@ engine_resume(const capture_point *cp)
 void
 engine_return(const capture_point *cp)
 {
-    ASSERT(_engine_is_ingress_chain(cp->src_chain));
+    ASSERT(_engine_is_ingress_chain(cp->chain_id));
     CONTRACT({
         ASSERT(cp->id != NO_TASK);
         if (vatomic_read(&_ghost.state) == FINISHED) {
@@ -229,6 +228,6 @@ engine_return(const capture_point *cp)
         ASSERT(vatomic_get_dec(&_ghost.pending_blocking_returns) > 0);
     })
 
-    log(cp, "RETURN   %s\t%s", ps_type_str(cp->src_type), cp->func);
+    log(cp, "RETURN   %s\t%s", ps_type_str(cp->type_id), cp->func);
     sequencer_return(cp);
 }

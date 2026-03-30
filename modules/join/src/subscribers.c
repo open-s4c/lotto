@@ -40,11 +40,11 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_JOIN, {
         .ret    = 0,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_TASK_JOIN,
-        .func      = "pthread_join",
-        .payload   = &jev,
-        .blocking  = false,
+        .chain_id = chain,
+        .type_id  = EVENT_TASK_JOIN,
+        .func     = "pthread_join",
+        .payload  = &jev,
+        .blocking = false,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_TASK_JOIN, &cp, md);
     switch (jev.ret) {

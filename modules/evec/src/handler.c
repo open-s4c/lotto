@@ -276,7 +276,7 @@ _evec_handle(const capture_point *cp, event_t *e)
     clock_time(&_state.now);
     _state.received_timeout = false;
     _check_timeouts(true);
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_EVEC_WAIT: {
             struct evec_timed_wait_event *ev = CP_PAYLOAD(ev);
             _handle_wait(cp->id, (uint64_t)(uintptr_t)ev->addr);

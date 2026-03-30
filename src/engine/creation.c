@@ -59,7 +59,7 @@ handle_creation(const capture_point *cp, event_t *e)
     ASSERT(!e->is_chpt);
     ASSERT(tidset_size(&e->tset) == 0);
 
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_TASK_CREATE:
             _state.last_parent = cp->id;
             e->next            = ANY_TASK;

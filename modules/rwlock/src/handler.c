@@ -132,7 +132,7 @@ LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {
 STATIC type_id
 _rwlock_event(const capture_point *cp)
 {
-    return cp->src_type;
+    return cp->type_id;
 }
 
 STATIC uint64_t

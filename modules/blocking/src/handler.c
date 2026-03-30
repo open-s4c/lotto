@@ -73,7 +73,7 @@ _blocking_handle(const capture_point *cp, event_t *e)
                           tidset_has(returned_tasks(), cp->id));
 
     /* When blocking, the current task should not be selectable. */
-    if (cp->blocking && cp->src_type != EVENT_TASK_CREATE) {
+    if (cp->blocking && cp->type_id != EVENT_TASK_CREATE) {
         ASSERT(!e->is_chpt);
         ASSERT(!tidset_has(&_state.blocked_actual, cp->id));
 

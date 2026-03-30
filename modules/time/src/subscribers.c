@@ -13,9 +13,9 @@ typedef struct {
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_TIME_YIELD, {
     time_yield_event_t *ev = EVENT_PAYLOAD(event);
     capture_point cp       = {
-        .src_type = EVENT_SYS_YIELD,
-        .payload  = ev,
-        .func     = ev->func,
+              .type_id = EVENT_SYS_YIELD,
+              .payload = ev,
+              .func    = ev->func,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_SYS_YIELD, &cp, md);
     return PS_OK;

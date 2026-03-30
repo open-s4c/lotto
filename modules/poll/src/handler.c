@@ -241,7 +241,7 @@ _poll_handle(const capture_point *cp, event_t *e)
         _state.should_cleanup = false;
         _cleanup_fds();
     }
-    if (cp->src_type == EVENT_POLL) {
+    if (cp->type_id == EVENT_POLL) {
         _wait(cp->id, ((poll_event_t *)cp->payload)->args);
     }
     _poll();

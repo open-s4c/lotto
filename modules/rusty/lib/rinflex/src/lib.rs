@@ -36,7 +36,7 @@ use std::sync::atomic::{fence, Ordering};
 pub struct Transition {
     pub id: TaskId,
     pub pc: StableAddress,
-    pub src_type: EventType,
+    pub type_id: EventType,
     pub after: bool,
 }
 
@@ -45,14 +45,14 @@ impl Transition {
     pub fn new(ctx: &CapturePoint) -> Self {
         Transition {
             id: TaskId::new(ctx.id),
-            src_type: ctx.event_type(),
-            after: u32::from(ctx.src_chain) == raw::CHAIN_INGRESS_AFTER,
+            type_id: ctx.event_type(),
+            after: u32::from(ctx.chain_id) == raw::CHAIN_INGRESS_AFTER,
             pc: StableAddress::with_method(ctx.pc, StableAddressMethod::STABLE_ADDRESS_METHOD_MAP),
         }
     }
 
     pub fn event_name(&self) -> String {
-        let mut name = self.src_type.name();
+        let mut name = self.type_id.name();
         if self.after {
             name.push_str("/AFTER");
         }

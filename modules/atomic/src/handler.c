@@ -18,9 +18,9 @@ _atomic_handle(const capture_point *cp, event_t *e)
     if (e->readonly)
         return;
 
-    switch (cp->src_chain) {
+    switch (cp->chain_id) {
         case CHAIN_INGRESS_BEFORE:
-            switch (cp->src_type) {
+            switch (cp->type_id) {
                 case EVENT_MA_AREAD:
                 case EVENT_MA_AWRITE:
                 case EVENT_MA_XCHG:
@@ -42,7 +42,7 @@ _atomic_handle(const capture_point *cp, event_t *e)
              * happened, so handlers may observe its result, but the sequencer
              * should not treat this point as a scheduling decision. Keep it
              * non-change-point and readonly. */
-            switch (cp->src_type) {
+            switch (cp->type_id) {
                 case EVENT_MA_AREAD:
                 case EVENT_MA_AWRITE:
                 case EVENT_MA_XCHG:

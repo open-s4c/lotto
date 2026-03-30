@@ -22,7 +22,7 @@ _region_filter_handle(const capture_point *cp, event_t *e)
 
     task_id tid = cp->vid != NO_TASK ? cp->vid : cp->id;
 
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_REGION_IN:
             if (!tidbag_has(&_in_region, tid)) {
                 logger_infof("enter region %lx\n", tid);

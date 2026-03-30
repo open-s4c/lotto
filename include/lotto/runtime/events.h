@@ -20,7 +20,7 @@
 static inline bool
 has_memaccess_addr(const capture_point *cp)
 {
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_MA_READ:
         case EVENT_MA_WRITE:
         case EVENT_MA_AREAD:
@@ -38,7 +38,7 @@ has_memaccess_addr(const capture_point *cp)
 static inline uintptr_t
 memaccess_addr(const capture_point *cp)
 {
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_MA_READ:
             return (uintptr_t)((struct ma_read_event *)cp->payload)->addr;
         case EVENT_MA_WRITE:
@@ -63,7 +63,7 @@ memaccess_addr(const capture_point *cp)
 static inline size_t
 memaccess_size(const capture_point *cp)
 {
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_MA_READ:
             return ((struct ma_read_event *)cp->payload)->size;
         case EVENT_MA_WRITE:

@@ -92,7 +92,7 @@ impl handler::Handler for EventHandler {
     }
 
     fn posthandle(&mut self, ctx: &CapturePoint) {
-        if ctx.src_type == 0 || !self.cfg.enabled.load(Ordering::Relaxed) {
+        if ctx.type_id == 0 || !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
         let Some(entry) = self.pers.tasks.get_mut(&TaskId(ctx.id)) else {

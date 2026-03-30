@@ -50,8 +50,8 @@
 (define EVENT_TASK_CREATE 172)
 
 (define-cstruct _capture_point
-  ([src_chain _chain_id]
-   [src_type _type_id]
+  ([chain_id _chain_id]
+   [type_id _type_id]
    [blocking _uint8]
    [id _task_id]
    [vid _task_id]
@@ -84,7 +84,7 @@
            [blocking '(WAKE BLOCK RETURN YIELD RESUME)]
            [else '(WAKE YIELD RESUME)])))
 
-(define (cat->type cat)
+(define (cat->type_id cat)
   (match cat
     ['CAT_BEFORE_READ EVENT_MA_READ]
     ['CAT_BEFORE_WRITE EVENT_MA_WRITE]
@@ -94,7 +94,7 @@
     [_ 0]))
 
 (define (cp-cat cp)
-  (match (capture_point-src_type cp)
+  (match (capture_point-type_id cp)
     [EVENT_MA_READ 'CAT_BEFORE_READ]
     [EVENT_MA_WRITE 'CAT_BEFORE_WRITE]
     [EVENT_TASK_CREATE 'CAT_TASK_CREATE]
@@ -105,10 +105,10 @@
 (define (make-cp cat id [blocking #f])
   (let ([cp (alloc-capture_point)])
     (call sys_memset cp 0 (ctype-sizeof _capture_point))
-    (set-capture_point-src_chain! cp (if (equal? cat 'CAT_NONE)
+    (set-capture_point-chain_id! cp (if (equal? cat 'CAT_NONE)
                                          CHAIN_INGRESS_EVENT
                                          CHAIN_INGRESS_BEFORE))
-    (set-capture_point-src_type! cp (cat->type cat))
+    (set-capture_point-type_id! cp (cat->type_id cat))
     (set-capture_point-blocking! cp (if blocking 1 0))
     (set-capture_point-id! cp id)
     (set-capture_point-func! cp "func")

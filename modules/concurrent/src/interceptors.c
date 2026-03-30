@@ -13,9 +13,9 @@ void
 _lotto_concurrent_enter(void)
 {
     capture_point cp = {
-        .src_chain = INTERCEPT_EVENT,
-        .src_type  = EVENT_DETACH,
-        .func      = "lotto_concurrent_enter",
+        .chain_id = INTERCEPT_EVENT,
+        .type_id  = EVENT_DETACH,
+        .func     = "lotto_concurrent_enter",
     };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_DETACH, &cp, 0);
 }
@@ -24,9 +24,9 @@ void
 _lotto_concurrent_leave(void)
 {
     capture_point cp = {
-        .src_chain = INTERCEPT_EVENT,
-        .src_type  = EVENT_ATTACH,
-        .func      = "lotto_concurrent_leave",
+        .chain_id = INTERCEPT_EVENT,
+        .type_id  = EVENT_ATTACH,
+        .func     = "lotto_concurrent_leave",
     };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_ATTACH, &cp, 0);
 }

@@ -36,7 +36,7 @@ LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, { _load_state(); })
 static type_id
 _effective_type(const capture_point *cp)
 {
-    type_id type = cp->src_type;
+    type_id type = cp->type_id;
     ASSERT(type < MAX_TYPES);
     return type;
 }

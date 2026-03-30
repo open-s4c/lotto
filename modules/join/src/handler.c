@@ -196,13 +196,13 @@ _join_handle(const capture_point *cp, event_t *e)
     ASSERT(cp->id != NO_TASK);
     ASSERT(e);
 
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_TASK_INIT:
             ASSERT(cp->task_init != NULL);
             _init(cp->id, cp->task_init->thread, cp->task_init->detached);
             break;
         case EVENT_TASK_JOIN: {
-            ASSERT(cp->src_type == EVENT_TASK_JOIN);
+            ASSERT(cp->type_id == EVENT_TASK_JOIN);
             task_join_event_t *join = (task_join_event_t *)cp->payload;
             ASSERT(join != NULL);
             _join(cp->id, join->thread, join->ptr, &join->ret);

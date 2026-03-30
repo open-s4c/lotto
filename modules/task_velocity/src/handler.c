@@ -81,16 +81,16 @@ _task_velocity_handle(const capture_point *cp, event_t *e)
     ASSERT(cp);
     ASSERT(cp->id != NO_TASK);
     task_t *t = NULL;
-    if (cp->src_type == EVENT_TASK_FINI) {
+    if (cp->type_id == EVENT_TASK_FINI) {
         tidmap_deregister(&_state.map, cp->id);
         ASSERT(!tidset_has(&e->tset, cp->id));
-    } else if (cp->src_type == EVENT_TASK_INIT) {
+    } else if (cp->type_id == EVENT_TASK_INIT) {
         t = (task_t *)tidmap_find(&_state.map, cp->id);
         ASSERT(t == NULL);
         t = (task_t *)tidmap_register(&_state.map, cp->id);
         ASSERT(t);
         t->probability = LOTTO_TASK_VELOCITY_MAX;
-    } else if (cp->src_type == EVENT_TASK_VELOCITY) {
+    } else if (cp->type_id == EVENT_TASK_VELOCITY) {
         t = (task_t *)tidmap_find(&_state.map, cp->id);
         ASSERT(t);
         t->probability =

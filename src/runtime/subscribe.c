@@ -34,8 +34,8 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_INIT, {
         .detached = detached,
     };
     capture_point cp = {
-        .src_chain = CAPTURE_EVENT,
-        .src_type  = EVENT_TASK_INIT,
+        .chain_id  = CAPTURE_EVENT,
+        .type_id   = EVENT_TASK_INIT,
         .func      = "event_self_init",
         .task_init = &ev,
     };
@@ -52,8 +52,8 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
         .detached = detached,
     };
     capture_point cp = {
-        .src_chain = CAPTURE_EVENT,
-        .src_type  = EVENT_TASK_INIT,
+        .chain_id  = CAPTURE_EVENT,
+        .type_id   = EVENT_TASK_INIT,
         .func      = "event_thread_start",
         .task_init = &ev,
     };
@@ -65,8 +65,8 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_EXIT, {
     struct pthread_exit_event *ev = EVENT_PAYLOAD(ev);
     capture_task_fini_event fev   = {.ptr = ev != NULL ? ev->ptr : NULL};
     capture_point cp              = {
-                     .src_chain = CAPTURE_EVENT,
-                     .src_type  = EVENT_TASK_FINI,
+                     .chain_id  = CAPTURE_EVENT,
+                     .type_id   = EVENT_TASK_FINI,
                      .func      = "pthread_exit",
                      .task_fini = &fev,
     };
@@ -87,8 +87,8 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_CREATE, {
         .run    = ev->run,
     };
     capture_point cp = {
-        .src_chain   = chain,
-        .src_type    = EVENT_TASK_CREATE,
+        .chain_id    = chain,
+        .type_id     = EVENT_TASK_CREATE,
         .func        = "pthread_create",
         .task_create = &cev,
         .blocking    = true,
@@ -106,11 +106,11 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_PTHREAD_CREATE, {
         .run    = ev->run,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_TASK_CREATE,
-        .func      = "pthread_create",
-        .payload   = &cev,
-        .blocking  = true,
+        .chain_id = chain,
+        .type_id  = EVENT_TASK_CREATE,
+        .func     = "pthread_create",
+        .payload  = &cev,
+        .blocking = true,
     };
     PS_PUBLISH(CHAIN_INGRESS_AFTER, EVENT_TASK_CREATE, &cp, md);
     return PS_OK;
@@ -125,11 +125,11 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_JOIN, {
         .ret    = EINTR,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_TASK_JOIN,
-        .func      = __FUNCTION__,
-        .payload   = &tev,
-        .blocking  = true,
+        .chain_id = chain,
+        .type_id  = EVENT_TASK_JOIN,
+        .func     = __FUNCTION__,
+        .payload  = &tev,
+        .blocking = true,
     };
     PS_PUBLISH(CHAIN_INGRESS_BEFORE, EVENT_TASK_JOIN, &cp, md);
 })
@@ -143,11 +143,11 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_PTHREAD_JOIN, {
         .ret    = ev->ret,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_TASK_JOIN,
-        .func      = __FUNCTION__,
-        .payload   = &tev,
-        .blocking  = true,
+        .chain_id = chain,
+        .type_id  = EVENT_TASK_JOIN,
+        .func     = __FUNCTION__,
+        .payload  = &tev,
+        .blocking = true,
     };
 
     PS_PUBLISH(CHAIN_INGRESS_AFTER, EVENT_TASK_JOIN, &cp, md);
@@ -172,8 +172,8 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_DETACH, {
         .ret    = &ret,
     };
     capture_point cp = {
-        .src_chain   = CAPTURE_BEFORE,
-        .src_type    = EVENT_TASK_DETACH,
+        .chain_id    = CAPTURE_BEFORE,
+        .type_id     = EVENT_TASK_DETACH,
         .pc          = (uintptr_t)ev->pc,
         .func        = __FUNCTION__,
         .task_detach = &dev,

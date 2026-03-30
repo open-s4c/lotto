@@ -36,7 +36,7 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_INIT, {
     capture_point cp = {
         .src_chain = CAPTURE_EVENT,
         .src_type  = EVENT_TASK_INIT,
-        .func      = "pthread_thread_start",
+        .func      = "event_self_init",
         .task_init = &ev,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_TASK_INIT, &cp, md);
@@ -44,6 +44,8 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_INIT, {
 })
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
+    if (self_id(md) == MAIN_THREAD)
+        return PS_OK;
     bool detached              = false;
     capture_task_init_event ev = {
         .thread   = (uintptr_t)pthread_self(),
@@ -52,7 +54,7 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
     capture_point cp = {
         .src_chain = CAPTURE_EVENT,
         .src_type  = EVENT_TASK_INIT,
-        .func      = "pthread_thread_start",
+        .func      = "event_thread_start",
         .task_init = &ev,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_TASK_INIT, &cp, md);

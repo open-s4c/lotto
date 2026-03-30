@@ -1,7 +1,3 @@
-
-#ifndef _GNU_SOURCE
-    #define _GNU_SOURCE /* See feature_test_macros(7) */
-#endif
 #include <errno.h>
 #include <spawn.h>
 
@@ -24,7 +20,6 @@ static int p_err[2];
 
 #define DICE_DSO_ENV "DICE_DSO"
 #define LOTTO_DSO    "liblotto-runtime.so"
-
 
 static void
 _handle_sigint(int sig, siginfo_t *si, void *arg)
@@ -52,122 +47,193 @@ _handle_sigterm(int sig, siginfo_t *si, void *arg)
     sys_exit(1);
 }
 
-static void
-_handle_sigkill(int sig, siginfo_t *si, void *arg)
-{
-    if (_pid) {
-        sys_fprintf(stderr, "[lotto] SIGKILL\n");
-        sys_kill(0, SIGKILL);
-        int wstatus;
-        sys_waitpid(0, &wstatus, 0);
-        sys_exit(130);
-    }
-    sys_exit(1);
-}
-
 #define BUFFER_SIZE 1024
 
-void
-read_pipes()
+typedef struct {
+    int wstatus;
+    bool have_status;
+    bool child_missing;
+} child_wait_state_t;
+
+static bool
+pipe_should_close_(short revents)
+{
+    return revents & (POLLERR | POLLHUP | POLLNVAL);
+}
+
+static void
+record_child_exit_(pid_t pid, child_wait_state_t *state)
+{
+    if (state->have_status || state->child_missing) {
+        return;
+    }
+
+    pid_t rpid = sys_waitpid(pid, &state->wstatus, WNOHANG);
+    if (rpid == pid) {
+        state->have_status = true;
+        return;
+    }
+    if (rpid < 0 && errno == ECHILD) {
+        state->child_missing = true;
+    }
+}
+
+static bool
+consume_pipe_data_(int fd, short revents, bool *data_read)
 {
     char buffer[BUFFER_SIZE];
-    nfds_t nfds = 2;
-    ssize_t bytes_read;
-    struct timespec timeout_ts;
-    struct pollfd pfds[2];
-    int ret_ppoll = 0;
+    bool drain_to_eof = revents & POLLHUP;
+    int out_fd        = fd == p_out[0] ? STDOUT_FILENO : STDERR_FILENO;
 
-    pfds[0].fd     = p_out[0];
-    pfds[0].events = POLLIN;
+    if (!(revents & (POLLIN | POLLHUP))) {
+        return false;
+    }
 
-    pfds[1].fd     = p_err[0];
-    pfds[1].events = POLLIN;
+    while (1) {
+        ssize_t bytes_read = sys_read(fd, buffer, BUFFER_SIZE - 1);
+        if (bytes_read > 0) {
+            buffer[bytes_read] = '\0';
+            sys_dprintf(out_fd, "%s", buffer);
+            *data_read = true;
+            if (!drain_to_eof) {
+                return false;
+            }
+            continue;
+        }
+        if (bytes_read == 0) {
+            return true;
+        }
+        switch (errno) {
+            case EINTR:
+                continue;
+            case EAGAIN:
+#if EWOULDBLOCK != EAGAIN
+            case EWOULDBLOCK:
+#endif
+                return false;
+            default:
+                ASSERT(0 && "unchecked read error");
+                return true;
+        }
+    }
+}
 
-    timeout_ts.tv_sec  = 0;
-    timeout_ts.tv_nsec = 10000;
+static void
+read_pipes(pid_t pid, child_wait_state_t *state)
+{
+    nfds_t nfds             = 2;
+    struct timespec timeout = {.tv_sec = 0, .tv_nsec = 10000};
+    struct pollfd pfds[2]   = {{.fd = p_out[0], .events = POLLIN},
+                               {.fd = p_err[0], .events = POLLIN}};
 
-    // revents can only be POLLIN, POLLERR, POLLHUP, POLLNVAL
-    while (nfds > 0 && ret_ppoll >= 0) {
-        ret_ppoll      = sys_ppoll(pfds, nfds, &timeout_ts, NULL);
-        bool data_read = false;
-        // POLLINs
-        for (uint64_t i = 0; i < nfds; i++) {
-            if (!(pfds[i].revents & POLLIN)) {
+    while (nfds > 0) {
+        int ret_ppoll = sys_ppoll(pfds, nfds, &timeout, NULL);
+        if (ret_ppoll == -1) {
+            if (errno == EINTR) {
                 continue;
             }
-            bytes_read = sys_read(pfds[i].fd, buffer, BUFFER_SIZE - 1);
-            if (bytes_read > 0) {
-                buffer[bytes_read] = '\0';
-                sys_dprintf(pfds[i].fd == p_out[0] ? STDOUT_FILENO :
-                                                     STDERR_FILENO,
-                            "%s", buffer);
+            switch (errno) {
+                case EFAULT:
+                case EINVAL:
+                case ENOMEM:
+                    ASSERT(0 && "Expecting no error on ppoll");
+                    break;
+                default:
+                    ASSERT(0 && "unchecked ppoll error");
+                    break;
             }
-            data_read = true;
         }
-        if (data_read)
-            continue;
+
+        record_child_exit_(pid, state);
+
+        bool data_read     = false;
+        bool close_pipe[2] = {false, false};
+        for (uint64_t i = 0; i < nfds; i++) {
+            short revents = pfds[i].revents;
+            if (!(revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL))) {
+                continue;
+            }
+
+            if (revents & (POLLIN | POLLHUP)) {
+                close_pipe[i] =
+                    consume_pipe_data_(pfds[i].fd, revents, &data_read);
+                continue;
+            }
+
+            if (pipe_should_close_(revents)) {
+                close_pipe[i] = true;
+            }
+        }
 
         for (int64_t i = CAST_TYPE(int64_t, nfds) - 1; i >= 0; i--) {
-            if (!(pfds[i].revents & (POLLERR | POLLHUP | POLLNVAL))) {
+            if (!close_pipe[i]) {
                 continue;
             }
-            pfds[i].fd = pfds[--nfds].fd;
+            pfds[i] = pfds[--nfds];
         }
-    }
 
-    if (ret_ppoll == -1) {
-        switch (errno) {
-            case EFAULT:
-            case EINTR:
-            case EINVAL:
-            case ENOMEM:
-                ASSERT(0 && "Expecting no error on ppoll");
-                break;
-            default:
-                ASSERT(0 && "unchecked ppoll error");
-                break;
+        if ((state->have_status || state->child_missing) && !data_read &&
+            ret_ppoll == 0) {
+            break;
         }
     }
-    return;
+}
+
+static int
+wait_status_to_retval_(int wstatus)
+{
+    if (WIFEXITED(wstatus)) {
+        return WEXITSTATUS(wstatus);
+    }
+    if (WIFSIGNALED(wstatus)) {
+        sys_fprintf(stdout, "Signal %s received\n",
+                    strsignal(WTERMSIG(wstatus)));
+        return -WTERMSIG(wstatus);
+    }
+    if (WIFSTOPPED(wstatus)) {
+        return 1;
+    }
+    return 1;
 }
 
 /* returns err */
 static int
 wait_child(pid_t pid)
 {
-    int wstatus, retval = 0;
-    read_pipes();
-    while (1) {
-        pid_t rpid = sys_waitpid(pid, &wstatus, WNOHANG);
-        if (rpid == 0) // not dead
+    child_wait_state_t state = {0};
+    int retval               = 0;
+
+    read_pipes(pid, &state);
+
+    while (!state.have_status && !state.child_missing) {
+        pid_t rpid = sys_waitpid(pid, &state.wstatus, 0);
+        if (rpid == pid) {
+            state.have_status = true;
+            break;
+        }
+        if (rpid < 0 && errno == EINTR) {
             continue;
-        if (errno == ECHILD) {
-            sys_fprintf(stdout, "Terminated unexpectedly\n");
-            retval = 1;
+        }
+        if (rpid < 0 && errno == ECHILD) {
+            state.child_missing = true;
             break;
         }
         if (rpid < 0) {
             sys_fprintf(stdout, "Unexpected return :%d\n", rpid);
-        }
-        if (WIFEXITED(wstatus)) {
-            int status = WEXITSTATUS(wstatus);
-            // if (status != 0)
-            //     sys_fprintf(stdout,"exited with code: %d\n",
-            //     status);
-            retval = status;
-            break;
-        }
-        if (WIFSIGNALED(wstatus)) {
-            sys_fprintf(stdout, "Signal %s received\n",
-                        strsignal(WTERMSIG(wstatus)));
-            retval = -WTERMSIG(wstatus);
-            break;
-        }
-        if (WIFSTOPPED(wstatus)) {
             retval = 1;
             break;
         }
     }
+
+    if (retval == 0) {
+        if (state.have_status) {
+            retval = wait_status_to_retval_(state.wstatus);
+        } else if (state.child_missing) {
+            sys_fprintf(stdout, "Terminated unexpectedly\n");
+            retval = 1;
+        }
+    }
+
     sys_close(p_out[0]);
     sys_close(p_err[0]);
     return retval;
@@ -217,18 +283,13 @@ execute(const args_t *args, const flags_t *flags, bool config)
     term_action.sa_sigaction = _handle_sigterm;
     sys_sigaction(SIGTERM, &term_action, &term_old);
 
-    struct sigaction kill_action, kill_old;
-    sys_memset(&kill_action, 0, sizeof(struct sigaction));
-    kill_action.sa_flags     = SA_SIGINFO;
-    kill_action.sa_sigaction = _handle_sigkill;
-    sys_sigaction(SIGKILL, &kill_action, &kill_old);
-
     int err = 0;
 
     // Set of signals to force to default signal handling in the new process:
     sigset_t sigdefset;
     sys_sigemptyset(&sigdefset);
     sys_sigaddset(&sigdefset, SIGINT);
+    sys_sigaddset(&sigdefset, SIGTERM);
     posix_spawnattr_t attr;
     sys_posix_spawnattr_init(&attr);
     sys_posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSIGDEF);
@@ -263,7 +324,6 @@ execute(const args_t *args, const flags_t *flags, bool config)
 
     sys_sigaction(SIGINT, &int_old, NULL);
     sys_sigaction(SIGTERM, &term_old, NULL);
-    sys_sigaction(SIGKILL, &kill_old, NULL);
 
     if (old_dice_dso_copy) {
         sys_setenv(DICE_DSO_ENV, old_dice_dso_copy, true);

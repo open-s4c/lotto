@@ -50,13 +50,14 @@ driver_options(int argc, char **argv, driver_options_t *opts)
         }
         if (strcmp(argv[argv_idx], "--load-runtime") == 0) {
             append_option_value(opts->runtime_loads,
-                                sizeof(opts->runtime_loads), argv[argv_idx + 1]);
+                                sizeof(opts->runtime_loads),
+                                argv[argv_idx + 1]);
             opts->subcmd_pos = argv_idx + 1;
             continue;
         }
         if (strcmp(argv[argv_idx], "--load-driver") == 0) {
-            append_option_value(opts->driver_loads,
-                                sizeof(opts->driver_loads), argv[argv_idx + 1]);
+            append_option_value(opts->driver_loads, sizeof(opts->driver_loads),
+                                argv[argv_idx + 1]);
             opts->subcmd_pos = argv_idx + 1;
             continue;
         }
@@ -69,19 +70,23 @@ describe(subcmd_t *scmd)
 {
     sys_fprintf(stdout, "Description:\n    %s\n\n", scmd->desc);
     sys_fprintf(stdout, "Usage:\n");
-    sys_fprintf(stdout,
-                "    lotto [--plugin-dir DIR] [--plugins P1[,P2]] "
-                "[--load-runtime PATH[:PATH...]] [--load-driver PATH[:PATH...]] "
-                "%s [<options>] %s\n\n",
-                scmd->name, scmd->args);
+    sys_fprintf(
+        stdout,
+        "    lotto [--plugin-dir DIR] [--plugins P1[,P2]] "
+        "[--load-runtime PATH[:PATH...]] [--load-driver PATH[:PATH...]] "
+        "%s [<options>] %s\n\n",
+        scmd->name, scmd->args);
     flags_help(scmd->defaults(), scmd->runtime_sel, scmd->sel);
 }
 
 int
 driver_main(int argc, char **argv)
 {
-    driver_options_t opts   = {0};
-    char *arg0              = argv[0];
+    driver_options_t opts = {0};
+    char *arg0            = argv[0];
+
+    sys_setvbuf(stdout, NULL, _IONBF, 0);
+    sys_setvbuf(stderr, NULL, _IONBF, 0);
 
     driver_options(argc, argv, &opts);
     if (opts.runtime_loads[0] != '\0') {
@@ -119,10 +124,10 @@ driver_main(int argc, char **argv)
 
     exec_info_t *exec_info = get_exec_info();
     exec_info->hash_actual = get_lotto_hash(arg0);
-    exec_info->args        = (scmd->group != SUBCMD_GROUP_OTHER) ?
-                                 ARGS(argc - opts.subcmd_pos - 1,
-                                      argv + opts.subcmd_pos + 1) :
-                                 ARGS(argc - opts.subcmd_pos, argv + opts.subcmd_pos);
+    exec_info->args =
+        (scmd->group != SUBCMD_GROUP_OTHER) ?
+            ARGS(argc - opts.subcmd_pos - 1, argv + opts.subcmd_pos + 1) :
+            ARGS(argc - opts.subcmd_pos, argv + opts.subcmd_pos);
 
     exec_info->args.arg0 = arg0;
     flags_t *flags       = scmd->defaults();

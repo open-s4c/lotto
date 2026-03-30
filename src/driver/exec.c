@@ -77,9 +77,6 @@ read_pipes()
     struct pollfd pfds[2];
     int ret_ppoll = 0;
 
-    sys_setvbuf(stdout, NULL, _IONBF, 0);
-    sys_setvbuf(stderr, NULL, _IONBF, 0);
-
     pfds[0].fd     = p_out[0];
     pfds[0].events = POLLIN;
 

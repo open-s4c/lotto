@@ -363,8 +363,8 @@ record_print(const record_t *r, int i)
     logger_println("RECORD %d", i);
     logger_println("  clock:    %s", clk_str);
     logger_println("  task:     %lu", r->id);
-    logger_println("  chain_id: %s", ps_chain_str(r->chain_id));
-    logger_println("  type_id:  %u", r->type_id);
+    logger_println("  chain:    %s", ps_chain_str(r->chain_id));
+    logger_println("  type:     %s", ps_type_str(r->type_id));
     logger_println("  reason:   %s", reason_str(r->reason));
     logger_println("  kind:     %s", kind_str(r->kind));
     logger_println("  pc:       %" PRIxPTR, r->pc);

@@ -1,2 +1,7 @@
+#include "events.h"
 #include <lotto/engine/pubsub.h>
+
+LOTTO_ADVERTISE_TYPE(EVENT_GHOST_START)
+LOTTO_ADVERTISE_TYPE(EVENT_GHOST_END)
+
 LOTTO_MODULE_INIT()

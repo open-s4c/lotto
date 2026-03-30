@@ -308,7 +308,6 @@ _deadlock_handle(const capture_point *cp, event_t *e)
     }
 }
 
-LOTTO_ADVERTISE_TYPE(EVENT_DEADLOCK__DETECTED)
 ON_SEQUENCER_CAPTURE(_deadlock_handle)
 
 static tidset_t _dbg_set;

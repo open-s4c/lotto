@@ -9,8 +9,6 @@ typedef struct yield_event {
     bool advisory;
 } yield_event_t;
 
-PS_ADVERTISE_TYPE(EVENT_LOTTO_YIELD)
-
 void
 intercept_yield(bool advisory)
 {

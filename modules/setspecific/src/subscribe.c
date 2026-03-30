@@ -41,9 +41,9 @@ typedef struct set_specific_event {
     const void *value;
 } set_specific_event_t;
 
-PS_ADVERTISE_TYPE(EVENT_KEY_CREATE)
-PS_ADVERTISE_TYPE(EVENT_KEY_DELETE)
-PS_ADVERTISE_TYPE(EVENT_SET_SPECIFIC)
+LOTTO_ADVERTISE_TYPE(EVENT_KEY_CREATE)
+LOTTO_ADVERTISE_TYPE(EVENT_KEY_DELETE)
+LOTTO_ADVERTISE_TYPE(EVENT_SET_SPECIFIC)
 
 static void
 intercept_key_create(pthread_key_t *key, void (*destructor)(void *))
@@ -124,6 +124,7 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SET_SPECIFIC, {
         .value = ev->value,
     };
     capture_point cp = {.src_type = EVENT_SET_SPECIFIC, .set_specific = &ce};
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_SET_SPECIFIC, &cp, (metadata_t *)&ctx);
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_SET_SPECIFIC, &cp,
+               (metadata_t *)&ctx);
     return PS_OK;
 })

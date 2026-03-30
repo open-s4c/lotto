@@ -3,10 +3,6 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/mutex/events.h>
 
-LOTTO_ADVERTISE_TYPE(EVENT_MUTEX_ACQUIRE)
-LOTTO_ADVERTISE_TYPE(EVENT_MUTEX_TRYACQUIRE)
-LOTTO_ADVERTISE_TYPE(EVENT_MUTEX_RELEASE)
-
 NEW_PRETTY_CALLBACK_FLAG(HANDLER_MUTEX_ENABLED, "", "handler-mutex",
                          "enable mutex handler", flag_on(), STR_CONVERTER_BOOL,
                          { mutex_config()->enabled = is_on(v); })

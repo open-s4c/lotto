@@ -10,8 +10,6 @@
 #include <lotto/runtime/ingress.h>
 #include <lotto/runtime/ingress_events.h>
 
-PS_ADVERTISE_TYPE(EVENT_AWAIT)
-
 void
 intercept_await(void *addr)
 {
@@ -28,11 +26,11 @@ _lotto_await(void *addr)
 }
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_AWAIT, {
-    await_event_t *ev  = EVENT_PAYLOAD(event);
-    capture_point cp   = {
-          .src_type = EVENT_AWAIT,
-          .func = "await",
-          .payload = ev,
+    await_event_t *ev = EVENT_PAYLOAD(event);
+    capture_point cp  = {
+         .src_type = EVENT_AWAIT,
+         .func     = "await",
+         .payload  = ev,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_AWAIT, &cp, md);
     return PS_OK;

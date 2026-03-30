@@ -11,8 +11,6 @@ typedef struct {
     const char *func;
 } fork_event_t;
 
-PS_ADVERTISE_TYPE(EVENT_FORK_EXECVE)
-
 pid_t
 lotto_fork_execve(const char *pathname, char *const argv[], char *const envp[])
 {

@@ -5,8 +5,6 @@
 #include <lotto/priority.h>
 #include <lotto/runtime/ingress.h>
 
-PS_ADVERTISE_TYPE(EVENT_PRIORITY)
-
 static void
 intercept_priority(int64_t priority)
 {

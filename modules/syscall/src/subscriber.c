@@ -14,8 +14,6 @@ struct syscall_saved_state {
 
 static struct syscall_saved_state _saved_state_key;
 
-LOTTO_ADVERTISE_TYPE(EVENT_SYSCALL)
-
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_SYSCALL, {
     struct syscall_saved_state *saved = SELF_TLS(md, &_saved_state_key);
     struct autocept_call_event *ev    = EVENT_PAYLOAD(event);

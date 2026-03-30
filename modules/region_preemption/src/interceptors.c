@@ -6,8 +6,6 @@
 #include <lotto/region_preemption.h>
 #include <lotto/runtime/ingress.h>
 
-PS_ADVERTISE_TYPE(EVENT_REGION_PREEMPTION)
-
 static void
 _publish_region_preemption(bool in_region)
 {

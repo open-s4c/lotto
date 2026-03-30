@@ -6,8 +6,6 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/timeout/timeout.h>
 
-LOTTO_ADVERTISE_TYPE(EVENT_TIMEOUT__TRIGGER)
-
 /*******************************************************************************
  * state
  ******************************************************************************/

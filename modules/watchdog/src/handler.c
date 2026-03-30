@@ -1,8 +1,10 @@
 #include "state.h"
+#include <dice/events/memaccess.h>
 #include <lotto/engine/prng.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/sequencer.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/modules/yield/events.h>
-#include <lotto/runtime/memaccess_payload.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
@@ -22,8 +24,16 @@ typedef struct {
     task_id id;
     nanosec_t ts;
     clk_t ticks;
+    task_id last_tid;
+    type_id last_type_id;
+    uintptr_t last_pc;
+    uint64_t repeat_count;
 } state_t;
 static state_t _state;
+
+REGISTER_EPHEMERAL(_state, ({ _state = (state_t){0}; }))
+
+#define BUSYEVER_THRESHOLD 1000
 
 static void
 _watchdog_reset(task_id id)
@@ -31,6 +41,30 @@ _watchdog_reset(task_id id)
     _state.id = id;
     _state.ticks =
         prng_range(watchdog_config()->budget / 2, watchdog_config()->budget);
+}
+
+static void
+_watchdog_track_busyever(const capture_point *cp)
+{
+    if (!is_memaccess(cp->type_id))
+        return;
+    if (_state.last_tid == cp->id && _state.last_type_id == cp->type_id &&
+        _state.last_pc == cp->pc) {
+        _state.repeat_count++;
+    } else {
+        _state.last_tid     = cp->id;
+        _state.last_type_id = cp->type_id;
+        _state.last_pc      = cp->pc;
+        _state.repeat_count = 1;
+    }
+
+    if (_state.repeat_count < BUSYEVER_THRESHOLD) {
+        return;
+    }
+
+    logger_fatalf(
+        "[tid: %lu, type: %s, pc: %p, count: %lu] stuck at busyloop\n", cp->id,
+        ps_type_str(cp->type_id), (void *)cp->pc, _state.repeat_count);
 }
 
 static bool
@@ -57,7 +91,12 @@ _watchdog_handle(const capture_point *cp, event_t *e)
 {
     ASSERT(cp && cp->id != NO_TASK);
     ASSERT(e);
-    if (e->skip || !watchdog_config()->enabled)
+    if (!watchdog_config()->enabled)
+        return;
+
+    _watchdog_track_busyever(cp);
+
+    if (e->skip)
         return;
 
     if (e->readonly)

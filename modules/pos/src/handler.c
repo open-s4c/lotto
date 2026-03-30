@@ -9,7 +9,7 @@
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/state.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/runtime/memaccess_payload.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 #include <lotto/util/once.h>
@@ -147,12 +147,12 @@ _pos_handle(const capture_point *cp, event_t *e)
             case EVENT_MA_XCHG:
             case EVENT_MA_RMW:
                 is_write = true;
-                addr     = context_memaccess_addr(cp);
+                addr     = memaccess_addr(cp);
                 break;
 
             case EVENT_MA_AREAD:
             case EVENT_MA_READ:
-                addr = context_memaccess_addr(cp);
+                addr = memaccess_addr(cp);
                 break;
 
             default:

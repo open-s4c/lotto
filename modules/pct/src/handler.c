@@ -87,10 +87,10 @@ _pct_handle(const capture_point *cp, event_t *e)
     task_t *t = NULL;
 
     /* initialization */
-    if (cp->src_type == EVENT_TASK_FINI) {
+    if (cp->type_id == EVENT_TASK_FINI) {
         tidmap_deregister(&pct_state()->map, cp->id);
         ASSERT(!tidset_has(&e->tset, cp->id));
-    } else if (cp->src_type == EVENT_TASK_INIT) {
+    } else if (cp->type_id == EVENT_TASK_INIT) {
         t = (task_t *)tidmap_find(&pct_state()->map, cp->id);
         ASSERT(t == NULL);
         t = (task_t *)tidmap_register(&pct_state()->map, cp->id);

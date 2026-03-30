@@ -68,7 +68,7 @@ impl Handler for OrderEnforcer {
             return;
         }
 
-        if ctx.src_type == 0 || self.fin.constraints.len() == 0 {
+        if ctx.type_id == 0 || self.fin.constraints.len() == 0 {
             return;
         }
 
@@ -140,7 +140,7 @@ impl Handler for OrderEnforcer {
     }
 
     fn posthandle(&mut self, ctx: &CapturePoint) {
-        if self.shutdown || ctx.src_type == 0 || self.fin.constraints.is_empty() {
+        if self.shutdown || ctx.type_id == 0 || self.fin.constraints.is_empty() {
             return;
         }
 

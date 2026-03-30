@@ -54,7 +54,7 @@ _type_from_number(const char *value)
 static type_id
 _effective_type(const capture_point *cp)
 {
-    type_id type = cp->src_type;
+    type_id type = cp->type_id;
     ASSERT(type < MAX_TYPES);
     return type;
 }
@@ -124,7 +124,7 @@ _parse_config()
         return;
 
     // if (!sys_strncmp(config_data + i, "type=", sys_strlen("type=")))
-    //     logger_info[l].type = atoll(config_data + i + 5);
+    //     logger_info[l].type_id = atoll(config_data + i + 5);
 
     config_data = deblank(config_data, config_data_length);
 

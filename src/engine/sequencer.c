@@ -31,7 +31,7 @@
 
 #define log(cp, fmt, ...)                                                      \
     logger_debugf("[t:%lu, clk:%lu, pc:0x%lx, type:%s] " fmt "\n", cp->id,     \
-                  _seq.clk, cp->pc & 0xfff, ps_type_str(cp->src_type),         \
+                  _seq.clk, cp->pc & 0xfff, ps_type_str(cp->type_id),          \
                   ##__VA_ARGS__)
 
 typedef struct {
@@ -206,7 +206,7 @@ sequencer_capture(const capture_point *cp)
     _seq.should_record =
         e.should_record || _granularity_should_record(cp, &e, &p);
     _seq.next_task     = next;
-    _seq.prev_type     = cp->src_type;
+    _seq.prev_type     = cp->type_id;
     _seq.prev_blocking = cp->blocking;
 
     /* event counting */
@@ -240,11 +240,11 @@ sequencer_resume(const capture_point *cp)
 
     capture_point resume_cp = *cp;
     resume_cp.decision      = NULL;
-    PS_PUBLISH(CHAIN_SEQUENCER_RESUME, cp->src_type, &resume_cp,
+    PS_PUBLISH(CHAIN_SEQUENCER_RESUME, cp->type_id, &resume_cp,
                (metadata_t *)&resume_cp);
     if (_seq.clk == 0)
         return;
-    if (cp->id == 1 && cp->src_type == 0 && cp->src_type == 0)
+    if (cp->id == 1 && cp->type_id == 0 && cp->type_id == 0)
         return;
 
     if (_seq.should_record ||
@@ -270,7 +270,7 @@ _dispatch_capture_event(const capture_point *cp, sequencer_decision *e)
 
     capture_point capture_cp = *cp;
     capture_cp.decision      = e;
-    PS_PUBLISH(CHAIN_SEQUENCER_CAPTURE, cp->src_type, &capture_cp,
+    PS_PUBLISH(CHAIN_SEQUENCER_CAPTURE, cp->type_id, &capture_cp,
                (metadata_t *)&capture_cp);
 
     if (!e->is_chpt) {
@@ -331,7 +331,7 @@ sequencer_get_clk()
 static inline unsigned
 _actions_for(const capture_point *cp, task_id next, const event_t *e)
 {
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_TASK_CREATE:
             ASSERT(e->replay || next == ANY_TASK);
             return ACTION_BLOCK | ACTION_YIELD | ACTION_RESUME;

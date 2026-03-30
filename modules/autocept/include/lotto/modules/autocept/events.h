@@ -40,7 +40,7 @@ struct autocept_call_event {
     struct autocept_call_regs regs;
     const char *name;
     void (*func)(void);
-    type_id src_type;
+    type_id type_id;
     struct value ret;
     uintptr_t retpc;
 };

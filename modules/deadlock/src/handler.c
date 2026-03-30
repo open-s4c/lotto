@@ -226,15 +226,15 @@ _mark_lost(task_id id)
 static bool
 _mutex_try_ok(const capture_point *cp)
 {
-    ASSERT(cp->src_type == EVENT_MUTEX_TRYACQUIRE);
+    ASSERT(cp->type_id == EVENT_MUTEX_TRYACQUIRE);
     return ((struct mutex_tryacquire_event *)cp->payload)->ret == 0;
 }
 
 static uintptr_t
 _rsrc_addr(const capture_point *cp)
 {
-    ASSERT(cp->src_type == EVENT_RSRC_ACQUIRING ||
-           cp->src_type == EVENT_RSRC_RELEASED);
+    ASSERT(cp->type_id == EVENT_RSRC_ACQUIRING ||
+           cp->type_id == EVENT_RSRC_RELEASED);
     return (uintptr_t)((rsrc_event_t *)cp->payload)->addr;
 }
 
@@ -257,7 +257,7 @@ _deadlock_handle(const capture_point *cp, event_t *e)
     task_id tid = cp->vid ? cp->vid : cp->id;
 
     ASSERT(tid != NO_TASK);
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_MUTEX_ACQUIRE:
             if (_check_deadlock(tid, mutex_event_addr(cp))) {
                 e->reason = REASON_RSRC_DEADLOCK;

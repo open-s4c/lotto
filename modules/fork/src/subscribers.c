@@ -11,11 +11,11 @@ typedef struct {
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_FORK_EXECVE, {
     fork_event_t *ev = EVENT_PAYLOAD(event);
     capture_point cp = {
-        .src_chain = CAPTURE_BEFORE,
-        .src_type  = EVENT_FORK_EXECVE,
-        .blocking  = true,
-        .payload   = ev,
-        .func      = ev->func,
+        .chain_id = CAPTURE_BEFORE,
+        .type_id  = EVENT_FORK_EXECVE,
+        .blocking = true,
+        .payload  = ev,
+        .func     = ev->func,
     };
     PS_PUBLISH(CHAIN_INGRESS_BEFORE, EVENT_FORK_EXECVE, &cp, md);
     return PS_OK;
@@ -24,11 +24,11 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_FORK_EXECVE, {
 PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_FORK_EXECVE, {
     fork_event_t *ev = EVENT_PAYLOAD(event);
     capture_point cp = {
-        .src_chain = CAPTURE_AFTER,
-        .src_type  = EVENT_FORK_EXECVE,
-        .blocking  = true,
-        .payload   = ev,
-        .func      = ev->func,
+        .chain_id = CAPTURE_AFTER,
+        .type_id  = EVENT_FORK_EXECVE,
+        .blocking = true,
+        .payload  = ev,
+        .func     = ev->func,
     };
     PS_PUBLISH(CHAIN_INGRESS_AFTER, EVENT_FORK_EXECVE, &cp, md);
     return PS_OK;

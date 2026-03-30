@@ -6,7 +6,7 @@ wrap!(CapturePoint, raw::capture_point);
 
 impl CapturePoint {
     pub fn event_type(&self) -> EventType {
-        EventType(self.src_type as u32)
+        EventType(self.type_id as u32)
     }
 
     pub fn function_name(&self) -> &'static str {

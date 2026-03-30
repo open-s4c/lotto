@@ -30,7 +30,7 @@ static void
 _intercept_resume(mediator_t *m, capture_point *cp)
 {
     logger_debugf("[%lu] prepare to resume type=%s\n", m->id,
-                  ps_type_str(cp->src_type));
+                  ps_type_str(cp->type_id));
 
     switch (mediator_resume(m, cp)) {
         case MEDIATOR_OK:
@@ -51,8 +51,8 @@ _intercept_resume(mediator_t *m, capture_point *cp)
 
 PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, ANY_EVENT, {
     capture_point *cp = EVENT_PAYLOAD(cp);
-    cp->src_chain     = chain;
-    cp->src_type      = type;
+    cp->chain_id      = chain;
+    cp->type_id       = type;
     mediator_t *m     = mediator_get(md, true);
 
     if (!mediator_capture(m, cp)) {
@@ -62,8 +62,8 @@ PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, ANY_EVENT, {
 })
 PS_SUBSCRIBE(CHAIN_INGRESS_BEFORE, ANY_EVENT, {
     capture_point *cp = EVENT_PAYLOAD(cp);
-    cp->src_chain     = chain;
-    cp->src_type      = type;
+    cp->chain_id      = chain;
+    cp->type_id       = type;
     mediator_t *m     = mediator_get(md, true);
 
     if (!mediator_capture(m, cp)) {
@@ -74,8 +74,8 @@ PS_SUBSCRIBE(CHAIN_INGRESS_BEFORE, ANY_EVENT, {
 })
 PS_SUBSCRIBE(CHAIN_INGRESS_AFTER, ANY_EVENT, {
     capture_point *cp = EVENT_PAYLOAD(cp);
-    cp->src_chain     = chain;
-    cp->src_type      = type;
+    cp->chain_id      = chain;
+    cp->type_id       = type;
 
     mediator_t *m = mediator_get(md, true);
     if (cp->blocking) {

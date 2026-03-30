@@ -201,9 +201,9 @@ race_check(const capture_point *cp, clk_t clk)
     };
 
     ot_set *oset = ot_get_or_reg(e.id);
-    switch (cp->src_chain) {
+    switch (cp->chain_id) {
         default: // BEFORE or EVENT
-            switch (cp->src_type) {
+            switch (cp->type_id) {
                 case EVENT_MA_AREAD:
                     e.atomic = true;
                     // fallthru
@@ -249,7 +249,7 @@ race_check(const capture_point *cp, clk_t clk)
             break;
 
         case CHAIN_INGRESS_AFTER:
-            switch (cp->src_type) {
+            switch (cp->type_id) {
                 case EVENT_MA_CMPXCHG:
                 case EVENT_MA_AWRITE:
                 case EVENT_MA_XCHG:
@@ -282,11 +282,11 @@ _race_handle(const capture_point *cp, event_t *e)
         return;
 #endif
 
-    if (cp->src_type == EVENT_TASK_FINI) {
+    if (cp->type_id == EVENT_TASK_FINI) {
         ot_lazy_dereg(cp->vid != NO_TASK ? cp->vid : cp->id, e->clk);
         return;
     }
-    if (cp->src_type == EVENT_TASK_INIT) {
+    if (cp->type_id == EVENT_TASK_INIT) {
         return;
     }
 
@@ -327,7 +327,7 @@ _race_resume_handle(const capture_point *cp, event_t *e)
 
     if (!race_config()->enabled)
         return;
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         default:
             return;
         case EVENT_TASK_CREATE:

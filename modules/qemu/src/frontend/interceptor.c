@@ -255,7 +255,7 @@ _intercept(context_t *ctx, const char *fname)
     if (fname)
         runtime_ingress(ctx, self_md());
     else {
-        ASSERT(ctx->cp && ctx->src_type == EVENT_QLOTTO_EXIT);
+        ASSERT(ctx->cp && ctx->type == EVENT_QLOTTO_EXIT);
         qlotto_exit_event_t *ev = ctx->cp->payload;
         if (ev->reason == REASON_SUCCESS) {
             lotto_exit(ctx, ev->reason);
@@ -288,7 +288,7 @@ vcpu_mem_capture(unsigned int cpu_index, qemu_plugin_meminfo_t info,
     }
 
     ctx.pstate                         = armcpu->pstate;
-    capture_point cp                   = {.src_type = ctx.src_type};
+    capture_point cp                   = {.type_id = ctx.src_type};
     struct ma_read_event read_ev       = {.pc   = (const void *)ctx.pc,
                                           .func = ctx.func,
                                           .addr = (void *)vaddr,
@@ -323,7 +323,7 @@ vcpu_mem_capture(unsigned int cpu_index, qemu_plugin_meminfo_t info,
                                           .size = sizeof(uint64_t),
                                           .cmp  = {.u64 = 0},
                                           .val  = {.u64 = 1}};
-    switch (ctx.src_type) {
+    switch (ctx.type) {
         case EVENT_MA_READ:
             cp.payload = &read_ev;
             break;
@@ -372,10 +372,9 @@ vcpu_insn_capture(unsigned int cpu_index, void *udata)
     //       To avoid SEGFAULTs, we always set it here.
     ctx.func = __FUNCTION__;
 
-    if (ctx.src_type == EVENT_RSRC_ACQUIRING ||
-        ctx.src_type == EVENT_RSRC_RELEASED) {
+    if (ctx.type == EVENT_RSRC_ACQUIRING || ctx.type == EVENT_RSRC_RELEASED) {
         rsrc_event_t ev  = {.addr = (void *)armcpu->xregs[20]};
-        capture_point cp = {.src_type = ctx.src_type, .payload = &ev};
+        capture_point cp = {.type_id = ctx.src_type, .payload = &ev};
         ctx.cp           = &cp;
         _intercept(&ctx, __FUNCTION__);
     } else {
@@ -423,27 +422,27 @@ vcpu_event_capture(unsigned int cpu_index, void *udata)
 
     _set_ctx_id(ctx, cpu_index);
 
-    if (ctx->src_type == EVENT_RSRC_ACQUIRING) {
+    if (ctx->type == EVENT_RSRC_ACQUIRING) {
         // ctx.func_addr = pc;
         rsrc_ev.addr = (void *)armcpu->xregs[0];
         if (event->ti.key == 0xffffffe0028a179c)
             rsrc_ev.addr = (void *)(armcpu->xregs[0] + 0xbf4);
         if (event->ti.key == 0xffffffe0028dcfc0)
             rsrc_ev.addr = (void *)0xffffffe002a15ec0;
-        cp      = (capture_point){.src_type = EVENT_RSRC_ACQUIRING,
-                                  .payload  = &rsrc_ev};
+        cp      = (capture_point){.type_id = EVENT_RSRC_ACQUIRING,
+                                  .payload = &rsrc_ev};
         ctx->cp = &cp;
     }
 
-    if (ctx->src_type == EVENT_RSRC_RELEASED) {
+    if (ctx->type == EVENT_RSRC_RELEASED) {
         // ctx.func_addr = pc;
         rsrc_ev.addr = (void *)armcpu->xregs[0];
         if (event->ti.key == 0xffffffe0028a183c)
             rsrc_ev.addr = (void *)(armcpu->xregs[0] + 0xbf4);
         if (event->ti.key == 0xffffffe0028dc768)
             rsrc_ev.addr = (void *)0xffffffe002a15ec0;
-        cp      = (capture_point){.src_type = EVENT_RSRC_RELEASED,
-                                  .payload  = &rsrc_ev};
+        cp      = (capture_point){.type_id = EVENT_RSRC_RELEASED,
+                                  .payload = &rsrc_ev};
         ctx->cp = &cp;
     }
 

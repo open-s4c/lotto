@@ -40,9 +40,9 @@ _lotto_spin_end(uint32_t cond)
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SPIN_START, {
     capture_point cp = {
-        .src_type = EVENT_SPIN_START,
-        .func     = "spin_start",
-        .payload  = NULL,
+        .type_id = EVENT_SPIN_START,
+        .func    = "spin_start",
+        .payload = NULL,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_SPIN_START, &cp, md);
     return PS_OK;
@@ -51,9 +51,9 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SPIN_START, {
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SPIN_END, {
     spin_end_event_t *ev = EVENT_PAYLOAD(event);
     capture_point cp     = {
-            .src_type = EVENT_SPIN_END,
-            .func     = "spin_end",
-            .payload  = ev,
+            .type_id = EVENT_SPIN_END,
+            .func    = "spin_end",
+            .payload = ev,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_SPIN_END, &cp, md);
     return PS_OK;

@@ -138,7 +138,7 @@ void
 cli_trace_trim_to_chain(trace_t *trace, chain_id chain)
 {
     for (record_t *record = trace_last(trace);
-         record != NULL && record->src_chain != chain;
+         record != NULL && record->chain_id != chain;
          trace_forget(trace), record = trace_last(trace)) {}
 }
 
@@ -363,9 +363,8 @@ record_print(const record_t *r, int i)
     logger_println("RECORD %d", i);
     logger_println("  clock:    %s", clk_str);
     logger_println("  task:     %lu", r->id);
-    logger_println("  src_chain:%s", ps_chain_str(r->src_chain));
-    logger_println("  type:     %u", r->type);
-    logger_println("  src_type: %u", r->src_type);
+    logger_println("  chain_id: %s", ps_chain_str(r->chain_id));
+    logger_println("  type_id:  %u", r->type_id);
     logger_println("  reason:   %s", reason_str(r->reason));
     logger_println("  kind:     %s", kind_str(r->kind));
     logger_println("  pc:       %" PRIxPTR, r->pc);

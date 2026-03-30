@@ -13,7 +13,7 @@
  * wired into the build or adapted to the final module-local ownership model.
  */
 
-#define MEDIATOR_VALUE_CAP 1024
+#define MEDIATOR_VALUE_CAP      1024
 #define MEDIATOR_DESTRUCTOR_CAP 1024
 
 size_t ndestructors;
@@ -30,7 +30,7 @@ struct mediator_value {
 static void
 mediator_tls_handle_capture(mediator_t *m, capture_point *cp)
 {
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_KEY_CREATE:
             destructors[ndestructors++] = (struct mediator_destructor){
                 .key        = *cp->key_create->key,

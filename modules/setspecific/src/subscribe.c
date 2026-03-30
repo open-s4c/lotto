@@ -102,7 +102,7 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_KEY_CREATE, {
         .key        = ev->key,
         .destructor = ev->destructor,
     };
-    capture_point cp = {.src_type = EVENT_KEY_CREATE, .key_create = &ce};
+    capture_point cp = {.type_id = EVENT_KEY_CREATE, .key_create = &ce};
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_KEY_CREATE, &cp, (metadata_t *)&ctx);
     return PS_OK;
 })
@@ -111,7 +111,7 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_KEY_DELETE, {
     key_delete_event_t *ev = EVENT_PAYLOAD(event);
     context_origin ctx = *ctx_origin(.self = md, .func = "pthread_key_delete");
     capture_key_delete_event ce = {.key = ev->key};
-    capture_point cp = {.src_type = EVENT_KEY_DELETE, .key_delete = &ce};
+    capture_point cp = {.type_id = EVENT_KEY_DELETE, .key_delete = &ce};
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_KEY_DELETE, &cp, (metadata_t *)&ctx);
     return PS_OK;
 })
@@ -123,7 +123,7 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SET_SPECIFIC, {
         .key   = ev->key,
         .value = ev->value,
     };
-    capture_point cp = {.src_type = EVENT_SET_SPECIFIC, .set_specific = &ce};
+    capture_point cp = {.type_id = EVENT_SET_SPECIFIC, .set_specific = &ce};
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_SET_SPECIFIC, &cp,
                (metadata_t *)&ctx);
     return PS_OK;

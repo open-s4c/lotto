@@ -89,7 +89,7 @@ pub unsafe extern "C" fn publish_arrival(ctx: *const capture_point, event: *mut 
     // Call complex handlers
     let ctx_info: ContextInfo = ContextInfo::new(ctx);
     trace!(
-        "Saving to table: task {:?} with event {:?}. src_type = {:?}",
+        "Saving to table: task {:?} with event {:?}. type = {:?}",
         tid,
         ctx_info,
         ctx.event_type()

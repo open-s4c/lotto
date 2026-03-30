@@ -127,10 +127,10 @@ _pos_handle(const capture_point *cp, event_t *e)
     bool is_write  = false;
     task_t *t      = NULL;
 
-    if (cp->src_type == EVENT_TASK_FINI) {
+    if (cp->type_id == EVENT_TASK_FINI) {
         tidmap_deregister(&_state, cp->id);
         ASSERT(!tidset_has(&e->tset, cp->id));
-    } else if (cp->src_type == EVENT_TASK_INIT) {
+    } else if (cp->type_id == EVENT_TASK_INIT) {
         t = (task_t *)tidmap_find(&_state, cp->id);
         ASSERT(t == NULL);
         t = (task_t *)tidmap_register(&_state, cp->id);
@@ -139,7 +139,7 @@ _pos_handle(const capture_point *cp, event_t *e)
         t->addr     = 0;
         t->priority = _fresh_priority(prng_next());
     } else {
-        switch (cp->src_type) {
+        switch (cp->type_id) {
             case EVENT_MA_WRITE:
             case EVENT_MA_AWRITE:
             case EVENT_MA_CMPXCHG:
@@ -175,7 +175,7 @@ _pos_handle(const capture_point *cp, event_t *e)
             t->priority = _fresh_priority(prng_next());
         }
     } else {
-        ASSERT(cp->src_type == EVENT_TASK_FINI);
+        ASSERT(cp->type_id == EVENT_TASK_FINI);
     }
     _pos_sort(&e->tset);
     _reset_races(tidset_get(&e->tset, 0));

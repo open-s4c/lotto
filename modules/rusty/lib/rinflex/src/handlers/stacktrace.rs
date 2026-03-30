@@ -39,7 +39,7 @@ impl handler::Handler for StackTraceHandler {
             return;
         }
         let id = TaskId(ctx.id);
-        match ctx.src_type as u32 {
+        match ctx.type_id as u32 {
             raw::EVENT_STACKTRACE_ENTER => {
                 let caller_pc =
                     ctx.caller_pc().expect("missing stacktrace caller") - call_insn_len();

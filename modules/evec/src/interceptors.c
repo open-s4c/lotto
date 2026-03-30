@@ -22,10 +22,10 @@ intercept_evec_prepare(const char *func, void *addr, const void *pc)
         .addr = addr,
     };
     capture_point cp = {
-        .src_chain = INTERCEPT_EVENT,
-        .src_type  = EVENT_EVEC_PREPARE,
-        .payload   = &ev,
-        .func      = func,
+        .chain_id = INTERCEPT_EVENT,
+        .type_id  = EVENT_EVEC_PREPARE,
+        .payload  = &ev,
+        .func     = func,
     };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_EVEC_PREPARE, &cp, 0);
 }
@@ -38,10 +38,10 @@ intercept_evec_wait(const char *func, void *addr, const void *pc)
         .addr = addr,
     };
     capture_point cp = {
-        .src_chain = INTERCEPT_EVENT,
-        .src_type  = EVENT_EVEC_WAIT,
-        .payload   = &ev,
-        .func      = func,
+        .chain_id = INTERCEPT_EVENT,
+        .type_id  = EVENT_EVEC_WAIT,
+        .payload  = &ev,
+        .func     = func,
     };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_EVEC_WAIT, &cp, 0);
 }
@@ -58,10 +58,10 @@ intercept_evec_timed_wait(const char *func, void *addr,
         .ret     = TIMED_WAIT_TIMEOUT,
     };
     capture_point cp = {
-        .src_chain = INTERCEPT_EVENT,
-        .src_type  = EVENT_EVEC_TIMED_WAIT,
-        .payload   = &ev,
-        .func      = func,
+        .chain_id = INTERCEPT_EVENT,
+        .type_id  = EVENT_EVEC_TIMED_WAIT,
+        .payload  = &ev,
+        .func     = func,
     };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_EVEC_TIMED_WAIT, &cp, 0);
     return ev.ret;
@@ -75,17 +75,16 @@ intercept_evec_cancel(const char *func, void *addr, const void *pc)
         .addr = addr,
     };
     capture_point cp = {
-        .src_chain = INTERCEPT_EVENT,
-        .src_type  = EVENT_EVEC_CANCEL,
-        .payload   = &ev,
-        .func      = func,
+        .chain_id = INTERCEPT_EVENT,
+        .type_id  = EVENT_EVEC_CANCEL,
+        .payload  = &ev,
+        .func     = func,
     };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_EVEC_CANCEL, &cp, 0);
 }
 
 void
-intercept_evec_wake(const char *func, void *addr, uint32_t cnt,
-                    const void *pc)
+intercept_evec_wake(const char *func, void *addr, uint32_t cnt, const void *pc)
 {
     struct evec_wake_event ev = {
         .pc   = pc,
@@ -93,10 +92,10 @@ intercept_evec_wake(const char *func, void *addr, uint32_t cnt,
         .cnt  = cnt,
     };
     capture_point cp = {
-        .src_chain = INTERCEPT_EVENT,
-        .src_type  = EVENT_EVEC_WAKE,
-        .payload   = &ev,
-        .func      = func,
+        .chain_id = INTERCEPT_EVENT,
+        .type_id  = EVENT_EVEC_WAKE,
+        .payload  = &ev,
+        .func     = func,
     };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_EVEC_WAKE, &cp, 0);
 }
@@ -110,10 +109,10 @@ intercept_evec_move(const char *func, void *src, void *dst, const void *pc)
         .dst = dst,
     };
     capture_point cp = {
-        .src_chain = INTERCEPT_EVENT,
-        .src_type  = EVENT_EVEC_MOVE,
-        .payload   = &ev,
-        .func      = func,
+        .chain_id = INTERCEPT_EVENT,
+        .type_id  = EVENT_EVEC_MOVE,
+        .payload  = &ev,
+        .func     = func,
     };
     PS_PUBLISH(INTERCEPT_EVENT, EVENT_EVEC_MOVE, &cp, 0);
 }

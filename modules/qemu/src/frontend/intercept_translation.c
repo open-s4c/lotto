@@ -47,8 +47,8 @@ udf_decode_reg(context_t *ctx, struct qemu_plugin_insn *insn)
             exit_ev         = sys_malloc(sizeof(*exit_ev));
             cp              = sys_malloc(sizeof(*cp));
             exit_ev->reason = REASON_SUCCESS;
-            *cp             = (capture_point){.src_type = EVENT_QLOTTO_EXIT,
-                                              .payload  = exit_ev};
+            *cp             = (capture_point){.type_id = EVENT_QLOTTO_EXIT,
+                                              .payload = exit_ev};
             ctx->type       = EVENT_QLOTTO_EXIT;
             ctx->src_type   = EVENT_QLOTTO_EXIT;
             ctx->cp         = cp;
@@ -59,8 +59,8 @@ udf_decode_reg(context_t *ctx, struct qemu_plugin_insn *insn)
             exit_ev         = sys_malloc(sizeof(*exit_ev));
             cp              = sys_malloc(sizeof(*cp));
             exit_ev->reason = REASON_ASSERT_FAIL;
-            *cp             = (capture_point){.src_type = EVENT_QLOTTO_EXIT,
-                                              .payload  = exit_ev};
+            *cp             = (capture_point){.type_id = EVENT_QLOTTO_EXIT,
+                                              .payload = exit_ev};
             ctx->type       = EVENT_QLOTTO_EXIT;
             ctx->src_type   = EVENT_QLOTTO_EXIT;
             ctx->cp         = cp;
@@ -76,8 +76,7 @@ udf_decode_reg(context_t *ctx, struct qemu_plugin_insn *insn)
             break;
         case LOTTO_LOCK_REL_A64_VAL:
             qlotto_context_set_event(ctx, EVENT_RSRC_RELEASED,
-                                     EVENT_RSRC_RELEASED,
-                                     CONTEXT_PHASE_AFTER);
+                                     EVENT_RSRC_RELEASED, CONTEXT_PHASE_AFTER);
             register_insn_cb(ctx, insn);
             break;
         case LOTTO_LOCK_TRYACQ_A64_VAL:

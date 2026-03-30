@@ -198,7 +198,7 @@ _posthandle_release(task_id id, uint64_t addr)
 static type_id
 _mutex_event_type(const capture_point *cp)
 {
-    return cp->src_type;
+    return cp->type_id;
 }
 
 static void

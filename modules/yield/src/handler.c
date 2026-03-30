@@ -15,7 +15,7 @@ _yield_handle(const capture_point *cp, event_t *e)
     ASSERT(cp);
     ASSERT(cp->id != NO_TASK);
 
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_SCHED_YIELD:
         case EVENT_USER_YIELD:
             if (!e->readonly && !e->is_chpt) {

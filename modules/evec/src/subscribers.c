@@ -40,11 +40,11 @@ _publish_evec_prepare(const chain_id chain, struct metadata *md,
         .addr = addr,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_EVEC_PREPARE,
-        .payload   = &eev,
-        .func      = func,
-        .pc        = (uintptr_t)pc,
+        .chain_id = chain,
+        .type_id  = EVENT_EVEC_PREPARE,
+        .payload  = &eev,
+        .func     = func,
+        .pc       = (uintptr_t)pc,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_EVEC_PREPARE, &cp, md);
 }
@@ -58,11 +58,11 @@ _publish_evec_wait(const chain_id chain, struct metadata *md, const char *func,
         .addr = addr,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_EVEC_WAIT,
-        .payload   = &eev,
-        .func      = func,
-        .pc        = (uintptr_t)pc,
+        .chain_id = chain,
+        .type_id  = EVENT_EVEC_WAIT,
+        .payload  = &eev,
+        .func     = func,
+        .pc       = (uintptr_t)pc,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_EVEC_WAIT, &cp, md);
 }
@@ -79,11 +79,11 @@ _publish_evec_timed_wait(const chain_id chain, struct metadata *md,
         .ret     = TIMED_WAIT_TIMEOUT,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_EVEC_TIMED_WAIT,
-        .payload   = &eev,
-        .func      = func,
-        .pc        = (uintptr_t)pc,
+        .chain_id = chain,
+        .type_id  = EVENT_EVEC_TIMED_WAIT,
+        .payload  = &eev,
+        .func     = func,
+        .pc       = (uintptr_t)pc,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_EVEC_TIMED_WAIT, &cp, md);
     return eev.ret;
@@ -99,11 +99,11 @@ _publish_evec_wake(const chain_id chain, struct metadata *md, const char *func,
         .cnt  = cnt,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_EVEC_WAKE,
-        .payload   = &eev,
-        .func      = func,
-        .pc        = (uintptr_t)pc,
+        .chain_id = chain,
+        .type_id  = EVENT_EVEC_WAKE,
+        .payload  = &eev,
+        .func     = func,
+        .pc       = (uintptr_t)pc,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_EVEC_WAKE, &cp, md);
 }
@@ -118,11 +118,11 @@ _publish_mutex_release(const chain_id chain, struct metadata *md,
         .addr = addr,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_MUTEX_RELEASE,
-        .payload   = &mev,
-        .func      = mev.func,
-        .pc        = (uintptr_t)pc,
+        .chain_id = chain,
+        .type_id  = EVENT_MUTEX_RELEASE,
+        .payload  = &mev,
+        .func     = mev.func,
+        .pc       = (uintptr_t)pc,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_MUTEX_RELEASE, &cp, md);
 }
@@ -137,11 +137,11 @@ _publish_mutex_acquire(const chain_id chain, struct metadata *md,
         .addr = addr,
     };
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_MUTEX_ACQUIRE,
-        .payload   = &mev,
-        .func      = mev.func,
-        .pc        = (uintptr_t)pc,
+        .chain_id = chain,
+        .type_id  = EVENT_MUTEX_ACQUIRE,
+        .payload  = &mev,
+        .func     = mev.func,
+        .pc       = (uintptr_t)pc,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_MUTEX_ACQUIRE, &cp, md);
 }

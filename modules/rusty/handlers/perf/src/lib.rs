@@ -100,7 +100,7 @@ impl PerfHandler {
         *cur += 1;
 
         // count of the category
-        let cur = self.count_category.entry(ctx_info.src_type).or_insert(0);
+        let cur = self.count_category.entry(ctx_info.type_id).or_insert(0);
         *cur += 1;
 
         // count of the program counter (pc)
@@ -168,7 +168,7 @@ pub fn register() {
 impl ExecuteHandler for PerfHandler {
     fn handle_execute(&mut self, tid: TaskId, ctx_info: &ContextInfo) {
         self.update_counts(tid, ctx_info);
-        if tid == TaskId::new(1) && ctx_info.src_type == raw::EVENT_STACKTRACE_EXIT {
+        if tid == TaskId::new(1) && ctx_info.type_id == raw::EVENT_STACKTRACE_EXIT {
             // This can be the last event, so we can overwrite
             // the perf-log now, and maybe we will also need to do it later.
             // Note that the log is only written for successful executions

@@ -126,7 +126,7 @@ _region_preemption_handle(const capture_point *cp, event_t *e)
 
     _region_check(cp->id);
 
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_REGION_OUT:
             _exit_region(cp->id);
             break;
@@ -149,7 +149,7 @@ _region_preemption_handle(const capture_point *cp, event_t *e)
 
     _enter_region();
 
-    if (cp->src_type == EVENT_REGION_IN) {
+    if (cp->type_id == EVENT_REGION_IN) {
         ASSERT(_task == NO_TASK);
         _task = cp->id;
     }

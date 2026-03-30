@@ -49,7 +49,7 @@ typedef struct {
     (capture_point)                                                            \
     {                                                                          \
         .id = (ID), .vid = NO_TASK, .pc = (PC),                                \
-        .src_chain = CHAIN_INGRESS_EVENT, .src_type = EVENT_MA_READ,           \
+        .chain_id = CHAIN_INGRESS_EVENT, .type_id = EVENT_MA_READ,             \
         .payload = &(struct ma_read_event){.addr = (void *)(ADDR),             \
                                            .size = sizeof(uintptr_t)},         \
     }
@@ -58,7 +58,7 @@ typedef struct {
     (capture_point)                                                            \
     {                                                                          \
         .id = (ID), .vid = NO_TASK, .pc = (PC),                                \
-        .src_chain = CHAIN_INGRESS_EVENT, .src_type = EVENT_MA_WRITE,          \
+        .chain_id = CHAIN_INGRESS_EVENT, .type_id = EVENT_MA_WRITE,            \
         .payload = &(struct ma_write_event){.addr = (void *)(ADDR),            \
                                             .size = sizeof(uintptr_t)},        \
     }

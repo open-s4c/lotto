@@ -63,7 +63,7 @@ _watchdog_handle(const capture_point *cp, event_t *e)
     if (e->readonly)
         return;
 
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_MA_AREAD:
         case EVENT_MA_AWRITE:
         case EVENT_MA_XCHG:
@@ -72,7 +72,7 @@ _watchdog_handle(const capture_point *cp, event_t *e)
         case EVENT_MA_FENCE:
             /* cp of _AFTER chain are marked with e->is_chpt = false. There is
              * no reason why to consider them for watchdog-forced scheduling. */
-            if (cp->src_chain == CHAIN_INGRESS_AFTER)
+            if (cp->chain_id == CHAIN_INGRESS_AFTER)
                 break;
             // fallthru
         case EVENT_MA_READ:
@@ -95,8 +95,8 @@ _watchdog_handle(const capture_point *cp, event_t *e)
             break;
 
         default:
-            if (cp->src_type != EVENT_SCHED_YIELD &&
-                cp->src_type != EVENT_USER_YIELD) {
+            if (cp->type_id != EVENT_SCHED_YIELD &&
+                cp->type_id != EVENT_USER_YIELD) {
                 break;
             }
             if (_watchdog_ok(cp->id))

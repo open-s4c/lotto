@@ -82,9 +82,9 @@ ghost_filter_(metadata_t *md, chain_id chain, type_id type)
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_GHOST_START, {
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_GHOST_START,
-        .func      = "lotto_ghost_enter",
+        .chain_id = chain,
+        .type_id  = EVENT_GHOST_START,
+        .func     = "lotto_ghost_enter",
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_GHOST_START, &cp, md);
     return PS_OK;
@@ -92,9 +92,9 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_GHOST_START, {
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_GHOST_END, {
     capture_point cp = {
-        .src_chain = chain,
-        .src_type  = EVENT_GHOST_END,
-        .func      = "lotto_ghost_leave",
+        .chain_id = chain,
+        .type_id  = EVENT_GHOST_END,
+        .func     = "lotto_ghost_leave",
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_GHOST_END, &cp, md);
     return PS_OK;

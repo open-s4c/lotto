@@ -36,7 +36,7 @@ struct mutex_release_event {
 static inline uintptr_t
 mutex_event_addr(const capture_point *cp)
 {
-    switch (cp->src_type) {
+    switch (cp->type_id) {
         case EVENT_MUTEX_ACQUIRE:
             return (uintptr_t)((struct mutex_acquire_event *)cp->payload)->addr;
         case EVENT_MUTEX_TRYACQUIRE:

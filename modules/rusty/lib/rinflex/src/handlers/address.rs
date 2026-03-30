@@ -39,8 +39,8 @@ impl handler::Handler for AddressHandler {
         let addr = StableAddress::with_default_method(ctx.pc);
         let info = AddressInfo {
             addr,
-            src_type: ctx.src_type as u32,
-            after: u32::from(ctx.src_chain) == raw::CHAIN_INGRESS_AFTER,
+            type_id: ctx.type_id as u32,
+            after: u32::from(ctx.chain_id) == raw::CHAIN_INGRESS_AFTER,
         };
         tasks.insert(TaskId::new(ctx.id), info);
     }
@@ -64,7 +64,7 @@ impl Marshable for Config {
 #[derive(Encode, Decode, Debug, Clone, MarshableNoPrint)]
 pub struct AddressInfo {
     pub addr: StableAddress,
-    pub src_type: u32,
+    pub type_id: u32,
     pub after: bool,
 }
 
@@ -78,7 +78,7 @@ impl Marshable for Persistent {
         for (id, info) in self.tasks.iter() {
             info!(
                 "task {} {} type={} after={}",
-                id, info.addr, info.src_type, info.after
+                id, info.addr, info.type_id, info.after
             );
         }
     }

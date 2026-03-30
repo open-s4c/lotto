@@ -175,11 +175,11 @@ runtime_fini_(void)
     }
 
     capture_point cp = {
-        .src_chain = 0,
-        .src_type  = EVENT_TASK_FINI,
-        .id        = 1,
-        .vid       = NO_TASK,
-        .func      = __FUNCTION__,
+        .chain_id = 0,
+        .type_id  = EVENT_TASK_FINI,
+        .id       = 1,
+        .vid      = NO_TASK,
+        .func     = __FUNCTION__,
     };
     lotto_exit(&cp, REASON_SUCCESS);
 }

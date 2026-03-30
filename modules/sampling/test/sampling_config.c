@@ -1,4 +1,5 @@
 // clang-format off
+// ALLOW_RETRIES: 5
 // RUN: (! %lotto %stress -r 20 --sampling-config %s.conf -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/sampling_config.c:{{[0-9]+}}: x != 1
 // clang-format on

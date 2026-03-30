@@ -62,7 +62,14 @@ _init(task_id tid, uint64_t pthread, bool detached)
     tidset_init(&pt->waiters);
     pt->terminated = false;
     pt->detached   = detached;
-    task_t *t      = (task_t *)map_register(&_state.tasks, pthread);
+
+    /* pthread ids are recycled. Depending how the events arrive here, it could
+     * happen that a new thread has the same pthread id than another still
+     * registered thread (that should soon terminate). If that is the case, we
+     * take over the task, overwriting the tid field. */
+    task_t *t = (task_t *)map_find(&_state.tasks, pthread);
+    if (t == NULL)
+        t = (task_t *)map_register(&_state.tasks, pthread);
     ASSERT(t);
     t->tid = tid;
 }
@@ -98,7 +105,9 @@ _join(task_id tid, uint64_t pthread, void **value_ptr, int *ret)
         }
         *ret = 0;
         tidmap_deregister(&_state.pthreads, waitee);
-        tidmap_deregister(&_state.tasks, pthread);
+        /* only deregister task if tid still matches */
+        if (t->tid == tid)
+            tidmap_deregister(&_state.tasks, pthread);
         return;
     }
     tidset_insert(&pt->waiters, tid);
@@ -123,8 +132,11 @@ _fini(task_id tid)
 {
     pthread_task_t *pt = (pthread_task_t *)tidmap_find(&_state.pthreads, tid);
     ASSERT(pt);
+    task_t *t = (task_t *)map_find(&_state.tasks, pt->pthread);
     if (pt->detached) {
-        tidmap_deregister(&_state.tasks, pt->pthread);
+        /* only deregister task if tid still matches */
+        if (t->tid == tid)
+            tidmap_deregister(&_state.tasks, pt->pthread);
         tidmap_deregister(&_state.pthreads, tid);
         return;
     }
@@ -142,7 +154,9 @@ _fini(task_id tid)
         *wee->ret = 0;
         tidmap_deregister(&_state.waitees, waiter);
     }
-    tidmap_deregister(&_state.tasks, pt->pthread);
+    /* only deregister task if tid still matches */
+    if (t->tid == tid)
+        tidmap_deregister(&_state.tasks, pt->pthread);
     tidmap_deregister(&_state.pthreads, tid);
 }
 

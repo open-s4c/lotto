@@ -16,7 +16,7 @@
 #include <lotto/sys/string.h>
 #include <lotto/util/macros.h>
 
-/* Amount of sampled events in INTERCEPT_EVENT by type.
+/* Amount of sampled events in INTERCEPT_EVENT/INTERCEPT_BEFORE by type.
  *
  * Probability of sampling (ie, not dropping the event) = p, with p \in [0;1].
  * Configuration is stored as d such that
@@ -26,6 +26,13 @@
  * By default nothing is dropped (ie, d = 0 for all events).
  * A configuration file can change p. Note that in the configuration file, we
  * write p, ie, the probability of sampling (not the probability of dropping).
+ *
+ * For BEFORE/AFTER chains, the sampling decision is carried in Dice metadata.
+ * If BEFORE drops an event, INTERCEPT_AFTER drops the matching AFTER event when
+ * the publisher reuses the same metadata object for both publications. This
+ * works with autocepted events as well. Custom interceptors must follow the
+ * same convention if they want sampling to suppress their AFTER event
+ * consistently.
  */
 
 static double _drop[MAX_TYPES];
@@ -93,4 +100,32 @@ PS_SUBSCRIBE(INTERCEPT_EVENT, ANY_EVENT, {
     double pp = prng_real();
     ASSERT(pp <= 1.0);
     return (pp <= p) ? PS_OK : PS_STOP_CHAIN;
+})
+
+PS_SUBSCRIBE(INTERCEPT_BEFORE, ANY_EVENT, {
+    ASSERT(md);
+    if (type >= MAX_TYPES) {
+        logger_errorf("invalid type id: %d\n", type);
+        return PS_OK;
+    }
+    double p = 1.0 - _drop[type];
+    logger_debugf("%s => %f\n", ps_type_str(type), p);
+
+    if (p == 1)
+        return PS_OK;
+    if (p == 0)
+        goto drop;
+
+    double pp = prng_real();
+    ASSERT(pp <= 1.0);
+    if (pp <= p)
+        return PS_OK;
+drop:
+    md->drop = true;
+    return PS_STOP_CHAIN;
+})
+
+PS_SUBSCRIBE(INTERCEPT_AFTER, ANY_EVENT, {
+    ASSERT(md);
+    return (md->drop) ? PS_STOP_CHAIN : PS_OK;
 })

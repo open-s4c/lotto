@@ -21,12 +21,13 @@ lotto_fork_execve(const char *pathname, char *const argv[], char *const envp[])
     pid_t ret       = -1;
     fork_event_t ev = {.func = __FUNCTION__};
 
-    PS_PUBLISH(INTERCEPT_BEFORE, EVENT_FORK_EXECVE, &ev, 0);
+    struct metadata md = {};
+    PS_PUBLISH(INTERCEPT_BEFORE, EVENT_FORK_EXECVE, &ev, &md);
 
     ret = sys_fork();
 
     if (ret != 0) {
-        PS_PUBLISH(INTERCEPT_AFTER, EVENT_FORK_EXECVE, &ev, 0);
+        PS_PUBLISH(INTERCEPT_AFTER, EVENT_FORK_EXECVE, &ev, &md);
     } else {
         ASSERT(sys_execve(pathname, argv, envp) == 0 &&
                "Error while calling execve");

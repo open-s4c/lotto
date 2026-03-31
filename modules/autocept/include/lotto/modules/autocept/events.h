@@ -43,6 +43,7 @@ struct autocept_call_event {
     type_id type_id;
     struct value ret;
     uintptr_t retpc;
+    uintptr_t saved_callee;
 };
 
 #endif

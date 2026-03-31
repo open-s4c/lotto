@@ -15,8 +15,12 @@
 .set AUTOCEPT_CALL_SRC_TYPE_OFFSET, 80
 .set AUTOCEPT_CALL_RET_OFFSET, 88
 .set AUTOCEPT_CALL_RETPC_OFFSET, 104
-.set AUTOCEPT_CALL_FRAME_SIZE, 112
+.set AUTOCEPT_CALL_SAVED_CALLEE_OFFSET, 112
+.set AUTOCEPT_CALL_EVENT_SIZE, 120
 .set AUTOCEPT_VALUE_TYPE_UINT64, 2
+.set AUTOCEPT_MD_SIZE, 8
+.set AUTOCEPT_MD_OFFSET, AUTOCEPT_CALL_EVENT_SIZE
+.set AUTOCEPT_CALL_FRAME_SIZE, AUTOCEPT_CALL_EVENT_SIZE + AUTOCEPT_MD_SIZE
 .set AUTOCEPT_FP_CALL_ARGS_SIZE, 128
 .set AUTOCEPT_FP_RETVAL_SIZE, 32
 
@@ -69,9 +73,12 @@
         movq  $0, AUTOCEPT_CALL_RET_OFFSET + 8(%rsp)
         movq  AUTOCEPT_CALL_FRAME_SIZE + AUTOCEPT_FP_CALL_ARGS_SIZE + 40(%rsp), %rax
         movq  %rax, AUTOCEPT_CALL_RETPC_OFFSET(%rsp)
+        movq  %r15, AUTOCEPT_CALL_SAVED_CALLEE_OFFSET(%rsp)
+        movq  $0, AUTOCEPT_MD_OFFSET(%rsp)
 
-        /* Pass struct autocept_call_event * as the first C argument. */
+        /* Pass struct autocept_call_event * and metadata_t * to the helper. */
         movq  %rsp, %rdi
+        leaq  AUTOCEPT_MD_OFFSET(%rsp), %rsi
 .endm
 
 /* Publish the BEFORE event. The helper returns the resolved real function
@@ -82,6 +89,7 @@
         call  *autocept_before@GOTPCREL(%rip)
         movq  %rax, .autocept_fptr_\name(%rip)
         movq  %r14, %r10
+        movzbq AUTOCEPT_MD_OFFSET(%rsp), %r15
 .endm
 
 /* Tear down the temporary BEFORE frame and restore the original register/FP
@@ -112,9 +120,11 @@
         addq   $AUTOCEPT_FP_CALL_ARGS_SIZE, %rsp
 
         /* Remove the wrapper's own frame so stacked user arguments return to
-         * their original positions before the real call.
+         * their original positions before the real call. Keep r15 as the
+         * metadata transport register; the original caller r15 is restored
+         * later from the saved BEFORE event.
          */
-        popq  %r15
+        addq  $8, %rsp
         popq  %r14
         popq  %r13
         popq  %r12
@@ -184,15 +194,19 @@
         movq  $0, AUTOCEPT_CALL_RET_OFFSET + 8(%rsp)
         movq  AUTOCEPT_CALL_FRAME_SIZE + AUTOCEPT_FP_CALL_ARGS_SIZE + 40(%rsp), %rax
         movq  %rax, AUTOCEPT_CALL_RETPC_OFFSET(%rsp)
+        movq  $0, AUTOCEPT_CALL_SAVED_CALLEE_OFFSET(%rsp)
 
         /* Write the captured scalar return into ev->ret. */
         movl  $AUTOCEPT_VALUE_TYPE_UINT64, AUTOCEPT_CALL_RET_OFFSET(%rsp)
         movq  %r12, AUTOCEPT_CALL_RET_OFFSET + 8(%rsp)
+        movq  %r15, %rax
+        movq  %rax, AUTOCEPT_MD_OFFSET(%rsp)
 
-        /* Pass struct autocept_call_event * as the first C argument and align
-         * the helper call to a 16-byte boundary.
+        /* Pass struct autocept_call_event * and metadata_t * to the helper,
+         * then align the helper call to a 16-byte boundary.
          */
         movq  %rsp, %rdi
+        leaq  AUTOCEPT_MD_OFFSET(%rsp), %rsi
         subq  $8, %rsp
 .endm
 
@@ -212,6 +226,7 @@
          */
         addq  $8, %rsp
         movq  AUTOCEPT_CALL_RETPC_OFFSET(%rsp), %r11
+        movq  AUTOCEPT_CALL_SAVED_CALLEE_OFFSET(%rsp), %r10
 
         /* Drop the event frame and restore the FP return registers. */
         addq  $AUTOCEPT_CALL_FRAME_SIZE, %rsp
@@ -224,11 +239,12 @@
         movq  %r13, %rdx
 
         /* Drop the wrapper frame and reconstruct the original caller stack. */
-        popq  %r15
+        addq  $8, %rsp
         popq  %r14
         popq  %r13
         popq  %r12
         popq  %rbx
+        movq  %r10, %r15
         pushq %r11
 .endm
 

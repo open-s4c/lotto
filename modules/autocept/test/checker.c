@@ -75,6 +75,9 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_AUTOCEPT_CALL, {
     struct checker_state *state          = SELF_TLS(md, &_checker_state_key);
     const struct autocept_call_event *ev = EVENT_PAYLOAD(event);
 
+    assert(md != NULL);
+    assert(md->drop == false);
+    md->drop           = true;
     state->seen_before = true;
     state->event       = *ev;
     _checker_stress(ev);
@@ -86,10 +89,12 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_AUTOCEPT_CALL, {
     struct checker_state *state          = SELF_TLS(md, &_checker_state_key);
     const struct autocept_call_event *ev = EVENT_PAYLOAD(event);
 
+    assert(md != NULL);
     assert(state->seen_before);
     assert(memcmp(&state->event.regs, &ev->regs, sizeof(ev->regs)) == 0);
     assert(state->event.name == ev->name);
     assert(state->event.retpc == ev->retpc);
+    assert(md->drop == true);
     _checker_stress(ev);
     state->seen_before = false;
     _checker_report("after ");

@@ -3,8 +3,12 @@
 .set AUTOCEPT_CALL_SRC_TYPE_OFFSET, 80
 .set AUTOCEPT_CALL_RET_OFFSET, 88
 .set AUTOCEPT_CALL_RETPC_OFFSET, 104
-.set AUTOCEPT_CALL_FRAME_SIZE, 112
+.set AUTOCEPT_CALL_SAVED_CALLEE_OFFSET, 112
+.set AUTOCEPT_CALL_EVENT_SIZE, 120
 .set AUTOCEPT_VALUE_TYPE_UINT64, 2
+.set AUTOCEPT_MD_SIZE, 8
+.set AUTOCEPT_MD_OFFSET, AUTOCEPT_CALL_EVENT_SIZE
+.set AUTOCEPT_CALL_FRAME_SIZE, AUTOCEPT_CALL_EVENT_SIZE + AUTOCEPT_MD_SIZE
 .set AUTOCEPT_FP_CALL_ARGS_SIZE, 128
 .set AUTOCEPT_FP_RETVAL_SIZE, 32
 
@@ -39,9 +43,12 @@
 	str	xzr, [sp, #AUTOCEPT_CALL_RET_OFFSET]
 	str	xzr, [sp, #AUTOCEPT_CALL_RET_OFFSET + 8]
 	str	x30, [sp, #AUTOCEPT_CALL_RETPC_OFFSET]
+	str	x20, [sp, #AUTOCEPT_CALL_SAVED_CALLEE_OFFSET]
+	str	xzr, [sp, #AUTOCEPT_MD_OFFSET]
 
-	/* Pass struct autocept_call_event * as the first C argument. */
+	/* Pass struct autocept_call_event * and metadata_t * to the helper. */
 	mov	x0, sp
+	add	x1, sp, #AUTOCEPT_MD_OFFSET
 .endm
 
 /* Publish the BEFORE event and cache the resolved real function pointer. */
@@ -49,6 +56,7 @@
 	bl	autocept_before
 	adrp	x9, .autocept_fptr_\name
 	str	x0, [x9, #:lo12:.autocept_fptr_\name]
+	ldrb	w20, [sp, #AUTOCEPT_MD_OFFSET]
 .endm
 
 /* Tear down the temporary BEFORE frame and restore the original register/FP
@@ -69,8 +77,12 @@
 	ldp	q6, q7, [sp, #96]
 	add	sp, sp, #AUTOCEPT_FP_CALL_ARGS_SIZE
 
-	/* Drop the wrapper frame before the real call. */
-	ldp	x19, x20, [sp], #16
+	/* Drop the wrapper frame before the real call. Keep x20 as the metadata
+	 * transport register; the original caller x20 is restored later from the
+	 * saved BEFORE event.
+	 */
+	ldr	x19, [sp, #0]
+	add	sp, sp, #16
 	ldp	x29, x30, [sp], #16
 .endm
 
@@ -119,15 +131,18 @@
 	str	xzr, [sp, #AUTOCEPT_CALL_RET_OFFSET]
 	str	xzr, [sp, #AUTOCEPT_CALL_RET_OFFSET + 8]
 	str	x30, [sp, #AUTOCEPT_CALL_RETPC_OFFSET]
+	str	xzr, [sp, #AUTOCEPT_CALL_SAVED_CALLEE_OFFSET]
 
 	/* Write the captured scalar return into ev->ret. */
 	mov	w9, #AUTOCEPT_VALUE_TYPE_UINT64
 	str	w9, [sp, #AUTOCEPT_CALL_RET_OFFSET]
 	ldr	x9, [sp, #AUTOCEPT_CALL_FRAME_SIZE + AUTOCEPT_FP_RETVAL_SIZE]
 	str	x9, [sp, #AUTOCEPT_CALL_RET_OFFSET + 8]
+	str	x20, [sp, #AUTOCEPT_MD_OFFSET]
 
-	/* Pass struct autocept_call_event * as the first C argument. */
+	/* Pass struct autocept_call_event * and metadata_t * as helper args. */
 	mov	x0, sp
+	add	x1, sp, #AUTOCEPT_MD_OFFSET
 .endm
 
 /* Publish the AFTER event. */
@@ -141,6 +156,7 @@
 .macro cleanup_after_event
 	/* Recover the original return address from the rebuilt event. */
 	ldr	x9, [sp, #AUTOCEPT_CALL_RETPC_OFFSET]
+	ldr	x10, [sp, #AUTOCEPT_CALL_SAVED_CALLEE_OFFSET]
 
 	/* Drop the event frame and restore the FP return registers. */
 	add	sp, sp, #AUTOCEPT_CALL_FRAME_SIZE
@@ -149,8 +165,10 @@
 
 	/* Restore the integer return registers and the wrapper frame. */
 	ldp	x0, x1, [sp], #16
-	ldp	x19, x20, [sp], #16
+	ldr	x19, [sp, #0]
+	add	sp, sp, #16
 	ldp	x29, x30, [sp], #16
+	mov	x20, x10
 	mov	x30, x9
 .endm
 

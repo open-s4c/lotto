@@ -37,6 +37,8 @@ static void append_preload(preload_state_t *state, const char *path);
 static void append_preload_list(preload_state_t *state, const char *paths);
 static void append_option_value(char *buf, size_t cap, const char *value);
 static bool path_is_readable(const char *path);
+static bool path_printf(char *buf, size_t cap, const char *fmt,
+                        const char *value);
 static int exec_self(char **argv);
 
 int
@@ -49,7 +51,7 @@ main(int argc, char **argv)
     }
 
     if (getenv(LOTTO_BOOTSTRAP_ENV) == NULL) {
-        driver_options_t opts   = {0};
+        driver_options_t opts = {0};
         char resolved_path[PATH_MAX];
         char driver_path[PATH_MAX];
         char binary_dir[PATH_MAX];
@@ -71,19 +73,32 @@ main(int argc, char **argv)
             }
         }
 
-        snprintf(binary_dir, sizeof(binary_dir), "%s", dirname(resolved_path));
-        const char *fmtstr = "%s/liblotto-driver.so";
-        snprintf(driver_path, sizeof(driver_path) - strlen(fmtstr), fmtstr,
-                 binary_dir);
+        if (!path_printf(binary_dir, sizeof(binary_dir), "%s",
+                         dirname(resolved_path))) {
+            fprintf(stderr, "lotto path too long\n");
+            return 1;
+        }
+        if (!path_printf(driver_path, sizeof(driver_path),
+                         "%s/liblotto-driver.so", binary_dir)) {
+            fprintf(stderr, "driver path too long\n");
+            return 1;
+        }
         if (!path_is_readable(driver_path)) {
-            const char *fmt_libdir     = "%s/../lib";
-            const char *fmt_driverpath = "%s/liblotto-driver.so";
-            snprintf(lib_dir, sizeof(lib_dir) - strlen(fmt_libdir), fmt_libdir,
-                     binary_dir);
-            snprintf(driver_path, sizeof(driver_path) - strlen(fmt_driverpath),
-                     fmt_driverpath, lib_dir);
+            if (!path_printf(lib_dir, sizeof(lib_dir), "%s/../lib",
+                             binary_dir)) {
+                fprintf(stderr, "library path too long\n");
+                return 1;
+            }
+            if (!path_printf(driver_path, sizeof(driver_path),
+                             "%s/liblotto-driver.so", lib_dir)) {
+                fprintf(stderr, "driver path too long\n");
+                return 1;
+            }
         } else {
-            snprintf(lib_dir, sizeof(lib_dir), "%s", binary_dir);
+            if (!path_printf(lib_dir, sizeof(lib_dir), "%s", binary_dir)) {
+                fprintf(stderr, "library path too long\n");
+                return 1;
+            }
         }
 
         preload_state_t preload        = {.buf = malloc(MAX_LIST_STR),
@@ -142,10 +157,10 @@ main(int argc, char **argv)
 static void
 driver_options(int argc, char **argv, driver_options_t *opts)
 {
-    opts->module_dir         = NULL;
-    opts->module_list        = NULL;
-    opts->runtime_loads[0]   = '\0';
-    opts->driver_loads[0]    = '\0';
+    opts->module_dir       = NULL;
+    opts->module_list      = NULL;
+    opts->runtime_loads[0] = '\0';
+    opts->driver_loads[0]  = '\0';
 
     for (int argv_idx = 1; argv_idx + 1 < argc; argv_idx += 2) {
         if (strcmp(argv[argv_idx], "--plugin-dir") == 0) {
@@ -157,7 +172,8 @@ driver_options(int argc, char **argv, driver_options_t *opts)
             continue;
         }
         if (strcmp(argv[argv_idx], "--load-runtime") == 0) {
-            append_option_value(opts->runtime_loads, sizeof(opts->runtime_loads),
+            append_option_value(opts->runtime_loads,
+                                sizeof(opts->runtime_loads),
                                 argv[argv_idx + 1]);
             continue;
         }
@@ -168,6 +184,13 @@ driver_options(int argc, char **argv, driver_options_t *opts)
         }
         break;
     }
+}
+
+static bool
+path_printf(char *buf, size_t cap, const char *fmt, const char *value)
+{
+    int written = snprintf(buf, cap, fmt, value);
+    return written >= 0 && (size_t)written < cap;
 }
 
 static int

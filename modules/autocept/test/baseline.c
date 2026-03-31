@@ -55,6 +55,38 @@ _report_ok(const char *stage)
     fflush(stdout);
 }
 
+#if defined(__x86_64__)
+__attribute__((noinline)) static uintptr_t
+_foo_1_call_preserve_callee(uintptr_t marker, int32_t a, uint64_t b, unsigned c,
+                            int32_t *ret_out)
+{
+    register uintptr_t callee __asm__("r15") = marker;
+
+    __asm__ volatile("" : "+r"(callee));
+    int32_t ret = foo_1(a, b, c);
+    __asm__ volatile("" : "+r"(callee));
+
+    *ret_out = ret;
+    return callee;
+}
+#elif defined(__aarch64__)
+__attribute__((noinline)) static uintptr_t
+_foo_1_call_preserve_callee(uintptr_t marker, int32_t a, uint64_t b, unsigned c,
+                            int32_t *ret_out)
+{
+    register uintptr_t callee __asm__("x20") = marker;
+
+    __asm__ volatile("" : "+r"(callee));
+    int32_t ret = foo_1(a, b, c);
+    __asm__ volatile("" : "+r"(callee));
+
+    *ret_out = ret;
+    return callee;
+}
+#else
+    #error "unsupported autocept test architecture"
+#endif
+
 static uint64_t
 _rng_next(void)
 {
@@ -199,13 +231,17 @@ static void
 test_foo_1(void)
 {
     struct foo_1_event ev = _foo_1_random_event();
+    uintptr_t marker      = (uintptr_t)(_rng_next() | UINT64_C(1));
     _ctx.func             = "foo_1";
     _foo_1_expected       = &ev;
     _start_test("foo_1");
     mockoto_foo_1_hook(_foo_1_hook);
 
-    int32_t ret = foo_1(ev.a, ev.b, ev.c);
+    int32_t ret = 0;
+    uintptr_t preserved =
+        _foo_1_call_preserve_callee(marker, ev.a, ev.b, ev.c, &ret);
     CHECK(ret == ev.ret);
+    CHECK(preserved == marker);
     CHECK(mockoto_foo_1_called() == 1);
     _report_ok("caller");
 

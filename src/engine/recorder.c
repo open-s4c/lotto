@@ -5,8 +5,6 @@
  *record commands from the caller (sequencer)
  **/
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-
 #include <lotto/base/envvar.h>
 #include <lotto/base/trace.h>
 #include <lotto/engine/pubsub.h>
@@ -23,15 +21,14 @@
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__REPLAY_END)
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__INFO_RECORD_LOAD)
 
-void __attribute__((noinline))
-recorder_end_trace()
+void __attribute__((noinline)) recorder_end_trace()
 {
-    logger_debugf("trace fully loaded\n");
-    // nothing happends here
+    /* nothing really happens here, but we have to  ensure we call a function
+     * here to avoid recorder_end_trace being optimized out. */
+    _logger_debugf("engine", __FILE__, __LINE__, "trace fully loaded\n");
 }
 
-void __attribute__((noinline))
-recorder_end_replay()
+void __attribute__((noinline)) recorder_end_replay()
 {
     logger_debugf("end of replay\n");
     LOTTO_PUBLISH(EVENT_ENGINE__REPLAY_END, nil);

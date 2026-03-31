@@ -5,9 +5,6 @@
 #include <string.h>
 #include <unistd.h> // _exit
 
-#include <vsync/atomic.h>
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-
 #include <lotto/base/cappt.h>
 #include <lotto/base/envvar.h>
 #include <lotto/base/reason.h>
@@ -26,6 +23,7 @@
 #include <lotto/sys/real.h>
 #include <lotto/sys/stream_file.h>
 #include <lotto/util/once.h>
+#include <vsync/atomic.h>
 #include <vsync/atomic/dispatch.h>
 #include <vsync/spinlock/caslock.h>
 

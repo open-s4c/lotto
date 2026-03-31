@@ -4,11 +4,6 @@
 #include <stdlib.h>
 #include <unistd.h> // _exit
 
-#include <vsync/atomic.h>
-#include <vsync/atomic/dispatch.h>
-#include <vsync/spinlock/caslock.h>
-
-#define LOGGER_PREFIX LOGGER_CUR_FILE
 #include <dice/chains/capture.h>
 #include <lotto/base/reason.h>
 #include <lotto/engine/pubsub.h>
@@ -20,6 +15,9 @@
 #include <lotto/sys/now.h>
 #include <lotto/util/contract.h>
 #include <lotto/util/once.h>
+#include <vsync/atomic.h>
+#include <vsync/atomic/dispatch.h>
+#include <vsync/spinlock/caslock.h>
 
 #define log(cp, fmt, ...)                                                      \
     logger_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx, type:%s] " fmt   \

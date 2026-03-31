@@ -1,4 +1,3 @@
-#define LOGGER_PREFIX LOGGER_CUR_FILE
 #include <lotto/base/tidmap.h>
 #include <lotto/base/tidset.h>
 #include <lotto/engine/sequencer.h>

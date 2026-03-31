@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
 #include <lotto/base/marshable.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>

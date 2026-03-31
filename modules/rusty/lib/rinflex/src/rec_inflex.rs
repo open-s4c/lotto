@@ -5,11 +5,11 @@ use lotto::base::flags::*;
 use lotto::base::Trace;
 use lotto::base::{Clock, Record, TaskId, Value};
 use lotto::cli::flags::*;
+use lotto::cli::prng;
 use lotto::engine::flags::*;
 use lotto::log::*;
 use lotto::owned::Owned;
 use lotto::raw;
-use lotto::sys::now;
 
 use crate::error::Error;
 use crate::handlers;
@@ -85,7 +85,7 @@ impl RecInflex {
         let mut bar = ProgressBar::new(self.report_progress, "HALT", self.rounds);
         crate::inflex::always(self.rounds, || {
             let outcome = loop {
-                flags.set_by_opt(&flag_seed(), Value::U64(now()));
+                flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                 let exitcode = checked_execute(&with_oc, &flags, true)?;
                 if let Some(outcome) = postexec(&self.trace_temp, exitcode, |_| true)? {
                     break outcome;
@@ -174,7 +174,7 @@ impl RecInflex {
         let mut bar = ProgressBar::new(self.report_progress, "correct?", self.rounds);
         always(self.rounds, || {
             let outcome = loop {
-                flags.set_by_opt(&flag_seed(), Value::U64(now()));
+                flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                 let exitcode = checked_execute(&check_trace, &flags, true)?;
                 if let Some(outcome) = postexec(&self.trace_temp, exitcode, |_| true)? {
                     break outcome;
@@ -363,7 +363,7 @@ impl RecInflex {
             }
 
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(replay_goal));
-            flags.set_by_opt(&flag_seed(), Value::U64(now()));
+            flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
 
             // Restore ichpt. Ichpt_initial was lost whenever we
             // unmarshal a config record, but it is nevertheless

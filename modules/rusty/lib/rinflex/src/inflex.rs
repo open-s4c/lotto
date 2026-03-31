@@ -4,6 +4,7 @@ use lotto::base::{Clock, Flags, Prng, Trace};
 use lotto::base::{EnvScope, Value};
 use lotto::cli::execute;
 use lotto::cli::flags::*;
+use lotto::cli::prng;
 use lotto::engine::flags::*;
 use lotto::log::*;
 use lotto::owned::Owned;
@@ -111,7 +112,7 @@ impl Inflex {
             bar.set_prefix_string(format!("IIP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
             let success_forever = always(self.rounds, || loop {
-                flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                 let exitcode = checked_execute(&self.input, &flags, true)?;
                 if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
                     bar.tick_valid();
@@ -144,7 +145,7 @@ impl Inflex {
             iip = binary_search(iip, self.last_clk, |clk| {
                 flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                 loop {
-                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                    flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                     let exitcode = checked_execute(&self.input, &flags, true)?;
                     if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
                         return Ok(outcome.is_success());
@@ -187,7 +188,7 @@ impl Inflex {
             bar.set_prefix_string(format!("IP={}", clk));
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
             let fail_forever = always(self.rounds, || loop {
-                flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                 let exitcode = checked_execute(&self.input, &flags, true)?;
                 if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
                     bar.tick_valid();
@@ -221,7 +222,7 @@ impl Inflex {
             ip = binary_search(ip, self.last_clk, |clk| {
                 flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                 loop {
-                    flags.set_by_opt(&flag_seed(), Value::U64(lotto::sys::now()));
+                    flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                     let exitcode = checked_execute(&self.input, &flags, true)?;
                     if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
                         return Ok(outcome.is_fail());

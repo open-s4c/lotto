@@ -1,8 +1,9 @@
 add_library(lotto.h INTERFACE)
 target_include_directories(
-    lotto.h INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
-                      "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>"
-                      "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+    lotto.h
+    INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+              "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>"
+              "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
 execute_process(
     COMMAND "${CMAKE_C_COMPILER}" -print-file-name=libasan.so

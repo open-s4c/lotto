@@ -15,7 +15,9 @@ function(_mockoto_resolve_headers OUT_VAR)
             list(APPEND _resolved "${_hdr}")
         endif()
     endforeach()
-    set(${OUT_VAR} ${_resolved} PARENT_SCOPE)
+    set(${OUT_VAR}
+        ${_resolved}
+        PARENT_SCOPE)
 endfunction()
 
 function(add_mockoto)

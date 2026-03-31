@@ -16,7 +16,6 @@ set(SRCS
     stream_file.c
     stream_impl.c)
 
-
 add_library(abort.o OBJECT abort.c)
 
 add_library(memmgr_runtime_libc.o OBJECT memmgr_libc.c)

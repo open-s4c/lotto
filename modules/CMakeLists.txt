@@ -83,7 +83,7 @@ add_module(time)
 add_module(random)
 add_module(tsan)
 if("${LOTTO_DRUM}")
-	add_module(drum)
+    add_module(drum)
 endif()
 add_module(debug)
 add_module(explore)
@@ -98,5 +98,7 @@ add_module(user_mempool)
 add_module(uafcheck)
 add_module(leakcheck)
 
-set(TIKL_MODULE_FEATURES "${TIKL_MODULE_FEATURES}" PARENT_SCOPE)
+set(TIKL_MODULE_FEATURES
+    "${TIKL_MODULE_FEATURES}"
+    PARENT_SCOPE)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)

@@ -3,7 +3,7 @@
 # ##############################################################################
 
 function(add_doc_target target src_dir distro_name doc_out_dir)
-return()
+    return()
     if(NOT src_dir)
         message(FATAL_ERROR "required parameter src_dir is empty")
     endif()

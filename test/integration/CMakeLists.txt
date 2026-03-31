@@ -26,14 +26,12 @@ foreach(PROBE_SRC ${PROBE_SRCS})
     target_link_libraries(${PROBE} PRIVATE lotto.h dice.h ${CMAKE_DL_LIBS})
     target_compile_definitions(
         ${PROBE}
-        PRIVATE DICE_MULTIFILE_MODULE
-                LOTTO_RUNTIME_MODULE=1
-                LOTTO_DRIVER_MODULE=0
-                DICE_MODULE_SLOT=999
+        PRIVATE DICE_MULTIFILE_MODULE LOTTO_RUNTIME_MODULE=1
+                LOTTO_DRIVER_MODULE=0 DICE_MODULE_SLOT=999
                 LOGGER_PREFIX="${PROBE}")
     set_target_properties(
-        ${PROBE}
-        PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tikl")
+        ${PROBE} PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
+                                      "${CMAKE_BINARY_DIR}/tikl")
     add_dependencies(tikl-test ${PROBE})
     add_dependencies(tikl-integration ${PROBE})
     list(APPEND INTEGRATION_PROBE_TARGETS ${PROBE})
@@ -52,8 +50,8 @@ foreach(SRC ${SRCS})
     if(NOT DEFINED TSAN_${TEST} OR "${TSAN_${TEST}}")
         target_compile_options(${TARGET} PRIVATE -fsanitize=thread)
         target_link_options(${TARGET} PRIVATE -fsanitize=thread)
-        if(CMAKE_C_COMPILER_ID MATCHES "Clang"
-           OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        if(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES
+                                                  "Clang")
             target_compile_options(${TARGET} PRIVATE -shared-libsan)
             target_link_options(${TARGET} PRIVATE -shared-libsan)
         endif()

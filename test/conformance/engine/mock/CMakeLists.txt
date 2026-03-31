@@ -36,17 +36,13 @@ add_binding(
             lotto/driver/events.h #
             lotto/engine/engine.h #
             lotto/engine/sequencer.h #
-    EXCLUDE sys/types.h
-            pthread.h
-            unistd.h
-            bits/confname.h)
+    EXCLUDE sys/types.h pthread.h unistd.h bits/confname.h)
 
 add_binding(
     TARGET sequencer.rkt
     INCLUDE lotto/engine/sequencer.h lotto/base/trace_flat.h
             lotto/engine/recorder.h lotto/engine/sequencer.h
-    EXCLUDE sys/types.h
-            pthread.h)
+    EXCLUDE sys/types.h pthread.h)
 add_library(mocked_sequencer SHARED)
 target_link_libraries(
     mocked_sequencer

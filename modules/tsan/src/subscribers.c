@@ -6,6 +6,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress_events.h>
+#include <lotto/sys/logger.h>
 
 #define PUBLISH_MEMACCESS(SUFFIX, SRC_TYPE, EV)                                \
     do {                                                                       \

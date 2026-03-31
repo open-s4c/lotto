@@ -97,8 +97,12 @@ enabled_str(bool b)
 static inline bool
 enabled_from(const char *src)
 {
-    bool is_true  = sys_strcmp(src, "enable") == 0;
-    bool is_false = sys_strcmp(src, "disable") == 0;
+    bool is_true = sys_strcmp(src, "enable") == 0 ||
+                   sys_strcmp(src, "on") == 0 || sys_strcmp(src, "true") == 0 ||
+                   sys_strcmp(src, "1") == 0;
+    bool is_false = sys_strcmp(src, "disable") == 0 ||
+                    sys_strcmp(src, "off") == 0 ||
+                    sys_strcmp(src, "false") == 0 || sys_strcmp(src, "0") == 0;
     ASSERT(is_true != is_false);
     return is_true;
 }

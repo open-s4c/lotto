@@ -13,8 +13,6 @@
 #include <limits.h>
 #include <stdint.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-
 #include <lotto/base/clk.h>
 #include <lotto/base/marshable.h>
 #include <lotto/base/value.h>

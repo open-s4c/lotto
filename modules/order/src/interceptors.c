@@ -34,7 +34,8 @@ lotto_order(uint64_t order)
         .func  = __FUNCTION__,
         .order = order,
     };
-    PS_PUBLISH(INTERCEPT_BEFORE, EVENT_ORDER, &ev, 0);
+    struct metadata md = {};
+    PS_PUBLISH(INTERCEPT_BEFORE, EVENT_ORDER, &ev, &md);
 
     vmutex_acquire(&verifier_mutex);
 
@@ -43,7 +44,7 @@ lotto_order(uint64_t order)
         vcond_wait(&verifier_cnd, &verifier_mutex);
     }
 
-    PS_PUBLISH(INTERCEPT_AFTER, EVENT_ORDER, &ev, 0);
+    PS_PUBLISH(INTERCEPT_AFTER, EVENT_ORDER, &ev, &md);
 
     next_order++;
 

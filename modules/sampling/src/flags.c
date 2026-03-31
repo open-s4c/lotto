@@ -24,7 +24,7 @@ _load_config_text(const char *fname)
 
     fp = fopen(fname, "r");
     if (fp == NULL) {
-        logger_errorf("failed to open sampling configuration: %s\n", fname);
+        logger_debugf("failed to open sampling configuration: %s\n", fname);
         return NULL;
     }
 

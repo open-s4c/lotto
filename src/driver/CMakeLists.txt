@@ -5,7 +5,7 @@ add_subdirectory(flags)
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
 set(CLI_UTILS_SRCS
-	module.c
+    module.c
     utils.c
     files.c
     subcmd.c
@@ -24,12 +24,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
 endif()
 
 macro(add_driver_dependencies TARGET)
-    add_dependencies(
-        "${TARGET}"
-        blob-tsano
-        blob-lotto
-        blob-lotto-dbg
-        ${ARGN})
+    add_dependencies("${TARGET}" blob-tsano blob-lotto blob-lotto-dbg ${ARGN})
     target_include_directories(${TARGET} PUBLIC ${CMAKE_BINARY_DIR}/include)
 endmacro()
 

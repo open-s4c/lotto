@@ -38,8 +38,8 @@ set(DICE_MEMPOOL_USE_MMAP
     CACHE BOOL "" FORCE)
 
 set(LTO OFF)
-if (${CMAKE_INTERPROCEDURAL_OPTIMIZATION})
-	set(LTO ON)
+if(${CMAKE_INTERPROCEDURAL_OPTIMIZATION})
+    set(LTO ON)
 endif()
 
 set(DICE_LTO
@@ -82,7 +82,8 @@ if(LOTTO_VSYNC_INCLUDE_DIRS)
     list(REMOVE_DUPLICATES LOTTO_VSYNC_INCLUDE_DIRS)
     foreach(LOTTO_VSYNC_INCLUDE_DIR ${LOTTO_VSYNC_INCLUDE_DIRS})
         if(EXISTS "${LOTTO_VSYNC_INCLUDE_DIR}/vsync")
-            install(DIRECTORY "${LOTTO_VSYNC_INCLUDE_DIR}/vsync" DESTINATION include)
+            install(DIRECTORY "${LOTTO_VSYNC_INCLUDE_DIR}/vsync"
+                    DESTINATION include)
         endif()
     endforeach()
 endif()
@@ -222,8 +223,7 @@ add_custom_target(
         -DLOTTO_LTO=${LOTTO_LTO} -DLOTTO_RACKET_TESTS=OFF
     COMMAND ${CMAKE_COMMAND} --build "${LOTTO_CICD_INSTALL_BUILD_DIR}" -j
     COMMAND ${CMAKE_COMMAND} --install "${LOTTO_CICD_INSTALL_BUILD_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E rm -rf
-            "${LOTTO_CICD_INSTALL_BUILD_DIR}/modules"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${LOTTO_CICD_INSTALL_BUILD_DIR}/modules"
     COMMAND ${CMAKE_COMMAND} -E rm -rf
             "${LOTTO_CICD_INSTALL_BUILD_DIR}/qlotto/modules"
     COMMAND "${LOTTO_CICD_INSTALL_PREFIX}/bin/lotto" modules

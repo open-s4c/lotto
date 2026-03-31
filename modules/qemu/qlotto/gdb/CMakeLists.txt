@@ -6,8 +6,8 @@ add_library(plugin-gdb-server SHARED ${SRCS})
 target_compile_options(plugin-gdb-server PRIVATE -O0 -g)
 add_compile_definitions(_GNU_SOURCE)
 
-target_include_directories(
-    plugin-gdb-server PRIVATE ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu)
+target_include_directories(plugin-gdb-server
+                           PRIVATE ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu)
 
 target_include_directories(plugin-gdb-server PUBLIC ${CMAKE_BINARY_DIR}/include)
 # required for QEMUv9
@@ -17,13 +17,8 @@ target_include_directories(
 
 target_link_libraries(plugin-gdb-server PRIVATE capstone elf)
 
-add_dependencies(
-    plugin-gdb-server
-    capstone
-    blob-aarch64-core
-    blob-aarch64-fpu
-    blob-system-registers
-    blob-target)
+add_dependencies(plugin-gdb-server capstone blob-aarch64-core blob-aarch64-fpu
+                 blob-system-registers blob-target)
 
 set_target_properties(plugin-gdb-server PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                                    "${QLOTTO_MODULE_BUILD_DIR}")

@@ -2,11 +2,15 @@ add_subdirectory(mock)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mock)
 
 file(GLOB SRCS *_test.c)
-list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/tidbag_test.c
-     ${CMAKE_CURRENT_SOURCE_DIR}/tidset_test.c
-     ${CMAKE_CURRENT_SOURCE_DIR}/address_bdd_test.c
-     ${CMAKE_CURRENT_SOURCE_DIR}/casts_test.c
-     ${CMAKE_CURRENT_SOURCE_DIR}/memory_map_test.c SRCS)
+list(
+    REMOVE_ITEM
+    SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/tidbag_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tidset_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/address_bdd_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/casts_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/memory_map_test.c
+    SRCS)
 foreach(SRC ${SRCS})
     get_filename_component(TARGET ${SRC} NAME_WLE)
     add_executable(${TARGET} ${SRC})
@@ -19,7 +23,8 @@ file(GLOB SUBSRCS tidbag_test.c tidset_test.c)
 foreach(SUBSRC ${SUBSRCS})
     get_filename_component(TARGET ${SUBSRC} NAME_WLE)
     add_executable(${TARGET} ${SUBSRC})
-    target_link_libraries(${TARGET} base_testing.o sys_testing.o memock.o dice.o)
+    target_link_libraries(${TARGET} base_testing.o sys_testing.o memock.o
+                          dice.o)
     add_test(NAME ${TARGET} COMMAND ${TARGET})
 endforeach()
 
@@ -27,7 +32,7 @@ file(GLOB UTILSRCS address_bdd_test.c casts_test.c memory_map_test.c)
 foreach(UTILSRC ${UTILSRCS})
     get_filename_component(TARGET ${UTILSRC} NAME_WLE)
     if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL aarch64 AND ${TARGET} STREQUAL
-                                                     memory_map_test)
+                                                      memory_map_test)
         continue()
     endif()
     add_executable(${TARGET} ${UTILSRC})

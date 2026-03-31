@@ -17,20 +17,19 @@ macro(add_runtime_module)
     add_library(${RUNTIME_DBG_MODULE_TARGET} ${RUNTIME_MODULE_TYPE}
                                              ${RUNTIME_MODULE_SOURCES})
     target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto.h dice.h)
-    target_link_libraries(${RUNTIME_DBG_MODULE_TARGET} PRIVATE lotto.h
-                                                             dice.h)
+    target_link_libraries(${RUNTIME_DBG_MODULE_TARGET} PRIVATE lotto.h dice.h)
 
     # enable LTO for this module?
     set(LTO FALSE)
-	if (${LOTTO_LTO})
-		if(${RUNTIME_MODULE_LTO})
-			set(LTO TRUE)
-		endif()
-	endif()
-	set_property(TARGET ${RUNTIME_MODULE_TARGET}
-		PROPERTY INTERPROCEDURAL_OPTIMIZATION ${LTO})
-	set_property(TARGET ${RUNTIME_DBG_MODULE_TARGET}
-		PROPERTY INTERPROCEDURAL_OPTIMIZATION ${LTO})
+    if(${LOTTO_LTO})
+        if(${RUNTIME_MODULE_LTO})
+            set(LTO TRUE)
+        endif()
+    endif()
+    set_property(TARGET ${RUNTIME_MODULE_TARGET}
+                 PROPERTY INTERPROCEDURAL_OPTIMIZATION ${LTO})
+    set_property(TARGET ${RUNTIME_DBG_MODULE_TARGET}
+                 PROPERTY INTERPROCEDURAL_OPTIMIZATION ${LTO})
 
     target_compile_definitions(
         ${RUNTIME_MODULE_TARGET}
@@ -65,8 +64,7 @@ macro(add_runtime_module)
             add_dependencies(lotto-cli ${RUNTIME_DBG_MODULE_TARGET})
         endif()
     else()
-        add_lotto_builtin(${RUNTIME_MODULE_TARGET}
-                          ${RUNTIME_DBG_MODULE_TARGET})
+        add_lotto_builtin(${RUNTIME_MODULE_TARGET} ${RUNTIME_DBG_MODULE_TARGET})
     endif()
 endmacro()
 
@@ -171,8 +169,8 @@ endfunction()
 macro(add_module NAME)
     set(oneValueArgs SLOT)
     cmake_parse_arguments(ADD_MODULE "" "${oneValueArgs}" "" ${ARGN})
-	option(LOTTO_MODULE_${NAME} "Build Lotto with module ${NAME}" ON)
-    if (${LOTTO_MODULE_${NAME}})
+    option(LOTTO_MODULE_${NAME} "Build Lotto with module ${NAME}" ON)
+    if(${LOTTO_MODULE_${NAME}})
         if(DEFINED ADD_MODULE_SLOT)
             new_module_at(${NAME} ${ADD_MODULE_SLOT})
         else()
@@ -186,9 +184,8 @@ endmacro()
 
 macro(add_module_object TARGET SLOT)
     add_library(${TARGET} OBJECT ${ARGN})
-    target_compile_definitions(
-        ${TARGET}
-        PRIVATE DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${SLOT})
+    target_compile_definitions(${TARGET} PRIVATE DICE_MULTIFILE_MODULE
+                                                 DICE_MODULE_SLOT=${SLOT})
 endmacro()
 
 function(add_module_tikl_test SRC)
@@ -204,8 +201,8 @@ function(add_module_tikl_test SRC)
     if(NOT DEFINED TSAN_${TEST} OR "${TSAN_${TEST}}")
         target_compile_options(${TARGET} PRIVATE -fsanitize=thread)
         target_link_options(${TARGET} PRIVATE -fsanitize=thread)
-        if(CMAKE_C_COMPILER_ID MATCHES "Clang"
-           OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        if(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES
+                                                  "Clang")
             target_compile_options(${TARGET} PRIVATE -shared-libsan)
             target_link_options(${TARGET} PRIVATE -shared-libsan)
         endif()

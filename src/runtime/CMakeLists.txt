@@ -54,16 +54,16 @@ macro(add_runtime TARGET OUTPUT_NAME)
     add_library(${TARGET} SHARED ${SRCS})
     target_link_libraries(${TARGET} PRIVATE ${LIBS})
     set_target_properties(
-        ${TARGET}
-        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} OUTPUT_NAME
-                   ${OUTPUT_NAME})
+        ${TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+                             OUTPUT_NAME ${OUTPUT_NAME})
     install(TARGETS ${TARGET} DESTINATION lib)
     set(LIBTARGET "lib${OUTPUT_NAME}.so")
     make_blob(blob-${TARGET} ${LIBTARGET} ${TARGET})
 endmacro()
 
 add_runtime(lotto lotto-runtime)
-list(TRANSFORM LIBS REPLACE "^lotto-runtime-engine\\.o$" "lotto-runtime-dbg-engine.o")
+list(TRANSFORM LIBS REPLACE "^lotto-runtime-engine\\.o$"
+                            "lotto-runtime-dbg-engine.o")
 add_runtime(lotto-dbg lotto-runtime-dbg)
 target_compile_definitions(lotto PRIVATE -DLOGGER_DISABLE)
 

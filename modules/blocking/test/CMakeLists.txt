@@ -18,8 +18,8 @@ add_binding(
 
 add_library(mocked_recorder SHARED)
 if(${LOTTO_LTO})
-    set_property(
-        TARGET mocked_recorder PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
+    set_property(TARGET mocked_recorder PROPERTY INTERPROCEDURAL_OPTIMIZATION
+                                                 ON)
 endif()
 target_link_libraries(
     mocked_recorder
@@ -33,8 +33,8 @@ target_link_libraries(
 
 add_library(replay_component SHARED)
 if(${LOTTO_LTO})
-    set_property(
-        TARGET replay_component PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
+    set_property(TARGET replay_component PROPERTY INTERPROCEDURAL_OPTIMIZATION
+                                                  ON)
 endif()
 set_target_properties(
     replay_component PROPERTIES LIBRARY_OUTPUT_DIRECTORY

@@ -1,6 +1,6 @@
 add_library(plugin-measure SHARED plugin_measure.c)
-target_include_directories(
-    plugin-measure PRIVATE ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu)
+target_include_directories(plugin-measure
+                           PRIVATE ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu)
 
 target_include_directories(plugin-measure PUBLIC ${CMAKE_BINARY_DIR}/include)
 # required for QEMUv9

@@ -1,8 +1,8 @@
 if(${LOTTO_RACKET_TESTS})
     add_library(deadlock_component SHARED)
     if(${LOTTO_LTO})
-        set_property(
-            TARGET deadlock_component PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
+        set_property(TARGET deadlock_component
+                     PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
     endif()
     set_target_properties(
         deadlock_component PROPERTIES LIBRARY_OUTPUT_DIRECTORY

@@ -19,6 +19,9 @@
 #include <vsync/atomic/dispatch.h>
 #include <vsync/spinlock/caslock.h>
 
+#ifdef log
+    #error
+#endif
 #define log(cp, fmt, ...)                                                      \
     logger_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx, type:%s] " fmt   \
                                                    "\n",                       \

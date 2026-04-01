@@ -1,6 +1,5 @@
 #include <stdlib.h>
 
-#define LOGGER_PREFIX "engine"
 #include <dice/module.h>
 #include <lotto/base/marshable.h>
 #include <lotto/engine/pubsub.h>

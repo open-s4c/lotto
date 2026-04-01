@@ -5,8 +5,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-
 #include <lotto/base/flag.h>
 #include <lotto/base/record_granularity.h>
 #include <lotto/base/stable_address.h>

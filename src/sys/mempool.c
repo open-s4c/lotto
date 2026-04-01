@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/memory.h>
@@ -12,7 +11,7 @@
 
 #define LOTTO_MEMPOOL_ALIGNMENT 8
 #define LOTTO_MEMPOOL_CANARY    0xBEEFFEED
-#define GET_ENTRY_PTR_STRUCT(p) ((entryptr_t *)(p) - 1)
+#define GET_ENTRY_PTR_STRUCT(p) ((entryptr_t *)(p)-1)
 #define GET_CANARY(p)           GET_ENTRY_PTR_STRUCT(p)->canary
 #define GET_ENTRY_PTR(p)        GET_ENTRY_PTR_STRUCT(p)->entry
 #define GET_ENTRY(p)            (*GET_ENTRY_PTR(p))

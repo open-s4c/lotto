@@ -1,3 +1,4 @@
+add_compile_definitions(LOGGER_PREFIX="sampling_test")
 file(GLOB SRCS *.c)
 list(FILTER SRCS EXCLUDE REGEX "parser_test\\.c$")
 

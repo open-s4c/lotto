@@ -214,16 +214,16 @@ impl log::Log for LottoLogger {
         // thread-safe.
         match record.level() {
             log::Level::Error => unsafe {
-                raw::logger_errorf(format_message_escape_cstr(record).as_ptr());
+                raw::_logger_errorf(std::ptr::null(),std::ptr::null(), 0, format_message_escape_cstr(record).as_ptr());
             },
             log::Level::Warn => unsafe {
-                raw::logger_warnf(format_message_escape_cstr(record).as_ptr());
+                raw::_logger_warnf(std::ptr::null(),std::ptr::null(), 0, format_message_escape_cstr(record).as_ptr());
             },
             log::Level::Info => unsafe {
-                raw::logger_infof(format_message_escape_cstr(record).as_ptr());
+                raw::_logger_infof(std::ptr::null(),std::ptr::null(), 0, format_message_escape_cstr(record).as_ptr());
             },
             log::Level::Debug => unsafe {
-                raw::logger_debugf(format_message_escape_cstr(record).as_ptr());
+                raw::_logger_debugf(std::ptr::null(),std::ptr::null(), 0, format_message_escape_cstr(record).as_ptr());
             },
             log::Level::Trace => {
                 TRACE_REDIRECT

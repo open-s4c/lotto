@@ -1,6 +1,7 @@
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/lotto/modules/rusty)
 configure_file(include/lotto/modules/rusty/rusty.h
                include/lotto/modules/rusty/rusty.h)
+add_compile_definitions(LOGGER_PREFIX="rusty")
 
 # ##############################################################################
 # Import Corrosion

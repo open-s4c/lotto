@@ -1,6 +1,7 @@
 sanitize()
 add_compile_options(-fPIC)
 add_compile_definitions(_GNU_SOURCE)
+add_compile_definitions(LOGGER_PREFIX="sys")
 set(SRCS
     abort.c
     common.c

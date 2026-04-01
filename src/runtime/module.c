@@ -5,8 +5,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-
 #include "sighandler.h"
 #include <dice/events/self.h>
 #include <dice/module.h>

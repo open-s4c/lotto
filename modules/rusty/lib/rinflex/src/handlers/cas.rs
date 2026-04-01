@@ -106,8 +106,10 @@ fn ctx_to_modify(ctx: &CapturePoint) -> Option<Modify> {
         return None;
     }
 
-    let raw_addr =
-        usize::from(get_addr_from_context(ctx, 0).expect("missing memory-access address"));
+    let raw_addr = match get_addr_from_context(ctx, 0) {
+        Ok(addr) => usize::from(addr),
+        Err(_) => return None,
+    };
     let addr = VAddr::get(ctx, raw_addr);
     let size = u64::from(get_size_from_context(ctx, 1));
     let kind: ModifyKind = match event_type {

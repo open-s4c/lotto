@@ -36,7 +36,6 @@ set(LIBS
     memmgr_runtime_dice.o
     memmgr_user_libc.o
     subscribers.o
-    lotto-runtime-engine.o
     dice.o
     dice-cxa.o
     dice-mman.o
@@ -62,10 +61,11 @@ macro(add_runtime TARGET OUTPUT_NAME)
 endmacro()
 
 add_runtime(lotto lotto-runtime)
-list(TRANSFORM LIBS REPLACE "^lotto-runtime-engine\\.o$"
-                            "lotto-runtime-dbg-engine.o")
-add_runtime(lotto-dbg lotto-runtime-dbg)
 target_compile_definitions(lotto PRIVATE -DLOGGER_DISABLE)
+target_link_libraries(lotto PRIVATE lotto-runtime-engine.o)
+
+add_runtime(lotto-dbg lotto-runtime-dbg)
+target_link_libraries(lotto-dbg PRIVATE lotto-runtime-dbg-engine.o)
 
 add_library(runtime-module.o OBJECT module.c)
 

@@ -324,10 +324,10 @@ preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
          .len     = libtsano_so_len},
 #if !defined(LOTTO_EMBED_LIB) || LOTTO_EMBED_LIB == 1
         verbose > 0 ?
-        (driver_file_t){.path    = LIBLOTTO,
+        (driver_file_t){.path    = LIBLOTTO_RUNTIME_DBG,
                         .content = liblotto_runtime_dbg_so,
                         .len     = liblotto_runtime_dbg_so_len} :
-        (driver_file_t){.path    = LIBLOTTO,
+        (driver_file_t){.path    = LIBLOTTO_RUNTIME,
                         .content = liblotto_runtime_so,
                         .len     = liblotto_runtime_so_len},
 #endif
@@ -369,10 +369,12 @@ preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
     _preload_list(getenv(LOTTO_LOAD_RUNTIME));
 
     /* preload the runtime library */
-    _preload_libs(dir, (libspec_t[]){
-                           {LIBLOTTO, do_preload_plotto},
-                           {NULL},
-                       });
+    _preload_libs(dir,
+                  (libspec_t[]){
+                      {verbose > 0 ? LIBLOTTO_RUNTIME_DBG : LIBLOTTO_RUNTIME,
+                       do_preload_plotto},
+                      {NULL},
+                  });
 
     /* preload other dynamic modules */
     if (do_preload_plotto) {

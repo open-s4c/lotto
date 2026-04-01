@@ -78,7 +78,9 @@ add_module(inactivity)
 
 # other components
 add_module(autocept)
-add_module(syscall SLOT 2)
+if("${LOTTO_INTERCEPT_SYSCALL}")
+    add_module(syscall SLOT 2)
+endif()
 add_module(time)
 add_module(random)
 add_module(tsan)

@@ -24,6 +24,6 @@ typedef struct exec_info_s {
 
 exec_info_t *get_exec_info();
 void exec_info_store_envvars();
-bool exec_info_replay_envvars();
+bool exec_info_replay_envvars(int verbose);
 
 #endif

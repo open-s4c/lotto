@@ -289,7 +289,7 @@ pub fn checked_execute(trace: &Path, flags: &Flags, config: bool) -> Result<i32,
     let args = first.args();
     first.unmarshal();
     unsafe {
-        raw::exec_info_replay_envvars();
+        raw::exec_info_replay_envvars(flags.get_uval(&FLAG_VERBOSE) as i32);
     }
     // Make sure `execute` uses the seed from `flags`, as it might
     // append another config record which uses the current engine's

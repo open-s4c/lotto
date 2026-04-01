@@ -348,7 +348,7 @@ preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
 
     _set_libpath_env(dir);
 
-    if (exec_info_replay_envvars()) {
+    if (exec_info_replay_envvars(verbose)) {
         return;
     }
 

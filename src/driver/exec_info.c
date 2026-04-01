@@ -1,3 +1,4 @@
+#include <lotto/base/libraries.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/logger.h>
@@ -5,6 +6,7 @@
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
 
+#define MAX_LIST_STR        ((size_t)(32 * 1024))
 static const char *_envvars[REPLAYED_ENVVARS] = {"LD_PRELOAD",
                                                  "DICE_PLUGIN_MODULES"};
 
@@ -86,8 +88,34 @@ exec_info_store_envvars()
     }
 }
 
+void
+exec_info_replay_ld_preload(int verbose, const char *stored)
+{
+    ASSERT(stored);
+    const char *liblotto = verbose > 0 ? LIBLOTTO_RUNTIME_DBG : LIBLOTTO_RUNTIME;
+    char ld_preload[MAX_LIST_STR] = {0};
+    size_t len = 0;
+    char buf[MAX_LIST_STR];
+    strncpy(buf, stored, sizeof(buf) - 1);
+
+    char *saveptr;
+    char *item = strtok_r(buf, ":", &saveptr);
+    while (item && len < MAX_LIST_STR) {
+        const char *entry = (!strcmp(item, LIBLOTTO_RUNTIME) || !strcmp(item, LIBLOTTO_RUNTIME_DBG)) ? liblotto : item;
+        if (len != 0) {
+            strncat(ld_preload, ":", sizeof(ld_preload) - len - 1);
+            len++;
+        }
+        strncat(ld_preload, entry, sizeof(ld_preload) - len - 1);
+        len += sys_strlen(entry);
+        item = strtok_r(NULL, ":", &saveptr);
+    }
+    ld_preload[MAX_LIST_STR - 1] = 0;
+    sys_setenv("LD_PRELOAD", ld_preload, true);
+}
+
 bool
-exec_info_replay_envvars()
+exec_info_replay_envvars(int verbose)
 {
     bool replayed_any = false;
     for (size_t i = 0; i < REPLAYED_ENVVARS; i++) {
@@ -96,6 +124,8 @@ exec_info_replay_envvars()
         }
         if (_exec_info.envvars[i][0] == '\0') {
             sys_unsetenv(_envvars[i]);
+        } else if (!strcmp(_envvars[i], "LD_PRELOAD")) {
+            exec_info_replay_ld_preload(verbose, _exec_info.envvars[i]);
         } else {
             sys_setenv(_envvars[i], _exec_info.envvars[i], true);
         }

@@ -51,6 +51,7 @@ function(add_mockoto)
                 -I ${PROJECT_SOURCE_DIR}/src/include #
                 -I ${PROJECT_SOURCE_DIR}/deps/dice/include #
                 -I ${PROJECT_SOURCE_DIR}/deps/dice/deps/libvsync/include #
+                -D 'LOGGER_PREFIX="mockr"' #
                 ${__FLAGS} #
                 > ${CMAKE_CURRENT_SOURCE_DIR}/${__TARGET}
             COMMAND
@@ -69,6 +70,7 @@ function(add_mockoto)
                 -I ${PROJECT_SOURCE_DIR}/src/include #
                 -I ${PROJECT_SOURCE_DIR}/deps/dice/include #
                 -I ${PROJECT_SOURCE_DIR}/deps/dice/deps/libvsync/include #
+                -D 'LOGGER_PREFIX="mockc"' #
                 ${__FLAGS} #
                 > ${CMAKE_CURRENT_SOURCE_DIR}/${__TARGET}
             COMMAND
@@ -79,6 +81,7 @@ function(add_mockoto)
                 -I ${PROJECT_SOURCE_DIR}/src/include #
                 -I ${PROJECT_SOURCE_DIR}/deps/dice/include #
                 -I ${PROJECT_SOURCE_DIR}/deps/dice/deps/libvsync/include #
+                -D 'LOGGER_PREFIX="mockh"' #
                 ${__FLAGS} #
                 > ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER}
             BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER}

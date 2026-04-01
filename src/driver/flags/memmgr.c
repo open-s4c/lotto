@@ -1,4 +1,3 @@
-#define LOGGER_PREFIX LOGGER_CUR_FILE
 #include <lotto/driver/flagmgr.h>
 #include <lotto/sys/assert.h>
 

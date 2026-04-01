@@ -1,4 +1,3 @@
-#define LOGGER_PREFIX LOGGER_CUR_FILE
 #include <lotto/driver/exec_info.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/logger.h>

@@ -1,5 +1,5 @@
 set(AUTOCEPT_TEST_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/foo.h)
-
+add_compile_definitions(LOGGER_PREFIX="test")
 add_library(autocept_testing SHARED test_interceptors.S)
 target_compile_definitions(
     autocept_testing

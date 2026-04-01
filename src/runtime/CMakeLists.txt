@@ -1,5 +1,7 @@
 sanitize()
 add_compile_definitions(_GNU_SOURCE)
+add_compile_definitions(LOGGER_PREFIX="runtime")
+
 set(MODULE_NAME runtime)
 set(MODULE_SLOT 9)
 add_compile_definitions(DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${MODULE_SLOT})

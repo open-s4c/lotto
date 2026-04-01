@@ -2,8 +2,6 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
-
 #include <dice/module.h>
 #include <dice/pubsub.h>
 #include <dice/self.h>

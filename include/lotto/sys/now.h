@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifndef LOGGER_PREFIX
+    #define LOGGER_PREFIX "now"
+#endif
+
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/time.h>

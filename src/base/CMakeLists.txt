@@ -1,8 +1,9 @@
 sanitize()
 add_compile_options(-fPIC)
 add_compile_definitions(_GNU_SOURCE)
-file(GLOB SRCS *.c)
+add_compile_definitions(LOGGER_PREFIX="base")
 
+file(GLOB SRCS *.c)
 add_library(base.o OBJECT ${SRCS})
 
 add_library(base_testing.o OBJECT ${SRCS})

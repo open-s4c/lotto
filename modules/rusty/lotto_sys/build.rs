@@ -169,7 +169,8 @@ fn main() -> Result<()> {
         .clang_arg(clang_build_include_arg)
         .clang_arg(clang_build_gen_include_arg)
         .clang_arg(dice_include_arg)
-        .clang_arg("-D_GNU_SOURCE");
+        .clang_arg("-D_GNU_SOURCE")
+        .clang_arg("-DLOGGER_PREFIX=\"lotto_sys\"");
     builder = libvsync_include_paths
         .into_iter()
         .map(|include_dir| format!("-I{}", include_dir))

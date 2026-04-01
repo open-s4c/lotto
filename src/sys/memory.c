@@ -1,4 +1,3 @@
-#define LOGGER_PREFIX LOGGER_CUR_FILE
 #include <lotto/sys/logger.h>
 #include <lotto/sys/memmgr_runtime.h>
 #include <lotto/sys/memmgr_user.h>

@@ -19,6 +19,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifndef LOGGER_PREFIX
+    #define LOGGER_PREFIX "real"
+#endif
+
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>

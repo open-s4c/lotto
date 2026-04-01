@@ -29,7 +29,6 @@
 #include <vsync/thread/cond.h>
 // clang-format on
 
-#define LOGGER_PREFIX LOGGER_CUR_FILE
 #include <lotto/base/task_id.h>
 #include <lotto/runtime/switcher.h>
 #include <lotto/sys/assert.h>

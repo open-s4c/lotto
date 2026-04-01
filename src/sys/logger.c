@@ -1,7 +1,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <unistd.h>
-#define LOGGER_IMPL
+
 #include <lotto/sys/abort.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
@@ -47,6 +47,16 @@ logger(enum logger_level l, int fd)
 {
     _level = l;
     _fd    = fd;
+}
+
+__attribute__((format(printf, 4, 5))) void
+_logger_printf(const char *prefix, const char *file, int line, const char *fmt,
+               ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    _logger_vprintf(prefix, file, line, fmt, args);
+    va_end(args);
 }
 
 __attribute__((format(printf, 4, 5))) void
@@ -102,67 +112,6 @@ _logger_debugf(const char *prefix, const char *file, int line, const char *fmt,
         va_list args;
         va_start(args, fmt);
         _logger_vprintf(prefix, file, line, fmt, args);
-        va_end(args);
-    }
-}
-
-__attribute__((format(printf, 1, 2))) void
-logger_printf(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    _logger_vprintf(NULL, NULL, 0, fmt, args);
-    va_end(args);
-}
-
-__attribute__((format(printf, 1, 2))) void
-logger_fatalf(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    _logger_vprintf(NULL, NULL, 0, fmt, args);
-    va_end(args);
-    sys_abort();
-}
-
-__attribute__((format(printf, 1, 2))) void
-logger_errorf(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    _logger_vprintf(NULL, NULL, 0, fmt, args);
-    va_end(args);
-}
-
-__attribute__((format(printf, 1, 2))) void
-logger_warnf(const char *fmt, ...)
-{
-    if (_level >= LOGGER_WARN) {
-        va_list args;
-        va_start(args, fmt);
-        _logger_vprintf(NULL, NULL, 0, fmt, args);
-        va_end(args);
-    }
-}
-
-__attribute__((format(printf, 1, 2))) void
-logger_infof(const char *fmt, ...)
-{
-    if (_level >= LOGGER_INFO) {
-        va_list args;
-        va_start(args, fmt);
-        _logger_vprintf(NULL, NULL, 0, fmt, args);
-        va_end(args);
-    }
-}
-
-__attribute__((format(printf, 1, 2))) void
-logger_debugf(const char *fmt, ...)
-{
-    if (_level >= LOGGER_DEBUG) {
-        va_list args;
-        va_start(args, fmt);
-        _logger_vprintf(NULL, NULL, 0, fmt, args);
         va_end(args);
     }
 }

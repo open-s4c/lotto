@@ -169,12 +169,7 @@ impl Redirect {
     }
 
     fn parse(input: &str) -> Redirect {
-        Redirect(
-            input
-                .split(",")
-                .map(|part| ConditionalRedirect::parse(part))
-                .collect(),
-        )
+        Redirect(input.split(",").map(ConditionalRedirect::parse).collect())
     }
 }
 
@@ -185,18 +180,13 @@ static TRACE_REDIRECT: Mutex<Redirect> = Mutex::new(Redirect(Vec::new()));
 static LEVEL: AtomicUsize = AtomicUsize::new(0);
 
 fn format_message(record: &log::Record) -> String {
-    if record.target() == "" {
-        format!("{}", record.args())
-    } else {
-        format!("[{:>21}] {}", record.target(), record.args())
-    }
+    format!("{}", record.args())
 }
 
 fn format_message_escape_cstr(record: &log::Record) -> CString {
     let s = format_message(record) + "\n";
     let escaped = s.replace("%", "%%").replace("\\", "\\\\");
-    let cs = CString::new(escaped).expect("no null in message");
-    cs
+    CString::new(escaped).expect("no null in message")
 }
 
 impl log::Log for LottoLogger {
@@ -210,38 +200,43 @@ impl log::Log for LottoLogger {
             return;
         }
 
+        let prefix = c"rusty".as_ptr();
+        let file = CString::new(record.target()).expect("invalid c string");
+        let file = file.as_c_str().as_ptr();
+        let line = record.line().unwrap_or(0) as i32;
+
         // Safety: the string is escaped, and TRACE_REDIRECT is
         // thread-safe.
         match record.level() {
             log::Level::Error => unsafe {
                 raw::_logger_errorf(
-                    std::ptr::null(),
-                    std::ptr::null(),
-                    0,
+                    prefix,
+                    file,
+                    line,
                     format_message_escape_cstr(record).as_ptr(),
                 );
             },
             log::Level::Warn => unsafe {
                 raw::_logger_warnf(
-                    std::ptr::null(),
-                    std::ptr::null(),
-                    0,
+                    prefix,
+                    file,
+                    line,
                     format_message_escape_cstr(record).as_ptr(),
                 );
             },
             log::Level::Info => unsafe {
                 raw::_logger_infof(
-                    std::ptr::null(),
-                    std::ptr::null(),
-                    0,
+                    prefix,
+                    file,
+                    line,
                     format_message_escape_cstr(record).as_ptr(),
                 );
             },
             log::Level::Debug => unsafe {
                 raw::_logger_debugf(
-                    std::ptr::null(),
-                    std::ptr::null(),
-                    0,
+                    prefix,
+                    file,
+                    line,
                     format_message_escape_cstr(record).as_ptr(),
                 );
             },

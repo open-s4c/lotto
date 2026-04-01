@@ -23,9 +23,10 @@ LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__INFO_RECORD_LOAD)
 
 void __attribute__((noinline)) recorder_end_trace()
 {
+    logger_debugf("trace fully loaded\n");
     /* nothing really happens here, but we have to  ensure we call a function
      * here to avoid recorder_end_trace being optimized out. */
-    _logger_debugf("engine", __FILE__, __LINE__, "trace fully loaded\n");
+    __asm__ volatile("" :::);
 }
 
 void __attribute__((noinline)) recorder_end_replay()

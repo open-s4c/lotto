@@ -55,6 +55,8 @@ PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, ANY_EVENT, {
     cp->type_id       = type;
     mediator_t *m     = mediator_get(md, true);
 
+    ASSERT(!cp->blocking && "events in this chain cannot block in user code");
+
     if (!mediator_capture(m, cp)) {
         _intercept_resume(m, cp);
     }

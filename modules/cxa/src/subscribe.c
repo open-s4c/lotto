@@ -20,7 +20,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_CXA_GUARD_ACQUIRE, {
                             .func     = "__cxa_guard_acquire",
                             .blocking = true,
     };
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, type, &cp, md);
+    PS_PUBLISH(CHAIN_INGRESS_BEFORE, type, &cp, md);
     return PS_OK;
 })
 
@@ -32,6 +32,6 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_CXA_GUARD_ACQUIRE, {
         .func     = "__cxa_guard_acquire",
         .blocking = true,
     };
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, type, &cp, md);
+    PS_PUBLISH(CHAIN_INGRESS_AFTER, type, &cp, md);
     return PS_OK;
 })

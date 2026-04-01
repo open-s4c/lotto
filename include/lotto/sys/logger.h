@@ -49,7 +49,7 @@ void _logger_debugf(const char *prefix, const char *file, int line,
 #define logger_infoln(fmt, ...)  logger_infof(fmt "\n", ##__VA_ARGS__)
 #define logger_println(fmt, ...) logger_printf(fmt "\n", ##__VA_ARGS__)
 #define logger_printf(fmt, ...)                                                \
-    _logger_printf(LOGGER_PREFIX, LOGGER_CUR_FILE, __LINE__, fmt, ##__VA_ARGS__)
+    _logger_printf(NULL, NULL, 0, fmt, ##__VA_ARGS__)
 #define logger_fatalf(fmt, ...)                                                \
     _logger_fatalf(LOGGER_PREFIX, LOGGER_CUR_FILE, __LINE__, fmt, ##__VA_ARGS__)
 #define logger_errorf(fmt, ...)                                                \

@@ -1,19 +1,16 @@
 use std::path::{Path, PathBuf};
 
-use lotto::base::{Clock, Flags, Prng, Trace};
+use lotto::base::{Clock, Flags, Trace};
 use lotto::base::{EnvScope, Value};
-use lotto::cli::execute;
 use lotto::cli::flags::*;
 use lotto::cli::prng;
 use lotto::engine::flags::*;
 use lotto::log::*;
 use lotto::owned::Owned;
-use lotto::raw;
 
 use crate::error::Error;
-use crate::handlers;
+use crate::exec::Exec;
 use crate::progress::ProgressBar;
-use crate::stats::STATS;
 
 pub struct Inflex {
     input: PathBuf,
@@ -127,9 +124,8 @@ impl Inflex {
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
             let success_forever = always(self.rounds, || loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                let exitcode = checked_execute(&self.input, &flags, true)?;
-                if let Some(outcome) = postexec(&self.input, &self.temp_output, exitcode, |_| true)?
-                {
+                let mut exec = Exec::new(&self.input, &self.temp_output, &flags);
+                if let Some(outcome) = exec.exec_and_check()? {
                     bar.tick_valid();
                     return Ok(outcome.is_success());
                 } else {
@@ -161,10 +157,8 @@ impl Inflex {
                 flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                    let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if let Some(outcome) =
-                        postexec(&self.input, &self.temp_output, exitcode, |_| true)?
-                    {
+                    let mut exec = Exec::new(&self.input, &self.temp_output, &flags);
+                    if let Some(outcome) = exec.exec_and_check()? {
                         return Ok(outcome.is_success());
                     } else {
                         bar.tick_invalid();
@@ -206,9 +200,8 @@ impl Inflex {
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
             let fail_forever = always(self.rounds, || loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                let exitcode = checked_execute(&self.input, &flags, true)?;
-                if let Some(outcome) = postexec(&self.input, &self.temp_output, exitcode, |_| true)?
-                {
+                let mut exec = Exec::new(&self.input, &self.temp_output, &flags);
+                if let Some(outcome) = exec.exec_and_check()? {
                     bar.tick_valid();
                     return Ok(outcome.is_fail());
                 } else {
@@ -241,10 +234,8 @@ impl Inflex {
                 flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                    let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if let Some(outcome) =
-                        postexec(&self.input, &self.temp_output, exitcode, |_| true)?
-                    {
+                    let mut exec = Exec::new(&self.input, &self.temp_output, &flags);
+                    if let Some(outcome) = exec.exec_and_check()? {
                         return Ok(outcome.is_fail());
                     } else {
                         bar.tick_invalid();
@@ -300,119 +291,4 @@ pub fn always(rounds: u64, mut pred: impl FnMut() -> Result<bool, Error>) -> Res
         }
     }
     Ok(true)
-}
-
-/// [`execute`] but guard against `SIGINT`.
-pub fn checked_execute(trace: &Path, flags: &Flags, config: bool) -> Result<i32, Error> {
-    let mut rec = Trace::load_file(trace);
-    let first = rec.next(raw::record::RECORD_START).expect("first record");
-    let args = first.args();
-    first.unmarshal();
-    unsafe {
-        raw::exec_info_replay_envvars(flags.get_uval(&FLAG_VERBOSE) as i32);
-    }
-    // Make sure `execute` uses the seed from `flags`, as it might
-    // append another config record which uses the current engine's
-    // seed.
-    let seed = flags.get_value(&flag_seed()).as_u64();
-    Prng::current_mut().seed = seed as u32;
-    let exitcode = {
-        let exec_start_instant = std::time::Instant::now();
-        let exitcode = execute(args, flags, config);
-        STATS.tick_run();
-        STATS.count_run_time(exec_start_instant);
-        exitcode
-    };
-    if exitcode == 130 {
-        return Err(Error::Interrupted);
-    }
-    return Ok(exitcode);
-}
-
-/// Additionally check the outcome.
-///
-/// Returns None if the execution should be discarded.
-pub fn postexec(
-    input: &Path,
-    output: &Path,
-    exitcode: i32,
-    filter: impl Fn(&Path) -> bool,
-) -> Result<Option<Outcome>, Error> {
-    let mut rec = Trace::load_file(output);
-    let last = rec.last().expect("no last record");
-
-    // Lotto crashed?
-    if last.reason.is_runtime() {
-        return Err(Error::LottoError {
-            input: input.to_path_buf(),
-            output: output.to_path_buf(),
-        });
-    }
-
-    // Should ignore? Probably from handler_drop.
-    if last.reason == raw::reason::REASON_IGNORE {
-        STATS.tick_discarded_run();
-        return Ok(None);
-    }
-
-    // Check the FINAL record and check whether order_enforcer wants
-    // us to discard.
-    handlers::order_enforcer::cli_reset();
-    if last.kind == raw::record::RECORD_EXIT && last.size > 0 {
-        unsafe {
-            raw::statemgr_unmarshal(
-                last.data.as_ptr() as *const std::ffi::c_void,
-                raw::state_type::STATE_TYPE_FINAL,
-                true,
-            );
-        }
-        if handlers::order_enforcer::should_discard() {
-            STATS.tick_discarded_run();
-            return Ok(None);
-        }
-    }
-
-    // Check if some handler aborts the execution, which is considered
-    // a failure, but exitcode may be 0.
-    if last.reason.is_abort() {
-        return Ok(Some(Outcome::Fail));
-    }
-
-    // User-supplied filter.
-    if !filter(output) {
-        return Ok(None);
-    }
-
-    // All tests passed.
-    if exitcode == 0 {
-        Ok(Some(Outcome::Success))
-    } else {
-        Ok(Some(Outcome::Fail))
-    }
-}
-
-pub fn preload(flags: &Flags) {
-    lotto::cli::preload(
-        flags.get_sval(&FLAG_TEMPORARY_DIRECTORY),
-        flags.get_uval(&FLAG_VERBOSE),
-        !flags.is_on(&FLAG_NO_PRELOAD),
-        flags.get_sval(&flag_memmgr_runtime()),
-        flags.get_sval(&flag_memmgr_user()),
-    );
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Outcome {
-    Success,
-    Fail,
-}
-
-impl Outcome {
-    pub fn is_fail(self) -> bool {
-        matches!(self, Outcome::Fail)
-    }
-
-    pub fn is_success(self) -> bool {
-        matches!(self, Outcome::Success)
-    }
 }

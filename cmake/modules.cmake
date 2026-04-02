@@ -179,6 +179,11 @@ macro(add_module NAME)
         set(TIKL_MODULE_FEATURES "${TIKL_MODULE_FEATURES}\n-D module-${NAME}")
         add_tikl_module_target(${NAME})
         add_subdirectory(${NAME})
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/include")
+            install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/include/"
+                    DESTINATION "include"
+                    FILES_MATCHING PATTERN "*.h")
+        endif()
     endif()
 endmacro()
 

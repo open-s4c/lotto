@@ -9,7 +9,7 @@ For API documentation, use `cargo doc --open`.
 ## Prerequisites
 
 - Install Rust (1.74 or newer)
-- Configure lotto with the option `-DLOTTO_RUST=ON`
+- Configure lotto with the option `-DLOTTO_MODULE_rusty=ON` (enabled automatically if `cargo` is found)
 
 ## Add a new Rust handler
 

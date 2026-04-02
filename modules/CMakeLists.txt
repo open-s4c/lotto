@@ -63,9 +63,7 @@ add_module(task_velocity)
 add_module(order)
 add_module(concurrent SLOT 6)
 add_module(ghost SLOT 7)
-if(${LOTTO_RUST})
-    add_module(rusty)
-endif()
+add_module(rusty)
 
 # scheduling strategy handlers
 add_module(pos)

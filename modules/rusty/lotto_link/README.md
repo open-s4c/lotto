@@ -5,5 +5,5 @@ Inside `#[cfg(test)]`, add `extern crate lotto_link`, to make sure the tests are
 Note:
 
 1. `/build/plugins/rust/liblotto_rust_testing.a` must be present; `build` is not customizable.
-2. `LOTTO_RUST` must be configured.
+2. `LOTTO_MODULE_rusty` must be enabled (it is by default when `cargo` is found).
 3. You need to build once before using `cargo test`.

@@ -48,7 +48,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
           -DCMAKE_C_COMPILER=${{ matrix.cc }}
           -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
-          -DLOTTO_RUST=${{ matrix.rust }}
+          -DLOTTO_MODULE_rusty=${{ matrix.rust }}
           -DLOTTO_LTO=${{ matrix.lotto_lto }}
       - name: Expand templates in Dice
         run: cmake --build build --target expand-tsan.c

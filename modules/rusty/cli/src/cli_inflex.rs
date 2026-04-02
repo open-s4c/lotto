@@ -60,8 +60,12 @@ fn inflex(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
             Ok(())
         }
         Err(Error::Interrupted) => Ok(()),
-        Err(Error::LottoError) => {
-            error!("Inflex failed due to Lotto internal errors");
+        Err(Error::LottoError { input, output }) => {
+            error!(
+                "Inflex failed due to Lotto internal errors in trace\ninput = {}\noutput = {}",
+                input.display(),
+                output.display()
+            );
             Ok(())
         }
         Err(e @ _) => unreachable!("Error {:?} should not be reached", e),

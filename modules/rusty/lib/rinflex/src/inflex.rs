@@ -114,7 +114,8 @@ impl Inflex {
             let success_forever = always(self.rounds, || loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                 let exitcode = checked_execute(&self.input, &flags, true)?;
-                if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
+                if let Some(outcome) = postexec(&self.input, &self.temp_output, exitcode, |_| true)?
+                {
                     bar.tick_valid();
                     return Ok(outcome.is_success());
                 } else {
@@ -147,7 +148,9 @@ impl Inflex {
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                     let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
+                    if let Some(outcome) =
+                        postexec(&self.input, &self.temp_output, exitcode, |_| true)?
+                    {
                         return Ok(outcome.is_success());
                     } else {
                         bar.tick_invalid();
@@ -190,7 +193,8 @@ impl Inflex {
             let fail_forever = always(self.rounds, || loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                 let exitcode = checked_execute(&self.input, &flags, true)?;
-                if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
+                if let Some(outcome) = postexec(&self.input, &self.temp_output, exitcode, |_| true)?
+                {
                     bar.tick_valid();
                     return Ok(outcome.is_fail());
                 } else {
@@ -224,7 +228,9 @@ impl Inflex {
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                     let exitcode = checked_execute(&self.input, &flags, true)?;
-                    if let Some(outcome) = postexec(&self.temp_output, exitcode, |_| true)? {
+                    if let Some(outcome) =
+                        postexec(&self.input, &self.temp_output, exitcode, |_| true)?
+                    {
                         return Ok(outcome.is_fail());
                     } else {
                         bar.tick_invalid();
@@ -313,6 +319,7 @@ pub fn checked_execute(trace: &Path, flags: &Flags, config: bool) -> Result<i32,
 ///
 /// Returns None if the execution should be discarded.
 pub fn postexec(
+    input: &Path,
     output: &Path,
     exitcode: i32,
     filter: impl Fn(&Path) -> bool,
@@ -322,7 +329,10 @@ pub fn postexec(
 
     // Lotto crashed?
     if last.reason.is_runtime() {
-        return Err(Error::LottoError);
+        return Err(Error::LottoError {
+            input: input.to_path_buf(),
+            output: output.to_path_buf(),
+        });
     }
 
     // Should ignore? Probably from handler_drop.

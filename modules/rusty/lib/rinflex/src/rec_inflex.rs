@@ -87,7 +87,7 @@ impl RecInflex {
             let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                 let exitcode = checked_execute(&with_oc, &flags, true)?;
-                if let Some(outcome) = postexec(&self.trace_temp, exitcode, |_| true)? {
+                if let Some(outcome) = postexec(&with_oc, &self.trace_temp, exitcode, |_| true)? {
                     break outcome;
                 } else {
                     bar.tick_invalid();
@@ -176,7 +176,8 @@ impl RecInflex {
             let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                 let exitcode = checked_execute(&check_trace, &flags, true)?;
-                if let Some(outcome) = postexec(&self.trace_temp, exitcode, |_| true)? {
+                if let Some(outcome) = postexec(&check_trace, &self.trace_temp, exitcode, |_| true)?
+                {
                     break outcome;
                 } else {
                     bar.tick_invalid();
@@ -386,7 +387,7 @@ impl RecInflex {
             }
 
             let exitcode = checked_execute(&input, &flags, true)?;
-            if let Some(actual_outcome) = postexec(&output, exitcode, &filter)? {
+            if let Some(actual_outcome) = postexec(&input, &output, exitcode, &filter)? {
                 bar.tick_valid();
                 if expected_outcome == actual_outcome {
                     return Ok(());

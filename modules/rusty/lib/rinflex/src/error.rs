@@ -18,8 +18,8 @@ pub enum Error {
     #[error("No event found at the specified clk {} in trace {}", .1, .0.display())]
     EventNotFound(PathBuf, Clock),
 
-    #[error("The execution terminated due to lotto internal error")]
-    LottoError,
+    #[error("The execution terminated due to lotto internal error, input={}, output={}", .input.display(), .output.display())]
+    LottoError { input: PathBuf, output: PathBuf },
 
     #[error("System IO error: {}", .0)]
     IO(#[from] io::Error),
@@ -37,7 +37,7 @@ impl HasErrorCode for Error {
             Error::Interrupted => NonZeroI32::new(130).unwrap(),
             Error::ClockNotFound(_, _) => NonZeroI32::new(1).unwrap(),
             Error::EventNotFound(_, _) => NonZeroI32::new(2).unwrap(),
-            Error::LottoError => NonZeroI32::new(3).unwrap(),
+            Error::LottoError { .. } => NonZeroI32::new(3).unwrap(),
             Error::IO(_) => NonZeroI32::new(4).unwrap(),
             Error::SubprocessFailure(_) => NonZeroI32::new(5).unwrap(),
             Error::ExecutionNotFound => NonZeroI32::new(6).unwrap(),

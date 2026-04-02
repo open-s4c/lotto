@@ -18,8 +18,12 @@ pub enum Error {
     #[error("No event found at the specified clk {} in trace {}", .1, .0.display())]
     EventNotFound(PathBuf, Clock),
 
-    #[error("The execution terminated due to lotto internal error, input={}, output={}", .input.display(), .output.display())]
-    LottoError { input: PathBuf, output: PathBuf },
+    #[error("The execution terminated due to lotto internal error, input={}, output={}\n{}", .input.display(), .output.display(), .logs.as_deref().unwrap_or("<no logs available>"))]
+    LottoError {
+        input: PathBuf,
+        output: PathBuf,
+        logs: Option<String>,
+    },
 
     #[error("System IO error: {}", .0)]
     IO(#[from] io::Error),

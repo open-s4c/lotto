@@ -13,16 +13,18 @@ pub struct Exec<'a, F> {
     pub input: &'a Path,
     pub output: &'a Path,
     pub flags: &'a Flags,
+    pub log_file: &'a Path,
     pub exitcode: Option<i32>,
     pub filter: Option<F>,
 }
 
 impl<'a> Exec<'a, fn(&Path) -> bool> {
-    pub fn new(input: &'a Path, output: &'a Path, flags: &'a Flags) -> Self {
+    pub fn new(input: &'a Path, output: &'a Path, flags: &'a Flags, log_file: &'a Path) -> Self {
         Exec {
             input,
             output,
             flags,
+            log_file,
             exitcode: None,
             filter: None,
         }
@@ -30,11 +32,18 @@ impl<'a> Exec<'a, fn(&Path) -> bool> {
 }
 
 impl<'a, F> Exec<'a, F> {
-    pub fn new_with_filter(input: &'a Path, output: &'a Path, flags: &'a Flags, filter: F) -> Self {
+    pub fn new_with_filter(
+        input: &'a Path,
+        output: &'a Path,
+        flags: &'a Flags,
+        log_file: &'a Path,
+        filter: F,
+    ) -> Self {
         Exec {
             input,
             output,
             flags,
+            log_file,
             exitcode: None,
             filter: Some(filter),
         }
@@ -82,10 +91,18 @@ where
 
         // Lotto crashed?
         if last.reason.is_runtime() {
-            return Err(Error::LottoError {
+            let ret = Err(Error::LottoError {
                 input: self.input.to_path_buf(),
                 output: self.output.to_path_buf(),
+                logs: Some(std::fs::read_to_string(self.log_file).unwrap_or(format!(
+                    "(cannot read log file {})",
+                    self.log_file.display()
+                ))),
             });
+            let _ = std::fs::remove_file(self.log_file);
+            return ret;
+        } else {
+            let _ = std::fs::remove_file(self.log_file);
         }
 
         // Should ignore? Probably from handler_drop.
@@ -133,7 +150,7 @@ where
     }
 
     // Exec and postexec combined.
-    pub fn exec_and_check(&mut self) -> Result<Option<Outcome>, Error> {
+    pub fn run(&mut self) -> Result<Option<Outcome>, Error> {
         self.exec();
         self.postexec()
     }

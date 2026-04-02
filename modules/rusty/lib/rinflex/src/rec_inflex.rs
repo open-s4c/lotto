@@ -16,6 +16,7 @@ use crate::exec::Exec;
 use crate::exec::Outcome;
 use crate::handlers;
 use crate::inflex::always;
+use crate::inflex::LogLevel;
 use crate::progress::ProgressBar;
 use crate::{inflex, trace, Constraint, ConstraintSet, Event, PrimitiveConstraint};
 
@@ -50,7 +51,8 @@ pub struct RecInflex {
     //
     // debug
     //
-    pub debug: bool,
+    pub log_level: LogLevel,
+    pub log_file: PathBuf,
 }
 
 impl RecInflex {
@@ -58,6 +60,7 @@ impl RecInflex {
         let input = flags.get_path_buf(&FLAG_INPUT);
         let output = flags.get_path_buf(&FLAG_OUTPUT);
         let tempdir = flags.get_path_buf(&FLAG_TEMPORARY_DIRECTORY);
+        let log_file = tempdir.join("rinflex.log");
         let trace_fail = tempdir.join("rinflex.fail.trace");
         let trace_fail_alt = tempdir.join("rinflex.fail_alt.trace");
         let trace_success = tempdir.join("rinflex.success.trace");
@@ -78,16 +81,15 @@ impl RecInflex {
             trace_success,
             trace_temp,
             next_id: 0,
-            debug: flags.get_uval(&FLAG_VERBOSE) >= 5,
+            log_level: LogLevel::from_verbose_count(flags.get_uval(&FLAG_VERBOSE)),
+            log_file,
         }
     }
 
-    pub fn set_log_level(&self) -> EnvScope {
-        if self.debug {
-            EnvScope::new("LOTTO_LOGGER_LEVEL", "debug")
-        } else {
-            EnvScope::new("LOTTO_LOGGER_LEVEL", "error")
-        }
+    pub fn set_logger(&self) -> [EnvScope; 2] {
+        let log_level = EnvScope::new("LOTTO_LOGGER_LEVEL", self.log_level.to_str());
+        let log_file = EnvScope::new("LOTTO_LOGGER_FILE", &self.log_file);
+        [log_level, log_file]
     }
 
     /// Check if the loop should terminate.
@@ -95,15 +97,15 @@ impl RecInflex {
         let with_oc = self.attach_constraints_to_trace(&self.trace_fail, 0, &self.constraints)?;
         let _replay = EnvScope::new("LOTTO_REPLAY", &with_oc);
         let _record = EnvScope::new("LOTTO_RECORD", &self.trace_temp);
-        let _logger = self.set_log_level();
+        let _logger = self.set_logger();
         let mut flags = self.flags.clone();
         flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(0));
         let mut bar = ProgressBar::new(self.report_progress, "HALT", self.rounds);
         crate::inflex::always(self.rounds, || {
             let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                let mut exec = Exec::new(&with_oc, &self.trace_temp, &flags);
-                if let Some(outcome) = exec.exec_and_check()? {
+                let mut exec = Exec::new(&with_oc, &self.trace_temp, &flags, &self.log_file);
+                if let Some(outcome) = exec.run()? {
                     break outcome;
                 } else {
                     bar.tick_invalid();
@@ -186,13 +188,13 @@ impl RecInflex {
         let mut flags = self.flags.to_owned();
         let _replay = EnvScope::new("LOTTO_REPLAY", &check_trace);
         let _record = EnvScope::new("LOTTO_RECORD", &self.trace_temp);
-        let _logger = self.set_log_level();
+        let _logger = self.set_logger();
         let mut bar = ProgressBar::new(self.report_progress, "correct?", self.rounds);
         always(self.rounds, || {
             let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                let mut exec = Exec::new(&check_trace, &self.trace_temp, &flags);
-                if let Some(outcome) = exec.exec_and_check()? {
+                let mut exec = Exec::new(&check_trace, &self.trace_temp, &flags, &self.log_file);
+                if let Some(outcome) = exec.run()? {
                     break outcome;
                 } else {
                     bar.tick_invalid();
@@ -360,7 +362,7 @@ impl RecInflex {
         );
         let _replay = EnvScope::new("LOTTO_REPLAY", &input);
         let _record = EnvScope::new("LOTTO_RECORD", &output);
-        let _logger = self.set_log_level();
+        let _logger = self.set_logger();
         let max_rounds = self.rounds * 10;
         let valid_rounds = if try_hard {
             self.rounds * 10
@@ -401,8 +403,8 @@ impl RecInflex {
                 );
             }
 
-            let mut exec = Exec::new_with_filter(&input, &output, &flags, &filter);
-            if let Some(actual_outcome) = exec.exec_and_check()? {
+            let mut exec = Exec::new_with_filter(&input, &output, &flags, &self.log_file, &filter);
+            if let Some(actual_outcome) = exec.run()? {
                 bar.tick_valid();
                 if expected_outcome == actual_outcome {
                     return Ok(());
@@ -420,7 +422,7 @@ impl RecInflex {
         trace: &Path,
         clock: Clock,
     ) -> Result<(Event, i32), Error> {
-        let _logger = self.set_log_level();
+        let _logger = self.set_logger();
         let event = trace::get_event_at_clk(flags, trace, clock)?;
 
         if event.t.is_after() {

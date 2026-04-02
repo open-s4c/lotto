@@ -43,7 +43,8 @@ pub struct Inflex {
     //
     // debug
     //
-    pub debug: bool,
+    pub log_level: LogLevel,
+    pub log_file: PathBuf,
 }
 
 impl Inflex {
@@ -69,6 +70,7 @@ impl Inflex {
         let tempdir = flags.get_path_buf(&FLAG_TEMPORARY_DIRECTORY);
         let candidate = tempdir.join("inflex.candidate.trace");
         let temp_output = tempdir.join("inflex.temp.trace");
+        let log_file = tempdir.join("inflex.log");
 
         let rounds = flags.get_uval(&FLAG_ROUNDS);
 
@@ -82,7 +84,8 @@ impl Inflex {
             report_progress: true,
             rounds,
             min: 0,
-            debug: flags.get_uval(&FLAG_VERBOSE) >= 6,
+            log_level: LogLevel::from_verbose_count(flags.get_uval(&FLAG_VERBOSE)),
+            log_file,
         }
     }
 
@@ -99,12 +102,10 @@ impl Inflex {
         &self.input
     }
 
-    pub fn set_log_level(&self) -> EnvScope {
-        if self.debug {
-            EnvScope::new("LOTTO_LOGGER_LEVEL", "debug")
-        } else {
-            EnvScope::new("LOTTO_LOGGER_LEVEL", "silent")
-        }
+    pub fn set_logger(&self) -> [EnvScope; 2] {
+        let log_level = EnvScope::new("LOTTO_LOGGER_LEVEL", self.log_level.to_str());
+        let log_file = EnvScope::new("LOTTO_LOGGER_FILE", &self.log_file);
+        [log_level, log_file]
     }
 
     /// Find the inverse inflection point.
@@ -113,7 +114,7 @@ impl Inflex {
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _logger = self.set_log_level();
+        let _logger = self.set_logger();
 
         // If it's unlikely to hit the bug, the probablistical
         // algorithm will just return 0. Use a slower but perhaps
@@ -124,8 +125,8 @@ impl Inflex {
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
             let success_forever = always(self.rounds, || loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                let mut exec = Exec::new(&self.input, &self.temp_output, &flags);
-                if let Some(outcome) = exec.exec_and_check()? {
+                let mut exec = Exec::new(&self.input, &self.temp_output, &flags, &self.log_file);
+                if let Some(outcome) = exec.run()? {
                     bar.tick_valid();
                     return Ok(outcome.is_success());
                 } else {
@@ -149,7 +150,7 @@ impl Inflex {
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _logger = self.set_log_level();
+        let _logger = self.set_logger();
 
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
         while confidence <= self.rounds && iip < self.last_clk {
@@ -157,8 +158,9 @@ impl Inflex {
                 flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                    let mut exec = Exec::new(&self.input, &self.temp_output, &flags);
-                    if let Some(outcome) = exec.exec_and_check()? {
+                    let mut exec =
+                        Exec::new(&self.input, &self.temp_output, &flags, &self.log_file);
+                    if let Some(outcome) = exec.run()? {
                         return Ok(outcome.is_success());
                     } else {
                         bar.tick_invalid();
@@ -192,7 +194,7 @@ impl Inflex {
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _logger = self.set_log_level();
+        let _logger = self.set_logger();
 
         binary_search(self.min, self.last_clk, |clk| {
             let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
@@ -200,8 +202,8 @@ impl Inflex {
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
             let fail_forever = always(self.rounds, || loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                let mut exec = Exec::new(&self.input, &self.temp_output, &flags);
-                if let Some(outcome) = exec.exec_and_check()? {
+                let mut exec = Exec::new(&self.input, &self.temp_output, &flags, &self.log_file);
+                if let Some(outcome) = exec.run()? {
                     bar.tick_valid();
                     return Ok(outcome.is_fail());
                 } else {
@@ -226,7 +228,7 @@ impl Inflex {
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _logger = self.set_log_level();
+        let _logger = self.set_logger();
 
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
         while confidence <= self.rounds && ip < self.last_clk {
@@ -234,8 +236,9 @@ impl Inflex {
                 flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                 loop {
                     flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                    let mut exec = Exec::new(&self.input, &self.temp_output, &flags);
-                    if let Some(outcome) = exec.exec_and_check()? {
+                    let mut exec =
+                        Exec::new(&self.input, &self.temp_output, &flags, &self.log_file);
+                    if let Some(outcome) = exec.run()? {
                         return Ok(outcome.is_fail());
                     } else {
                         bar.tick_invalid();
@@ -291,4 +294,50 @@ pub fn always(rounds: u64, mut pred: impl FnMut() -> Result<bool, Error>) -> Res
         }
     }
     Ok(true)
+}
+
+#[derive(Clone, Copy)]
+pub enum LogLevel {
+    Silent,
+    Debug,
+    Info,
+    Error,
+}
+
+impl LogLevel {
+    pub fn to_str(&self) -> &'static str {
+        use LogLevel::*;
+        match self {
+            Silent => "silent",
+            Debug => "debug",
+            Info => "info",
+            Error => "error",
+        }
+    }
+
+    pub fn from_verbose_count(verbose: u64) -> LogLevel {
+        let patterns = [
+            (1, LogLevel::Error),
+            (2, LogLevel::Error),
+            (3, LogLevel::Info),
+            (4, LogLevel::Info),
+            (5, LogLevel::Debug),
+            (6, LogLevel::Debug),
+        ];
+        for (count, level) in patterns.into_iter() {
+            if verbose == count {
+                return level;
+            }
+        }
+        if verbose > 6 {
+            return LogLevel::Debug;
+        }
+        LogLevel::Silent
+    }
+}
+
+impl ToString for LogLevel {
+    fn to_string(&self) -> String {
+        self.to_str().to_string()
+    }
 }

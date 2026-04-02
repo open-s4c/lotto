@@ -57,13 +57,13 @@ add_module(atomic)
 add_module(yield)
 add_module(termination)
 
-# advanced handlers                                                            #
+# advanced handlers
 add_module(priority)
 add_module(task_velocity)
 add_module(order)
 add_module(concurrent SLOT 6)
 add_module(ghost SLOT 7)
-add_module(rusty)
+add_module(rusty DEFAULT ${HAVE_CARGO})
 
 # scheduling strategy handlers
 add_module(pos)
@@ -76,15 +76,11 @@ add_module(inactivity)
 
 # other components
 add_module(autocept)
-if("${LOTTO_INTERCEPT_SYSCALL}")
-    add_module(syscall SLOT 2)
-endif()
+add_module(syscall SLOT 2 DEFAULT OFF)
 add_module(time)
 add_module(random)
 add_module(tsan)
-if("${LOTTO_DRUM}")
-    add_module(drum)
-endif()
+add_module(drum DEFAULT ${HAVE_CURSES})
 add_module(debug)
 add_module(explore)
 add_module(trace)

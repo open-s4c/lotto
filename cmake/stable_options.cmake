@@ -3,21 +3,9 @@ option(LOTTO_LTO "Enable link-time optimization" OFF)
 # ##############################################################################
 # Rust options
 # ##############################################################################
-find_program(CARGO_EXECUTABLE cargo)
-if(CARGO_EXECUTABLE)
-    set(_lotto_rusty_default ON)
-else()
-    set(_lotto_rusty_default OFF)
-endif()
-
-# Pre-declare LOTTO_MODULE_rusty with a default based on whether cargo is
-# available. add_module(rusty) in modules/CMakeLists.txt will see this cached
-# value and not override it.
-option(LOTTO_MODULE_rusty "Build Lotto with module rusty" ${_lotto_rusty_default})
-
-if(LOTTO_MODULE_rusty)
-    set(LOTTO_RUST_LIT_FEATURE RUST_HANDLERS_AVAILABLE)
-endif()
+# LOTTO_MODULE_rusty is declared via add_module(rusty DEFAULT ${HAVE_CARGO})
+# in modules/CMakeLists.txt. The LOTTO_RUST_LIT_FEATURE is set after modules
+# are configured in the top-level CMakeLists.txt.
 
 # ##############################################################################
 # compatibility options
@@ -32,8 +20,6 @@ option(LOTTO_TESTS_WITH_TSAN "Enable TSAN instrumentation in tests" ON)
 if(NOT "${LOTTO_TESTS_WITH_TSAN}")
     add_definitions(-DDISABLE_TSAN_INSTRUMENTATION)
 endif()
-
-option(LOTTO_DRUM "Enable Lotto drum" ON)
 
 # ##############################################################################
 # Frontend selection
@@ -91,10 +77,6 @@ if(${LOTTO_BUSYLOOP_FUTEX})
     add_compile_definitions(FUTEX_USERSPACE)
 endif()
 
-option(LOTTO_INTERCEPT_SYSCALL "Intercept syscall()" OFF)
-if(${LOTTO_INTERCEPT_SYSCALL})
-    add_compile_definitions(LOTTO_INTERCEPT_SYSCALL)
-endif()
 
 # ##############################################################################
 # Logging options

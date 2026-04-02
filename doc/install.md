@@ -70,7 +70,7 @@ cmake --build build
 
 Currently, lotto only supports being built in `Debug` mode.
 
-- `LOTTO_RUST`: A subset of (optional) lotto handlers is implemented in Rust. Set to `ON` to enable the handlers.
+- `LOTTO_MODULE_rusty`: A subset of (optional) lotto handlers is implemented in Rust. Automatically enabled when `cargo` is found; set to `OFF` to disable.
                 See [rust.md](rust.md) for detailed instructions on installing the Rust compiler.
 
 

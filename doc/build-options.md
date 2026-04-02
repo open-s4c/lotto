@@ -28,9 +28,9 @@
 
   Number of pages in Lotto runtime mempool when LOTTO_RUNTIME_MEMMGR=MEMPOOL.
 
-- `LOTTO_RUST`: (default `OFF`)
+- `LOTTO_MODULE_rusty`: (default `ON` if `cargo` is found, `OFF` otherwise)
 
-  Enable Lotto Rust modules
+  Enable Lotto Rust module
 
 - `LOTTO_STABLE_ADDRESS_MAP`: (default `ON`)
 

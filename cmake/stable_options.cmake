@@ -3,9 +3,19 @@ option(LOTTO_LTO "Enable link-time optimization" OFF)
 # ##############################################################################
 # Rust options
 # ##############################################################################
-option(LOTTO_RUST "Enable Lotto Rust modules" OFF)
+find_program(CARGO_EXECUTABLE cargo)
+if(CARGO_EXECUTABLE)
+    set(_lotto_rusty_default ON)
+else()
+    set(_lotto_rusty_default OFF)
+endif()
 
-if("${LOTTO_RUST}")
+# Pre-declare LOTTO_MODULE_rusty with a default based on whether cargo is
+# available. add_module(rusty) in modules/CMakeLists.txt will see this cached
+# value and not override it.
+option(LOTTO_MODULE_rusty "Build Lotto with module rusty" ${_lotto_rusty_default})
+
+if(LOTTO_MODULE_rusty)
     set(LOTTO_RUST_LIT_FEATURE RUST_HANDLERS_AVAILABLE)
 endif()
 

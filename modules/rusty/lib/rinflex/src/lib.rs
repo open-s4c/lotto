@@ -4,6 +4,7 @@
 //! by both the rinflex CLI and the engine handlers.
 
 pub mod error;
+pub mod exec;
 pub mod handlers;
 pub mod idmap;
 pub mod inflex;

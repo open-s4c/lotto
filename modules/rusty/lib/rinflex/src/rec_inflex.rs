@@ -12,8 +12,10 @@ use lotto::owned::Owned;
 use lotto::raw;
 
 use crate::error::Error;
+use crate::exec::Exec;
+use crate::exec::Outcome;
 use crate::handlers;
-use crate::inflex::{always, checked_execute, postexec, Outcome};
+use crate::inflex::always;
 use crate::progress::ProgressBar;
 use crate::{inflex, trace, Constraint, ConstraintSet, Event, PrimitiveConstraint};
 
@@ -84,7 +86,7 @@ impl RecInflex {
         if self.debug {
             EnvScope::new("LOTTO_LOGGER_LEVEL", "debug")
         } else {
-            EnvScope::new("LOTTO_LOGGER_LEVEL", "silent")
+            EnvScope::new("LOTTO_LOGGER_LEVEL", "error")
         }
     }
 
@@ -100,8 +102,8 @@ impl RecInflex {
         crate::inflex::always(self.rounds, || {
             let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                let exitcode = checked_execute(&with_oc, &flags, true)?;
-                if let Some(outcome) = postexec(&with_oc, &self.trace_temp, exitcode, |_| true)? {
+                let mut exec = Exec::new(&with_oc, &self.trace_temp, &flags);
+                if let Some(outcome) = exec.exec_and_check()? {
                     break outcome;
                 } else {
                     bar.tick_invalid();
@@ -189,9 +191,8 @@ impl RecInflex {
         always(self.rounds, || {
             let outcome = loop {
                 flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
-                let exitcode = checked_execute(&check_trace, &flags, true)?;
-                if let Some(outcome) = postexec(&check_trace, &self.trace_temp, exitcode, |_| true)?
-                {
+                let mut exec = Exec::new(&check_trace, &self.trace_temp, &flags);
+                if let Some(outcome) = exec.exec_and_check()? {
                     break outcome;
                 } else {
                     bar.tick_invalid();
@@ -400,8 +401,8 @@ impl RecInflex {
                 );
             }
 
-            let exitcode = checked_execute(&input, &flags, true)?;
-            if let Some(actual_outcome) = postexec(&input, &output, exitcode, &filter)? {
+            let mut exec = Exec::new_with_filter(&input, &output, &flags, &filter);
+            if let Some(actual_outcome) = exec.exec_and_check()? {
                 bar.tick_valid();
                 if expected_outcome == actual_outcome {
                     return Ok(());

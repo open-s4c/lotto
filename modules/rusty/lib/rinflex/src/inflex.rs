@@ -42,6 +42,11 @@ pub struct Inflex {
     // other parameters
     //
     pub report_progress: bool,
+
+    //
+    // debug
+    //
+    pub debug: bool,
 }
 
 impl Inflex {
@@ -80,6 +85,7 @@ impl Inflex {
             report_progress: true,
             rounds,
             min: 0,
+            debug: flags.get_uval(&FLAG_VERBOSE) >= 6,
         }
     }
 
@@ -96,13 +102,21 @@ impl Inflex {
         &self.input
     }
 
+    pub fn set_log_level(&self) -> EnvScope {
+        if self.debug {
+            EnvScope::new("LOTTO_LOGGER_LEVEL", "debug")
+        } else {
+            EnvScope::new("LOTTO_LOGGER_LEVEL", "silent")
+        }
+    }
+
     /// Find the inverse inflection point.
     pub fn run_inverse(&self) -> Result<Clock, Error> {
         let mut flags = self.flags.clone();
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+        let _logger = self.set_log_level();
 
         // If it's unlikely to hit the bug, the probablistical
         // algorithm will just return 0. Use a slower but perhaps
@@ -139,7 +153,7 @@ impl Inflex {
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+        let _logger = self.set_log_level();
 
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
         while confidence <= self.rounds && iip < self.last_clk {
@@ -184,7 +198,7 @@ impl Inflex {
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+        let _logger = self.set_log_level();
 
         binary_search(self.min, self.last_clk, |clk| {
             let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
@@ -219,7 +233,7 @@ impl Inflex {
 
         let _env_replay = EnvScope::new("LOTTO_REPLAY", &self.input);
         let _env_record = EnvScope::new("LOTTO_RECORD", &self.temp_output);
-        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+        let _logger = self.set_log_level();
 
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
         while confidence <= self.rounds && ip < self.last_clk {

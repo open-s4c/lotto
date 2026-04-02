@@ -11,9 +11,6 @@ ADD_INTERCEPTOR(recv)
 //ADD_INTERCEPTOR(sem_timedwait)
 //ADD_INTERCEPTOR(sem_wait)
 
-#ifdef LOTTO_INTERCEPT_SYSCALL
-//ADD_INTERCEPTOR(syscall)
-#endif
 //ADD_INTERCEPTOR(__cxa_guard_acquire)
 
 // C++ std::thread create and join

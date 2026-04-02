@@ -44,6 +44,11 @@ pub struct RecInflex {
     pub trace_fail_alt: PathBuf,
     pub trace_success: PathBuf,
     pub trace_temp: PathBuf,
+
+    //
+    // debug
+    //
+    pub debug: bool,
 }
 
 impl RecInflex {
@@ -71,6 +76,15 @@ impl RecInflex {
             trace_success,
             trace_temp,
             next_id: 0,
+            debug: flags.get_uval(&FLAG_VERBOSE) >= 5,
+        }
+    }
+
+    pub fn set_log_level(&self) -> EnvScope {
+        if self.debug {
+            EnvScope::new("LOTTO_LOGGER_LEVEL", "debug")
+        } else {
+            EnvScope::new("LOTTO_LOGGER_LEVEL", "silent")
         }
     }
 
@@ -79,7 +93,7 @@ impl RecInflex {
         let with_oc = self.attach_constraints_to_trace(&self.trace_fail, 0, &self.constraints)?;
         let _replay = EnvScope::new("LOTTO_REPLAY", &with_oc);
         let _record = EnvScope::new("LOTTO_RECORD", &self.trace_temp);
-        let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+        let _logger = self.set_log_level();
         let mut flags = self.flags.clone();
         flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(0));
         let mut bar = ProgressBar::new(self.report_progress, "HALT", self.rounds);
@@ -170,7 +184,7 @@ impl RecInflex {
         let mut flags = self.flags.to_owned();
         let _replay = EnvScope::new("LOTTO_REPLAY", &check_trace);
         let _record = EnvScope::new("LOTTO_RECORD", &self.trace_temp);
-        let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+        let _logger = self.set_log_level();
         let mut bar = ProgressBar::new(self.report_progress, "correct?", self.rounds);
         always(self.rounds, || {
             let outcome = loop {
@@ -345,7 +359,7 @@ impl RecInflex {
         );
         let _replay = EnvScope::new("LOTTO_REPLAY", &input);
         let _record = EnvScope::new("LOTTO_RECORD", &output);
-        let _env_silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+        let _logger = self.set_log_level();
         let max_rounds = self.rounds * 10;
         let valid_rounds = if try_hard {
             self.rounds * 10
@@ -405,7 +419,7 @@ impl RecInflex {
         trace: &Path,
         clock: Clock,
     ) -> Result<(Event, i32), Error> {
-        let _silent = EnvScope::new("LOTTO_LOGGER_LEVEL", "silent");
+        let _logger = self.set_log_level();
         let event = trace::get_event_at_clk(flags, trace, clock)?;
 
         if event.t.is_after() {

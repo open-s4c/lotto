@@ -60,11 +60,16 @@ fn inflex(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
             Ok(())
         }
         Err(Error::Interrupted) => Ok(()),
-        Err(Error::LottoError { input, output }) => {
+        Err(Error::LottoError {
+            input,
+            output,
+            logs,
+        }) => {
             error!(
-                "Inflex failed due to Lotto internal errors in trace\ninput = {}\noutput = {}",
+                "Inflex failed due to Lotto internal errors in trace\ninput = {}\noutput = {}\nlogs = {}",
                 input.display(),
-                output.display()
+                output.display(),
+                logs.as_deref().unwrap_or("<no logs available>")
             );
             Ok(())
         }

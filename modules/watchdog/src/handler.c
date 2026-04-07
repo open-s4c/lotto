@@ -125,6 +125,7 @@ _watchdog_handle(const capture_point *cp, event_t *e)
                 break;
 
             /* Avoid repeating current task: remove it from the tset. */
+            logger_debugf("removing task %lu\n", cp->id);
             tidset_remove(&e->tset, cp->id);
             if (!e->is_chpt) {
                 e->reason  = REASON_WATCHDOG;
@@ -140,6 +141,7 @@ _watchdog_handle(const capture_point *cp, event_t *e)
             }
             if (_watchdog_ok(cp->id))
                 break;
+            logger_debugf("removing task %lu\n", cp->id);
             tidset_remove(&e->tset, cp->id);
             if (!e->is_chpt) {
                 e->reason  = REASON_WATCHDOG;

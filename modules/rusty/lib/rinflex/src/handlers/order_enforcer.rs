@@ -133,10 +133,8 @@ impl Handler for OrderEnforcer {
          * blocked, which is handled in EVENT_ENGINE__NEXT_TASK above. */
 
         /* Reduce the likelihood by setting any_task_filter. */
-        if self.block.len() != 0 {
-            self.prev_any_task_filter = cappt.any_task_filter;
-            cappt.any_task_filter = Some(_any_task_filter_blocked_by_constraints);
-        }
+        self.prev_any_task_filter = cappt.any_task_filter;
+        cappt.any_task_filter = Some(_any_task_filter_blocked_by_constraints);
     }
 
     fn posthandle(&mut self, ctx: &CapturePoint) {
@@ -327,7 +325,7 @@ unsafe extern "C" fn _any_task_filter_blocked_by_constraints(task_id: u64) -> bo
             return false;
         }
     }
-    HANDLER.block.get(&TaskId(task_id)).is_none()
+    HANDLER.block.get(&TaskId(task_id)).is_some()
 }
 
 //

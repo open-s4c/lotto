@@ -94,6 +94,9 @@ add_module(user_mempool)
 add_module(uafcheck)
 add_module(leakcheck)
 
+if(LOTTO_MODULE_rusty)
+    set(LOTTO_RUST_LIT_FEATURE RUST_HANDLERS_AVAILABLE)
+endif()
 set(TIKL_MODULE_FEATURES
     "${TIKL_MODULE_FEATURES}"
     PARENT_SCOPE)

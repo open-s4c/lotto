@@ -5,7 +5,7 @@ option(LOTTO_LTO "Enable link-time optimization" OFF)
 # ##############################################################################
 # LOTTO_MODULE_rusty is declared via add_module(rusty DEFAULT ${HAVE_CARGO})
 # in modules/CMakeLists.txt. The LOTTO_RUST_LIT_FEATURE is set after modules
-# are configured in the top-level CMakeLists.txt.
+# are configured in modules/CMakeLists.txt.
 
 # ##############################################################################
 # compatibility options

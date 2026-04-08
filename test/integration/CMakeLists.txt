@@ -87,10 +87,10 @@ configure_file(lit.cfg.in ${LIT_CFG} @ONLY)
 
 set(LIT_CFG_PATH ${CMAKE_CURRENT_BINARY_DIR}/${LIT_CFG})
 
-set(LIT_WORKERS
+set(LOTTO_LIT_WORKERS
     1
     CACHE STRING "Number of lit workers")
-set(LIT_TIMEOUT
+set(LOTTO_LIT_TIMEOUT
     300
     CACHE STRING "Lit timeout")
 
@@ -153,7 +153,8 @@ macro(add_lit_c_tests)
             list(APPEND ${${PREFIX}_DAILY_DEPS} ${TEST})
             list(APPEND ${${PREFIX}_DAILY_SCRIPTS} ${COPIED_SRC})
         endif()
-        add_lit_target(lit-${TEST} ${LIT_WORKERS} ${LIT_TIMEOUT} COPIED_SRC)
+        add_lit_target(lit-${TEST} ${LOTTO_LIT_WORKERS} ${LOTTO_LIT_TIMEOUT}
+                       COPIED_SRC)
         add_dependencies(lit-${TEST} lit-prepare ${TEST})
     endforeach()
 endmacro()
@@ -198,7 +199,8 @@ macro(add_lit_cpp_tests)
             list(APPEND ${${PREFIX}_DAILY_DEPS} ${TEST})
             list(APPEND ${${PREFIX}_DAILY_SCRIPTS} ${COPIED_SRC})
         endif()
-        add_lit_target(lit-${TEST} ${LIT_WORKERS} ${LIT_TIMEOUT} COPIED_SRC)
+        add_lit_target(lit-${TEST} ${LOTTO_LIT_WORKERS} ${LOTTO_LIT_TIMEOUT}
+                       COPIED_SRC)
         add_dependencies(lit-${TEST} lit-prepare ${TEST})
     endforeach()
 endmacro()
@@ -216,7 +218,8 @@ macro(add_lit_sh_tests)
         string(REGEX REPLACE "(.*)(_demo.*)" \\1 DEMO ${TEST})
         set(COPIED_SRC "${CMAKE_CURRENT_BINARY_DIR}/lit/${TEST}.sh")
 
-        add_lit_target(lit-${TEST} ${LIT_WORKERS} ${LIT_TIMEOUT} COPIED_SRC)
+        add_lit_target(lit-${TEST} ${LOTTO_LIT_WORKERS} ${LOTTO_LIT_TIMEOUT}
+                       COPIED_SRC)
         add_dependencies(lit-${TEST} lit-prepare)
         if(TARGET ${DEMO})
             foreach(DEMO_SCRIPT ${${PREFIX}_DEMO_SCRIPTS})
@@ -239,10 +242,10 @@ macro(add_lit_sh_tests)
     endforeach()
 endmacro()
 
-set(LIT_WORKERS
+set(LOTTO_LIT_WORKERS
     1
     CACHE STRING "Number of lit workers")
-set(LIT_TIMEOUT
+set(LOTTO_LIT_TIMEOUT
     300
     CACHE STRING "Lit timeout")
 
@@ -257,10 +260,10 @@ set(LIT_TESTS_DEPS "")
 
 set(LIT_NIGHTLY_TESTS)
 
-set(LIT_DAILY_TIMEOUT
+set(LOTTO_LIT_DAILY_TIMEOUT
     180
     CACHE STRING "Lit daily timeout")
-set(LIT_NIGHTLY_TIMEOUT
+set(LOTTO_LIT_NIGHTLY_TIMEOUT
     600
     CACHE STRING "Lit nightly timeout")
 
@@ -330,21 +333,22 @@ add_lit_sh_tests(
     NIGHTLY_DEPS
     LIT_NIGHTLY_DEPS)
 
-add_lit_target(lit-nightly ${LIT_WORKERS} ${LIT_NIGHTLY_TIMEOUT}
+add_lit_target(lit-nightly ${LOTTO_LIT_WORKERS} ${LOTTO_LIT_NIGHTLY_TIMEOUT}
                LIT_NIGHTLY_SRCS)
 add_dependencies(lit-nightly lit-prepare ${LIT_NIGHTLY_DEPS})
 
-add_lit_target(lit-daily ${LIT_WORKERS} ${LIT_DAILY_TIMEOUT} LIT_DAILY_SRCS)
+add_lit_target(lit-daily ${LOTTO_LIT_WORKERS} ${LOTTO_LIT_DAILY_TIMEOUT}
+               LIT_DAILY_SRCS)
 add_dependencies(lit-daily lit-prepare ${LIT_DAILY_DEPS})
 
-add_lit_target(lit-demos ${LIT_WORKERS} ${LIT_TIMEOUT} LIT_DEMOS)
+add_lit_target(lit-demos ${LOTTO_LIT_WORKERS} ${LOTTO_LIT_TIMEOUT} LIT_DEMOS)
 add_dependencies(lit-demos lit-prepare ${LIT_DEMOS_DEPS})
 
 # ##############################################################################
 # General rules
 # ##############################################################################
 
-add_lit_target(lit ${LIT_WORKERS} ${LIT_TIMEOUT} LIT_SRCS)
+add_lit_target(lit ${LOTTO_LIT_WORKERS} ${LOTTO_LIT_TIMEOUT} LIT_SRCS)
 add_dependencies(lit lit-prepare ${LIT_DEPS})
-add_lit_target(lit-tests ${LIT_WORKERS} ${LIT_TIMEOUT} LIT_TESTS)
+add_lit_target(lit-tests ${LOTTO_LIT_WORKERS} ${LOTTO_LIT_TIMEOUT} LIT_TESTS)
 add_dependencies(lit-tests lit-prepare ${LIT_TESTS_DEPS})

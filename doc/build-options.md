@@ -92,19 +92,18 @@
 
 ## Lit options
 
-- `LIT_DAILY_TIMEOUT`: (default `180`)
+- `LOTTO_LIT_DAILY_TIMEOUT`: (default `180`)
 
   Lit daily timeout
 
-- `LIT_NIGHTLY_TIMEOUT`: (default `600`)
+- `LOTTO_LIT_NIGHTLY_TIMEOUT`: (default `600`)
 
   Lit nightly timeout
 
-- `LIT_TIMEOUT`: (default `300`)
+- `LOTTO_LIT_TIMEOUT`: (default `300`)
 
   Lit timeout
 
-- `LIT_WORKERS`: (default `1`)
+- `LOTTO_LIT_WORKERS`: (default `1`)
 
   Number of lit workers
-

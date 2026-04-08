@@ -19,7 +19,6 @@ add_compile_options("-fPIC" "-Werror" -DLOG_UNLOCKED)
 set(LOTTO_FRONTEND_LIST POSIX QEMU)
 include(cmake/detect.cmake)
 include(cmake/stable_options.cmake)
-include(cmake/CPM.cmake)
 include(cmake/submodule.cmake)
 
 # ##############################################################################
@@ -95,11 +94,11 @@ endif()
 
 message(STATUS "TIKL_PROGRAM: ${TIKL_PROGRAM}")
 
-set(TIKL_TIMEOUT
+set(LOTTO_TIKL_TIMEOUT
     300
     CACHE STRING "tikl timeout")
 
-set(TIKL_WORKERS
+set(LOTTO_TIKL_WORKERS
     1
     CACHE STRING "Number of tikl workers")
 
@@ -107,6 +106,8 @@ set(TIKL_WORKERS
 # CMake libs
 # ------------------------------------------------------------------------------
 include(cmake/utils.cmake)
+hide_cache_variables("^DICE_")
+hide_cache_variables("^TSANO_")
 include(cmake/modules.cmake)
 
 # ##############################################################################
@@ -223,8 +224,8 @@ add_custom_target(
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         -DCMAKE_INSTALL_PREFIX=${LOTTO_CICD_INSTALL_PREFIX}
-        -DLOTTO_FRONTEND=${LOTTO_FRONTEND}
-        -DLOTTO_LTO=${LOTTO_LTO} -DLOTTO_RACKET_TESTS=OFF
+        -DLOTTO_FRONTEND=${LOTTO_FRONTEND} -DLOTTO_LTO=${LOTTO_LTO}
+        -DLOTTO_RACKET_TESTS=OFF
     COMMAND ${CMAKE_COMMAND} --build "${LOTTO_CICD_INSTALL_BUILD_DIR}" -j
     COMMAND ${CMAKE_COMMAND} --install "${LOTTO_CICD_INSTALL_BUILD_DIR}"
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${LOTTO_CICD_INSTALL_BUILD_DIR}/modules"

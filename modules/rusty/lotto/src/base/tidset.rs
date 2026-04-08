@@ -21,6 +21,22 @@ impl TidSet {
     pub fn iter(&self) -> Iter<'_> {
         Iter { tset: self, idx: 0 }
     }
+
+    pub fn has(&self, tid: TaskId) -> bool {
+        unsafe { raw::tidset_has(self.as_ptr(), tid.0) }
+    }
+
+    pub fn remove(&mut self, tid: TaskId) -> bool {
+        unsafe { raw::tidset_remove(self.as_mut_ptr(), tid.0) }
+    }
+
+    pub fn clear(&mut self) {
+        unsafe { raw::tidset_clear(self.as_mut_ptr()) }
+    }
+
+    pub fn set(&mut self, idx: usize, tid: TaskId) {
+        unsafe { raw::tidset_set(self.as_mut_ptr(), idx, tid.0) }
+    }
 }
 
 impl IntoIterator for TidSet {

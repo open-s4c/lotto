@@ -42,6 +42,7 @@
 #include "lotto/engine/sequencer.h"
 #include "lotto/engine/state.h"
 #include "lotto/engine/statemgr.h"
+#include "lotto/modules/available/state.h"
 #include "lotto/modules/ichpt/state.h"
 #include "lotto/modules/rusty/events.h"
 #include "lotto/modules/termination/state.h"

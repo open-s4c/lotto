@@ -4,9 +4,7 @@
 //! - During execution, only counters are modified
 //! - Upon exit, the results are saved in FINAL states
 use lotto::base::reason::*;
-use lotto::base::CapturePoint;
-use lotto::base::TidSet;
-use lotto::base::Value;
+use lotto::base::{CapturePoint, TidSet, Value};
 use lotto::brokers::statemgr::*;
 use lotto::cli::flags::STR_CONVERTER_NONE;
 use lotto::cli::FlagKey;
@@ -60,6 +58,13 @@ pub struct OrderEnforcer {
     prev_any_task_filter: Option<unsafe extern "C" fn(raw::task_id) -> bool>,
 }
 
+macro_rules! discard {
+    ($self:expr) => {
+        $self.discard();
+        return;
+    };
+}
+
 impl Handler for OrderEnforcer {
     fn handle(&mut self, ctx: &CapturePoint, cappt: &mut raw::event_t) {
         if U64OrInf::from(cappt.clk) > self.max_clock {
@@ -88,9 +93,19 @@ impl Handler for OrderEnforcer {
 
         // Check if we should block the current thread.
         let constraints = &mut self.fin.constraints;
-
         if constraints.len() == 0 {
             return;
+        }
+        // If the current task is going to exit, any pending
+        // constraint whose source is this task cannot be satisfied
+        // anymore. Discard this run immediately.
+        if ctx.type_id == raw::EVENT_TASK_FINI as u16 {
+            for c in constraints.iter() {
+                if c.c.source.cnt > 0 && c.c.source.t.id == TaskId(ctx.id) {
+                    debug!("Shutting down due to constraint {} cannot be satisfied because its source is no longer available", c);
+                    discard!(self);
+                }
+            }
         }
 
         let tset = unsafe { TidSet::wrap(&cappt.tset) };
@@ -149,13 +164,12 @@ impl Handler for OrderEnforcer {
          * the execution more opportunity to succeed.)
          */
         if let Some(cnt) = self.block.get(&tid) {
-            self.fin.should_discard = true;
             debug!("Shutting down due to Lotto picking thread {} for ANY_TASK which is blocked by {} constraints", tid, cnt);
             debug!(
                 "discard from order_enforcer because task {} is blocked",
                 tid
             );
-            return;
+            discard!(self);
         }
 
         /* Reconstruct last event */
@@ -198,6 +212,13 @@ impl Handler for OrderEnforcer {
                 }
             }
         }
+    }
+}
+
+impl OrderEnforcer {
+    fn discard(&mut self) {
+        self.fin.should_discard = true;
+        self.shutdown = true;
     }
 }
 

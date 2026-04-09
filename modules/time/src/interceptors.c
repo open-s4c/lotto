@@ -19,6 +19,7 @@
 #include <lotto/sys/sched.h>
 #include <lotto/unsafe/time.h>
 #include <lotto/util/casts.h>
+#include <lotto/yield.h>
 #include <sys/types.h>
 
 typedef struct {
@@ -51,7 +52,7 @@ fork(void)
 time_t
 real_time(time_t *tloc)
 {
-    REAL_DECL(time_t, time, time_t *tloc);
+    REAL_DECL(time_t, time, time_t * tloc);
     if (REAL_NAME(time) == NULL)
         REAL_NAME(time) = real_func("time", 0);
 
@@ -148,18 +149,18 @@ sleep(unsigned int seconds)
 int
 nanosleep(const struct timespec *req, struct timespec *rem)
 {
-    return 0;
+    return lotto_yield(0);
 }
 
 int
 usleep(useconds_t usec)
 {
-    return 0;
+    return lotto_yield(0);
 }
 
 unsigned int
 sleep(unsigned int seconds)
 {
-    return 0;
+    return lotto_yield(0);
 }
 #endif

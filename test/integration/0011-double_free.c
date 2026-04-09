@@ -1,7 +1,7 @@
 // clang-format off
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress --memmgr-user=uaf --stable-address-method MASK -- %b 2>&1) | %check %s
-// CHECK: SEGFAULT
+// CHECK: SEGV_ACCERR
 // clang-format on
 
 #include <pthread.h>
@@ -27,4 +27,3 @@ main()
     pthread_join(thread2, 0);
     return 0;
 }
-

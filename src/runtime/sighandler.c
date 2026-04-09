@@ -97,7 +97,10 @@ _handle_sigint(int sig, siginfo_t *si, void *arg)
 static void
 _handle_segfault(int sig, siginfo_t *si, void *arg)
 {
-    _handle(REASON_SEGFAULT, REASON_RUNTIME_SEGFAULT);
+    if (si->si_code == SEGV_ACCERR)
+        _handle(REASON_SEGV_ACCERR, REASON_RUNTIME_SEGV_ACCERR);
+    else
+        _handle(REASON_SEGFAULT, REASON_RUNTIME_SEGFAULT);
 }
 
 static void

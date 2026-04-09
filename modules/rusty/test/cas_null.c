@@ -2,7 +2,7 @@
 // REQUIRES: STABLE_ADDRESS_MAP, RUST_HANDLERS_AVAILABLE
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress --handler-cas enable --memmgr-user uaf -- %b)
-// CHECK: SEGFAULT
+// CHECK: SEGV_ACCERR
 
 // clang-format on
 

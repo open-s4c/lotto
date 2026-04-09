@@ -19,6 +19,7 @@
     GEN_REASON(ASSERT_FAIL)                                                    \
     GEN_REASON(RSRC_DEADLOCK)                                                  \
     GEN_REASON(SEGFAULT)                                                       \
+    GEN_REASON(SEGV_ACCERR)                                                    \
     GEN_REASON(SIGINT)                                                         \
     GEN_REASON(SIGABRT)                                                        \
     GEN_REASON(SIGTERM)                                                        \
@@ -28,6 +29,7 @@
     GEN_REASON(ABORT)                                                          \
     GEN_REASON(SHUTDOWN)                                                       \
     GEN_REASON(RUNTIME_SEGFAULT)                                               \
+    GEN_REASON(RUNTIME_SEGV_ACCERR)                                            \
     GEN_REASON(RUNTIME_SIGINT)                                                 \
     GEN_REASON(RUNTIME_SIGABRT)                                                \
     GEN_REASON(RUNTIME_SIGTERM)                                                \

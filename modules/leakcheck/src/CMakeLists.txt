@@ -1,5 +1,5 @@
-set(RUNTIME_MODULE_TYPE_memmgr_user_leakcheck SHARED)
-set(RUNTIME_MODULE_TYPE_memmgr_runtime_leakcheck SHARED)
+set(RUNTIME_MODULE_TYPE_memmgr_user_leakcheck PLUGIN)
+set(RUNTIME_MODULE_TYPE_memmgr_runtime_leakcheck PLUGIN)
 
 new_module(memmgr_user_leakcheck)
 add_runtime_module(leakcheck.c)

@@ -1,5 +1,5 @@
-set(RUNTIME_MODULE_TYPE_memmgr_user_uafcheck SHARED)
-set(RUNTIME_MODULE_TYPE_memmgr_runtime_uafcheck SHARED)
+set(RUNTIME_MODULE_TYPE_memmgr_user_uafcheck PLUGIN)
+set(RUNTIME_MODULE_TYPE_memmgr_runtime_uafcheck PLUGIN)
 
 new_module(memmgr_runtime_uafcheck)
 add_runtime_module(uafcheck.c uaf_memmgr.c)

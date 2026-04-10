@@ -1,5 +1,7 @@
-option(LOTTO_DEFAULT_RUNTIME_BUILTIN "Build runtime modules as builtin (OBJECT) by default" YES)
-option(LOTTO_DEFAULT_DRIVER_BUILTIN "Build driver modules as builtin (OBJECT) by default" NO)
+option(LOTTO_DEFAULT_RUNTIME_BUILTIN
+       "Build runtime modules as builtin (OBJECT) by default" YES)
+option(LOTTO_DEFAULT_DRIVER_BUILTIN
+       "Build driver modules as builtin (OBJECT) by default" NO)
 
 macro(add_runtime_module)
     if(${LOTTO_DEFAULT_RUNTIME_BUILTIN})
@@ -25,6 +27,11 @@ macro(add_runtime_module)
                                              ${RUNTIME_MODULE_SOURCES})
     target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto.h dice.h)
     target_link_libraries(${RUNTIME_DBG_MODULE_TARGET} PRIVATE lotto.h dice.h)
+
+    if("${RUNTIME_MODULE_TYPE}" STREQUAL SHARED)
+        target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto)
+        target_link_libraries(${RUNTIME_DBG_MODULE_TARGET} PRIVATE lotto-dbg)
+    endif()
 
     # enable LTO for this module?
     set(LTO FALSE)
@@ -185,7 +192,8 @@ macro(add_module NAME)
     else()
         set(_add_module_default ON)
     endif()
-    option(LOTTO_MODULE_${NAME} "Build Lotto with module ${NAME}" ${_add_module_default})
+    option(LOTTO_MODULE_${NAME} "Build Lotto with module ${NAME}"
+           ${_add_module_default})
     if(${LOTTO_MODULE_${NAME}})
         if(DEFINED ADD_MODULE_SLOT)
             new_module_at(${NAME} ${ADD_MODULE_SLOT})
@@ -196,9 +204,11 @@ macro(add_module NAME)
         add_tikl_module_target(${NAME})
         add_subdirectory(${NAME})
         if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/include")
-            install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/include/"
-                    DESTINATION "include"
-                    FILES_MATCHING PATTERN "*.h")
+            install(
+                DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/include/"
+                DESTINATION "include"
+                FILES_MATCHING
+                PATTERN "*.h")
         endif()
     endif()
 endmacro()

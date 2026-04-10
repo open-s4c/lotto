@@ -2,13 +2,16 @@
 #include <stdio.h>
 #include <unistd.h>
 
+static int _fd = -1;
+#define LOG_FILENO _fd
+
+#include <dice/log.h>
 #include <lotto/sys/abort.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/stdio.h>
 
 static enum logger_level _level = LOGGER_INFO;
-static int _fd                  = -1;
 
 static void
 _logger_prefix(const char *prefix, const char *file, int line)
@@ -16,7 +19,7 @@ _logger_prefix(const char *prefix, const char *file, int line)
     if (_fd < 0 || prefix == NULL || file == NULL || line <= 0) {
         return;
     }
-    sys_dprintf(_fd, "[%s/%s:%d] ", prefix, file, line);
+    dice_log_printf_("[%s/%s:%d] ", prefix, file, line);
 }
 
 static void
@@ -27,7 +30,7 @@ _logger_vprintf(const char *prefix, const char *file, int line, const char *fmt,
         return;
     }
     _logger_prefix(prefix, file, line);
-    sys_vdprintf(_fd, fmt, args);
+    dice_log_vprintf_(fmt, args);
 }
 
 void

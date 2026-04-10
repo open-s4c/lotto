@@ -116,6 +116,8 @@ hide_cache_variables("^CAPSTONE_")
 hide_cache_variables("^BUILD_SHARED_LIBS$")
 hide_cache_variables("^BUILD_STATIC_LIBS$")
 hide_cache_variables("^BUILD_STATIC_RUNTIME$")
+
+set(LOTTO_MODULE_TYPE_LIST PLUGIN BUILTIN)
 include(cmake/modules.cmake)
 
 # ##############################################################################

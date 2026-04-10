@@ -1,17 +1,38 @@
-option(LOTTO_DEFAULT_RUNTIME_BUILTIN
-       "Build runtime modules as builtin (OBJECT) by default" YES)
-option(LOTTO_DEFAULT_DRIVER_BUILTIN
-       "Build driver modules as builtin (OBJECT) by default" NO)
+function(ensure_module_type VARNAME)
+    set(_var ${VARNAME})
+    set(_val ${${VARNAME}})
+    if(NOT "${_val}" IN_LIST LOTTO_MODULE_TYPE_LIST)
+        message(FATAL_ERROR "Invalid type ${_var}: `${_val}`. "
+                            "Use one of these: `${LOTTO_MODULE_TYPE_LIST}`")
+    endif()
+endfunction()
+
+set(LOTTO_DEFAULT_RUNTIME_MODULE_TYPE
+    BUILTIN
+    CACHE STRING "Default type of runtime modules")
+set_property(CACHE LOTTO_DEFAULT_RUNTIME_MODULE_TYPE
+             PROPERTY STRINGS ${LOTTO_MODULE_TYPE_LIST})
+ensure_module_type(LOTTO_DEFAULT_RUNTIME_MODULE_TYPE)
+set(LOTTO_DEFAULT_DRIVER_MODULE_TYPE
+    PLUGIN
+    CACHE STRING "Default type of driver modules")
+set_property(CACHE LOTTO_DEFAULT_DRIVER_MODULE_TYPE
+             PROPERTY STRINGS ${LOTTO_MODULE_TYPE_LIST})
+ensure_module_type(LOTTO_DEFAULT_DRIVER_MODULE_TYPE)
 
 macro(add_runtime_module)
-    if(${LOTTO_DEFAULT_RUNTIME_BUILTIN})
-        set(RUNTIME_MODULE_TYPE OBJECT)
+    if(NOT DEFINED MODULE_NAME)
+        message(FATAL_ERROR "Undefined module name")
+    endif()
+    ensure_module_type(RUNTIME_MODULE_TYPE_${MODULE_NAME})
+    set(RUNTIME_MODULE_TYPE ${RUNTIME_MODULE_TYPE_${MODULE_NAME}})
+
+    if(${RUNTIME_MODULE_TYPE} STREQUAL BUILTIN)
+        set(_lib_type "OBJECT")
     else()
-        set(RUNTIME_MODULE_TYPE SHARED)
+        set(_lib_type "SHARED")
     endif()
-    if(DEFINED RUNTIME_MODULE_TYPE_${MODULE_NAME})
-        set(RUNTIME_MODULE_TYPE ${RUNTIME_MODULE_TYPE_${MODULE_NAME}})
-    endif()
+
     set(RUNTIME_MODULE_LTO ON)
     if(DEFINED RUNTIME_MODULE_LTO_${MODULE_NAME})
         set(RUNTIME_MODULE_LTO ${RUNTIME_MODULE_LTO_${MODULE_NAME}})
@@ -21,14 +42,13 @@ macro(add_runtime_module)
     set(RUNTIME_DBG_MODULE_TARGET lotto-runtime-dbg-${MODULE_NAME})
     message(STATUS "Module ${MODULE_SLOT} (runtime): ${MODULE_NAME}")
 
-    add_library(${RUNTIME_MODULE_TARGET} ${RUNTIME_MODULE_TYPE}
-                                         ${RUNTIME_MODULE_SOURCES})
-    add_library(${RUNTIME_DBG_MODULE_TARGET} ${RUNTIME_MODULE_TYPE}
+    add_library(${RUNTIME_MODULE_TARGET} ${_lib_type} ${RUNTIME_MODULE_SOURCES})
+    add_library(${RUNTIME_DBG_MODULE_TARGET} ${_lib_type}
                                              ${RUNTIME_MODULE_SOURCES})
     target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto.h dice.h)
     target_link_libraries(${RUNTIME_DBG_MODULE_TARGET} PRIVATE lotto.h dice.h)
 
-    if("${RUNTIME_MODULE_TYPE}" STREQUAL SHARED)
+    if("${RUNTIME_MODULE_TYPE}" STREQUAL "PLUGIN")
         target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto)
         target_link_libraries(${RUNTIME_DBG_MODULE_TARGET} PRIVATE lotto-dbg)
     endif()
@@ -60,7 +80,7 @@ macro(add_runtime_module)
                 LOTTO_DRIVER_MODULE=0 #
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
-    if("${RUNTIME_MODULE_TYPE}" STREQUAL "SHARED")
+    if(${RUNTIME_MODULE_TYPE} STREQUAL PLUGIN)
         set_target_properties(
             ${RUNTIME_MODULE_TARGET}
             PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
@@ -108,20 +128,22 @@ function(runtime_module_link_options)
 endfunction()
 
 macro(add_driver_module)
-    if(${LOTTO_DEFAULT_DRIVER_BUILTIN})
-        set(DRIVER_MODULE_TYPE OBJECT)
+    if(NOT DEFINED MODULE_NAME)
+        message(FATAL_ERROR "Undefined module name")
+    endif()
+    ensure_module_type(DRIVER_MODULE_TYPE_${MODULE_NAME})
+    set(DRIVER_MODULE_TYPE ${DRIVER_MODULE_TYPE_${MODULE_NAME}})
+    if("${DRIVER_MODULE_TYPE}" STREQUAL BUILTIN)
+        set(_lib_type "OBJECT")
     else()
-        set(DRIVER_MODULE_TYPE SHARED)
+        set(_lib_type "SHARED")
     endif()
-    if(DEFINED DRIVER_MODULE_TYPE_${MODULE_NAME})
-        set(DRIVER_MODULE_TYPE ${DRIVER_MODULE_TYPE_${MODULE_NAME}})
-    endif()
+
     set(DRIVER_MODULE_SOURCES ${ARGV})
     set(DRIVER_MODULE_TARGET lotto-driver-${MODULE_NAME})
     message(STATUS "Module ${MODULE_SLOT} (driver) : ${MODULE_NAME}")
 
-    add_library(${DRIVER_MODULE_TARGET} ${DRIVER_MODULE_TYPE}
-                                        ${DRIVER_MODULE_SOURCES})
+    add_library(${DRIVER_MODULE_TARGET} ${_lib_type} ${DRIVER_MODULE_SOURCES})
     target_link_libraries(${DRIVER_MODULE_TARGET} PRIVATE lotto.h dice.h)
     target_compile_definitions(
         ${DRIVER_MODULE_TARGET}
@@ -130,7 +152,7 @@ macro(add_driver_module)
                 LOTTO_DRIVER_MODULE=1 #
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
-    if("${DRIVER_MODULE_TYPE}" STREQUAL "SHARED")
+    if("${DRIVER_MODULE_TYPE}" STREQUAL "PLUGIN")
         set_target_properties(
             ${DRIVER_MODULE_TARGET}
             PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
@@ -194,7 +216,11 @@ macro(add_module NAME)
     endif()
     option(LOTTO_MODULE_${NAME} "Build Lotto with module ${NAME}"
            ${_add_module_default})
+
     if(${LOTTO_MODULE_${NAME}})
+        set(RUNTIME_MODULE_TYPE_${NAME} ${LOTTO_DEFAULT_RUNTIME_MODULE_TYPE})
+        set(DRIVER_MODULE_TYPE_${NAME} ${LOTTO_DEFAULT_DRIVER_MODULE_TYPE})
+
         if(DEFINED ADD_MODULE_SLOT)
             new_module_at(${NAME} ${ADD_MODULE_SLOT})
         else()

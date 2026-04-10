@@ -1,5 +1,6 @@
-set(RUNTIME_MODULE_TYPE_memmgr_user_mempool SHARED)
-set(RUNTIME_MODULE_TYPE_memmgr_runtime_mempool SHARED)
+set(RUNTIME_MODULE_TYPE_memmgr_user_mempool PLUGIN)
+set(RUNTIME_MODULE_TYPE_memmgr_runtime_mempool PLUGIN)
+set(DRIVER_MODULE_TYPE_memmgr_user_mempool PLUGIN)
 
 new_module(memmgr_user_mempool)
 add_runtime_module(mempool_memmgr.c)

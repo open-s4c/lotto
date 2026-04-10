@@ -9,7 +9,7 @@ crate-type = ["staticlib"]
 [dependencies]
 lotto.workspace = true
 loccolator.workspace = true
-rusty_handlers.workspace = true
+rusty_handlers = { workspace = true, features = ["driver"] }
 
 rinflex = { path="../lib/rinflex", optional = true }
 

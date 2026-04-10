@@ -14,7 +14,7 @@ use lotto::raw;
 use lotto::sync::HandlerWrapper;
 use lotto::Stateful;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::handlers::event;
 use crate::num::U64OrInf;
@@ -65,6 +65,7 @@ macro_rules! discard {
     };
 }
 
+#[cfg(feature = "runtime")]
 impl Handler for OrderEnforcer {
     fn handle(&mut self, ctx: &CapturePoint, cappt: &mut raw::event_t) {
         if U64OrInf::from(cappt.clk) > self.max_clock {
@@ -149,7 +150,7 @@ impl Handler for OrderEnforcer {
 
         /* Reduce the likelihood by setting any_task_filter. */
         self.prev_any_task_filter = cappt.any_task_filter;
-        cappt.any_task_filter = Some(_any_task_filter_blocked_by_constraints);
+        cappt.any_task_filter = Some(_should_wait);
     }
 
     fn posthandle(&mut self, ctx: &CapturePoint) {
@@ -332,8 +333,10 @@ impl Marshable for Final {
 }
 
 pub fn register() {
-    trace!("Registering rinflex handler");
-    lotto::engine::handler::register(&*HANDLER);
+    #[cfg(feature = "runtime")] {
+        trace!("Registering rinflex handler");
+        lotto::engine::handler::register(&*HANDLER);
+    }
     lotto::brokers::statemgr::register(&*HANDLER);
     lotto::brokers::statemgr::subscribe_to_statemgr_topics(&*HANDLER);
 }

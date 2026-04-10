@@ -20,3 +20,9 @@ handler_rinflex = { path = "rinflex", optional = true }
 [features]
 demo = []
 stable_address_map = ["dep:handler_rinflex", "lotto/stable_address_map"]
+runtime = [
+    "handler_rinflex/runtime"
+]
+driver = [
+    "handler_rinflex/driver"
+]

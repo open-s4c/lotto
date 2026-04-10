@@ -12,7 +12,7 @@ log = "0.4.20"
 lotto.workspace = true
 loccolator.workspace = true
 string-builder = "0.2.0"
-rusty_handlers.workspace = true
+rusty_handlers = { workspace = true, features = ["runtime"] }
 
 [features]
 demo = ["rusty_handlers/demo"]

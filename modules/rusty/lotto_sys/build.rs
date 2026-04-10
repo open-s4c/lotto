@@ -125,7 +125,7 @@ fn main() -> Result<()> {
     let dice_include_arg = format!("-I{}", dice_include_dir.display());
     println!("Dice include dir is {}", dice_include_arg);
 
-    let mut modules_include_dirs: Vec<_> = vec!["termination", "ichpt", "available"]
+    let mut modules_include_dirs: Vec<_> = vec!["termination", "ichpt", "available", "impasse"]
         .into_iter()
         .map(|m| get_lotto_dir().join("modules").join(m).join("include"))
         .collect();

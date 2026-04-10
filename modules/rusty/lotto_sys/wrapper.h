@@ -44,6 +44,7 @@
 #include "lotto/engine/statemgr.h"
 #include "lotto/modules/available/state.h"
 #include "lotto/modules/ichpt/state.h"
+#include "lotto/modules/impasse/state.h"
 #include "lotto/modules/rusty/events.h"
 #include "lotto/modules/termination/state.h"
 #include "lotto/runtime/capture_point.h"

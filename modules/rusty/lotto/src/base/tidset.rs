@@ -1,10 +1,44 @@
+use core::mem::MaybeUninit;
 use crate::base::TaskId;
-use crate::wrap_with_dispose;
+use crate::wrap;
 use lotto_sys as raw;
 
-wrap_with_dispose!(TidSet, raw::tidset_t, raw::tidset_fini);
+// [`TidSet`] shouldn't have owning references.
+
+wrap!(TidSet, raw::tidset_t);
+
+impl Drop for TidSet {
+    fn drop(&mut self) {
+        unsafe {
+            raw::tidset_fini(self as *mut TidSet as *mut raw::tidset_t);
+        }
+    }
+}
+
+impl std::fmt::Display for TidSet {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let v: Vec<_> = self.iter().map(|id| id.0).collect();
+        write!(f, "{:?}", v)
+    }
+}
+
+impl Clone for TidSet {
+    fn clone(&self) -> Self {
+        let mut result = TidSet::new();
+        result.copy(self);
+        result
+    }
+}
 
 impl TidSet {
+    pub fn new() -> TidSet {
+        let mut obj: MaybeUninit<TidSet> = MaybeUninit::uninit();
+        unsafe {
+            raw::tidset_init(obj.as_mut_ptr() as *mut _);
+            obj.assume_init()
+        }
+    }
+
     pub fn size(&self) -> usize {
         unsafe { raw::tidset_size(self.as_ptr()) }
     }
@@ -36,6 +70,10 @@ impl TidSet {
 
     pub fn set(&mut self, idx: usize, tid: TaskId) {
         unsafe { raw::tidset_set(self.as_mut_ptr(), idx, tid.0) }
+    }
+
+    pub fn copy(&mut self, other: &TidSet) {
+        unsafe { raw::tidset_copy(self.as_mut_ptr(), other.as_ptr()) }
     }
 }
 

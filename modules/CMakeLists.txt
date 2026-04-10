@@ -39,8 +39,8 @@ add_module(rwlock)
 add_module(evec)
 add_module(poll)
 add_module(timeout)
-add_module(impasse)
 add_module(cxa)
+add_module(impasse)
 
 # hard filters                                                                 #
 add_module(region_preemption)

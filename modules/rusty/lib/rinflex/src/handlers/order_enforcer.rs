@@ -3,6 +3,8 @@
 //! - Supply ordering constraints through config
 //! - During execution, only counters are modified
 //! - Upon exit, the results are saved in FINAL states
+#![allow(unused_imports)]
+
 use lotto::base::reason::*;
 use lotto::base::{CapturePoint, TidSet, Value};
 use lotto::brokers::statemgr::*;
@@ -14,7 +16,7 @@ use lotto::raw;
 use lotto::sync::HandlerWrapper;
 use lotto::Stateful;
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use crate::handlers::event;
 use crate::num::U64OrInf;
@@ -26,7 +28,6 @@ pub static HANDLER: HandlerWrapper<OrderEnforcer> = HandlerWrapper::new(|| Order
     block: BTreeMap::new(),
     shutdown: false,
     max_clock: get_max_clock(),
-    prev_any_task_filter: None,
 });
 
 fn get_max_clock() -> U64OrInf {
@@ -54,10 +55,9 @@ pub struct OrderEnforcer {
 
     /// The maximal clock that this execution is allowed to reach.
     pub max_clock: U64OrInf,
-
-    prev_any_task_filter: Option<unsafe extern "C" fn(raw::task_id) -> bool>,
 }
 
+#[cfg(feature = "runtime")]
 macro_rules! discard {
     ($self:expr) => {
         $self.discard();
@@ -149,7 +149,6 @@ impl Handler for OrderEnforcer {
          * blocked, which is handled in EVENT_ENGINE__NEXT_TASK above. */
 
         /* Reduce the likelihood by setting any_task_filter. */
-        self.prev_any_task_filter = cappt.any_task_filter;
         cappt.any_task_filter = Some(_should_wait);
     }
 
@@ -217,6 +216,7 @@ impl Handler for OrderEnforcer {
 }
 
 impl OrderEnforcer {
+    #[cfg(feature = "runtime")]
     fn discard(&mut self) {
         self.fin.should_discard = true;
         self.shutdown = true;
@@ -270,6 +270,7 @@ impl StateTopicSubscriber for OrderEnforcer {
 /// Check whether event `cur` will break constraint `c`.
 ///
 /// If true, `cur.id` should be blocked.
+#[cfg(feature = "runtime")]
 fn should_block(cur: &Event, constraint: &Constraint) -> bool {
     let source = &constraint.c.source;
     let target = &constraint.c.target;
@@ -343,13 +344,28 @@ pub fn register() {
 
 // ANY_TASK filter
 
-unsafe extern "C" fn _any_task_filter_blocked_by_constraints(task_id: u64) -> bool {
-    if let Some(f) = HANDLER.prev_any_task_filter {
-        if !f(task_id) {
-            return false;
-        }
+#[cfg(feature = "runtime")]
+unsafe extern "C" fn _should_wait(task_id: u64) -> bool {
+    let aosb = unsafe { TidSet::wrap(raw::available_or_soft_blocked_tasks()) };
+
+    // hard-blocked by other modules
+    if !aosb.has(TaskId(task_id)) {
+        return true;
     }
-    HANDLER.block.get(&TaskId(task_id)).is_some()
+
+    // oc-blocked
+    let oc_blocked = HANDLER.block.get(&TaskId(task_id)).is_some();
+    if !oc_blocked {
+        return false;
+    }
+
+    // allow id if hard-blocking id will deadlock in switcher
+    let mut aosb = aosb.clone();
+    for id in HANDLER.block.keys() {
+        aosb.remove(*id);
+    }
+    let will_deadlock = aosb.size() == 0;
+    !will_deadlock
 }
 
 //

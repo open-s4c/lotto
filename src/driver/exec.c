@@ -17,6 +17,7 @@
 static pid_t _pid;
 static int p_out[2];
 static int p_err[2];
+static exec_command_prefix_f *_exec_command_prefix;
 
 #define DICE_DSO_ENV "DICE_DSO"
 #define LOTTO_DSO    "liblotto-runtime.so"
@@ -242,6 +243,16 @@ wait_child(pid_t pid)
 int
 execute(const args_t *args, const flags_t *flags, bool config)
 {
+    args_t prefixed_args = *args;
+    char **dynamic_argv  = NULL;
+    if (_exec_command_prefix != NULL) {
+        char **original_argv = prefixed_args.argv;
+        _exec_command_prefix(&prefixed_args, flags);
+        if (prefixed_args.argv != original_argv) {
+            dynamic_argv = prefixed_args.argv;
+        }
+    }
+
     const char *old_dice_dso = sys_getenv(DICE_DSO_ENV);
     char *old_dice_dso_copy  = NULL;
     if (old_dice_dso) {
@@ -268,8 +279,8 @@ execute(const args_t *args, const flags_t *flags, bool config)
         replay_copy = NULL;
     }
     struct flag_val fgoal = flags_get(flags, flag_replay_goal());
-    cli_trace_init(sys_getenv("LOTTO_RECORD"), args, sys_getenv("LOTTO_REPLAY"),
-                   fgoal, config, flags);
+    cli_trace_init(sys_getenv("LOTTO_RECORD"), &prefixed_args,
+                   sys_getenv("LOTTO_REPLAY"), fgoal, config, flags);
 
     struct sigaction int_action, int_old;
     sys_memset(&int_action, 0, sizeof(struct sigaction));
@@ -310,8 +321,8 @@ execute(const args_t *args, const flags_t *flags, bool config)
     sys_posix_spawn_file_actions_addclose(&action, p_out[1]);
     sys_posix_spawn_file_actions_addclose(&action, p_err[1]);
 
-    err =
-        posix_spawnp(&_pid, args->argv[0], &action, &attr, args->argv, environ);
+    err = posix_spawnp(&_pid, prefixed_args.argv[0], &action, &attr,
+                       prefixed_args.argv, environ);
     if (err != 0) {
         sys_fprintf(stderr, "error creating child: %s\n", strerror(err));
     } else {
@@ -347,5 +358,15 @@ execute(const args_t *args, const flags_t *flags, bool config)
         ASSERT(ret != -1 && "could not run the after run action");
     }
 
+    if (dynamic_argv != NULL) {
+        sys_free(dynamic_argv);
+    }
+
     return err;
+}
+
+void
+execute_set_command_prefix(exec_command_prefix_f *prefix)
+{
+    _exec_command_prefix = prefix;
 }

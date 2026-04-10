@@ -1,6 +1,7 @@
 #include <lotto/modules/autocept.h>
 
 // general libc functions
+ADD_INTERCEPTOR(accept)
 ADD_INTERCEPTOR(epoll_wait)
 ADD_INTERCEPTOR(recv)
 //ADD_INTERCEPTOR(ioctl)

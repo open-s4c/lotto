@@ -11,3 +11,6 @@
 [submodule "deps/tikl"]
 	path = deps/tikl
 	url = https://github.com/db7/tikl.git
+[submodule "deps/mockoto"]
+	path = deps/mockoto
+	url = https://github.com/db7/mockoto.git

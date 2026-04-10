@@ -20,6 +20,7 @@
 #include <lotto/unsafe/time.h>
 #include <lotto/util/casts.h>
 #include <lotto/yield.h>
+#include <sys/timeb.h>
 #include <sys/types.h>
 
 typedef struct {
@@ -101,6 +102,18 @@ clock(void)
     return (long)ret;
 }
 
+int ftime(struct timeb *tp) {
+    struct timespec ts;
+
+    if (clock_gettime(CLOCK_REALTIME, &ts) == -1) {
+        return -1;
+    }
+
+    tp->time = ts.tv_sec;
+    tp->millitm = (unsigned short)(ts.tv_nsec / NSEC_IN_MSEC);
+
+    return 0;
+}
 
 #if defined(QLOTTO_ENABLED)
 int

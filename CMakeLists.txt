@@ -112,6 +112,10 @@ set(LOTTO_TIKL_WORKERS
 include(cmake/utils.cmake)
 hide_cache_variables("^DICE_")
 hide_cache_variables("^TSANO_")
+hide_cache_variables("^CAPSTONE_")
+hide_cache_variables("^BUILD_SHARED_LIBS$")
+hide_cache_variables("^BUILD_STATIC_LIBS$")
+hide_cache_variables("^BUILD_STATIC_RUNTIME$")
 include(cmake/modules.cmake)
 
 # ##############################################################################

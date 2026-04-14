@@ -55,6 +55,7 @@ marshable_bind(marshable_t *parent, marshable_t *child)
 {
     ASSERT(parent);
     ASSERT(child);
+    ASSERT(parent != child);
     child->next = NULL;
     while (parent->next)
         parent = parent->next;

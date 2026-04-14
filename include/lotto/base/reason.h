@@ -43,7 +43,7 @@ typedef enum reason { FOR_EACH_REASON REASON_END_ } reason_t;
 #define REASON_RUNTIME(r)                                                      \
     ((r) == REASON_RUNTIME_SEGFAULT || (r) == REASON_RUNTIME_SIGINT ||         \
      (r) == REASON_RUNTIME_SIGABRT || (r) == REASON_RUNTIME_SIGTERM ||         \
-     (r) == REASON_RUNTIME_SIGKILL)
+     (r) == REASON_RUNTIME_SIGKILL || (r) == REASON_RUNTIME_SEGV_ACCERR)
 
 #define IS_REASON_SHUTDOWN(r)                                                  \
     ((r) == REASON_SHUTDOWN || (r) == REASON_SUCCESS || (r) == REASON_IGNORE)
@@ -55,7 +55,8 @@ typedef enum reason { FOR_EACH_REASON REASON_END_ } reason_t;
      (r) == REASON_RUNTIME_SEGFAULT || (r) == REASON_RUNTIME_SIGINT ||         \
      (r) == REASON_RUNTIME_SIGABRT || (r) == REASON_IMPASSE ||                 \
      (r) == REASON_SIGTERM || (r) == REASON_RUNTIME_SIGTERM ||                 \
-     (r) == REASON_SIGKILL || (r) == REASON_RUNTIME_SIGKILL)
+     (r) == REASON_SIGKILL || (r) == REASON_RUNTIME_SIGKILL ||                 \
+     (r) == REASON_SEGV_ACCERR || (r) == REASON_RUNTIME_SEGV_ACCERR)
 
 #define IS_REASON_TERMINATE(r) (IS_REASON_SHUTDOWN(r) || IS_REASON_ABORT(r))
 

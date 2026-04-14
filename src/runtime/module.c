@@ -167,11 +167,6 @@ lotto_exit(capture_point *cp, reason_t reason)
 static void DICE_DTOR
 runtime_fini_(void)
 {
-    if (_logger_fd >= 0) {
-        close(_logger_fd);
-        _logger_fd = -1;
-    }
-
     capture_point cp = {
         .chain_id = 0,
         .type_id  = EVENT_TASK_FINI,

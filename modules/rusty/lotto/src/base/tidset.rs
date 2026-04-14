@@ -1,6 +1,6 @@
-use core::mem::MaybeUninit;
 use crate::base::TaskId;
 use crate::wrap;
+use core::mem::MaybeUninit;
 use lotto_sys as raw;
 
 // [`TidSet`] shouldn't have owning references.

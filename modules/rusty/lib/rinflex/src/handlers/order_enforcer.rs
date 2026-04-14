@@ -334,7 +334,8 @@ impl Marshable for Final {
 }
 
 pub fn register() {
-    #[cfg(feature = "runtime")] {
+    #[cfg(feature = "runtime")]
+    {
         trace!("Registering rinflex handler");
         lotto::engine::handler::register(&*HANDLER);
     }

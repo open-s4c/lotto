@@ -558,7 +558,7 @@ impl RecInflex {
 
 /// For debugging.
 #[allow(dead_code)]
-fn pause(prompt: &str) -> String {
+pub fn pause(prompt: &str) -> String {
     use std::io::Write;
     print!("{}", prompt);
     std::io::stdout().flush().unwrap();

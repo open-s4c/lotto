@@ -25,11 +25,12 @@ use rinflex::handlers::flags::*;
     group=raw::subcmd_group::SUBCMD_GROUP_TRACE
 )]
 fn replay(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
-    envvar_set! {
-        "LOTTO_LOGGER_FILE" => flags.get_sval(&FLAG_LOGGER_FILE),
-    };
     let verbose = flags.get_uval(&FLAG_VERBOSE);
     cli::logger(verbose);
+    envvar_set! {
+        "LOTTO_LOGGER_FILE" => flags.get_sval(&FLAG_LOGGER_FILE),
+        "LOTTO_LOGGER_LEVEL" => format!("{}", verbose),
+    };
 
     println!("trace file: {}", flags.get_sval(&FLAG_INPUT));
 

@@ -28,7 +28,7 @@ target_compile_definitions(memmgr_runtime_dice.o PRIVATE LOTTO_MEMMGR_RUNTIME)
 # ##############################################################################
 # libruntime
 # ##############################################################################
-set(SRCS ingress.c sighandler.c module.c malloc.c)
+set(SRCS ingress.c sighandler.c module.c)
 set(LIBS
     m
     mediator.o
@@ -41,6 +41,7 @@ set(LIBS
     dice.o
     dice-cxa.o
     dice-mman.o
+    dice-malloc.o
     dice-pthread_cond.o
     dice-pthread_create.o
     dice-pthread_mutex.o

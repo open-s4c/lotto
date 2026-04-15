@@ -15,7 +15,7 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_POLL, {
         .type_id  = type,
         .payload  = ev,
         .func     = "poll",
-        .blocking = ev->args->timeout != 0,
+        .blocking = false,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_POLL, &cp, md);
     return PS_OK;

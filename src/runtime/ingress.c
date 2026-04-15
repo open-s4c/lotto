@@ -53,6 +53,11 @@ PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, ANY_EVENT, {
     cp->type_id       = type;
     mediator_t *m     = mediator_get(md, true);
 
+    if (cp->blocking) {
+        logger_fatalf("blocking ingress-event type=%s func=%s chain=%u\n",
+                      ps_type_str(cp->type_id), cp->func ? cp->func : "<null>",
+                      (unsigned)cp->chain_id);
+    }
     ASSERT(!cp->blocking && "events in this chain cannot block in user code");
 
     if (!mediator_capture(m, cp)) {

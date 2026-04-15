@@ -24,6 +24,7 @@
 #include <lotto/sys/logger.h>
 #include <lotto/sys/modules.h>
 #include <lotto/sys/stdio.h>
+#include <lotto/sys/string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -224,6 +225,34 @@ _preload_memmgr_plugins(const char *chain, bool runtime, bool dbg)
 }
 
 static bool
+_parse_runtime_plugin_path(const char *path, const char **name, const char **dir)
+{
+    static char out_dir[MAX_LIST_STR] = {0};
+    static char out_name[MAX_LIST_STR] = {0};
+    if (dir)
+        *dir = out_dir;
+    if (name)
+        *name = out_name;
+
+    const char *base = strrchr(path, '/');
+    if (base) {
+        strncpy(out_dir, path, (uintptr_t)base - (uintptr_t)path);
+        base += 1;
+    } else {
+        out_dir[0] = 0;
+    }
+    if (strncmp(base, RUNTIME_DBG_MODULE_PREFIX, RUNTIME_DBG_MODULE_PREFIX_LEN) == 0) {
+        strncpy(out_name, base + RUNTIME_DBG_MODULE_PREFIX_LEN, MAX_LIST_STR);
+        return true;
+    } else if (strncmp(base, RUNTIME_MODULE_PREFIX, RUNTIME_MODULE_PREFIX_LEN) == 0) {
+        strncpy(out_name, base + RUNTIME_MODULE_PREFIX_LEN, MAX_LIST_STR);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static bool
 _is_runtime_plugin_path(const char *path)
 {
     const char *base = strrchr(path, '/');
@@ -310,6 +339,50 @@ _set_dice_plugin_modules_from_preload(void)
     }
 }
 
+/* Check if the trace was generated with liblotto-dbg. */
+bool
+_ld_preload_is_dbg()
+{
+    const char *ld_preload = getenv("LD_PRELOAD");
+    return ld_preload && strstr(ld_preload, LIBLOTTO_RUNTIME_DBG);
+}
+
+/* Replace runtime plugin paths with the correct paths:
+ * if the user requested dbg, replace them with dbg versions;
+ * otherwise, replace them with ndbg versions. */
+void
+_ld_preload_fix_dbg(bool is_dbg)
+{
+    const char *ld_preload = getenv("LD_PRELOAD");
+    if (!ld_preload || ld_preload[0] == 0)
+        return;
+    char ld_preload_cpy[MAX_LIST_STR];
+    char result[MAX_LIST_STR] = {0};
+    size_t len = 0;
+    sys_strcpy(ld_preload_cpy, ld_preload);
+    for (const char *path = strtok(ld_preload_cpy, ":"); path != NULL && len < sizeof(result) - 1;
+         path = strtok(NULL, ":")) {
+        char module_path[MAX_LIST_STR] = {0};
+        const char *module_name = NULL, *module_dir = NULL;
+        if (!sys_strcmp(path, LIBLOTTO_RUNTIME) && is_dbg) {
+            strncpy(result + len, LIBLOTTO_RUNTIME_DBG, sizeof(result) - len - 1);
+            len += sys_strlen(LIBLOTTO_RUNTIME_DBG);
+            result[len++] = ':';
+        } else if (!sys_strcmp(path, LIBLOTTO_RUNTIME_DBG) && !is_dbg) {
+            strncpy(result + len, LIBLOTTO_RUNTIME, sizeof(result) - len - 1);
+            len += sys_strlen(LIBLOTTO_RUNTIME);
+            result[len++] = ':';
+        } else if (_parse_runtime_plugin_path(path, &module_name, &module_dir)) {
+            snprintf(module_path, MAX_LIST_STR, "%s/lotto-runtime%s-%s", module_dir, is_dbg ? "-dbg" : "", module_name);
+            strncpy(result + len, module_path, sizeof(result) - len - 1);
+            len += sys_strlen(module_path);
+            result[len++] = ':';
+        }
+    }
+    result[--len] = 0;
+    setenv("LD_PRELOAD", result, true);
+}
+
 void
 preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
         const char *memmgr_chain_runtime, const char *memmgr_chain_user)
@@ -348,7 +421,13 @@ preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
 
     _set_libpath_env(dir);
 
-    if (exec_info_replay_envvars(verbose)) {
+    bool replayed = exec_info_replay_envvars(verbose);
+    bool is_dbg = verbose > 0;
+    if (replayed && _ld_preload_is_dbg() == is_dbg) {
+        return;
+    } else if (replayed) {
+        _ld_preload_fix_dbg(is_dbg);
+        _set_dice_plugin_modules_from_preload();
         return;
     }
 

@@ -18,13 +18,6 @@
 #define SO_SUFFIX              ".so"
 #define SO_SUFFIX_LEN          (sizeof(SO_SUFFIX) - 1)
 
-#define DRIVER_MODULE_PREFIX          "lotto-driver-"
-#define DRIVER_MODULE_PREFIX_LEN      (sizeof(DRIVER_MODULE_PREFIX) - 1)
-#define RUNTIME_MODULE_PREFIX         "lotto-runtime-"
-#define RUNTIME_MODULE_PREFIX_LEN     (sizeof(RUNTIME_MODULE_PREFIX) - 1)
-#define RUNTIME_DBG_MODULE_PREFIX     "lotto-runtime-dbg-"
-#define RUNTIME_DBG_MODULE_PREFIX_LEN (sizeof(RUNTIME_DBG_MODULE_PREFIX) - 1)
-
 #define STARTS_WITH(s, LITERAL_NAME)                                           \
     (sys_strncmp((s), LITERAL_NAME, LITERAL_NAME##_LEN) == 0)
 

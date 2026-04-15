@@ -7,6 +7,13 @@
 
 #include <stdbool.h>
 
+#define DRIVER_MODULE_PREFIX          "lotto-driver-"
+#define DRIVER_MODULE_PREFIX_LEN      (sizeof(DRIVER_MODULE_PREFIX) - 1)
+#define RUNTIME_MODULE_PREFIX         "lotto-runtime-"
+#define RUNTIME_MODULE_PREFIX_LEN     (sizeof(RUNTIME_MODULE_PREFIX) - 1)
+#define RUNTIME_DBG_MODULE_PREFIX     "lotto-runtime-dbg-"
+#define RUNTIME_DBG_MODULE_PREFIX_LEN (sizeof(RUNTIME_DBG_MODULE_PREFIX) - 1)
+
 typedef enum {
     MODULE_KIND_NONE    = 0,
     MODULE_KIND_CLI     = 1,

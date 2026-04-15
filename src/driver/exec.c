@@ -19,9 +19,6 @@ static int p_out[2];
 static int p_err[2];
 static exec_command_prefix_f *_exec_command_prefix;
 
-#define DICE_DSO_ENV "DICE_DSO"
-#define LOTTO_DSO    "liblotto-runtime.so"
-
 static void
 _handle_sigint(int sig, siginfo_t *si, void *arg)
 {
@@ -234,7 +231,6 @@ wait_child(pid_t pid)
             retval = 1;
         }
     }
-
     sys_close(p_out[0]);
     sys_close(p_err[0]);
     return retval;
@@ -252,15 +248,6 @@ execute(const args_t *args, const flags_t *flags, bool config)
             dynamic_argv = prefixed_args.argv;
         }
     }
-
-    const char *old_dice_dso = sys_getenv(DICE_DSO_ENV);
-    char *old_dice_dso_copy  = NULL;
-    if (old_dice_dso) {
-        size_t len        = sys_strlen(old_dice_dso);
-        old_dice_dso_copy = sys_malloc(len + 1);
-        sys_strcpy(old_dice_dso_copy, old_dice_dso);
-    }
-    sys_setenv(DICE_DSO_ENV, LOTTO_DSO, true);
 
     const char *cmd = flags_get_sval(flags, flag_before_run());
     if (cmd && cmd[0]) {
@@ -335,13 +322,6 @@ execute(const args_t *args, const flags_t *flags, bool config)
 
     sys_sigaction(SIGINT, &int_old, NULL);
     sys_sigaction(SIGTERM, &term_old, NULL);
-
-    if (old_dice_dso_copy) {
-        sys_setenv(DICE_DSO_ENV, old_dice_dso_copy, true);
-        sys_free(old_dice_dso_copy);
-    } else {
-        sys_unsetenv(DICE_DSO_ENV);
-    }
 
     if (replay_ptr) {
         sys_setenv("LOTTO_REPLAY", replay_copy, true);

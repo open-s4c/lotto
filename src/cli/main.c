@@ -11,6 +11,12 @@
 #include <lotto/sys/modules.h>
 #include <sys/personality.h>
 
+#if defined(__APPLE__)
+    #define PRELOAD "DYLD_INSERT_LIBRARIES"
+#else
+    #define PRELOAD "LD_PRELOAD"
+#endif
+
 #define LOTTO_BOOTSTRAP_ENV "LOTTO_DRIVER_BOOTSTRAPPED"
 #define DICE_PLUGIN_MODULES "DICE_PLUGIN_MODULES"
 #define LOTTO_CLI_PRELOAD   "LOTTO_CLI_PRELOAD"
@@ -116,6 +122,14 @@ main(int argc, char **argv)
         preload.buf[0]        = '\0';
         plugin_modules.buf[0] = '\0';
 
+        const char *existing_ld_preload = getenv(PRELOAD);
+        if (existing_ld_preload != NULL && existing_ld_preload[0] != '\0') {
+            setenv(LOTTO_CLI_PRELOAD, existing_ld_preload, true);
+            append_preload(&preload, existing_ld_preload);
+        } else {
+            unsetenv(LOTTO_CLI_PRELOAD);
+        }
+
         append_preload(&preload, driver_path);
         if (lotto_module_foreach(add_driver_module, &preload) != 0) {
             free(preload.buf);
@@ -127,12 +141,6 @@ main(int argc, char **argv)
             free(plugin_modules.buf);
             return 1;
         }
-        if (getenv("LD_PRELOAD") != NULL && getenv("LD_PRELOAD")[0] != '\0') {
-            setenv(LOTTO_CLI_PRELOAD, getenv("LD_PRELOAD"), true);
-            append_preload(&preload, getenv("LD_PRELOAD"));
-        } else {
-            unsetenv(LOTTO_CLI_PRELOAD);
-        }
         append_preload_list(&preload, opts.driver_loads);
 
         if (opts.runtime_loads[0] != '\0') {
@@ -141,7 +149,7 @@ main(int argc, char **argv)
             unsetenv(LOTTO_LOAD_RUNTIME);
         }
 
-        setenv("LD_PRELOAD", preload.buf, true);
+        setenv(PRELOAD, preload.buf, true);
         setenv(DICE_PLUGIN_MODULES, plugin_modules.buf, true);
         setenv(LOTTO_BOOTSTRAP_ENV, "1", true);
         prepend_env_path("LD_LIBRARY_PATH", lib_dir);
@@ -239,7 +247,7 @@ append_preload(preload_state_t *state, const char *path)
     }
 
     if (written < 0 || (size_t)written >= state->cap - state->len) {
-        fprintf(stderr, "error: LD_PRELOAD list too long\n");
+        fprintf(stderr, "error: %s list too long\n", PRELOAD);
         exit(1);
     }
     state->len += (size_t)written;

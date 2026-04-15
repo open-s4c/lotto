@@ -4,11 +4,7 @@
 
 Current Lotto startup in each process follows this shape:
 
-`constructors -> EVENT_LOTTO_STARTUP_SYNC -> EVENT_LOTTO_REGISTER -> EVENT_LOTTO_INIT`
-
-The important part is not the event names themselves. The important part is
-the proof boundary created by the first dummy publication in
-`src/engine/module.c`.
+`constructors -> EVENT_DICE_READY -> EVENT_LOTTO_REGISTER -> EVENT_LOTTO_INIT`
 
 ## Why startup is subtle
 
@@ -33,31 +29,11 @@ Current:
 - `src/runtime/module.c` is intentionally empty
 - `src/driver/module.c` no longer owns generic startup
 
-The startup constructor in `src/engine/module.c` does four things:
+The startup subscription in `src/engine/module.c` does two things on
+`EVENT_DICE_READY`:
 
-1. publishes `EVENT_LOTTO_STARTUP_SYNC` on `CHAIN_CONTROL`
-2. closes the late-subscription barrier
-3. publishes `EVENT_LOTTO_REGISTER`
-4. publishes `EVENT_LOTTO_INIT`
-
-## Why the dummy publication exists
-
-The dummy publication is not used for its payload. It exists to force Dice
-initialization and the Dice loader pass before Lotto begins its own semantic
-phases.
-
-Current reasoning:
-
-1. A plain constructor enters Lotto startup.
-2. It performs a dummy `PS_PUBLISH(...)`.
-3. That publish forces Dice `ps_init()`.
-4. Dice init performs the plugin-loader `dlopen` pass.
-5. Plugin constructors run and may install subscriptions.
-6. The dummy publication returns.
-7. Only then does Lotto begin registration and initialization.
-
-This is a stronger boundary than any argument based only on constructor
-priority.
+1. publishes `EVENT_LOTTO_REGISTER`
+2. publishes `EVENT_LOTTO_INIT`
 
 ## The phase split
 
@@ -111,24 +87,12 @@ That is a deliberate runtime assertion of the intended design:
 - all raw subscriptions must be in place before registration starts
 - registration/init should not still be wiring the pubsub graph
 
-The barrier closes after the dummy publication returns and before
-`EVENT_LOTTO_REGISTER` is published.
+The barrier closes before `EVENT_LOTTO_REGISTER` is published.
 
-## Why `EVENT_DICE_READY` is no longer the right mental model
+## Why `EVENT_DICE_READY` is the startup trigger
 
-Older descriptions treat `EVENT_DICE_READY` as Lotto's startup trigger.
-
-Current tree:
-
-- Dice may still publish `EVENT_DICE_READY`
-- Lotto should not rely on it as the proof boundary
-
-The useful proof boundary is instead:
-
-"the dummy publication in the generic Lotto startup constructor has returned"
-
-That boundary is what gives Lotto confidence that the configured plugin set has
-already executed its constructors and installed its subscriptions.
+Current tree uses `EVENT_DICE_READY` as Lotto's startup trigger for beginning
+`EVENT_LOTTO_REGISTER` and `EVENT_LOTTO_INIT`.
 
 ## Open assumptions
 

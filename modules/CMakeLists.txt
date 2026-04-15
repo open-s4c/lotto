@@ -27,10 +27,10 @@ include_directories(autocept/include)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LOTTO_MODULE_BUILD_DIR}")
 
-set(RUNTIME_MODULE_TYPE_syscall OBJECT)
-set(RUNTIME_MODULE_TYPE_rusty SHARED)
+set(RUNTIME_MODULE_TYPE_qemu BUILTIN)
+set(RUNTIME_MODULE_TYPE_syscall BUILTIN)
+set(RUNTIME_MODULE_TYPE_rusty PLUGIN)
 set(RUNTIME_MODULE_LTO_rusty OFF)
-set(RUNTIME_MODULE_TYPE_qemu SHARED)
 
 # blocking handlers
 add_module(blocking)

@@ -257,7 +257,9 @@ _is_runtime_plugin_path(const char *path)
 {
     const char *base = strrchr(path, '/');
     base             = base ? base + 1 : path;
-    return strncmp(base, "lotto-runtime-", strlen("lotto-runtime-")) == 0;
+    return strncmp(base, "lotto-runtime-", strlen("lotto-runtime-")) == 0 ||
+           strcmp(base, LIBLOTTO_RUNTIME) == 0 ||
+           strcmp(base, LIBLOTTO_RUNTIME_DBG) == 0;
 }
 
 static void

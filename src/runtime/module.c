@@ -11,6 +11,7 @@
 #include <dice/pubsub.h>
 #include <dice/self.h>
 #include <lotto/base/clk.h>
+#include <lotto/base/reason.h>
 #include <lotto/base/trace_file.h>
 #include <lotto/engine/engine.h>
 #include <lotto/engine/pubsub.h>
@@ -39,6 +40,7 @@ typedef struct {
 } cb_data;
 
 static vatomic64_t _only_once;
+static vatomic64_t _winner_reason;
 
 bool
 _lotto_loaded(void)
@@ -77,6 +79,7 @@ runtime_init_(void)
     }
 
     sighandler_init();
+    vatomic_write(&_winner_reason, REASON_SUCCESS);
     engine_init(_replayer, _recorder);
 }
 
@@ -119,14 +122,20 @@ static void *
 fini_cb_(void *arg)
 {
     const cb_data *dat = (const cb_data *)arg;
+    reason_t reason    = (reason_t)vatomic_read(&_winner_reason);
     ASSERT(dat != NULL);
-    int err = 0;
+
+    if (reason == REASON_SUCCESS) {
+        reason = dat->reason;
+    }
+
     if (vatomic_xchg(&_only_once, 1) == 0) {
         mediator_t *m = self_md() ? mediator_get(self_md(), false) : NULL;
-        if (m)
+        if (m) {
             mediator_fini(m);
+        }
 
-        err = engine_fini(dat->cp, dat->reason);
+        int err = engine_fini(dat->cp, reason);
 
         if (_recorder) {
             stream_close(trace_stream(_recorder));
@@ -140,7 +149,13 @@ fini_cb_(void *arg)
         sys_memory_fini();
         nanosec_t elapsed = now() - _start;
         logger_debugf("Elapsed time = %.2fs\n", in_sec(elapsed));
-        _exit(err);
+        if (reason == REASON_SUCCESS) {
+            _exit(0);
+        }
+        _exit(err != 0 ? err : 1);
+    }
+    if (reason != REASON_SUCCESS) {
+        _exit(1);
     }
     REAL_DECL(void, pthread_exit, void *arg);
     REAL_NAME(pthread_exit) = real_func("pthread_exit", 0);
@@ -152,6 +167,12 @@ fini_cb_(void *arg)
 NORETURN void
 lotto_exit(capture_point *cp, reason_t reason)
 {
+    if (reason != REASON_SUCCESS) {
+        reason_t previous = (reason_t)vatomic_xchg(&_winner_reason, reason);
+        if (previous != REASON_SUCCESS) {
+            vatomic_xchg(&_winner_reason, previous);
+        }
+    }
     fflush(stdout);
     fflush(stderr);
     cp->id      = (cp->id == NO_TASK) ? 1 : cp->id;

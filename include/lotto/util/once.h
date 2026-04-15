@@ -15,12 +15,12 @@
         _initd = true;                                                         \
     } while (0)
 
-#define once(CODE)                                                             \
+#define once(...)                                                              \
     do {                                                                       \
         static bool _initd = false;                                            \
         if (!_initd) {                                                         \
             _initd = true;                                                     \
-            (CODE);                                                            \
+            __VA_ARGS__;                                                       \
         }                                                                      \
     } while (0)
 

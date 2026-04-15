@@ -61,6 +61,7 @@ LOTTO_MODULE_INIT()
 
 PS_SUBSCRIBE(CHAIN_CONTROL, EVENT_DICE_READY, {
     once({
+        startup_barrier_closed_ = true;
         START_REGISTRATION_PHASE();
         START_INITIALIZATION_PHASE();
     });

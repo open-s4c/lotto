@@ -28,6 +28,7 @@ pub static HANDLER: HandlerWrapper<OrderEnforcer> = HandlerWrapper::new(|| Order
     block: BTreeMap::new(),
     shutdown: false,
     max_clock: get_max_clock(),
+    prev_any_task_filter: BTreeMap::new(),
 });
 
 fn get_max_clock() -> U64OrInf {
@@ -41,6 +42,7 @@ fn get_max_clock() -> U64OrInf {
 }
 
 #[derive(Stateful)]
+#[allow(dead_code)]
 pub struct OrderEnforcer {
     #[config]
     pub cfg: Config,
@@ -55,6 +57,8 @@ pub struct OrderEnforcer {
 
     /// The maximal clock that this execution is allowed to reach.
     pub max_clock: U64OrInf,
+
+    prev_any_task_filter: BTreeMap<raw::task_id, Option<unsafe extern "C" fn(raw::task_id) -> bool>>,
 }
 
 #[cfg(feature = "runtime")]
@@ -146,10 +150,17 @@ impl Handler for OrderEnforcer {
 
         /* It is possible that tset is empty at this point.  In that case,
          * the engine can pick any task, including ones that are already
-         * blocked, which is handled in EVENT_ENGINE__NEXT_TASK above. */
+         * blocked. This will be checked by posthandle. */
 
         /* Reduce the likelihood by setting any_task_filter. */
-        cappt.any_task_filter = Some(_should_wait);
+        if self.block.get(&TaskId(ctx.id)).is_some() {
+            if cappt.any_task_filter.is_some() {
+                self.prev_any_task_filter.insert(ctx.id, cappt.any_task_filter);
+            } else {
+                self.prev_any_task_filter.remove(&ctx.id);
+            }
+            cappt.any_task_filter = Some(should_wait);
+        }
     }
 
     fn posthandle(&mut self, ctx: &CapturePoint) {
@@ -274,15 +285,17 @@ impl StateTopicSubscriber for OrderEnforcer {
 fn should_block(cur: &Event, constraint: &Constraint) -> bool {
     let source = &constraint.c.source;
     let target = &constraint.c.target;
-    if cur.t == source.t || cur.t == target.t {
+    if cur.t == target.t {
         debug!(
-            "checking [t:{},cat:{},cnt:{},eff:{:?}] against {}",
+            "checking [t:{},cat:{},cnt:{},eff:{:?}] against constraint id={}",
             cur.t.id,
             cur.t.event_name(),
             cur.cnt,
             Eff::from(cur.m.as_ref()),
-            constraint
+            constraint.id
         );
+    } else {
+        return false;
     }
 
     if source.cnt == 0 || target.cnt != 1 {
@@ -310,7 +323,18 @@ impl Marshable for Config {
     fn print(&self) {
         info!("{} new constraints", self.new_constraints.len());
         for (i, c) in self.new_constraints.iter().enumerate() {
-            info!("New constraint {} = {}", i, c);
+            info!(
+                "new constraint {} (id={}) [t:{}, clk:{}, pc:{}, cat:{}] => [t:{}, clk:{}, pc:{}, cat:{}]",
+                i, c.id,
+                c.c.source.t.id,
+                c.c.source.clk,
+                c.c.source.t.pc,
+                c.c.source.t.type_id.name(),
+                c.c.target.t.id,
+                c.c.target.clk,
+                c.c.target.t.pc,
+                c.c.target.t.type_id.name(),
+            );
         }
     }
 }
@@ -346,11 +370,12 @@ pub fn register() {
 // ANY_TASK filter
 
 #[cfg(feature = "runtime")]
-unsafe extern "C" fn _should_wait(task_id: u64) -> bool {
-    let aosb = unsafe { TidSet::wrap(raw::available_or_soft_blocked_tasks()) };
-
-    // hard-blocked by other modules
-    if !aosb.has(TaskId(task_id)) {
+unsafe extern "C" fn should_wait(task_id: raw::task_id) -> bool {
+    // hard blocked by other modules
+    if HANDLER.prev_any_task_filter.get(&task_id)
+        .and_then(|f| *f)
+        .is_some_and(|f| f(task_id))
+    {
         return true;
     }
 
@@ -361,6 +386,7 @@ unsafe extern "C" fn _should_wait(task_id: u64) -> bool {
     }
 
     // allow id if hard-blocking id will deadlock in switcher
+    let aosb = unsafe { TidSet::wrap(raw::available_or_soft_blocked_tasks()) };
     let mut aosb = aosb.clone();
     for id in HANDLER.block.keys() {
         aosb.remove(*id);

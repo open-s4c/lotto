@@ -52,6 +52,7 @@ add_module(filtering)
 # feature handlers
 add_module(available)
 add_module(watchdog)
+add_module(busyabort DEFAULT OFF)
 add_module(ichpt)
 add_module(race)
 add_module(atomic)

@@ -10,9 +10,15 @@
 
 /** Hook used to rewrite a command line before `execute()` spawns the child. */
 typedef void(exec_command_prefix_f)(args_t *args, const flags_t *flags);
+/** Hook used to rewrite recorded replay args before `execute()` runs. */
+typedef void(exec_replay_args_resolver_f)(args_t *args, const flags_t *flags);
 
 /** Set or clear the process launch prefix hook used by `execute()`. */
 void execute_set_command_prefix(exec_command_prefix_f *prefix);
+/** Set or clear replay arg resolver hook used by replay-like commands. */
+void execute_set_replay_args_resolver(exec_replay_args_resolver_f *resolver);
+/** Resolve replay args through the currently registered replay hook. */
+void execute_resolve_replay_args(args_t *args, const flags_t *flags);
 /** Spawn and supervise a command according to current driver settings. */
 int execute(const args_t *args, const flags_t *flags, bool config);
 

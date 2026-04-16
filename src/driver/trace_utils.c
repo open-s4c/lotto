@@ -272,6 +272,8 @@ cli_trace_copy(const char *from, const char *to)
 record_t *
 record_start(const args_t *args)
 {
+    (void)args;
+
     record_t *r = record_alloc(statemgr_size(STATE_TYPE_START));
     r->kind     = RECORD_START;
     statemgr_marshal(r->data, STATE_TYPE_START);

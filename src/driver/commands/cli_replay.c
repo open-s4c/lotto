@@ -22,6 +22,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/stdio.h>
+#include <lotto/sys/stdlib.h>
 
 int
 replay(args_t *args, flags_t *flags)
@@ -49,6 +50,13 @@ replay(args_t *args, flags_t *flags)
     }
 
     args = record_args(first);
+    args_t replay_args = *args;
+    char **dynamic_argv = NULL;
+    char **original_argv = replay_args.argv;
+    execute_resolve_replay_args(&replay_args, flags);
+    if (replay_args.argv != original_argv) {
+        dynamic_argv = replay_args.argv;
+    }
 
     preload(flags_get_sval(flags, flag_temporary_directory()), verbose,
             !flags_is_on(flags, flag_no_preload()),
@@ -76,11 +84,15 @@ replay(args_t *args, flags_t *flags)
     setenv("LOTTO_RECORD_GRANULARITY", var, true);
     if (verbose > 0) {
         sys_fprintf(stdout, "[lotto] replaying: ");
-        args_print(args);
+        args_print(&replay_args);
         sys_fprintf(stdout, "\n");
     }
     adjust(flags_get_sval(flags, flag_input()));
-    return execute(args, flags, true);
+    int ret = execute(&replay_args, flags, true);
+    if (dynamic_argv != NULL) {
+        sys_free(dynamic_argv);
+    }
+    return ret;
 }
 
 static flags_t *

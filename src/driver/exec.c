@@ -18,6 +18,7 @@ static pid_t _pid;
 static int p_out[2];
 static int p_err[2];
 static exec_command_prefix_f *_exec_command_prefix;
+static exec_replay_args_resolver_f *_exec_replay_args_resolver;
 
 static void
 _handle_sigint(int sig, siginfo_t *si, void *arg)
@@ -349,4 +350,18 @@ void
 execute_set_command_prefix(exec_command_prefix_f *prefix)
 {
     _exec_command_prefix = prefix;
+}
+
+void
+execute_set_replay_args_resolver(exec_replay_args_resolver_f *resolver)
+{
+    _exec_replay_args_resolver = resolver;
+}
+
+void
+execute_resolve_replay_args(args_t *args, const flags_t *flags)
+{
+    if (_exec_replay_args_resolver != NULL) {
+        _exec_replay_args_resolver(args, flags);
+    }
 }

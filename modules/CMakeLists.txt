@@ -34,6 +34,7 @@ set(RUNTIME_MODULE_TYPE_rusty PLUGIN)
 set(RUNTIME_MODULE_LTO_rusty OFF)
 
 add_module(guard SLOT 1)
+add_module(summary SLOT 2 DEFAULT OFF)
 
 # blocking handlers
 add_module(blocking)
@@ -81,7 +82,7 @@ add_module(inactivity)
 
 # other components
 add_module(autocept)
-add_module(syscall SLOT 2 DEFAULT OFF)
+add_module(syscall SLOT 5 DEFAULT OFF)
 add_module(time)
 add_module(random)
 add_module(tsan)

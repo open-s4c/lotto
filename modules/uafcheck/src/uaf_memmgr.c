@@ -5,6 +5,7 @@
 #include <lotto/sys/logger.h>
 #include <lotto/sys/memmgr_impl.h>
 #include <lotto/sys/real.h>
+#include <sys/syscall.h>
 #include <sys/types.h>
 #include <vsync/atomic/core.h>
 #include <vsync/spinlock/caslock.h>
@@ -14,6 +15,12 @@ static pid_t _owner;
 static uafc_t *_uc;
 
 #define FORWARD(F, ...) uafc_##F(_uc, __VA_ARGS__)
+
+static pid_t
+_uaf_tid(void)
+{
+    return (pid_t)syscall(SYS_gettid);
+}
 
 static void
 _uaf_mem_init(void)
@@ -31,7 +38,7 @@ static bool
 _uaf_lock(void)
 {
     caslock_acquire(&_lock);
-    _owner = 1;
+    _owner = _uaf_tid();
     return true;
 }
 
@@ -46,7 +53,7 @@ static bool
 _uaf_nested(void)
 {
     _uaf_mem_init();
-    return _owner;
+    return _owner == _uaf_tid();
 }
 
 void

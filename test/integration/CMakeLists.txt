@@ -12,6 +12,8 @@ add_dependencies(tikl-test tikl-build)
 
 file(GLOB SRCS *.c)
 
+set(TSAN_0011-double_free OFF)
+
 add_custom_target(
     tikl-integration
     COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRCS}

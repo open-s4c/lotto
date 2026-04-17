@@ -1,3 +1,7 @@
+// This test intentionally runs without TSan instrumentation. TSan's runtime
+// and allocator interposition can diagnose the race or abort in libc before
+// Lotto's user UAF memory manager gets a chance to turn the second free into
+// the expected SEGV_ACCERR.
 // clang-format off
 // UNSUPPORTED: aarch64
 // RUN: (! %lotto %stress --memmgr-user=uaf --stable-address-method MASK -- %b 2>&1) | %check %s

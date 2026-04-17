@@ -7,6 +7,23 @@ function(ensure_module_type VARNAME)
     endif()
 endfunction()
 
+function(ensure_module_name_prefix NAME)
+    if(NOT DEFINED MODULE_ROOT_NAME)
+        return()
+    endif()
+
+    string(REGEX MATCH "^${MODULE_ROOT_NAME}($|-.*)" _is_valid_module_name
+                 "${NAME}")
+    if(NOT _is_valid_module_name)
+        message(
+            FATAL_ERROR
+                "Invalid module artifact name `${NAME}`. "
+                "Expected `${MODULE_ROOT_NAME}` or `${MODULE_ROOT_NAME}-...` "
+                "(producing lotto-(driver|runtime)-(dbg-)?${MODULE_ROOT_NAME}(-.*)?.${CMAKE_SHARED_LIBRARY_SUFFIX}."
+        )
+    endif()
+endfunction()
+
 set(LOTTO_DEFAULT_RUNTIME_MODULE_TYPE
     BUILTIN
     CACHE STRING "Default type of runtime modules")
@@ -53,7 +70,7 @@ macro(add_runtime_module)
         target_link_libraries(${RUNTIME_DBG_MODULE_TARGET} PRIVATE lotto-dbg)
     endif()
 
-    # enable LTO for this module?
+    # enable LTO for this module ?
     set(LTO FALSE)
     if(${LOTTO_LTO})
         if(${RUNTIME_MODULE_LTO})
@@ -188,17 +205,20 @@ function(driver_module_link_options)
 endfunction()
 
 macro(new_module NAME)
+    ensure_module_name_prefix(${NAME})
     math(EXPR SLOT "${SLOT}+1")
     set(MODULE_NAME ${NAME})
     set(MODULE_SLOT ${SLOT})
 endmacro()
 
 macro(new_module_at NAME EXPLICIT_SLOT)
+    ensure_module_name_prefix(${NAME})
     set(MODULE_NAME ${NAME})
     set(MODULE_SLOT ${EXPLICIT_SLOT})
 endmacro()
 
 add_custom_target(tikl-modules)
+add_custom_target(clean-disabled-modules ALL)
 
 function(add_tikl_module_target NAME)
     add_custom_target(tikl-module-${NAME})
@@ -218,6 +238,7 @@ macro(add_module NAME)
            ${_add_module_default})
 
     if(${LOTTO_MODULE_${NAME}})
+        set(MODULE_ROOT_NAME ${NAME})
         set(RUNTIME_MODULE_TYPE_${NAME} ${LOTTO_DEFAULT_RUNTIME_MODULE_TYPE})
         set(DRIVER_MODULE_TYPE_${NAME} ${LOTTO_DEFAULT_DRIVER_MODULE_TYPE})
 
@@ -236,6 +257,18 @@ macro(add_module NAME)
                 FILES_MATCHING
                 PATTERN "*.h")
         endif()
+        unset(MODULE_ROOT_NAME)
+    else()
+        set(_clean_target "clean-disabled-module-${NAME}")
+        add_custom_target(
+            ${_clean_target}
+            COMMAND
+                ${CMAKE_COMMAND}
+                -DLOTTO_MODULE_BUILD_DIR=${LOTTO_MODULE_BUILD_DIR}
+                -DMODULE_NAME=${NAME} -DSOEXT=${CMAKE_SHARED_LIBRARY_SUFFIX} -P
+                ${PROJECT_SOURCE_DIR}/cmake/clean_disabled_module_artifacts.cmake
+        )
+        add_dependencies(clean-disabled-modules ${_clean_target})
     endif()
 endmacro()
 

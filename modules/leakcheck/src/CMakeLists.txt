@@ -1,10 +1,10 @@
-set(RUNTIME_MODULE_TYPE_memmgr_user_leakcheck PLUGIN)
-set(RUNTIME_MODULE_TYPE_memmgr_runtime_leakcheck PLUGIN)
+set(RUNTIME_MODULE_TYPE_leakcheck-memmgr_user PLUGIN)
+set(RUNTIME_MODULE_TYPE_leakcheck-memmgr_runtime PLUGIN)
 
-new_module(memmgr_user_leakcheck)
+new_module(leakcheck-memmgr_user)
 add_runtime_module(leakcheck.c)
 runtime_module_compile_definitions(PRIVATE LOTTO_MEMMGR_USER)
 
-new_module(memmgr_runtime_leakcheck)
+new_module(leakcheck-memmgr_runtime)
 add_runtime_module(leakcheck.c)
 runtime_module_compile_definitions(PRIVATE LOTTO_MEMMGR_RUNTIME)

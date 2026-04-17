@@ -6,10 +6,10 @@
 #include <lotto/util/macros.h>
 
 STATIC void
-_atomic_handle(const capture_point *cp, event_t *e)
+_memaccess_handle(const capture_point *cp, event_t *e)
 {
     ASSERT(e);
-    if (e->skip || !atomic_config()->enabled)
+    if (e->skip || !memaccess_config()->enabled)
         return;
 
     ASSERT(cp);
@@ -38,7 +38,8 @@ _atomic_handle(const capture_point *cp, event_t *e)
             break;
 
         case CHAIN_INGRESS_AFTER:
-            /* _AFTER atomic events are informative: the operation has already
+            /* _AFTER memaccess events are informative: the operation has
+             * already
              * happened, so handlers may observe its result, but the sequencer
              * should not treat this point as a scheduling decision. Keep it
              * non-change-point and readonly. */
@@ -63,4 +64,4 @@ _atomic_handle(const capture_point *cp, event_t *e)
             break;
     }
 }
-ON_SEQUENCER_CAPTURE(_atomic_handle)
+ON_SEQUENCER_CAPTURE(_memaccess_handle)

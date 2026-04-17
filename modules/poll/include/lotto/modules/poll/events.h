@@ -5,12 +5,18 @@
 #ifndef LOTTO_MODULES_POLL_EVENTS_H
 #define LOTTO_MODULES_POLL_EVENTS_H
 
-#include "poll.h"
-
 #define EVENT_POLL 164
 
-typedef struct poll_event {
-    poll_args_t *args;
-} poll_event_t;
+#include <poll.h>
+
+struct poll_event {
+    const void *pc;
+    struct pollfd *fds;
+    nfds_t nfds;
+    int timeout;
+    int ret;
+    int ret_save;
+    int (*func)(struct pollfd *, nfds_t, int);
+};
 
 #endif

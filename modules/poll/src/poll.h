@@ -8,13 +8,10 @@
 #ifndef _GNU_SOURCE
     #define _GNU_SOURCE
 #endif
-#include <poll.h>
+#include <lotto/base/task_id.h>
+#include <lotto/modules/poll/events.h>
 
-typedef struct poll_args_s {
-    struct pollfd *fds;
-    nfds_t nfds;
-    int timeout;
-    int ret;
-} poll_args_t;
+bool _lotto_poll_is_waiting(task_id id);
+void _lotto_poll_print_waiters(void);
 
 #endif

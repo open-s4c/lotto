@@ -1,13 +1,12 @@
-#include <alloca.h>
 #include <poll.h>
 #include <signal.h>
 #include <time.h>
 
 #include "poll.h"
 #include <dice/chains/intercept.h>
+#include <dice/interpose.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>
-#include <lotto/base/callrec.h>
 #include <lotto/base/record.h>
 #include <lotto/base/trace.h>
 #include <lotto/engine/clock.h>
@@ -16,25 +15,24 @@
 #include <lotto/engine/recorder.h>
 #include <lotto/modules/poll/events.h>
 #include <lotto/sys/logger.h>
-#include <lotto/sys/real.h>
-#include <lotto/sys/sched.h>
 #include <lotto/unsafe/time.h>
-#include <lotto/util/casts.h>
-#include <sys/types.h>
 
-static void
-intercept_poll(poll_args_t *args)
+INTERPOSE(int, poll, struct pollfd *fds, nfds_t nfds, int timeout)
 {
-    poll_event_t ev = {.args = args};
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_POLL, &ev, 0);
-}
+    struct poll_event ev = {
+        .pc      = INTERPOSE_PC,
+        .fds     = fds,
+        .nfds    = nfds,
+        .timeout = timeout,
+        .ret     = 0,
+        .func    = REAL_FUNC(poll),
+    };
 
-int
-poll(struct pollfd *fds, nfds_t nfds, int timeout)
-{
-    poll_args_t args = {.fds = fds, .nfds = nfds, .timeout = timeout};
-    intercept_poll(&args);
-    return args.ret;
+    struct metadata md = {0};
+    PS_PUBLISH(INTERCEPT_BEFORE, EVENT_POLL, &ev, &md);
+    ev.ret = ev.func(ev.fds, ev.nfds, ev.timeout);
+    PS_PUBLISH(INTERCEPT_AFTER, EVENT_POLL, &ev, &md);
+    return ev.ret;
 }
 
 int

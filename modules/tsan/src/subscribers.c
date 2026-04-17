@@ -8,11 +8,18 @@
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/logger.h>
 
+static inline uintptr_t
+memaccess_event_pc(const void *event)
+{
+    const void *pc = *(const void *const *)event;
+    return (uintptr_t)pc;
+}
+
 #define PUBLISH_MEMACCESS(SUFFIX, SRC_TYPE, EV)                                \
     do {                                                                       \
         capture_point cp = {                                                   \
             .payload = (EV),                                                   \
-            .pc      = (uintptr_t)(EV)->pc,                                    \
+            .pc      = memaccess_event_pc(EV),                                 \
             .func    = (EV)->func,                                             \
         };                                                                     \
         PS_PUBLISH(CHAIN_INGRESS_##SUFFIX, SRC_TYPE, &cp, md);                 \

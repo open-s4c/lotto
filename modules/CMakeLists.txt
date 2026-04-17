@@ -57,7 +57,7 @@ add_module(available)
 add_module(watchdog)
 add_module(ichpt)
 add_module(race)
-add_module(atomic)
+add_module(memaccess)
 add_module(yield)
 add_module(termination)
 

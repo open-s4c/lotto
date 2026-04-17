@@ -1,10 +1,10 @@
-set(RUNTIME_MODULE_TYPE_memmgr_user_uafcheck PLUGIN)
-set(RUNTIME_MODULE_TYPE_memmgr_runtime_uafcheck PLUGIN)
+set(RUNTIME_MODULE_TYPE_uafcheck-memmgr_user PLUGIN)
+set(RUNTIME_MODULE_TYPE_uafcheck-memmgr_runtime PLUGIN)
 
-new_module(memmgr_runtime_uafcheck)
+new_module(uafcheck-memmgr_runtime)
 add_runtime_module(uafcheck.c uaf_memmgr.c)
 runtime_module_compile_definitions(PRIVATE LOTTO_MEMMGR_RUNTIME)
 
-new_module(memmgr_user_uafcheck)
+new_module(uafcheck-memmgr_user)
 add_runtime_module(uafcheck.c uaf_memmgr.c)
 runtime_module_compile_definitions(PRIVATE LOTTO_MEMMGR_USER)

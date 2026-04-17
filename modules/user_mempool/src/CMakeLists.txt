@@ -1,8 +1,8 @@
-set(RUNTIME_MODULE_TYPE_memmgr_user_mempool PLUGIN)
-set(RUNTIME_MODULE_TYPE_memmgr_runtime_mempool PLUGIN)
-set(DRIVER_MODULE_TYPE_memmgr_user_mempool PLUGIN)
+set(RUNTIME_MODULE_TYPE_user_mempool-memmgr_user PLUGIN)
+set(RUNTIME_MODULE_TYPE_user_mempool-memmgr_runtime PLUGIN)
+set(DRIVER_MODULE_TYPE_user_mempool-memmgr_user PLUGIN)
 
-new_module(memmgr_user_mempool)
+new_module(user_mempool-memmgr_user)
 add_runtime_module(mempool_memmgr.c)
 runtime_module_compile_definitions(PRIVATE LOTTO_MEMMGR_USER)
 

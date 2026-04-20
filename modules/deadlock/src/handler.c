@@ -313,7 +313,7 @@ ON_SEQUENCER_CAPTURE(_deadlock_handle)
 static tidset_t _dbg_set;
 
 const tidset_t *
-_lotto_deadlock_keys(void)
+lotto_dbg_deadlock_keys(void)
 {
     tidset_fini(&_dbg_set);
     tidset_init(&_dbg_set);
@@ -326,7 +326,7 @@ _lotto_deadlock_keys(void)
 }
 
 const tidset_t *
-_lotto_deadlock_tasks_in(void *addr)
+lotto_dbg_deadlock_tasks_in(void *addr)
 {
     struct rsrc *rsrc = (struct rsrc *)map_find(
         &_state.resources, CAST_TYPE(uint64_t, (uintptr_t)addr));

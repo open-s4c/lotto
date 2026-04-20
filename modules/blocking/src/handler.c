@@ -100,13 +100,13 @@ ON_SEQUENCER_CAPTURE(_blocking_handle)
  ******************************************************************************/
 
 bool
-_lotto_is_blocked(task_id id, bool replay)
+lotto_dbg_blocking_is_blocked(task_id id, bool replay)
 {
     return tidset_has(BLOCKED_TASKS(replay), id);
 }
 
 void
-_lotto_print_returned()
+lotto_dbg_blocking_print_returned()
 {
     marshable_print(&returned_tasks()->m);
 }

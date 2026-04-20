@@ -341,31 +341,18 @@ LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {
     }
 })
 
-struct handler_evec *
-_lotto_evec_handler()
+const tidset_t *
+lotto_dbg_evec_waiters(void)
 {
-    return &_state;
+    return &_state.waiters;
 }
 
-bool
-_lotto_evec_is_waiter_of(task_id id, void *addr)
+const tidset_t *
+lotto_dbg_evec_waiters_of(void *addr)
 {
     struct evec *evec = (struct evec *)map_find(
         &_state.evecs, CAST_TYPE(uint64_t, (uintptr_t)addr));
     if (evec == NULL)
-        return false;
-    return tidset_has(&evec->waiters, id);
-}
-
-bool
-_lotto_evec_is_waiting(task_id id)
-{
-    return tidset_has(&_state.waiters, id);
-}
-
-
-void
-_lotto_print_handle_waiters(void)
-{
-    tidset_print(&_state.waiters.m);
+        return NULL;
+    return &evec->waiters;
 }

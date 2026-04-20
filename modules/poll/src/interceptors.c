@@ -30,7 +30,9 @@ INTERPOSE(int, poll, struct pollfd *fds, nfds_t nfds, int timeout)
 
     struct metadata md = {0};
     PS_PUBLISH(INTERCEPT_BEFORE, EVENT_POLL, &ev, &md);
-    ev.ret = ev.func(ev.fds, ev.nfds, ev.timeout);
+    int ret = ev.func(ev.fds, ev.nfds, ev.timeout);
+    if (ev.ret == 0)
+        ev.ret = ret;
     PS_PUBLISH(INTERCEPT_AFTER, EVENT_POLL, &ev, &md);
     return ev.ret;
 }

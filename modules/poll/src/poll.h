@@ -9,9 +9,10 @@
     #define _GNU_SOURCE
 #endif
 #include <lotto/base/task_id.h>
+#include <lotto/base/tidset.h>
 #include <lotto/modules/poll/events.h>
 
-bool _lotto_poll_is_waiting(task_id id);
-void _lotto_poll_print_waiters(void);
+bool lotto_dbg_poll_is_waiting(task_id id);
+const tidset_t *lotto_dbg_poll_waiters(void);
 
 #endif

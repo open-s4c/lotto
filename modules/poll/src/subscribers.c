@@ -8,7 +8,7 @@
 #include <lotto/runtime/ingress_events.h>
 
 static int
-poll_default_return_(struct pollfd *fds, nfds_t nfds, int timeout)
+poll_return_0_(struct pollfd *fds, nfds_t nfds, int timeout)
 {
     (void)fds;
     (void)nfds;
@@ -28,13 +28,6 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_POLL, {
         .blocking = false,
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_POLL, &cp, md);
-    ev->func     = poll_default_return_;
-    ev->ret_save = ev->ret;
-    return PS_OK;
-})
-
-PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_POLL, {
-    struct poll_event *ev = EVENT_PAYLOAD(event);
-    ev->ret               = ev->ret_save;
+    ev->func = poll_return_0_;
     return PS_OK;
 })

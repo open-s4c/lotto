@@ -289,20 +289,24 @@ LOTTO_SUBSCRIBE_SEQUENCER_CAPTURE(ANY_EVENT, {
 })
 
 bool
-_lotto_poll_is_waiting(task_id id)
+lotto_dbg_poll_is_waiting(task_id id)
 {
     return tidmap_find(&_state.polls, id) != NULL;
 }
 
-void
-_lotto_poll_print_waiters(void)
+const tidset_t *
+lotto_dbg_poll_waiters(void)
 {
-    tidset_t waiters = {0};
-    tidset_init(&waiters);
+    static tidset_t waiters = {0};
+    static bool initialized = false;
+    if (!initialized) {
+        tidset_init(&waiters);
+        initialized = true;
+    }
+    tidset_clear(&waiters);
     for (const tiditem_t *cur = tidmap_iterate(&_state.polls); cur;
          cur                  = tidmap_next(cur)) {
         tidset_insert(&waiters, cur->key);
     }
-    tidset_print(&waiters.m);
-    tidset_fini(&waiters);
+    return &waiters;
 }

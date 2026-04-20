@@ -36,6 +36,7 @@
  */
 
 static double _drop[MAX_TYPES];
+static bool _enabled = false;
 
 STATIC void _load_state();
 LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, { _load_state(); })
@@ -84,11 +85,31 @@ _load_state()
     _print_config();
 }
 
+/* To avoid complications before a mediator is running for a thread, we use the
+ * EVENT_TASK_INIT and EVENT_TASK_CREATE to enable/disable the sampling
+ * altogether. */
+PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, EVENT_TASK_INIT, {
+    ASSERT(!_enabled);
+    _enabled = true;
+})
+PS_SUBSCRIBE(CHAIN_INGRESS_BEFORE, EVENT_TASK_CREATE, {
+    ASSERT(_enabled);
+    _enabled = false;
+})
+
+
+/* The next two terceptors follow the same logic: they stop the chain if the
+ * randomly generated value is below a threshold. In the case of the
+ * BEFORE chain, we additionally mark the Dice metadata as dropped, which
+ * allows us to also drop the same event in the AFTER chain. */
 PS_SUBSCRIBE(INTERCEPT_EVENT, ANY_EVENT, {
+    if (!_enabled)
+        return PS_OK;
     if (type >= MAX_TYPES) {
         logger_errorf("invalid type id: %d\n", type);
         return PS_OK;
     }
+
     double p = 1.0 - _drop[type];
     logger_debugf("%s => %f\n", ps_type_str(type), p);
 
@@ -103,7 +124,8 @@ PS_SUBSCRIBE(INTERCEPT_EVENT, ANY_EVENT, {
 })
 
 PS_SUBSCRIBE(INTERCEPT_BEFORE, ANY_EVENT, {
-    ASSERT(md);
+    if (!_enabled)
+        return PS_OK;
     if (type >= MAX_TYPES) {
         logger_errorf("invalid type id: %d\n", type);
         return PS_OK;
@@ -126,6 +148,8 @@ drop:
 })
 
 PS_SUBSCRIBE(INTERCEPT_AFTER, ANY_EVENT, {
+    if (!_enabled)
+        return PS_OK;
     ASSERT(md);
     return (md->drop) ? PS_STOP_CHAIN : PS_OK;
 })

@@ -15,7 +15,6 @@ struct poll_event {
     nfds_t nfds;
     int timeout;
     int ret;
-    int ret_save;
     int (*func)(struct pollfd *, nfds_t, int);
 };
 

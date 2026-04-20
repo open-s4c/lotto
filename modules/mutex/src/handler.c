@@ -262,14 +262,8 @@ LOTTO_SUBSCRIBE_SEQUENCER_RESUME(ANY_EVENT, {
     }
 })
 
-struct handler_mutex *
-_lotto_mutex_handler()
-{
-    return &_state;
-}
-
 task_id
-_lotto_mutex_owner(void *addr)
+lotto_dbg_mutex_owner(void *addr)
 {
     struct mtx *mtx = (struct mtx *)map_find(
         &_state.mutexes, CAST_TYPE(uint64_t, (uintptr_t)addr));
@@ -278,26 +272,20 @@ _lotto_mutex_owner(void *addr)
     return mtx->owner;
 }
 
-void
-_lotto_print_mutex_waiters(void)
+const tidset_t *
+lotto_dbg_mutex_waiters(void)
 {
-    tidset_print(&_state.waiters.m);
+    return &_state.waiters;
 }
 
-bool
-_lotto_mutex_is_waiter_of(task_id id, void *addr)
+const tidset_t *
+lotto_dbg_mutex_waiters_of(void *addr)
 {
     struct mtx *mtx = (struct mtx *)map_find(
         &_state.mutexes, CAST_TYPE(uint64_t, (uintptr_t)addr));
     if (mtx == NULL)
-        return false;
-    return tidset_has(&mtx->waiters, id);
-}
-
-bool
-_lotto_mutex_is_waiting(task_id id)
-{
-    return tidset_has(&_state.waiters, id);
+        return NULL;
+    return &mtx->waiters;
 }
 
 task_id

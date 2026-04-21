@@ -9,6 +9,6 @@ foreach(SRC ${SRCS})
         engine_component
         memmgr_runtime_libc.o
         memmgr_user_libc.o
-        lotto-runtime-memmgr_user_leakcheck)
+        lotto-runtime-leakcheck-memmgr_user)
     add_test(NAME ${TARGET} COMMAND ${TARGET})
 endforeach()

@@ -6,10 +6,10 @@
 #include <lotto/base/callrec.h>
 #include <lotto/base/record.h>
 #include <lotto/base/trace.h>
-#include <lotto/engine/clock.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/recorder.h>
+#include <lotto/modules/clock.h>
 #include <lotto/runtime/ingress.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/real.h>

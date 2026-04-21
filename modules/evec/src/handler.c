@@ -46,7 +46,7 @@ LOTTO_SUBSCRIBE(EVENT_TIMEOUT__TRIGGER, {
         return PS_OK;
     }
     _state.received_timeout = true;
-    clock_time(&_state.now);
+    lotto_clock_time(&_state.now);
     _check_timeouts(false);
 })
 
@@ -273,7 +273,7 @@ _evec_handle(const capture_point *cp, event_t *e)
     ASSERT(cp->id != NO_TASK);
 
     bool may_block = false;
-    clock_time(&_state.now);
+    lotto_clock_time(&_state.now);
     _state.received_timeout = false;
     _check_timeouts(true);
     switch (cp->type_id) {

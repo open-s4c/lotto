@@ -60,8 +60,8 @@ typedef struct capture_point {
     task_id id;        ///< Task ID
     task_id vid;       ///< Virtual task ID (NO_TASK if not available)
     uintptr_t pc;      ///< Program counter at the interception
+    uint64_t cpu_cost; ///< CPU cost accumulated since previous capture point
 #if defined(QLOTTO_ENABLED)
-    uint64_t icount; ///< Time shifter
     uint32_t pstate; ///< Processor state (EL at bits 2-3)
 #endif
     const char *func; ///< Debugging information for the intercepted operation

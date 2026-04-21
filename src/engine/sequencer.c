@@ -9,13 +9,13 @@
 #include <lotto/base/envvar.h>
 #include <lotto/base/reason.h>
 #include <lotto/base/record.h>
-#include <lotto/engine/clock.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/state.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/clock.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
@@ -53,7 +53,6 @@ typedef struct {
 static sequencer_t _seq;
 
 clk_t clk_bound;
-uint64_t time_bound_ns;
 
 LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
     (void)v;
@@ -82,10 +81,6 @@ sequencer_reset(void)
     const char *var    = getenv("LOTTO_DEBUG_CLK_BOUND");
     if (var) {
         clk_bound = atoll(var);
-    }
-    var = getenv("LOTTO_DEBUG_TIME_BOUND_NS");
-    if (var) {
-        time_bound_ns = atoll(var);
     }
 }
 REGISTER_EPHEMERAL(_seq, ({ sequencer_reset(); }))
@@ -119,7 +114,6 @@ bool sequencer_dispatch_override(const capture_point *cp, sequencer_decision *e,
  * Debug functions
  ******************************************************************************/
 void __attribute__((noinline)) sequencer_clk_met();
-void __attribute__((noinline)) sequencer_time_met();
 
 /*******************************************************************************
  * Public interface
@@ -133,10 +127,6 @@ sequencer_capture(const capture_point *cp)
 #ifdef QLOTTO_ENABLED
     if (clk_bound && _seq.clk >= clk_bound) {
         sequencer_clk_met();
-    }
-
-    if (time_bound_ns && clock_ns() >= time_bound_ns) {
-        sequencer_time_met();
     }
 #endif
     /* try replaying any record from input trace */
@@ -415,21 +405,8 @@ sequencer_clk_met()
     clk_bound = 0;
 }
 
-void __attribute__((noinline))
-sequencer_time_met()
-{
-    logger_debugf("time met\n");
-    time_bound_ns = 0;
-}
-
 void
 sequencer_set_clk_bound(clk_t value)
 {
     clk_bound = value;
-}
-
-void
-sequencer_set_time_bound_ns(uint64_t value)
-{
-    time_bound_ns = value;
 }

@@ -69,7 +69,6 @@ _engine_is_ingress_chain(chain_id chain)
 }
 
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__START)
-LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__BEFORE_CAPTURE)
 
 /*******************************************************************************
  * contract checker using ghost state
@@ -165,8 +164,6 @@ engine_capture(const capture_point *cp)
 
     log(cp, "CAPTURE  %s\t%s", ps_type_str(cp->type_id), cp->func);
 
-    struct value val = any(cp);
-    LOTTO_PUBLISH(EVENT_ENGINE__BEFORE_CAPTURE, val);
     struct plan p = sequencer_capture(cp);
 
     CONTRACT({

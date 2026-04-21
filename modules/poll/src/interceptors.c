@@ -9,10 +9,10 @@
 #include <dice/pubsub.h>
 #include <lotto/base/record.h>
 #include <lotto/base/trace.h>
-#include <lotto/engine/clock.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/recorder.h>
+#include <lotto/modules/clock.h>
 #include <lotto/modules/poll/events.h>
 #include <lotto/sys/logger.h>
 #include <lotto/unsafe/time.h>

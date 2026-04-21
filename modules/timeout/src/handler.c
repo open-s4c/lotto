@@ -1,9 +1,9 @@
 
 #include <dice/module.h>
-#include <lotto/engine/clock.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/clock.h>
 #include <lotto/modules/timeout/timeout.h>
 
 /*******************************************************************************
@@ -35,7 +35,7 @@ static void
 _check_deadlines(tidset_t *tset)
 {
     struct timespec now;
-    clock_time(&now);
+    lotto_clock_time(&now);
     for (const tiditem_t *cur = tidmap_iterate(&_state); cur;) {
         const timeout_t *timeout = (const timeout_t *)cur;
         if (timespec_compare(&timeout->deadline, &now) > 0) {
@@ -66,7 +66,7 @@ _time_leap(tidset_t *tset)
     }
     task_id id = min->ti.key;
     ASSERT(id != NO_TASK);
-    lotto_clock_set(&min->deadline);
+    lotto_clock_leap(&min->deadline);
     if (multiple) {
         _check_deadlines(tset);
         return;
@@ -98,7 +98,7 @@ handler_timeout_register(task_id id, const struct timespec *deadline)
 {
     timeout_t *timeout = (timeout_t *)tidmap_register(&_state, id);
     struct timespec now;
-    clock_time(&now);
+    lotto_clock_time(&now);
     ASSERT(timeout);
     timeout->deadline = *deadline;
 }

@@ -111,8 +111,6 @@ PS_SUBSCRIBE(INTERCEPT_EVENT, ANY_EVENT, {
     }
 
     double p = 1.0 - _drop[type];
-    logger_debugf("%s => %f\n", ps_type_str(type), p);
-
     if (p == 1)
         return PS_OK;
     if (p == 0)
@@ -131,8 +129,6 @@ PS_SUBSCRIBE(INTERCEPT_BEFORE, ANY_EVENT, {
         return PS_OK;
     }
     double p = 1.0 - _drop[type];
-    logger_debugf("%s => %f\n", ps_type_str(type), p);
-
     if (p == 1)
         return PS_OK;
     if (p == 0)

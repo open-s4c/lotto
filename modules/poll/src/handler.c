@@ -1,9 +1,9 @@
 
 #include "poll.h"
-#include <lotto/engine/clock.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/clock.h>
 #include <lotto/modules/poll/events.h>
 #include <lotto/modules/timeout/timeout.h>
 #include <lotto/sys/poll.h>
@@ -71,7 +71,7 @@ _wait(task_id tid, struct poll_event *args)
     int timeout  = waiter->args->timeout;
     if (timeout != 0 && timeout != -1) {
         struct timespec deadline;
-        clock_time(&deadline);
+        lotto_clock_time(&deadline);
         uint64_t timeout_ns  = timeout * NSEC_IN_MSEC;
         uint64_t deadline_ns = deadline.tv_nsec + timeout_ns;
         deadline.tv_sec += (long)(deadline_ns / NSEC_IN_SEC);

@@ -250,7 +250,7 @@ _intercept(context_t *ctx, const char *fname)
         ctx->func = fname;
 
     // Inform Lotto how much time has elapsed
-    ctx->icount = icounter_get(&frontend_state.inline_insn_count);
+    ctx->cpu_cost = icounter_get(&frontend_state.inline_insn_count);
 
     if (fname)
         runtime_ingress(ctx, self_md());

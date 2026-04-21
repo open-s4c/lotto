@@ -3,7 +3,6 @@ target_link_libraries(
     sequencer_test
     PRIVATE engine_sequencer_testing.o
             base_testing.o
-            engine_clock_testing.o
             engine_recorder_testing.o
             sys_testing.o
             engine_prng_testing.o

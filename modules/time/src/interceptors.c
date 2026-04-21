@@ -9,10 +9,10 @@
 #include <lotto/base/callrec.h>
 #include <lotto/base/record.h>
 #include <lotto/base/trace.h>
-#include <lotto/engine/clock.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/recorder.h>
+#include <lotto/modules/clock.h>
 #include <lotto/modules/time/events.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/real.h>
@@ -26,6 +26,19 @@
 typedef struct {
     const char *func;
 } time_yield_event_t;
+
+static void
+_clock_timespec_from_read(struct timespec *ts)
+{
+    uint64_t cur_ns = lotto_clock_read();
+    uint64_t sec    = cur_ns / NSEC_IN_SEC;
+    uint64_t nsec   = cur_ns % NSEC_IN_SEC;
+
+    ASSERT(sec < LONG_MAX);
+    ts->tv_sec = (long)sec;
+    ASSERT(nsec < LONG_MAX);
+    ts->tv_nsec = (long)nsec;
+}
 
 static inline void
 intercept_time_yield(const char *func)
@@ -53,7 +66,7 @@ fork(void)
 time_t
 real_time(time_t *tloc)
 {
-    REAL_DECL(time_t, time, time_t * tloc);
+    REAL_DECL(time_t, time, time_t *tloc);
     if (REAL_NAME(time) == NULL)
         REAL_NAME(time) = real_func("time", 0);
 
@@ -63,7 +76,7 @@ real_time(time_t *tloc)
 time_t
 time(time_t *tloc)
 {
-    uint64_t cur_ns = clock_ns();
+    uint64_t cur_ns = lotto_clock_read();
     uint64_t sec    = cur_ns / NSEC_IN_SEC;
     ASSERT(sec <= LONG_MAX);
     if (NULL != tloc) {
@@ -77,7 +90,7 @@ int
 gettimeofday(struct timeval *tv, void *tz)
 {
     struct timespec ts;
-    clock_time(&ts);
+    _clock_timespec_from_read(&ts);
 
     tv->tv_sec   = ts.tv_sec;
     uint64_t sec = ts.tv_nsec / NSEC_IN_SEC;
@@ -89,27 +102,29 @@ gettimeofday(struct timeval *tv, void *tz)
 int
 clock_gettime(clockid_t clockid, struct timespec *tp)
 {
-    clock_time(tp);
+    _clock_timespec_from_read(tp);
     return 0;
 }
 
 clock_t
 clock(void)
 {
-    uint64_t cur_ns = clock_ns();
+    uint64_t cur_ns = lotto_clock_read();
     uint64_t ret    = (cur_ns * CLOCKS_PER_SEC) / NSEC_IN_SEC;
     ASSERT(ret <= LONG_MAX);
     return (long)ret;
 }
 
-int ftime(struct timeb *tp) {
+int
+ftime(struct timeb *tp)
+{
     struct timespec ts;
 
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1) {
         return -1;
     }
 
-    tp->time = ts.tv_sec;
+    tp->time    = ts.tv_sec;
     tp->millitm = (unsigned short)(ts.tv_nsec / NSEC_IN_MSEC);
 
     return 0;
@@ -119,14 +134,14 @@ int ftime(struct timeb *tp) {
 int
 nanosleep(const struct timespec *req, struct timespec *rem)
 {
-    uint64_t cur_ns   = clock_ns();
+    uint64_t cur_ns   = lotto_clock_read();
     uint64_t ns_start = cur_ns;
     uint64_t ns_end   = ns_start + ((req->tv_sec * NSEC_IN_SEC + req->tv_nsec) /
                                   (SLEEP_DIVISOR));
 
     while (cur_ns < ns_end) {
         intercept_time_yield("nanosleep");
-        cur_ns = clock_ns();
+        cur_ns = lotto_clock_read();
     }
     return 0;
 }
@@ -134,13 +149,13 @@ nanosleep(const struct timespec *req, struct timespec *rem)
 int
 usleep(useconds_t usec)
 {
-    uint64_t cur_ns   = clock_ns();
+    uint64_t cur_ns   = lotto_clock_read();
     uint64_t ns_start = cur_ns;
     uint64_t ns_end   = ns_start + ((usec * NSEC_IN_USEC) / (SLEEP_DIVISOR));
 
     while (cur_ns < ns_end) {
         intercept_time_yield("usleep");
-        cur_ns = clock_ns();
+        cur_ns = lotto_clock_read();
     }
     return 0;
 }
@@ -148,13 +163,13 @@ usleep(useconds_t usec)
 unsigned int
 sleep(unsigned int seconds)
 {
-    uint64_t cur_ns   = clock_ns();
+    uint64_t cur_ns   = lotto_clock_read();
     uint64_t ns_start = cur_ns;
     uint64_t ns_end   = ns_start + ((seconds * NSEC_IN_SEC) / (SLEEP_DIVISOR));
 
     while (cur_ns < ns_end) {
         intercept_time_yield("sleep");
-        cur_ns = clock_ns();
+        cur_ns = lotto_clock_read();
     }
     return 0;
 }

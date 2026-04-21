@@ -6,7 +6,7 @@
 #define LOTTO_MODULES_TIMEOUT_TIMEOUT_H
 
 #include <lotto/base/task_id.h>
-#include <lotto/engine/clock.h>
+#include <lotto/modules/clock.h>
 #include <lotto/modules/timeout/events.h>
 
 /**

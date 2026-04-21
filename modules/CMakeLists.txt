@@ -8,6 +8,7 @@ set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 set(TIKL_MODULE_FEATURES)
 
 include_directories(blocking/include)
+include_directories(clock/include)
 include_directories(ichpt/include)
 include_directories(mutex/include)
 include_directories(timeout/include)
@@ -37,6 +38,7 @@ add_module(guard SLOT 1)
 add_module(summary SLOT 2 DEFAULT OFF)
 
 # blocking handlers
+add_module(clock)
 add_module(blocking)
 add_module(join)
 add_module(mutex)
@@ -47,7 +49,7 @@ add_module(timeout)
 add_module(cxa)
 add_module(impasse)
 
-# hard filters                                                                 #
+# hard filters
 add_module(region_preemption)
 add_module(region_filter)
 add_module(sampling SLOT 3)

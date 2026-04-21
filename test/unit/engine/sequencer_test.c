@@ -51,8 +51,9 @@ capture_point_eq(const capture_point *lhs, const capture_point *rhs)
     return lhs->chain_id == rhs->chain_id && lhs->type_id == rhs->type_id &&
            lhs->blocking == rhs->blocking && lhs->id == rhs->id &&
            lhs->vid == rhs->vid && lhs->pc == rhs->pc &&
+           lhs->cpu_cost == rhs->cpu_cost &&
 #if defined(QLOTTO_ENABLED)
-           lhs->icount == rhs->icount && lhs->pstate == rhs->pstate &&
+           lhs->pstate == rhs->pstate &&
 #endif
            lhs->func == rhs->func && lhs->func_addr == rhs->func_addr &&
            lhs->payload == rhs->payload;

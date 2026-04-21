@@ -23,6 +23,7 @@ include_directories(time/include)
 include_directories(task_velocity/include)
 include_directories(yield/include)
 include_directories(available/include)
+include_directories(bias/include)
 include_directories(explore/include)
 include_directories(autocept/include)
 
@@ -73,7 +74,8 @@ add_module(concurrent SLOT 6)
 add_module(ghost SLOT 7)
 add_module(rusty DEFAULT ${HAVE_CARGO})
 
-# scheduling strategy handlers
+# bias and scheduling strategy handlers
+add_module(bias)
 add_module(pos)
 add_module(pct)
 

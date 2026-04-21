@@ -46,6 +46,7 @@ static bool path_is_readable(const char *path);
 static bool path_printf(char *buf, size_t cap, const char *fmt,
                         const char *value);
 static int exec_self(char **argv);
+static bool path_self(char **argv, char *path, size_t bufsize);
 
 int
 main(int argc, char **argv)
@@ -70,14 +71,11 @@ main(int argc, char **argv)
             return 1;
         }
 
-        if (realpath(argv[0], resolved_path) == NULL) {
-            if (argv[0][0] == '/') {
-                snprintf(resolved_path, sizeof(resolved_path), "%s", argv[0]);
-            } else {
-                perror("failed to resolve lotto path");
-                return 1;
-            }
+        if (!path_self(argv, resolved_path, sizeof(resolved_path))) {
+            perror("failed to resolve lotto path");
+            return 1;
         }
+        setenv("LOTTO_EXECUTABLE_PATH", resolved_path, true);
 
         if (!path_printf(binary_dir, sizeof(binary_dir), "%s",
                          dirname(resolved_path))) {
@@ -304,4 +302,23 @@ exec_self(char **argv)
 #endif
     perror("failed to exec");
     return 1;
+}
+
+static bool
+path_self(char **argv, char *path, size_t bufsize)
+{
+#ifdef __linux__
+    if (realpath("/proc/self/exe", path) != NULL) {
+        return true;
+    }
+#else
+    if (realpath(argv[0], path) != NULL) {
+        return true;
+    }
+#endif
+    if (argv[0][0] == '/') {
+        snprintf(path, bufsize, "%s", argv[0]);
+        return true;
+    }
+    return false;
 }

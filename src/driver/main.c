@@ -100,11 +100,15 @@ driver_main(int argc, char **argv)
 
 #if defined(LOTTO_EMBED_LIB) && LOTTO_EMBED_LIB == 0
     {
+        char *exe_path = getenv("LOTTO_EXECUTABLE_PATH");
         char resolved_path[PATH_MAX];
-        ASSERT(realpath(argv[0], resolved_path) != 0 &&
-               "Unable to resolve path. You must provide lotto's path or a "
-               "real path alias.");
-        preload_set_libpath(dirname(resolved_path));
+        if (!exe_path) {
+            exe_path = realpath(argv[0], resolved_path);
+        }
+        ASSERT(exe_path != 0 &&
+            "Unable to resolve path. You must provide lotto's path or a "
+            "real path alias.");
+        preload_set_libpath(dirname(exe_path));
     }
 #endif
 

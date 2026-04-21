@@ -192,7 +192,7 @@ pub static FLAG_REPLAY_GOAL: FlagKey = FlagKey::new(
 
 pub static FLAG_TEMPORARY_DIRECTORY: FlagKey = FlagKey::new_defer_default_raw(
     c"FLAG_TEMPORARY_DIRECTORY",
-    c"",
+    c"t",
     c"temporary-directory",
     c"DIR",
     c"temporary directory to write Lotto files",

@@ -42,8 +42,6 @@ DECLARE_COMMAND_FLAG(INFLEX_METHOD, "", "inflex-method", "METHOD",
                      "b(inary) / l(inear) search + p(robablistic)/e(xplore)",
                      flag_sval("bp"))
 
-void round_print(flags_t *flags, uint64_t round);
-
 static bool _fails(const args_t *args, flags_t *flags);
 static clk_t _truncate_trace(const char *input, const char *output, clk_t clk);
 static bool _produce_full_trace_and_set_input(args_t *args, flags_t *flags);

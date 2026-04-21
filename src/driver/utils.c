@@ -11,8 +11,11 @@
 #include <lotto/base/trace_chunked.h>
 #include <lotto/base/trace_flat.h>
 #include <lotto/driver/args.h>
+#include <lotto/driver/exec.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/sequencer.h>
+#include <lotto/driver/flags/memmgr.h>
+#include <lotto/driver/preload.h>
 #include <lotto/driver/trace.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/assert.h>
@@ -190,4 +193,45 @@ get_default_temporary_directory()
     ASSERT(root);
     sys_sprintf(temporary_directory_default, "%s/.lotto", root);
     return temporary_directory_default;
+}
+
+flags_t *
+run_default_flags()
+{
+    flags_t *flags = flagmgr_flags_alloc();
+    flags_cpy(flags, flags_default());
+    flags_set_default(flags, flag_input(), sval(""));
+    return flags;
+}
+
+int
+run_once(args_t *args, flags_t *flags)
+{
+    uint64_t verbose = flag_verbose_count(flags);
+
+    setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, flag_logger_file()),
+           true);
+
+    preload(flags_get_sval(flags, flag_temporary_directory()), verbose,
+            !flags_is_on(flags, flag_no_preload()),
+            flags_get_sval(flags, flag_memmgr_runtime()),
+            flags_get_sval(flags, flag_memmgr_user()));
+
+    envvar_t vars[] = {
+        {"LOTTO_RECORD", .sval = flags_get_sval(flags, flag_output())},
+        {NULL}};
+    envvar_set(vars, true);
+
+    if (verbose > 0) {
+        sys_fprintf(stdout, "[lotto] starting: ");
+        args_print(args);
+        sys_fprintf(stdout, "\n");
+    }
+
+    const char *input = flags_get_sval(flags, flag_input());
+    if (input && input[0] != '\0') {
+        adjust(input);
+    }
+
+    return execute(args, flags, false);
 }

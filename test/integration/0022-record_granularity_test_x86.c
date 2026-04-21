@@ -1,12 +1,12 @@
 // clang-format off
 // UNSUPPORTED: aarch64, clang, Clang
-// RUN: %lotto %stress --handler-race disable -r 1 -- %b
+// RUN: %lotto %stress --disable race -r 1 -- %b
 // RUN: %lotto %show | %check %s --check-prefix=MINIMAL
-// RUN: %lotto %stress --handler-race disable -r 1 --record-granularity CHPT -- %b
+// RUN: %lotto %stress --disable race -r 1 --record-granularity CHPT -- %b
 // RUN: %lotto %show | %check %s --check-prefix=CHPT
-// RUN: %lotto %stress --handler-race disable -r 1 --record-granularity SWITCH -- %b
+// RUN: %lotto %stress --disable race -r 1 --record-granularity SWITCH -- %b
 // RUN: %lotto %show | %check %s --check-prefix=SWITCH
-// RUN: %lotto %stress --handler-race disable -r 1 --record-granularity CAPTURE -- %b
+// RUN: %lotto %stress --disable race -r 1 --record-granularity CAPTURE -- %b
 // RUN: %lotto %show | %check %s --check-prefix=CAPTURE
 //
 // MINIMAL: RECORD 2
@@ -37,4 +37,3 @@ main()
     pthread_join(thread1, 0);
     return 0;
 }
-

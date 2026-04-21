@@ -87,6 +87,7 @@ macro(add_runtime_module)
         PRIVATE DICE_MULTIFILE_MODULE #
                 LOTTO_RUNTIME_MODULE=1 #
                 LOTTO_DRIVER_MODULE=0 #
+                LOTTO_MODULE_NAME="${MODULE_NAME}" #
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}" #
                 LOGGER_DISABLE)
@@ -95,6 +96,7 @@ macro(add_runtime_module)
         PRIVATE DICE_MULTIFILE_MODULE #
                 LOTTO_RUNTIME_MODULE=1 #
                 LOTTO_DRIVER_MODULE=0 #
+                LOTTO_MODULE_NAME="${MODULE_NAME}" #
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
     if(${RUNTIME_MODULE_TYPE} STREQUAL PLUGIN)
@@ -167,6 +169,7 @@ macro(add_driver_module)
         PRIVATE DICE_MULTIFILE_MODULE #
                 LOTTO_RUNTIME_MODULE=0 #
                 LOTTO_DRIVER_MODULE=1 #
+                LOTTO_MODULE_NAME="${MODULE_NAME}" #
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
     if("${DRIVER_MODULE_TYPE}" STREQUAL "PLUGIN")

@@ -42,7 +42,7 @@ function(add_mockoto)
 
     if("${__RACKET}")
         add_custom_target(
-            update-${__TARGET} ALL
+            update-${__TARGET}
             COMMAND
                 mockoto -p ${PROJECT_BINARY_DIR} #
                 ${__EXCLUDE} --mode rkt ${__INCLUDE_RESOLVED} -- #
@@ -61,7 +61,7 @@ function(add_mockoto)
     else()
         string(REGEX REPLACE "[.]c$" ".h" HEADER ${__TARGET})
         add_custom_target(
-            update-${__TARGET} ALL
+            update-${__TARGET}
             COMMAND
                 mockoto -p ${PROJECT_BINARY_DIR} #
                 ${__EXCLUDE} --mode C ${__INCLUDE_RESOLVED} -- #

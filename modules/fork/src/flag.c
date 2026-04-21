@@ -1,5 +1,15 @@
 #include "state.h"
 #include <lotto/driver/flagmgr.h>
+#include <lotto/driver/flags/modules.h>
+
+static void
+_fork_enabled(bool enabled)
+{
+    fork_execve_config()->enabled = enabled;
+}
+
+_FLAGMGR_SUBSCRIBE({ register_runtime_switchable_module(LOTTO_MODULE_NAME,
+                                                        _fork_enabled); })
 
 NEW_PRETTY_CALLBACK_FLAG(
     HANDLER_FORK_EXECVE_ENABLED, "", "handler-fork-execve",

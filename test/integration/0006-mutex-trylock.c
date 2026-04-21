@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: %lotto %record --handler-deadlock disable -- %b | grep LAST_THREAD | tee %b.record
+// RUN: %lotto %record --disable deadlock -- %b | grep LAST_THREAD | tee %b.record
 // RUN: %lotto %replay | grep LAST_THREAD | tee %b.replay
 // RUN: diff %b.record %b.replay
 // clang-format on

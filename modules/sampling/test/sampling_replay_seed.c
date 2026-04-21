@@ -1,7 +1,7 @@
 // clang-format off
 // ALLOW_RETRIES: 5
 // RUN: printf 'EVENT_MA_READ=0.99\nEVENT_MA_WRITE=0.99\n' > %t.conf
-// RUN: %lotto %stress -r 1 --sampling-config %t.conf --enforcement-mode SEED --record-granularity CAPTURE -- %b | grep '^shared=' > %t.record
+// RUN: %lotto %stress -r 1 --sampling-config %t.conf --enforce-mode SEED --record-granularity CAPTURE -- %b | grep '^shared=' > %t.record
 // RUN: %lotto %replay | grep '^shared=' > %t.replay
 // RUN: test -s %t.replay
 // RUN: diff -u %t.record %t.replay

@@ -9,6 +9,7 @@
 #include <lotto/base/record_granularity.h>
 #include <lotto/base/stable_address.h>
 #include <lotto/driver/flagmgr.h>
+#include <lotto/driver/flags/modules.h>
 #include <lotto/driver/flags/prng.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/engine/pubsub.h>
@@ -150,6 +151,8 @@ flags_publish(const flags_t *flags)
             continue;
         opt->callback(flags_get_value(flags, i), NULL);
     }
+    ASSERT(apply_module_enable_flags(flags) == 0 &&
+           "module enable/disable flags failed after parse");
 }
 
 
@@ -396,6 +399,22 @@ _flags_with_opt(int64_t o)
 }
 
 static void
+_append_string_flag(flags_t *flags, flag_t f, const char *optarg)
+{
+    const char *cur = flags_get_sval(flags, f);
+    if (cur == NULL || cur[0] == '\0') {
+        flags_set_by_opt(flags, f, sval(sys_strdup(optarg)));
+        return;
+    }
+
+    size_t len = sys_strlen(cur) + 1 + sys_strlen(optarg) + 1;
+    char *buf  = sys_malloc(len);
+    ASSERT(buf);
+    sys_snprintf(buf, len, "%s,%s", cur, optarg);
+    flags_set_by_opt(flags, f, sval(buf));
+}
+
+static void
 apply_forced_non_defaults(flags_t *flags)
 {
     const flags_t *default_flags = flags_default();
@@ -495,6 +514,11 @@ flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
                                           !flags_is_on(flags, fnum)));
                 break;
             case VALUE_TYPE_STRING:
+                if (fnum == flag_enable_module() ||
+                    fnum == flag_disable_module()) {
+                    _append_string_flag(flags, fnum, optarg);
+                    break;
+                }
                 flags_set_by_opt(flags, fnum, sval(optarg));
                 break;
             default:

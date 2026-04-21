@@ -2,7 +2,7 @@
 // RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/mp_race.c:{{[0-9]+}}: data == 1
 //
-// RUN: (! %lotto %record --handler-race-strict --stable-address-method MASK -- %b 2>&1) | %check %s --check-prefix=HANDLER
+// RUN: (! %lotto %record --race-strict --stable-address-method MASK -- %b 2>&1) | %check %s --check-prefix=HANDLER
 // HANDLER: {{\[.*race.*\]}} Data race detected at addr: {{.*}}
 // clang-format on
 
@@ -43,4 +43,3 @@ main()
     pthread_join(bob, 0);
     return 0;
 }
-

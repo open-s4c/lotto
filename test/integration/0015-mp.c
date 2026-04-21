@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: %lotto %stress --handler-race disable -r 50 -- %b
+// RUN: %lotto %stress --disable race -r 50 -- %b
 // clang-format on
 
 #include <assert.h>
@@ -44,4 +44,3 @@ main()
     pthread_join(bob, 0);
     return 0;
 }
-

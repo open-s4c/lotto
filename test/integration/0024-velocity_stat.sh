@@ -29,7 +29,7 @@ done
 echo "Running tests with velocity handler disabled..."
 for i in $(seq 1 $REPEATS); do
 	start_time=$(date +%s%N)
-	$LOTTO_BIN $LOTTO_CMD --handler-task-velocity disable -s random -r 20 -- $VELOCITY_TEST >/dev/null 2>&1
+	$LOTTO_BIN $LOTTO_CMD --disable task-velocity -s random -r 20 -- $VELOCITY_TEST >/dev/null 2>&1
 	exit_code=$?
 	end_time=$(date +%s%N)
 

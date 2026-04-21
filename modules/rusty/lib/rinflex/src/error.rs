@@ -32,7 +32,7 @@ pub enum Error {
     SubprocessFailure(String),
 
     #[error("Cannot find an execution that satisfies all of the given constraints")]
-    ExecutionNotFound,
+    ExecutionNotFound { valid: u64, invalid: u64 },
 }
 
 impl HasErrorCode for Error {
@@ -44,7 +44,7 @@ impl HasErrorCode for Error {
             Error::LottoError { .. } => NonZeroI32::new(3).unwrap(),
             Error::IO(_) => NonZeroI32::new(4).unwrap(),
             Error::SubprocessFailure(_) => NonZeroI32::new(5).unwrap(),
-            Error::ExecutionNotFound => NonZeroI32::new(6).unwrap(),
+            Error::ExecutionNotFound { .. } => NonZeroI32::new(6).unwrap(),
         }
     }
 }

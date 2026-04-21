@@ -285,7 +285,7 @@ flag_verbose_logger_level_str(const flags_t *flags)
                          flag_sval("stderr"))
 
 #define DECLARE_FLAG_TEMPORARY_DIRECTORY                                       \
-    DECLARE_COMMAND_FLAG(TEMPORARY_DIRECTORY, "", "temporary-directory",       \
+    DECLARE_COMMAND_FLAG(TEMPORARY_DIRECTORY, "t", "temporary-directory",      \
                          "DIR", "temporary directory to write Lotto files",    \
                          flag_sval(get_default_temporary_directory()))
 

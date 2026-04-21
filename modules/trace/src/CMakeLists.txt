@@ -1,1 +1,1 @@
-add_driver_module(trace.c show.c module.c)
+add_driver_module(show.c module.c)

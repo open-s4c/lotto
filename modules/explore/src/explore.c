@@ -25,8 +25,6 @@
 static uint64_t round_index;
 static const type_id ignored_types[] = {EVENT_TASK_CREATE, 0};
 
-void round_print(flags_t *flags, uint64_t round);
-
 static bool
 _types_has(const type_id types[], type_id type)
 {

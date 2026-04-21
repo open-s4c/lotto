@@ -4,7 +4,7 @@
  *
  * The (non)atomic region enables/disables task preemptions. The default state
  * (outside the region) is controlled by the CLI flag
- * `--preemptions-off`. If the flag is set, preemptions are disabled and
+ * `--region_preemption-default-off`. If the flag is set, preemptions are disabled and
  * nonatomic regions make a difference by allowing them. Otherwise, atomic
  * regions can be used to disable preemptions locally.
  */

@@ -7,7 +7,7 @@ the replay is failing to reproduce the recorded execution. However, this check m
 too late. Therefore, Lotto has a replay enforcement feature, which stores even more information in the trace to allow to
 recognize replay divergence as early as possible.
 
-Replay enforcement supports multiple modes. Their combination can be provided through the `--enforcement-mode` flag as
+Replay enforcement supports multiple modes. Their combination can be provided through the `--enforce-mode` flag as
 a vertical bar separated list. Each mode adds a specific datum to all records and verifies whether it matches on replay.
 The available modes are listed in the table below:
 

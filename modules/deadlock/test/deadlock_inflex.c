@@ -1,6 +1,6 @@
 // clang-format off
 // UNSUPPORTED: aarch64
-// RUN: (! %lotto %stress -v -s random --check-deadlock -- %b)
+// RUN: (! %lotto %stress -v -s random --mutex-check-deadlock -- %b)
 // RUN: %lotto %inflex -r 100
 // clang-format on
 #include <assert.h>
@@ -51,4 +51,3 @@ main()
     pthread_join(t2, NULL);
     return 0;
 }
-

@@ -2,7 +2,7 @@
 #ifndef MOCKOTO__H
 #define MOCKOTO__H
 
-#include "/home/diogo/Workspaces/lotto/modules/autocept/test/foo.h"
+#include "foo.h"
 
 // function: foo_1
 typedef int32_t (*mockoto_foo_1_f) (int32_t, uint64_t, unsigned int);

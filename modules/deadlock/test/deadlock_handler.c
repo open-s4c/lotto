@@ -1,6 +1,6 @@
 // clang-format off
 // ALLOW_RETRIES: 100
-// RUN: (! %lotto %stress -s random --handler-mutex disable -v -- %b 2>&1) | %check %s
+// RUN: (! %lotto %stress -s random --disable mutex -v -- %b 2>&1) | %check %s
 // CHECK: [{{.*}}] Deadlock detected!
 // clang-format on
 #include <assert.h>
@@ -59,4 +59,3 @@ main()
     pthread_join(t2, NULL);
     return 0;
 }
-

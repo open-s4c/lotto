@@ -1,7 +1,7 @@
 #  [lotto](README.md) / region_preemption.h
 _The preemption region interface._ 
 
-The preemption region enables/disables task preemptions depending on the default state (controled by the the CLI flag `--region-preemption-default-off`). I.e., if the flag is unset, the regions behave atomically, otherwise tasks may preempt only inside regions. 
+The preemption region enables/disables task preemptions depending on the default state (controled by the the CLI flag `--region_preemption-default-off`). I.e., if the flag is unset, the regions behave atomically, otherwise tasks may preempt only inside regions. 
 
 ---
 # Functions 

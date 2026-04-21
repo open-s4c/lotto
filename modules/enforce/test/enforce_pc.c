@@ -1,6 +1,6 @@
 // clang-format off
 // ALLOW_RETRIES: 100
-// RUN: %lotto %stress -r 1 --enforcement-mode PC --record-granularity CAPTURE -- %b
+// RUN: %lotto %stress -r 1 --enforce-mode PC --record-granularity CAPTURE -- %b
 // RUN: sleep 1
 // RUN: (! %lotto %replay 3>&2 2>&1 1>&3) | %check %s
 // CHECK: MISMATCH [field: pc,
@@ -34,4 +34,3 @@ main()
     pthread_join(alice, 0);
     return 0;
 }
-

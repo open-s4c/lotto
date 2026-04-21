@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress --advisory-yield -- %b 2>&1) | %check %s
+// RUN: (! %lotto %stress --yield-advisory -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/user_yield_advisory.c:{{[0-9]+}}: val == 0
 // clang-format on
 
@@ -43,4 +43,3 @@ main()
     pthread_join(bob, 0);
     return 0;
 }
-

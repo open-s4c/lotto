@@ -11,11 +11,7 @@ target_link_libraries(
 set_target_properties(autocept_testing PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                                   ${CMAKE_CURRENT_BINARY_DIR})
 
-add_mock(TARGET autocept_mock.c INCLUDE ${AUTOCEPT_TEST_HEADER} FLAGS
-                                        -DAUTOCEPT_TEST_MOCKOTO)
-
 add_library(autocept_test_mock SHARED autocept_mock.c variadic_mock.c)
-add_dependencies(autocept_test_mock update-autocept_mock.c)
 target_include_directories(autocept_test_mock
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(autocept_test_mock PROPERTIES LIBRARY_OUTPUT_DIRECTORY
@@ -27,7 +23,6 @@ set_target_properties(autocept_checker PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                                   ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(autocept_baseline_test baseline.c)
-add_dependencies(autocept_baseline_test update-autocept_mock.c)
 add_dependencies(autocept_baseline_test autocept_testing)
 add_dependencies(autocept_baseline_test autocept_checker)
 target_include_directories(autocept_baseline_test

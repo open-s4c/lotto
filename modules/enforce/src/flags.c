@@ -8,7 +8,8 @@ _enforce_modes_help(char *dst)
 }
 
 NEW_PRETTY_CALLBACK_FLAG(
-    ENFORCEMENT_MODE, "E", "enforcement-mode", "enables replay enforcement",
+    ENFORCEMENT_MODE, "E", LOTTO_MODULE_FLAG("mode"),
+    "enables replay enforcement",
     flag_uval(ENFORCE_MODE_CAT | ENFORCE_MODE_TID | ENFORCE_MODE_CUSTOM |
               ENFORCE_MODE_SEED),
     STR_CONVERTER_PRINT(enforce_modes_str, enforce_modes_from,

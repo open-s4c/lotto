@@ -7,6 +7,7 @@
 #include <lotto/cmake_variables.h>
 #include <lotto/driver/args.h>
 #include <lotto/driver/exec_info.h>
+#include <lotto/driver/flags/modules.h>
 #include <lotto/driver/main.h>
 #include <lotto/driver/preload.h>
 #include <lotto/driver/subcmd.h>
@@ -134,10 +135,13 @@ driver_main(int argc, char **argv)
             ARGS(argc - opts.subcmd_pos, argv + opts.subcmd_pos);
 
     exec_info->args.arg0 = arg0;
-    flags_t *flags       = scmd->defaults();
+        flags_t *flags       = scmd->defaults();
     switch (
         flags_parse(flags, &exec_info->args, scmd->runtime_sel, scmd->sel)) {
         case FLAGS_PARSE_OK: {
+            if (validate_module_enable_flags(flags) != 0) {
+                return 1;
+            }
             if (scmd->group == SUBCMD_GROUP_RUN && exec_info->args.argc < 1) {
                 sys_fprintf(stderr, "error: no program to run specified\n");
                 return 1;

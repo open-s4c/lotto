@@ -199,6 +199,10 @@ flag_verbose_logger_level_str(const flags_t *flags)
 
 #define _FLAGMGR_SUBSCRIBE(...) ON_DRIVER_REGISTER_FLAGS(__VA_ARGS__)
 
+#ifdef LOTTO_MODULE_NAME
+#define LOTTO_MODULE_FLAG(name) LOTTO_MODULE_NAME "-" name
+#endif
+
 #define NEW_PRETTY_CALLBACK_FLAG(name, opt, long_opt, desc, val,               \
                                  str_converter, ...)                           \
     _FLAGMGR_CALLBACK(name, __VA_ARGS__)                                       \

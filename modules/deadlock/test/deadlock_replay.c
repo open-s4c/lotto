@@ -1,6 +1,6 @@
 // clang-format off
 // ALLOW_RETRIES: 100
-// RUN: (! %lotto %stress -v -s random --check-deadlock -- %b)
+// RUN: (! %lotto %stress -v -s random --mutex-check-deadlock -- %b)
 // RUN: (! %lotto %replay -v -s random 2>&1) | %check %s
 // CHECK: [{{.*}}] Deadlock detected!
 // clang-format on
@@ -59,4 +59,3 @@ main()
     pthread_join(t2, NULL);
     return 0;
 }
-

@@ -226,8 +226,9 @@ sequencer_resume(const capture_point *cp)
     bool prev_blocking = _seq.prev_blocking;
     bool prev_create   = _seq.prev_type == EVENT_TASK_CREATE;
 
+    sequencer_decision e    = { 0 };
     capture_point resume_cp = *cp;
-    resume_cp.decision      = NULL;
+    resume_cp.decision      = &e;
     PS_PUBLISH(CHAIN_SEQUENCER_RESUME, cp->type_id, &resume_cp,
                (metadata_t *)&resume_cp);
     if (_seq.clk == 0)

@@ -39,8 +39,8 @@ add_module(guard SLOT 1)
 add_module(summary SLOT 2 DEFAULT OFF)
 
 # blocking handlers
-add_module(clock)
 add_module(blocking)
+add_module(clock)
 add_module(join)
 add_module(mutex)
 add_module(rwlock)

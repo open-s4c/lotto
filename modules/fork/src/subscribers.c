@@ -2,7 +2,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/fork/events.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 
 typedef struct {
     const char *func;

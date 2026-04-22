@@ -4,7 +4,7 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/blocking/blocking.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>

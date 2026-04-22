@@ -4,7 +4,7 @@
 #include <dice/log.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/sequencer.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 
 static void
 pthread_create_random_sigabrt_probe_handle_(const capture_point *cp, event_t *e)

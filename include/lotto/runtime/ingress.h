@@ -5,11 +5,11 @@
 #ifndef LOTTO_INGRESS_H
 #define LOTTO_INGRESS_H
 
-#include <dice/pubsub.h>
 #include <dice/events/pthread.h>
+#include <dice/pubsub.h>
 #include <lotto/base/task_id.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/runtime/mediator.h>
 #include <lotto/util/macros.h>
 

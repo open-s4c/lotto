@@ -191,7 +191,7 @@ pub fn register() {
             .try_lock()
             .expect("single threaded")
             .custom_event_table;
-        table.insert(lotto::raw::EVENT_AWAIT, parse_await_context());
+        table.insert(lotto::raw::EVENT_RUSTY_AWAIT, parse_await_context());
     }
     lotto::engine::pubsub::subscribe_arrival_or_execute(&*HANDLER);
     lotto::brokers::statemgr::register(&*HANDLER);

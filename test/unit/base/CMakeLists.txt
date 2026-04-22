@@ -1,5 +1,7 @@
-add_subdirectory(mock)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mock)
+if(${LOTTO_MOCKOTO_TESTS})
+    add_subdirectory(mock)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mock)
+endif()
 
 file(GLOB SRCS *_test.c)
 list(
@@ -19,14 +21,16 @@ foreach(SRC ${SRCS})
     add_test(NAME ${TARGET} COMMAND ${TARGET})
 endforeach()
 
-file(GLOB SUBSRCS tidbag_test.c tidset_test.c)
-foreach(SUBSRC ${SUBSRCS})
-    get_filename_component(TARGET ${SUBSRC} NAME_WLE)
-    add_executable(${TARGET} ${SUBSRC})
-    target_link_libraries(${TARGET} base_testing.o sys_testing.o memock.o
-                          dice.o)
-    add_test(NAME ${TARGET} COMMAND ${TARGET})
-endforeach()
+if(TARGET memock.o)
+    file(GLOB SUBSRCS tidbag_test.c tidset_test.c)
+    foreach(SUBSRC ${SUBSRCS})
+        get_filename_component(TARGET ${SUBSRC} NAME_WLE)
+        add_executable(${TARGET} ${SUBSRC})
+        target_link_libraries(${TARGET} base_testing.o sys_testing.o memock.o
+                              dice.o)
+        add_test(NAME ${TARGET} COMMAND ${TARGET})
+    endforeach()
+endif()
 
 file(GLOB UTILSRCS address_bdd_test.c casts_test.c memory_map_test.c)
 foreach(UTILSRC ${UTILSRCS})
@@ -41,7 +45,7 @@ foreach(UTILSRC ${UTILSRCS})
     add_test(NAME ${TARGET} COMMAND ${TARGET})
 endforeach()
 
-if(${LOTTO_RACKET_TESTS})
+if(${LOTTO_RACKET_TESTS} AND TARGET base_component)
     add_racket_test(
         FILENAME plan_test.rkt
         BINDING lotto/engine/plan.h

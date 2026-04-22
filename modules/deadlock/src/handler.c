@@ -233,8 +233,8 @@ _mutex_try_ok(const capture_point *cp)
 static uintptr_t
 _rsrc_addr(const capture_point *cp)
 {
-    ASSERT(cp->type_id == EVENT_RSRC_ACQUIRING ||
-           cp->type_id == EVENT_RSRC_RELEASED);
+    ASSERT(cp->type_id == EVENT_DEADLOCK_RSRC_ACQUIRING ||
+           cp->type_id == EVENT_DEADLOCK_RSRC_RELEASED);
     return (uintptr_t)((rsrc_event_t *)cp->payload)->addr;
 }
 
@@ -276,7 +276,7 @@ _deadlock_handle(const capture_point *cp, event_t *e)
                 _acquiring(tid, addr);
             }
         } break;
-        case EVENT_RSRC_ACQUIRING:
+        case EVENT_DEADLOCK_RSRC_ACQUIRING:
             if (_check_deadlock(tid, _rsrc_addr(cp))) {
                 e->reason = REASON_RSRC_DEADLOCK;
             }
@@ -289,7 +289,7 @@ _deadlock_handle(const capture_point *cp, event_t *e)
                 e->reason = REASON_RSRC_DEADLOCK;
             }
             break;
-        case EVENT_RSRC_RELEASED:
+        case EVENT_DEADLOCK_RSRC_RELEASED:
             if (!_released(tid, _rsrc_addr(cp))) {
                 e->reason = REASON_RSRC_DEADLOCK;
             }
@@ -304,7 +304,7 @@ _deadlock_handle(const capture_point *cp, event_t *e)
     }
     if (e->reason == REASON_RSRC_DEADLOCK) {
         struct value val = bval(true);
-        LOTTO_PUBLISH(EVENT_DEADLOCK__DETECTED, val);
+        LOTTO_PUBLISH(EVENT_DEADLOCK_DETECTED, val);
     }
 }
 

@@ -437,7 +437,7 @@ pub fn get_addr_from_context(
     addr_id: usize,
 ) -> Result<NonZeroUsize, AddressFromContextError> {
     let addr = match ctx.event_type().to_raw_value() {
-        raw::EVENT_AWAIT => unsafe {
+        raw::EVENT_RUSTY_AWAIT => unsafe {
             ctx.payload_unchecked::<raw::await_event_t>()
                 .map(|ev| ev.addr as usize)
         },
@@ -532,7 +532,7 @@ pub fn get_size_from_context(ctx: &CapturePoint, size_id: usize) -> AddrSize {
 pub fn get_value_from_context(ctx: &CapturePoint, value_id: usize, size: AddrSize) -> ValuesTypes {
     let event_type = ctx.event_type();
     let value = match event_type.to_raw_value() {
-        raw::EVENT_SPIN_END => unsafe {
+        raw::EVENT_RUSTY_SPIN_END => unsafe {
             ctx.payload_unchecked::<raw::spin_end_event_t>()
                 .map(|ev| ValuesTypes::U32(ev.cond))
         },

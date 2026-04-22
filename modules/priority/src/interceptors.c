@@ -9,7 +9,7 @@ static void
 intercept_priority(int64_t priority)
 {
     priority_event_t ev = {.priority = priority};
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_PRIORITY, &ev, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_PRIORITY_SET, &ev, 0);
 }
 
 void

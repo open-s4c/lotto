@@ -103,8 +103,8 @@ _watchdog_handle(const capture_point *cp, event_t *e)
             break;
 
         default:
-            if (cp->type_id != EVENT_SCHED_YIELD &&
-                cp->type_id != EVENT_USER_YIELD) {
+            if (cp->type_id != EVENT_YIELD_SCHED &&
+                cp->type_id != EVENT_YIELD_USER) {
                 break;
             }
             if (_watchdog_ok(cp->id))

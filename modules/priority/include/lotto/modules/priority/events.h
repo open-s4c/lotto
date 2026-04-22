@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#define EVENT_PRIORITY 153
+#define EVENT_PRIORITY_SET 153
 
 typedef struct priority_event {
     int64_t priority;

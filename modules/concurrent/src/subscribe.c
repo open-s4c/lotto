@@ -1,11 +1,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "events.h"
 #include <dice/module.h>
 #include <dice/pubsub.h>
 #include <dice/self.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/modules/concurrent/events.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/abort.h>
@@ -57,7 +57,7 @@ concurrent_state_log_leave_(struct concurrent_state *state)
 static inline enum ps_err
 concurrent_filter_(metadata_t *md, chain_id chain, type_id type)
 {
-    if (type == EVENT_DETACH || type == EVENT_ATTACH ||
+    if (type == EVENT_CONCURRENT_DETACH || type == EVENT_CONCURRENT_ATTACH ||
         type == EVENT_TASK_CREATE || type == EVENT_TASK_JOIN ||
         type == EVENT_TASK_FINI) {
         return PS_OK;
@@ -79,7 +79,7 @@ concurrent_filter_(metadata_t *md, chain_id chain, type_id type)
     return PS_STOP_CHAIN;
 }
 
-PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, EVENT_DETACH, {
+PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, EVENT_CONCURRENT_DETACH, {
     capture_point *cp              = event;
     struct concurrent_state *state = concurrent_state_get_(md);
     if (state == NULL) {
@@ -90,13 +90,13 @@ PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, EVENT_DETACH, {
     if (state->depth == 1) {
         state->concurrent = true;
         cp->blocking      = true;
-        PS_PUBLISH(CHAIN_INGRESS_BEFORE, EVENT_DETACH, cp, md);
+        PS_PUBLISH(CHAIN_INGRESS_BEFORE, EVENT_CONCURRENT_DETACH, cp, md);
     }
 
     return PS_STOP_CHAIN;
 })
 
-PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, EVENT_ATTACH, {
+PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, EVENT_CONCURRENT_ATTACH, {
     capture_point *cp              = event;
     struct concurrent_state *state = concurrent_state_get_(md);
     if (state == NULL) {
@@ -117,7 +117,7 @@ PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, EVENT_ATTACH, {
     state->concurrent = false;
     concurrent_state_log_leave_(state);
     cp->blocking = true;
-    PS_PUBLISH(CHAIN_INGRESS_AFTER, EVENT_ATTACH, cp, md);
+    PS_PUBLISH(CHAIN_INGRESS_AFTER, EVENT_CONCURRENT_ATTACH, cp, md);
     return PS_STOP_CHAIN;
 })
 

@@ -13,10 +13,10 @@
 #include <lotto/base/context.h>
 #include <lotto/base/map.h>
 #include <lotto/modules/deadlock/events.h>
+#include <lotto/modules/region_preemption/events.h>
+#include <lotto/modules/yield/events.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/context_payload.h>
-#include <lotto/runtime/ingress_events.h>
-#include <lotto/runtime/module_events.h>
 
 #define EVENT_QLOTTO_EXIT 196
 
@@ -112,25 +112,27 @@ qlotto_context_set_semantics(context_t *ctx, category_t cat)
             ctx->phase    = CONTEXT_PHASE_AFTER;
             break;
         case CAT_RSRC_ACQUIRING:
-            ctx->type     = EVENT_RSRC_ACQUIRING;
-            ctx->src_type = EVENT_RSRC_ACQUIRING;
+            ctx->type     = EVENT_DEADLOCK_RSRC_ACQUIRING;
+            ctx->src_type = EVENT_DEADLOCK_RSRC_ACQUIRING;
             ctx->phase    = CONTEXT_PHASE_BEFORE;
             break;
         case CAT_RSRC_RELEASED:
-            ctx->type     = EVENT_RSRC_RELEASED;
-            ctx->src_type = EVENT_RSRC_RELEASED;
+            ctx->type     = EVENT_DEADLOCK_RSRC_RELEASED;
+            ctx->src_type = EVENT_DEADLOCK_RSRC_RELEASED;
             ctx->phase    = CONTEXT_PHASE_AFTER;
             break;
         case CAT_SYS_YIELD:
-            qlotto_context_set_event(ctx, EVENT_SYS_YIELD, EVENT_SYS_YIELD,
+            qlotto_context_set_event(ctx, EVENT_YIELD_SYS, EVENT_YIELD_SYS,
                                      CONTEXT_PHASE_EVENT);
             break;
         case CAT_REGION_IN:
-            qlotto_context_set_event(ctx, EVENT_REGION_IN, EVENT_REGION_IN,
+            qlotto_context_set_event(ctx, EVENT_REGION_PREEMPTION_IN,
+                                     EVENT_REGION_PREEMPTION_IN,
                                      CONTEXT_PHASE_EVENT);
             break;
         case CAT_REGION_OUT:
-            qlotto_context_set_event(ctx, EVENT_REGION_OUT, EVENT_REGION_OUT,
+            qlotto_context_set_event(ctx, EVENT_REGION_PREEMPTION_OUT,
+                                     EVENT_REGION_PREEMPTION_OUT,
                                      CONTEXT_PHASE_EVENT);
             break;
         default:

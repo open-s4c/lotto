@@ -1,6 +1,7 @@
 #include "state.h"
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/region_preemption/events.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
@@ -127,7 +128,7 @@ _region_preemption_handle(const capture_point *cp, event_t *e)
     _region_check(cp->id);
 
     switch (cp->type_id) {
-        case EVENT_REGION_OUT:
+        case EVENT_REGION_PREEMPTION_OUT:
             _exit_region(cp->id);
             break;
         case EVENT_TASK_FINI:
@@ -149,7 +150,7 @@ _region_preemption_handle(const capture_point *cp, event_t *e)
 
     _enter_region();
 
-    if (cp->type_id == EVENT_REGION_IN) {
+    if (cp->type_id == EVENT_REGION_PREEMPTION_IN) {
         ASSERT(_task == NO_TASK);
         _task = cp->id;
     }

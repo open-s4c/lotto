@@ -1,4 +1,4 @@
-if(${LOTTO_RACKET_TESTS})
+if(${LOTTO_RACKET_TESTS} AND TARGET engine_component)
     add_library(deadlock_component SHARED)
     if(${LOTTO_LTO})
         set_property(TARGET deadlock_component

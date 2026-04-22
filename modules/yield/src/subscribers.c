@@ -13,18 +13,18 @@ typedef struct yield_event {
     bool advisory;
 } yield_event_t;
 
-PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SCHED_YIELD, {
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_YIELD_SCHED, {
     capture_point cp = {
-        .type_id = EVENT_USER_YIELD,
+        .type_id = EVENT_YIELD_USER,
         .func    = "sched_yield",
     };
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_USER_YIELD, &cp, md);
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_YIELD_USER, &cp, md);
     return PS_OK;
 })
 
-PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_LOTTO_YIELD, {
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_YIELD_LOTTO, {
     yield_event_t *ev    = EVENT_PAYLOAD(event);
-    type_id ingress_type = ev->advisory ? EVENT_SYS_YIELD : EVENT_USER_YIELD;
+    type_id ingress_type = ev->advisory ? EVENT_YIELD_SYS : EVENT_YIELD_USER;
     capture_point cp     = {
             .type_id = ingress_type,
             .payload = ev,

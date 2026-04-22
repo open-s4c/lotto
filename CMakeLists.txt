@@ -153,6 +153,9 @@ option(LOTTO_QEMU_YIELD "whether to instrument guest code with yield syscall"
 # testing configuration
 # ##############################################################################
 option(LOTTO_RACKET_TESTS "Enable Racket tests" OFF)
+option(LOTTO_MOCKOTO_TESTS
+       "Enable tests that depend on mockoto-generated mock/binding artifacts"
+       OFF)
 option(LOTTO_TEST_COVERAGE "Enable test coverage with lcov" OFF)
 
 if("${LOTTO_TEST_COVERAGE}")

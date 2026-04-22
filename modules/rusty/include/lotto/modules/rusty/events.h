@@ -7,9 +7,9 @@
 
 #include <stdint.h>
 
-#define EVENT_AWAIT      159
-#define EVENT_SPIN_START 160
-#define EVENT_SPIN_END   161
+#define EVENT_RUSTY_AWAIT      159
+#define EVENT_RUSTY_SPIN_START 160
+#define EVENT_RUSTY_SPIN_END   161
 
 typedef struct await_event {
     void *addr;

@@ -7,7 +7,9 @@
 
 #include <stdbool.h>
 
-#define EVENT_REGION_PREEMPTION 155
+#define EVENT_REGION_PREEMPTION     155
+#define EVENT_REGION_PREEMPTION_IN  198
+#define EVENT_REGION_PREEMPTION_OUT 199
 
 typedef struct region_preemption_event {
     bool in_region;

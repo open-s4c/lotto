@@ -372,7 +372,7 @@ vcpu_insn_capture(unsigned int cpu_index, void *udata)
     //       To avoid SEGFAULTs, we always set it here.
     ctx.func = __FUNCTION__;
 
-    if (ctx.type == EVENT_RSRC_ACQUIRING || ctx.type == EVENT_RSRC_RELEASED) {
+    if (ctx.type == EVENT_DEADLOCK_RSRC_ACQUIRING || ctx.type == EVENT_DEADLOCK_RSRC_RELEASED) {
         rsrc_event_t ev  = {.addr = (void *)armcpu->xregs[20]};
         capture_point cp = {.type_id = ctx.src_type, .payload = &ev};
         ctx.cp           = &cp;
@@ -422,26 +422,26 @@ vcpu_event_capture(unsigned int cpu_index, void *udata)
 
     _set_ctx_id(ctx, cpu_index);
 
-    if (ctx->type == EVENT_RSRC_ACQUIRING) {
+    if (ctx->type == EVENT_DEADLOCK_RSRC_ACQUIRING) {
         // ctx.func_addr = pc;
         rsrc_ev.addr = (void *)armcpu->xregs[0];
         if (event->ti.key == 0xffffffe0028a179c)
             rsrc_ev.addr = (void *)(armcpu->xregs[0] + 0xbf4);
         if (event->ti.key == 0xffffffe0028dcfc0)
             rsrc_ev.addr = (void *)0xffffffe002a15ec0;
-        cp      = (capture_point){.type_id = EVENT_RSRC_ACQUIRING,
+        cp      = (capture_point){.type_id = EVENT_DEADLOCK_RSRC_ACQUIRING,
                                   .payload = &rsrc_ev};
         ctx->cp = &cp;
     }
 
-    if (ctx->type == EVENT_RSRC_RELEASED) {
+    if (ctx->type == EVENT_DEADLOCK_RSRC_RELEASED) {
         // ctx.func_addr = pc;
         rsrc_ev.addr = (void *)armcpu->xregs[0];
         if (event->ti.key == 0xffffffe0028a183c)
             rsrc_ev.addr = (void *)(armcpu->xregs[0] + 0xbf4);
         if (event->ti.key == 0xffffffe0028dc768)
             rsrc_ev.addr = (void *)0xffffffe002a15ec0;
-        cp      = (capture_point){.type_id = EVENT_RSRC_RELEASED,
+        cp      = (capture_point){.type_id = EVENT_DEADLOCK_RSRC_RELEASED,
                                   .payload = &rsrc_ev};
         ctx->cp = &cp;
     }

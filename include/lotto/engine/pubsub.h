@@ -10,29 +10,15 @@
 #include <lotto/driver/events.h>
 #include <lotto/engine/events.h>
 #include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/ingress.h>
 #include <lotto/runtime/events.h>
 #include <lotto/util/macros.h>
 
 /* Lotto pubsub chains. */
 #define CHAIN_LOTTO_CONTROL     7
 #define CHAIN_LOTTO_DEFAULT     8
-#define CHAIN_INGRESS_EVENT     9
-#define CHAIN_INGRESS_BEFORE    10
-#define CHAIN_INGRESS_AFTER     11
 #define CHAIN_SEQUENCER_CAPTURE 12
 #define CHAIN_SEQUENCER_RESUME  13
-
-#define FORWARD_CAPTURE_TO_INGRESS(SUFFIX, TYPE)                               \
-    static void __attribute__((constructor(DICE_XTOR_PRIO)))                   \
-    lotto_advertise_type_##TYPE##_(void)                                       \
-    {                                                                          \
-        ps_register_type(TYPE, #TYPE);                                         \
-    }                                                                          \
-    PS_SUBSCRIBE(CAPTURE_##SUFFIX, TYPE, {                                     \
-        capture_point *cp = EVENT_PAYLOAD(event);                              \
-        PS_PUBLISH(CHAIN_INGRESS_##SUFFIX, TYPE, cp, md);                      \
-        return PS_STOP_CHAIN;                                                  \
-    })
 
 /* Advertise a Lotto event type name for debugging and tracing output. */
 #define LOTTO_ADVERTISE_TYPE(TYPE)                                             \

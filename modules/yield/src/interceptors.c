@@ -15,7 +15,7 @@ void
 intercept_yield(bool advisory)
 {
     yield_event_t ev = {.advisory = advisory};
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_LOTTO_YIELD, &ev, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_YIELD_LOTTO, &ev, 0);
 }
 
 int
@@ -27,6 +27,6 @@ lotto_yield(bool advisory)
 
 INTERPOSE(int, sched_yield, void)
 {
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_SCHED_YIELD, NULL, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_YIELD_SCHED, NULL, 0);
     return 0;
 }

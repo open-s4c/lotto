@@ -16,9 +16,9 @@ void lotto_rust_before_marshal_final(void);
 void lotto_rust_register();
 void lotto_rust_init();
 
-LOTTO_ADVERTISE_TYPE(EVENT_AWAIT)
-LOTTO_ADVERTISE_TYPE(EVENT_SPIN_START)
-LOTTO_ADVERTISE_TYPE(EVENT_SPIN_END)
+LOTTO_ADVERTISE_TYPE(EVENT_RUSTY_AWAIT)
+LOTTO_ADVERTISE_TYPE(EVENT_RUSTY_SPIN_START)
+LOTTO_ADVERTISE_TYPE(EVENT_RUSTY_SPIN_END)
 
 static void
 _rusty_capture_handle(const capture_point *ctx, event_t *e)

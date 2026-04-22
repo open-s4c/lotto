@@ -4,6 +4,7 @@
 
 #include <lotto/base/context.h>
 #include <lotto/base/reason.h>
+#include <lotto/modules/region_preemption/events.h>
 #include <lotto/modules/qemu/perf.h>
 #include <lotto/qemu/lotto_udf.h>
 #include <lotto/qlotto/frontend/event.h>
@@ -37,7 +38,7 @@ udf_decode_reg(context_t *ctx, struct qemu_plugin_insn *insn)
     ASSERT(0 == (opcode & UDF_MASK));
     switch (opcode) {
         case LOTTO_YIELD_A64_VAL:
-            qlotto_context_set_event(ctx, EVENT_SYS_YIELD, EVENT_SYS_YIELD,
+            qlotto_context_set_event(ctx, EVENT_YIELD_SYS, EVENT_YIELD_SYS,
                                      CONTEXT_PHASE_EVENT);
             register_insn_cb(ctx, insn);
             break;
@@ -69,14 +70,14 @@ udf_decode_reg(context_t *ctx, struct qemu_plugin_insn *insn)
 
         // Guest lock actions
         case LOTTO_LOCK_ACQ_A64_VAL:
-            qlotto_context_set_event(ctx, EVENT_RSRC_ACQUIRING,
-                                     EVENT_RSRC_ACQUIRING,
+            qlotto_context_set_event(ctx, EVENT_DEADLOCK_RSRC_ACQUIRING,
+                                     EVENT_DEADLOCK_RSRC_ACQUIRING,
                                      CONTEXT_PHASE_BEFORE);
             register_insn_cb(ctx, insn);
             break;
         case LOTTO_LOCK_REL_A64_VAL:
-            qlotto_context_set_event(ctx, EVENT_RSRC_RELEASED,
-                                     EVENT_RSRC_RELEASED, CONTEXT_PHASE_AFTER);
+            qlotto_context_set_event(ctx, EVENT_DEADLOCK_RSRC_RELEASED,
+                                     EVENT_DEADLOCK_RSRC_RELEASED, CONTEXT_PHASE_AFTER);
             register_insn_cb(ctx, insn);
             break;
         case LOTTO_LOCK_TRYACQ_A64_VAL:
@@ -86,12 +87,14 @@ udf_decode_reg(context_t *ctx, struct qemu_plugin_insn *insn)
 
         // Lotto Region
         case LOTTO_REGION_IN_VAL:
-            qlotto_context_set_event(ctx, EVENT_REGION_IN, EVENT_REGION_IN,
+            qlotto_context_set_event(ctx, EVENT_REGION_PREEMPTION_IN,
+                                     EVENT_REGION_PREEMPTION_IN,
                                      CONTEXT_PHASE_EVENT);
             register_insn_cb(ctx, insn);
             break;
         case LOTTO_REGION_OUT_VAL:
-            qlotto_context_set_event(ctx, EVENT_REGION_OUT, EVENT_REGION_OUT,
+            qlotto_context_set_event(ctx, EVENT_REGION_PREEMPTION_OUT,
+                                     EVENT_REGION_PREEMPTION_OUT,
                                      CONTEXT_PHASE_EVENT);
             register_insn_cb(ctx, insn);
             break;
@@ -151,7 +154,7 @@ set_ctx_by_insn(context_t *ctx, cs_insn *insn_cs, struct qemu_plugin_insn *insn,
     switch (mapped_cat) {
         case CAT_EXTRA_HS_CALL:
         case CAT_EXTRA_WF:
-            qlotto_context_set_event(ctx, EVENT_SYS_YIELD, EVENT_SYS_YIELD,
+            qlotto_context_set_event(ctx, EVENT_YIELD_SYS, EVENT_YIELD_SYS,
                                      CONTEXT_PHASE_EVENT);
             break;
         case CAT_EXTRA_UDF:

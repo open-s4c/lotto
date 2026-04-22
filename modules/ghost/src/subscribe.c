@@ -1,12 +1,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "events.h"
 #include <dice/chains/capture.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>
 #include <dice/self.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/modules/ghost/events.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/abort.h>

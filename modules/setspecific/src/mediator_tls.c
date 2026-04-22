@@ -1,7 +1,7 @@
 #include <pthread.h>
 
+#include <lotto/modules/setspecific/events.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
 #include <lotto/runtime/mediator.h>
 
 /*

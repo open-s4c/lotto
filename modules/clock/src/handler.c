@@ -120,7 +120,7 @@ lotto_clock_leap(const struct timespec *ts)
 }
 
 ON_SEQUENCER_CAPTURE({
-    if (cp->type_id == EVENT_LOTTO_CLOCK) {
+    if (cp->type_id == EVENT_CLOCK_READ) {
         struct lotto_clock_event *ev = cp->payload;
         ev->ret                      = _clock_ns();
         e->next                      = cp->id;

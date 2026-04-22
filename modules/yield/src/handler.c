@@ -16,8 +16,8 @@ _yield_handle(const capture_point *cp, event_t *e)
     ASSERT(cp->id != NO_TASK);
 
     switch (cp->type_id) {
-        case EVENT_SCHED_YIELD:
-        case EVENT_USER_YIELD:
+        case EVENT_YIELD_SCHED:
+        case EVENT_YIELD_USER:
             if (!e->readonly && !e->is_chpt) {
                 if (!yield_config()->advisory) {
                     tidset_remove(&e->tset, cp->id);
@@ -28,7 +28,7 @@ _yield_handle(const capture_point *cp, event_t *e)
                 }
             }
             break;
-        case EVENT_SYS_YIELD:
+        case EVENT_YIELD_SYS:
             if (!e->readonly && !e->is_chpt) {
                 e->reason  = REASON_SYS_YIELD;
                 e->is_chpt = true;

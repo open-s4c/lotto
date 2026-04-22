@@ -8,26 +8,26 @@ void
 intercept_rsrc_acquiring(void *addr)
 {
     rsrc_event_t ev = {.addr = addr};
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_RSRC_ACQUIRING, &ev, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_DEADLOCK_RSRC_ACQUIRING, &ev, 0);
 }
 
 void
 intercept_rsrc_released(void *addr)
 {
     rsrc_event_t ev = {.addr = addr};
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_RSRC_RELEASED, &ev, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_DEADLOCK_RSRC_RELEASED, &ev, 0);
 }
 
 void
 _lotto_rsrc_acquiring(void *addr)
 {
     rsrc_event_t ev = {.addr = addr};
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_RSRC_ACQUIRING, &ev, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_DEADLOCK_RSRC_ACQUIRING, &ev, 0);
 }
 
 void
 _lotto_rsrc_released(void *addr)
 {
     rsrc_event_t ev = {.addr = addr};
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_RSRC_RELEASED, &ev, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_DEADLOCK_RSRC_RELEASED, &ev, 0);
 }

@@ -4,11 +4,11 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/region_preemption/events.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_REGION_PREEMPTION, {
     region_preemption_event_t *ev = EVENT_PAYLOAD(event);
-    type_id type     = ev->in_region ? EVENT_REGION_IN : EVENT_REGION_OUT;
+    type_id type     = ev->in_region ? EVENT_REGION_PREEMPTION_IN
+                                     : EVENT_REGION_PREEMPTION_OUT;
     capture_point cp = {
         .payload = ev,
         .func    = __FUNCTION__,

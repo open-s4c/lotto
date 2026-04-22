@@ -5,13 +5,13 @@
 #include <lotto/modules/priority/events.h>
 #include <lotto/runtime/capture_point.h>
 
-PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_PRIORITY, {
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_PRIORITY_SET, {
     priority_event_t *ev = EVENT_PAYLOAD(event);
     capture_point cp     = {
-            .type_id = EVENT_PRIORITY,
+            .type_id = EVENT_PRIORITY_SET,
             .payload = ev,
             .func    = __FUNCTION__,
     };
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_PRIORITY, &cp, md);
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_PRIORITY_SET, &cp, md);
     return PS_OK;
 })

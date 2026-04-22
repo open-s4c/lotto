@@ -25,7 +25,7 @@
 uint64_t lotto_clock_read(void);
 
 // Read the current emulated Lotto time as a timespec from the local clock
-// module state. This does not publish EVENT_LOTTO_CLOCK and is safe from
+// module state. This does not publish EVENT_CLOCK_READ and is safe from
 // inside sequencer handlers.
 void lotto_clock_time(struct timespec *ts);
 

@@ -14,47 +14,47 @@
 void
 intercept_spin_start()
 {
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_SPIN_START, NULL, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_RUSTY_SPIN_START, NULL, 0);
 }
 
 void
 intercept_spin_end(uint32_t cond)
 {
     spin_end_event_t ev = {.cond = cond};
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_SPIN_END, &ev, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_RUSTY_SPIN_END, &ev, 0);
 }
 
 // strong definition
 void
 _lotto_spin_start()
 {
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_SPIN_START, NULL, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_RUSTY_SPIN_START, NULL, 0);
 }
 
 void
 _lotto_spin_end(uint32_t cond)
 {
     spin_end_event_t ev = {.cond = cond};
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_SPIN_END, &ev, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_RUSTY_SPIN_END, &ev, 0);
 }
 
-PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SPIN_START, {
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_RUSTY_SPIN_START, {
     capture_point cp = {
-        .type_id = EVENT_SPIN_START,
+        .type_id = EVENT_RUSTY_SPIN_START,
         .func    = "spin_start",
         .payload = NULL,
     };
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_SPIN_START, &cp, md);
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_RUSTY_SPIN_START, &cp, md);
     return PS_OK;
 })
 
-PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SPIN_END, {
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_RUSTY_SPIN_END, {
     spin_end_event_t *ev = EVENT_PAYLOAD(event);
     capture_point cp     = {
-            .type_id = EVENT_SPIN_END,
+            .type_id = EVENT_RUSTY_SPIN_END,
             .func    = "spin_end",
             .payload = ev,
     };
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_SPIN_END, &cp, md);
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_RUSTY_SPIN_END, &cp, md);
     return PS_OK;
 })

@@ -41,7 +41,7 @@ REGISTER_STATE(EPHEMERAL, _state, {
 static void _cleanup_poll(const struct poll_waiter *waiter);
 static void _cleanup_fds();
 /* Unblock task when timeout is triggered by the timeout handler */
-LOTTO_SUBSCRIBE(EVENT_TIMEOUT__TRIGGER, {
+LOTTO_SUBSCRIBE(EVENT_TIMEOUT_TRIGGER, {
     task_id id = as_uval(v);
     struct poll_waiter *waiter =
         (struct poll_waiter *)tidmap_find(&_state.polls, id);

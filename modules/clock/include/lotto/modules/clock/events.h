@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define EVENT_LOTTO_CLOCK 197
+#define EVENT_CLOCK_READ 197
 
 struct lotto_clock_event {
     const void *pc;

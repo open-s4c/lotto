@@ -7,12 +7,12 @@
 #include <dice/pubsub.h>
 #include <lotto/base/category.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/modules/setspecific/events.h>
 #include <lotto/evec.h>
 #include <lotto/mutex.h>
 #include <lotto/rsrc_deadlock.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/ingress.h>
-#include <lotto/runtime/ingress_events.h>
 #include <lotto/states/handlers/deadlock.h>
 #include <lotto/states/handlers/mutex.h>
 #include <lotto/sys/abort.h>

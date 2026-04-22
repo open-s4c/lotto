@@ -43,14 +43,23 @@
 #include "lotto/engine/state.h"
 #include "lotto/engine/statemgr.h"
 #include "lotto/modules/available/state.h"
+#include "lotto/modules/cxa/events.h"
 #include "lotto/modules/ichpt/state.h"
 #include "lotto/modules/impasse/state.h"
+#include "lotto/modules/deadlock/events.h"
+#include "lotto/modules/evec/events.h"
+#include "lotto/modules/fork/events.h"
+#include "lotto/modules/mutex/events.h"
+#include "lotto/modules/poll/events.h"
+#include "lotto/modules/region_preemption/events.h"
 #include "lotto/modules/rusty/events.h"
+#include "lotto/modules/task_velocity/events.h"
 #include "lotto/modules/termination/state.h"
+#include "lotto/modules/time/events.h"
+#include "lotto/modules/yield/events.h"
 #include "lotto/runtime/capture_point.h"
 #include "lotto/runtime/events.h"
 #include "lotto/runtime/ingress_events.h"
-#include "lotto/runtime/module_events.h"
 #include "lotto/sys/fcntl.h"
 #include "lotto/sys/memory.h"
 #include "lotto/sys/now.h"
@@ -65,7 +74,6 @@
 #include "lotto/sys/string.h"
 #include "lotto/sys/unistd.h"
 #include "lotto/sys/wait.h"
-#include <lotto/modules/rusty/rusty.h>
 #include <lotto/modules/termination/flags.h>
 #include <lotto/modules/termination/state.h>
 /* IWYU pragma: end_keep */

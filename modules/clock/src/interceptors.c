@@ -11,6 +11,6 @@ lotto_clock_read(void)
         .pc  = INTERPOSE_PC,
         .ret = 0,
     };
-    PS_PUBLISH(INTERCEPT_EVENT, EVENT_LOTTO_CLOCK, &ev, 0);
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_CLOCK_READ, &ev, 0);
     return ev.ret;
 }

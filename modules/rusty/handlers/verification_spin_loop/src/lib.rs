@@ -678,8 +678,11 @@ pub fn register() {
             .try_lock()
             .expect("single threaded")
             .custom_event_table;
-        table.insert(lotto::raw::EVENT_SPIN_START, parse_spin_start_context());
-        table.insert(lotto::raw::EVENT_SPIN_END, parse_spin_end_context());
+        table.insert(
+            lotto::raw::EVENT_RUSTY_SPIN_START,
+            parse_spin_start_context(),
+        );
+        table.insert(lotto::raw::EVENT_RUSTY_SPIN_END, parse_spin_end_context());
     }
     lotto::engine::pubsub::subscribe_arrival_or_execute(&*HANDLER);
     lotto::brokers::statemgr::register(&*HANDLER);

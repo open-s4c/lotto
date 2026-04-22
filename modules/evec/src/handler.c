@@ -41,7 +41,7 @@ REGISTER_STATE(EPHEMERAL, _state, {
 })
 
 static void _check_timeouts(bool should_publish);
-LOTTO_SUBSCRIBE(EVENT_TIMEOUT__TRIGGER, {
+LOTTO_SUBSCRIBE(EVENT_TIMEOUT_TRIGGER, {
     if (_state.received_timeout || !tidset_has(&_state.waiters, as_uval(v))) {
         return PS_OK;
     }

@@ -53,6 +53,26 @@ fn get_rusty_module_slot(lotto_build_dir: &PathBuf) -> Result<i32> {
     })
 }
 
+fn collect_module_include_dirs(root: &PathBuf) -> Result<Vec<PathBuf>> {
+    let modules_dir = root.join("modules");
+    let mut include_dirs = Vec::new();
+    if !modules_dir.exists() {
+        return Ok(include_dirs);
+    }
+
+    for entry in fs::read_dir(&modules_dir)
+        .with_context(|| format!("could not read {}", modules_dir.display()))?
+    {
+        let entry = entry?;
+        let include_dir = entry.path().join("include");
+        if include_dir.exists() {
+            include_dirs.push(include_dir.canonicalize().unwrap_or(include_dir));
+        }
+    }
+
+    Ok(include_dirs)
+}
+
 fn main() -> Result<()> {
     let lotto_dir = get_lotto_dir();
     let lotto_build_dir = get_lotto_build_dir();
@@ -125,21 +145,10 @@ fn main() -> Result<()> {
     let dice_include_arg = format!("-I{}", dice_include_dir.display());
     println!("Dice include dir is {}", dice_include_arg);
 
-    let mut modules_include_dirs: Vec<_> = vec!["termination", "ichpt", "available", "impasse"]
-        .into_iter()
-        .map(|m| get_lotto_dir().join("modules").join(m).join("include"))
-        .collect();
-    let rusty_include_dir = lotto_build_dir
-        .join("modules")
-        .join("rusty")
-        .join("include");
-    modules_include_dirs.push(rusty_include_dir);
-    modules_include_dirs.push(
-        get_lotto_dir()
-            .join("modules")
-            .join("rusty")
-            .join("include"),
-    );
+    let mut modules_include_dirs = collect_module_include_dirs(&lotto_build_dir)?;
+    modules_include_dirs.extend(collect_module_include_dirs(&get_lotto_dir())?);
+    modules_include_dirs.sort();
+    modules_include_dirs.dedup();
 
     println!("Modules include dir is {:?}", modules_include_dirs);
     modules_include_dirs

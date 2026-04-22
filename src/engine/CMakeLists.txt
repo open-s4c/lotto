@@ -15,7 +15,7 @@ set(ENGINE_RUNTIME_SRCS
     plan.c
     sequencer.c
     recorder.c
-    creation.c
+    task.c
     module.c)
 
 set(ENGINE_DRIVER_SRCS flags.c state.c statemgr.c module.c)

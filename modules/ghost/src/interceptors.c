@@ -1,7 +1,7 @@
-#include "events.h"
 #include <dice/chains/intercept.h>
 #include <dice/module.h>
 #include <dice/pubsub.h>
+#include <lotto/modules/ghost/events.h>
 #include <lotto/unsafe/ghost.h>
 
 void

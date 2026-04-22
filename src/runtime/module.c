@@ -34,6 +34,10 @@ static trace_t *_recorder;
 static trace_t *_replayer;
 static int _logger_fd = -1;
 
+PS_ADVERTISE_CHAIN(CHAIN_INGRESS_EVENT)
+PS_ADVERTISE_CHAIN(CHAIN_INGRESS_BEFORE)
+PS_ADVERTISE_CHAIN(CHAIN_INGRESS_AFTER)
+
 typedef struct {
     const capture_point *cp;
     reason_t reason;

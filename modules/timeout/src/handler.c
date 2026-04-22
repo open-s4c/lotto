@@ -26,7 +26,7 @@ static void
 _trigger_timeout(tidset_t *tset, task_id id)
 {
     struct value val = uval(id);
-    LOTTO_PUBLISH(EVENT_TIMEOUT__TRIGGER, val);
+    LOTTO_PUBLISH(EVENT_TIMEOUT_TRIGGER, val);
     bool ret = tidset_insert(tset, id);
     ASSERT(ret);
 }

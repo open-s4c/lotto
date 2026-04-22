@@ -88,7 +88,7 @@ _priority_handle(const capture_point *cp, event_t *e)
         t = (task_t *)tidmap_register(&_state.map, cp->id);
         ASSERT(t);
         t->priority = 0;
-    } else if (cp->type_id == EVENT_PRIORITY) {
+    } else if (cp->type_id == EVENT_PRIORITY_SET) {
         t = (task_t *)tidmap_find(&_state.map, cp->id);
         ASSERT(t);
         t->priority = ((priority_event_t *)cp->payload)->priority;

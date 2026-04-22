@@ -5,7 +5,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/poll/events.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 
 static int
 poll_return_0_(struct pollfd *fds, nfds_t nfds, int timeout)

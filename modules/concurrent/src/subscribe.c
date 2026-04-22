@@ -7,7 +7,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/concurrent/events.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/abort.h>
 #include <lotto/sys/logger.h>
 #include <lotto/unsafe/concurrent.h>

@@ -8,8 +8,8 @@
 #include <lotto/check.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/events.h>
 #include <lotto/runtime/ingress.h>
-#include <lotto/runtime/ingress_events.h>
 #include <lotto/runtime/mediator.h>
 #include <lotto/runtime/runtime.h>
 #include <lotto/sys/assert.h>

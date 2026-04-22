@@ -4,7 +4,7 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/race/race_result.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/string.h>
 race_t race_check(const capture_point *cp, clk_t clk);

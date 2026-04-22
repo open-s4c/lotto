@@ -119,6 +119,11 @@ lotto_clock_leap(const struct timespec *ts)
     CONTRACT({ ASSERT(timespec_compare(ts, &now) <= 0); })
 }
 
+ON_SEQUENCER_RESUME({
+    if (cp->type_id == EVENT_CLOCK_READ)
+        e->skip = true;
+})
+
 ON_SEQUENCER_CAPTURE({
     if (cp->type_id == EVENT_CLOCK_READ) {
         struct lotto_clock_event *ev = cp->payload;

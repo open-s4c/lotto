@@ -22,6 +22,5 @@ thiserror = "2"
 lotto_link.workspace = true
 
 [features]
-default = ["stable_address_map"]
-stable_address_map = ["lotto_sys/stable_address_map"]
+default = []
 qlotto = []

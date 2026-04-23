@@ -17,6 +17,7 @@ ON_DRIVER_REGISTER_COMMANDS({
                     flag_no_preload(), flag_before_run(),
                     flag_after_run(),  flag_logger_file(),
                     flag_input(),      0};
-    subcmd_register(run, "run", "[--] <command line>", "Run a program once",
+    subcmd_register(run, "run", "[--] <command line>",
+                    "Run a program once without recording a trace",
                     true, sel, run_default_flags, SUBCMD_GROUP_RUN);
 })

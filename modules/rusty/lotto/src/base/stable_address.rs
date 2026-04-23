@@ -65,16 +65,12 @@ impl StableAddress {
     }
 
     /// Obtain a [`MapAddress`] reference.
-    ///
-    /// Only available when `LOTTO_STABLE_ADDRESS_MAP` is supported.
-    #[cfg(feature = "stable_address_map")]
     pub fn as_map_address(&self) -> &MapAddress {
         assert!(self.inner.type_ == raw::stable_address_stable_address_type_ADDRESS_MAP);
         unsafe { MapAddress::wrap(&self.inner.value.map) }
     }
 
     /// Obtain a mutable [`MapAddress`] reference.
-    #[cfg(feature = "stable_address_map")]
     pub fn as_map_address_mut(&mut self) -> &mut MapAddress {
         assert!(self.inner.type_ == raw::stable_address_stable_address_type_ADDRESS_MAP);
         unsafe { MapAddress::wrap_mut(&mut self.inner.value.map) }
@@ -183,7 +179,6 @@ mod tests {
     use super::*;
     use crate::brokers::statemgr::Serializable;
 
-    #[cfg(feature = "stable_address_map")]
     static STATIC_VAR: u64 = 0;
 
     #[test]
@@ -207,7 +202,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "stable_address_map")]
     fn map_marshale() {
         let sa = StableAddress::with_method(
             &STATIC_VAR as *const _ as usize,
@@ -227,7 +221,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "stable_address_map")]
     fn clone() {
         let sa = StableAddress::with_method(
             &STATIC_VAR as *const _ as usize,

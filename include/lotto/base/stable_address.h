@@ -35,9 +35,7 @@ typedef struct stable_address {
     } type;
     union stable_address_value {
         uintptr_t ptr;
-#ifdef LOTTO_STABLE_ADDRESS_MAP
         map_address_t map;
-#endif
     } value;
 } stable_address_t;
 

@@ -84,7 +84,7 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
                 );
                 break;
             }
-            Err(Error::ExecutionNotFound) => {
+            Err(Error::ExecutionNotFound { .. }) => {
                 eprintln!("Cannot find an execution that satisfied the given constraints. This is likely due to circular constraints or control dependence.");
                 break;
             }

@@ -113,7 +113,8 @@ impl Handler for OrderEnforcer {
             }
         }
 
-        let tset = unsafe { TidSet::wrap(&cappt.tset) };
+        let tset = unsafe { TidSet::wrap_mut(&mut cappt.tset) };
+        let mut need_yield = false;
         for id in tset.iter() {
             if self.block.get(&id).is_some() {
                 continue;
@@ -138,14 +139,17 @@ impl Handler for OrderEnforcer {
                         .entry(id)
                         .and_modify(|cnt| *cnt += 1)
                         .or_insert(1);
+                } else if id.0 == ctx.id && should_yield(&e, c) {
+                    need_yield = true;
                 }
             }
         }
 
         for block_id in self.block.keys() {
-            unsafe {
-                raw::tidset_remove(&mut cappt.tset, block_id.0);
-            }
+            tset.remove(TaskId(block_id.0));
+        }
+        if need_yield && tset.size() >= 2 {
+            tset.remove(TaskId(ctx.id));
         }
 
         /* It is possible that tset is empty at this point.  In that case,
@@ -312,6 +316,16 @@ fn should_block(cur: &Event, constraint: &Constraint) -> bool {
 
     debug!("fallback-unblockable");
     false
+}
+
+/// If there is (a -> b) and we see a before b, we can force yield to
+/// another thread.
+///
+/// When IP is incorrect (smaller than the true IP), we want to find a
+/// counterexample instead of slipping through the true IP.
+#[cfg(feature = "runtime")]
+fn should_yield(e: &Event, c: &Constraint) -> bool {
+    e.t == c.c.source.t && c.c.target.cnt == 1
 }
 
 #[derive(Encode, Decode, Debug, Default)]

@@ -193,11 +193,6 @@ fn main() -> Result<()> {
             builder.clang_arg(include_arg)
         });
 
-    #[cfg(feature = "stable_address_map")]
-    {
-        builder = builder.clang_arg("-DLOTTO_STABLE_ADDRESS_MAP");
-    }
-
     let bindings = builder
         // Finish the builder and generate the bindings.
         .generate()

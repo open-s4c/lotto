@@ -93,23 +93,21 @@ fn replay(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {
     adjust(flags.get_sval(&FLAG_INPUT));
     let exitcode = execute(&args, flags, true);
 
-    if cfg!(feature = "stable_address_map") {
-        use rinflex::handlers::order_enforcer;
-        order_enforcer::cli_reset();
-        adjust(flags.get_sval(&FLAG_OUTPUT));
-        if order_enforcer::should_discard() {
-            println!(
-                "number of constraints: {}",
-                order_enforcer::HANDLER.fin.constraints.len()
-            );
-            println!(
-                "should_discard = {}",
-                order_enforcer::HANDLER.fin.should_discard
-            );
-            println!("** INVALID **");
-        } else {
-            println!("valid");
-        }
+    use rinflex::handlers::order_enforcer;
+    order_enforcer::cli_reset();
+    adjust(flags.get_sval(&FLAG_OUTPUT));
+    if order_enforcer::should_discard() {
+        println!(
+            "number of constraints: {}",
+            order_enforcer::HANDLER.fin.constraints.len()
+        );
+        println!(
+            "should_discard = {}",
+            order_enforcer::HANDLER.fin.should_discard
+        );
+        println!("** INVALID **");
+    } else {
+        println!("valid");
     }
     SubCmdResult::from_error_code(exitcode)
 }

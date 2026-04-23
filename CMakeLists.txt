@@ -129,22 +129,8 @@ include(cmake/modules.cmake)
 # ##############################################################################
 # Experimental options
 # ##############################################################################
-if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
-    set(LOTTO_STABLE_ADDRESS_MAP_DEFAULT OFF)
-    set(LOTTO_QEMU_YIELD_DEFAULT OFF)
-else()
-    set(LOTTO_STABLE_ADDRESS_MAP_DEFAULT ON)
-    set(LOTTO_QEMU_YIELD_DEFAULT OFF)
-endif()
-
-option(LOTTO_STABLE_ADDRESS_MAP
-       "whether stable addresses support the `MAP` method"
-       ${LOTTO_STABLE_ADDRESS_MAP_DEFAULT})
-
-if("${LOTTO_STABLE_ADDRESS_MAP}")
-    add_compile_definitions(LOTTO_STABLE_ADDRESS_MAP)
-    set(LOTTO_STABLE_ADDRESS_MAP_LIT_FEATURE STABLE_ADDRESS_MAP)
-endif()
+set(LOTTO_STABLE_ADDRESS_MAP_LIT_FEATURE STABLE_ADDRESS_MAP)
+set(LOTTO_QEMU_YIELD_DEFAULT OFF)
 
 option(LOTTO_QEMU_YIELD "whether to instrument guest code with yield syscall"
        ${LOTTO_QEMU_YIELD_DEFAULT})

@@ -15,11 +15,10 @@ handler_spin_loop = { path = "verification_spin_loop" }
 handler_perf = { path = "perf" }
 
 # rinflex
-handler_rinflex = { path = "rinflex", optional = true }
+handler_rinflex = { path = "rinflex" }
 
 [features]
 demo = []
-stable_address_map = ["dep:handler_rinflex", "lotto/stable_address_map"]
 runtime = [
     "handler_rinflex/runtime"
 ]

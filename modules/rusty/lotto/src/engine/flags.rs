@@ -17,8 +17,8 @@ simple_wrap_raw!(flag_stable_address_method, Flag);
 
 simple_wrap_raw!(flag_seed, Flag);
 
-simple_wrap_raw!(flag_termination_type, Flag);
-simple_wrap_raw!(flag_termination_limit, Flag);
+simple_wrap_raw!(flag_terminate_type, Flag);
+simple_wrap_raw!(flag_terminate_limit, Flag);
 
 simple_wrap_raw!(flag_memmgr_runtime, Flag);
 simple_wrap_raw!(flag_memmgr_user, Flag);

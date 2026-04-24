@@ -272,7 +272,14 @@ cli_trace_copy(const char *from, const char *to)
 record_t *
 record_start(const args_t *args)
 {
-    (void)args;
+    ASSERT(args);
+
+    exec_info_t *exec_info = get_exec_info();
+    exec_info->args        = *args;
+    if (exec_info->args.arg0 == NULL && exec_info->args.argc > 0 &&
+        exec_info->args.argv != NULL) {
+        exec_info->args.arg0 = exec_info->args.argv[0];
+    }
 
     record_t *r = record_alloc(statemgr_size(STATE_TYPE_START));
     r->kind     = RECORD_START;

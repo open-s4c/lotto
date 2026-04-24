@@ -30,7 +30,7 @@ if("${LOTTO_RUST_DEMO}")
     list(APPEND FEATURES "demo")
 endif()
 
-if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
+if(LOTTO_MODULE_qemu)
     list(APPEND FEATURES "qlotto")
 endif()
 

@@ -47,6 +47,7 @@ bool mediator_capture(mediator_t *m, capture_point *cp);
  * semantic ingress is captured for the task.
  */
 mediator_status_t mediator_resume(mediator_t *m, capture_point *cp);
+reason_t mediator_reason(const mediator_t *m);
 
 /* Complete a previously blocking semantic ingress event once the task becomes
  * runnable again.

@@ -2,6 +2,7 @@
 #include <spawn.h>
 
 #include <lotto/driver/exec.h>
+#include <lotto/driver/exec_info.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/trace_prepare.h>
 #include <lotto/sys/poll.h>
@@ -241,6 +242,7 @@ int
 execute(const args_t *args, const flags_t *flags, bool config)
 {
     args_t prefixed_args = *args;
+    args_t original_args = *args;
     char **dynamic_argv  = NULL;
     if (_exec_command_prefix != NULL) {
         char **original_argv = prefixed_args.argv;
@@ -248,6 +250,10 @@ execute(const args_t *args, const flags_t *flags, bool config)
         if (prefixed_args.argv != original_argv) {
             dynamic_argv = prefixed_args.argv;
         }
+    }
+    if (prefixed_args.argv != NULL && prefixed_args.argc > 0 &&
+        prefixed_args.argv[0] != NULL) {
+        prefixed_args.arg0 = prefixed_args.argv[0];
     }
 
     const char *cmd = flags_get_sval(flags, flag_before_run());
@@ -269,6 +275,7 @@ execute(const args_t *args, const flags_t *flags, bool config)
     struct flag_val fgoal = flags_get(flags, flag_replay_goal());
     cli_trace_init(sys_getenv("LOTTO_RECORD"), &prefixed_args,
                    sys_getenv("LOTTO_REPLAY"), fgoal, config, flags);
+    get_exec_info()->args = original_args;
 
     struct sigaction int_action, int_old;
     sys_memset(&int_action, 0, sizeof(struct sigaction));

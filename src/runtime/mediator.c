@@ -178,6 +178,13 @@ mediator_resume(mediator_t *m, capture_point *cp)
     return st;
 }
 
+reason_t
+mediator_reason(const mediator_t *m)
+{
+    ASSERT(m != NULL);
+    return m->plan.reason;
+}
+
 static inline bool
 _should_resume(const mediator_t *m)
 {

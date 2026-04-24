@@ -121,7 +121,7 @@ fi
 
 if [ ${DO_STRESS} -ne 0 ]; then
   USE_PLUGIN=1
-  TERMINATION_ARGS="${TERMINATION_ARGS} --termination-type TIME --termination-limit ${TERM_SEC}"
+  TERMINATION_ARGS="${TERMINATION_ARGS} --terminate-type TIME --terminate-limit ${TERM_SEC}"
   LOTTO_CMD="${LOTTO} stress ${RECORD_ARGS} ${UNIVERSAL_ARGS} ${TERMINATION_ARGS} -- "
 fi
 
@@ -132,7 +132,7 @@ fi
 
 if [ ${DO_INFLEX} -ne 0 ]; then
   RUN_QEMU=0
-  TERMINATION_ARGS="${TERMINATION_ARGS} --termination-type TIME --termination-limit ${TERM_SEC}"
+  TERMINATION_ARGS="${TERMINATION_ARGS} --terminate-type TIME --terminate-limit ${TERM_SEC}"
   LOTTO_CMD="${LOTTO} inflex ${UNIVERSAL_ARGS}"
 fi
 

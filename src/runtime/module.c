@@ -134,7 +134,14 @@ fini_cb_(void *arg)
     }
 
     if (vatomic_xchg(&_only_once, 1) == 0) {
-        mediator_t *m = self_md() ? mediator_get(self_md(), false) : NULL;
+        struct metadata *md = self_md();
+        struct lotto_fini_event ev = {
+            .md     = md,
+            .reason = reason,
+        };
+        START_FINALIZATION_PHASE(&ev, md);
+
+        mediator_t *m = md ? mediator_get(md, false) : NULL;
         if (m) {
             mediator_fini(m);
         }

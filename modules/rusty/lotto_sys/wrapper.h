@@ -54,7 +54,7 @@
 #include "lotto/modules/region_preemption/events.h"
 #include "lotto/modules/rusty/events.h"
 #include "lotto/modules/task_velocity/events.h"
-#include "lotto/modules/termination/state.h"
+#include "lotto/modules/terminate/state.h"
 #include "lotto/modules/time/events.h"
 #include "lotto/modules/yield/events.h"
 #include "lotto/runtime/capture_point.h"
@@ -73,6 +73,6 @@
 #include "lotto/sys/string.h"
 #include "lotto/sys/unistd.h"
 #include "lotto/sys/wait.h"
-#include <lotto/modules/termination/flags.h>
-#include <lotto/modules/termination/state.h>
+#include <lotto/modules/terminate/flags.h>
+#include <lotto/modules/terminate/state.h>
 /* IWYU pragma: end_keep */

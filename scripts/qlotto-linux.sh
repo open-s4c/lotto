@@ -14,7 +14,5 @@ exec ${QEMU_CMD} \
     -kernel demos/linux/linux-${LINUX_VERSION}/arch/arm64/boot/Image \
     -initrd demos/linux/rootfs.img \
     -plugin ${PLUGIN_PATH}/libplugin-lotto.so \
-    -plugin ${PLUGIN_PATH}/libplugin-gdb-server.so \
     -d plugin \
     -append "init=/init.sh serial=ttyAMA0 root=/dev/ram panic=-1 -- $*" 2>&1
-

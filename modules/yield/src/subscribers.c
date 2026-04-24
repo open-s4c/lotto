@@ -33,3 +33,12 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_YIELD_LOTTO, {
     PS_PUBLISH(CHAIN_INGRESS_EVENT, ingress_type, &cp, md);
     return PS_OK;
 })
+
+PS_SUBSCRIBE(CHAIN_LOTTO_TRAP, EVENT_YIELD_USER, {
+    capture_point cp = {
+        .type_id = EVENT_YIELD_USER,
+        .func    = __FUNCTION__,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_YIELD_USER, &cp, md);
+    return PS_OK;
+})

@@ -5,9 +5,19 @@
 #ifndef LOTTO_CORE_ENGINE_EVENTS_H
 #define LOTTO_CORE_ENGINE_EVENTS_H
 
+#include <lotto/base/reason.h>
+
+struct metadata;
+
 /* Lotto startup phase events driven by the engine. */
 #define EVENT_LOTTO_REGISTER 140
 #define EVENT_LOTTO_INIT     141
+#define EVENT_LOTTO_FINI     142
+
+struct lotto_fini_event {
+    struct metadata *md;
+    reason_t reason;
+};
 
 /* Core engine events. */
 #define EVENT_ENGINE__START                      110

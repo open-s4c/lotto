@@ -63,7 +63,7 @@ LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
     _set_default_filtering();
     *_drop_less = *_drop;
 
-#ifdef QLOTTO_ENABLED
+#if 0
     _drop_less[EVENT_BEFORE_READ]  = 0;
     _drop_less[EVENT_BEFORE_WRITE] = 0;
 #endif

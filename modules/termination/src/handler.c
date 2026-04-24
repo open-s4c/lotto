@@ -5,6 +5,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/termination/events.h>
 #include <lotto/modules/termination/state.h>
 #include <lotto/util/macros.h>
 
@@ -15,7 +16,20 @@ static task_id last         = 0;
 STATIC void
 _termination_handle(const capture_point *cp, event_t *e)
 {
-    (void)cp;
+    switch (cp->type_id) {
+        case EVENT_TERMINATE_SUCCESS:
+            e->reason = REASON_SUCCESS;
+            return;
+        case EVENT_TERMINATE_FAIL:
+            e->reason = REASON_ASSERT_FAIL;
+            return;
+        case EVENT_TERMINATE_STOP:
+            e->reason = REASON_SUCCESS;
+            return;
+        default:
+            break;
+    }
+
     if (IS_REASON_SHUTDOWN(e->reason)) {
         return;
     }

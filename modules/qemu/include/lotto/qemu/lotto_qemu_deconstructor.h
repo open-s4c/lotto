@@ -15,7 +15,7 @@
         void qlotto_exit(void)                                                 \
         {                                                                      \
             fprintf(stderr, "QLotto test exit deconstructor.\n");              \
-            LOTTO_TEST_SUCCESS;                                                \
+            LOTTO_EXIT_SUCCESS;                                                \
         }
 #else
     #define QLOTTO_DECONSTRUCTOR

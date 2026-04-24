@@ -249,6 +249,10 @@ execute(const args_t *args, const flags_t *flags, bool config)
             dynamic_argv = prefixed_args.argv;
         }
     }
+    if (prefixed_args.argv != NULL && prefixed_args.argc > 0 &&
+        prefixed_args.argv[0] != NULL) {
+        prefixed_args.arg0 = prefixed_args.argv[0];
+    }
 
     const char *cmd = flags_get_sval(flags, flag_before_run());
     if (cmd && cmd[0]) {

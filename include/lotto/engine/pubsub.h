@@ -10,8 +10,8 @@
 #include <lotto/driver/events.h>
 #include <lotto/engine/events.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress.h>
 #include <lotto/runtime/events.h>
+#include <lotto/runtime/ingress.h>
 #include <lotto/util/macros.h>
 
 /* Lotto pubsub chains. */
@@ -19,6 +19,8 @@
 #define CHAIN_LOTTO_DEFAULT     8
 #define CHAIN_SEQUENCER_CAPTURE 12
 #define CHAIN_SEQUENCER_RESUME  13
+#define CHAIN_LOTTO_TRAP        14
+#define CHAIN_QEMU_CONTROL      15
 
 /* Advertise a Lotto event type name for debugging and tracing output. */
 #define LOTTO_ADVERTISE_TYPE(TYPE)                                             \

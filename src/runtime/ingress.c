@@ -34,11 +34,11 @@ _intercept_resume(mediator_t *m, capture_point *cp)
         case MEDIATOR_OK:
             break;
         case MEDIATOR_ABORT:
-            lotto_exit(cp, REASON_ABORT);
+            lotto_exit(cp, mediator_reason(m));
             sys_abort();
             break;
         case MEDIATOR_SHUTDOWN:
-            lotto_exit(cp, REASON_SHUTDOWN);
+            lotto_exit(cp, mediator_reason(m));
             sys_abort();
             break;
         default:
@@ -72,7 +72,11 @@ PS_SUBSCRIBE(CHAIN_INGRESS_BEFORE, ANY_EVENT, {
     mediator_t *m     = mediator_get(md, true);
 
     if (!mediator_capture(m, cp)) {
-        ENSURE(!cp->blocking);
+        if (cp->blocking) {
+            logger_debugf("[%lu] coercing blocking ingress-before event '%s'\n",
+                          m->id, ps_type_str(cp->type_id));
+            cp->blocking = false;
+        }
         _intercept_resume(m, cp);
     }
     return PS_STOP_CHAIN;

@@ -30,6 +30,7 @@ include_directories(autocept/include)
 include_directories(qemu/include)
 include_directories(qemu_gdb/include)
 include_directories(qemu_profile/include)
+include_directories(qemu_snapshot/include)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LOTTO_MODULE_BUILD_DIR}")
 

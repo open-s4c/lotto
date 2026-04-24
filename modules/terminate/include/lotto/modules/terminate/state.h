@@ -19,7 +19,7 @@
     GEN_TERMINATE_MODE(TIME)
 
 #define GEN_TERMINATE_MODE(mode) TERMINATE_MODE_##mode,
-typedef enum termination_mode {
+typedef enum terminate_mode {
     TERMINATE_MODE_NONE = 0,
     FOR_EACH_TERMINATE_MODE TERMINATE_MODE_END_,
     TERMINATE_MODE_SIZE_ = (1ULL << 62),

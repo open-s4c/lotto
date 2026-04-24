@@ -17,7 +17,7 @@
 #include <ucontext.h>
 
 #include <lotto/bias.h>
-#include <lotto/qemu/lotto_udf.h>
+#include <lotto/qemu/trap.h>
 
 
 static inline bool

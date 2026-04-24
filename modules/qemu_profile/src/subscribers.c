@@ -4,7 +4,7 @@
 #include <lotto/modules/qemu/events.h>
 #include <lotto/modules/yield/events.h>
 #include <lotto/runtime/events.h>
-#include <lotto/runtime/trap.h>
+#include <lotto/qemu/trap.h>
 
 PS_SUBSCRIBE(CHAIN_QEMU_CONTROL, EVENT_QEMU_INIT, { qemu_profile_on_init(); })
 

@@ -7,7 +7,6 @@ pub mod cli_hello_rust;
 pub mod cli_inflex;
 #[cfg(feature = "demo")]
 pub mod cli_replay;
-#[cfg(feature = "stable_address_map")]
 pub mod cli_rinflex;
 
 #[global_allocator]
@@ -50,7 +49,6 @@ pub fn rusty_init() {
             cli_inflex::subcmd_init();
         }
 
-        #[cfg(feature = "stable_address_map")]
         cli_rinflex::subcmd_init();
     });
 }

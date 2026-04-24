@@ -19,7 +19,7 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/available/state.h>
 #include <lotto/modules/explore/explore.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/stdio.h>
 
 static uint64_t round_index;

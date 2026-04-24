@@ -2,7 +2,7 @@
 
 #include <dice/log.h>
 #include <lotto/engine/sequencer.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 
 static int handler_calls_;
 

@@ -17,7 +17,7 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/clock.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/real.h>
@@ -226,7 +226,7 @@ sequencer_resume(const capture_point *cp)
     bool prev_blocking = _seq.prev_blocking;
     bool prev_create   = _seq.prev_type == EVENT_TASK_CREATE;
 
-    sequencer_decision e    = { 0 };
+    sequencer_decision e    = {0};
     capture_point resume_cp = *cp;
     resume_cp.decision      = &e;
     PS_PUBLISH(CHAIN_SEQUENCER_RESUME, cp->type_id, &resume_cp,

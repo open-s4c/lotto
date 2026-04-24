@@ -1,7 +1,7 @@
 #include <signal.h>
 
 #include <lotto/engine/sequencer.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 
 static void
 pthread_create_sigabrt_probe_handle_(const capture_point *cp, event_t *e)

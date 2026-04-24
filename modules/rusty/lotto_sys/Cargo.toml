@@ -12,6 +12,3 @@ bincode.workspace = true
 anyhow = "1.0"
 bindgen = "0.69.1"
 cmake-package = "0.1.11"
-
-[features]
-stable_address_map = []

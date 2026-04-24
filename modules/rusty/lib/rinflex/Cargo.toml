@@ -5,7 +5,7 @@ edition.workspace = true
 description = "Common stuff between rinflex CLI driver and engine"
 
 [dependencies]
-lotto = { workspace = true, features = ["stable_address_map"] }
+lotto.workspace = true
 bincode.workspace = true
 libc = "*"
 thiserror = "2"

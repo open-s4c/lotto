@@ -18,10 +18,11 @@ endif()
 if(DEFINED QEMU_PROFILE_MODULE_INCLUDE_DIR)
     include_directories(${QEMU_PROFILE_MODULE_INCLUDE_DIR})
 endif()
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../qemu_snapshot/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../bias/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../deadlock/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../mutex/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../termination/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../terminate/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../yield/include)
 
 # Kernel objects shared by every test binary.

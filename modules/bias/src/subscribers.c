@@ -4,7 +4,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/bias/events.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/trap.h>
+#include <lotto/qemu/trap.h>
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_BIAS_POLICY, {
     bias_policy_event_t *ev = EVENT_PAYLOAD(event);
@@ -28,7 +28,7 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_BIAS_TOGGLE, {
 
 PS_SUBSCRIBE(CHAIN_LOTTO_TRAP, EVENT_BIAS_POLICY, {
     capture_point *trap_cp         = EVENT_PAYLOAD(event);
-    lotto_trap_event_t *trap_ev    = trap_cp ? trap_cp->payload : NULL;
+    struct lotto_trap_event *trap_ev = trap_cp ? trap_cp->payload : NULL;
     bias_policy_event_t bias_event = {
         .policy = trap_ev ? (bias_policy_t)trap_ev->regs[1] : BIAS_POLICY_NONE,
     };

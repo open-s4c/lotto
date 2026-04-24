@@ -15,10 +15,10 @@ terminate_config()
 }
 
 #define GEN_TERMINATE_MODE(mode) [TERMINATE_MODE_##mode] = #mode,
-static const char *_termination_mode_map[] = {[TERMINATE_MODE_NONE] = "NONE",
-                                              FOR_EACH_TERMINATE_MODE};
+static const char *_terminate_mode_map[] = {[TERMINATE_MODE_NONE] = "NONE",
+                                            FOR_EACH_TERMINATE_MODE};
 #undef GEN_TERMINATE_MODE
 
-BIT_STR(termination_mode, TERMINATION_MODE)
-BIT_FROM(termination_mode, TERMINATION_MODE)
-BIT_ALL_STR(termination_mode, TERMINATION_MODE)
+BIT_STR(terminate_mode, TERMINATE_MODE)
+BIT_FROM(terminate_mode, TERMINATE_MODE)
+BIT_ALL_STR(terminate_mode, TERMINATE_MODE)

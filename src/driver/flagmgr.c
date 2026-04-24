@@ -507,11 +507,13 @@ flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
                             strtoul(optarg, NULL, 10)));
                 break;
             case VALUE_TYPE_BOOL:
-                flags_set_by_opt(flags, fnum,
-                                 bval(STR_CONVERTER_IS_PRESENT(
-                                          _options[fnum].str_converter) ?
-                                          enabled_from(optarg) :
-                                          !flags_is_on(flags, fnum)));
+                flags_set_by_opt(
+                    flags, fnum,
+                    bval(optarg == NULL ? !flags_is_on(flags, fnum) :
+                         STR_CONVERTER_IS_PRESENT(
+                             _options[fnum].str_converter) ?
+                             enabled_from(optarg) :
+                             !flags_is_on(flags, fnum)));
                 break;
             case VALUE_TYPE_STRING:
                 if (fnum == flag_enable_module() ||

@@ -74,7 +74,6 @@ describe(subcmd_t *scmd)
     sys_fprintf(
         stdout,
         "    lotto [--plugin-dir DIR] [--plugins P1[,P2]] "
-        "[--load-runtime PATH[:PATH...]] [--load-driver PATH[:PATH...]] "
         "%s [<options>] %s\n\n",
         scmd->name, scmd->args);
     flags_help(scmd->defaults(), scmd->runtime_sel, scmd->sel);

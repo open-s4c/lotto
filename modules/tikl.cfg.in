@@ -3,7 +3,8 @@ builddir    = @PROJECT_BINARY_DIR@
 emulator    =
 lotto       = timeout -k 110s 100s stdbuf -i0 -o0 -e0 %emulator %builddir/lotto
 ntlotto     = stdbuf -i0 -o0 -e0 %emulator %builddir/lotto
-tmpdir      = -t %T
+deadline    = timeout -k 6s 5s
+tmpdir      = --temporary-directory %T
 output      = -o %t.trace
 input       = -i %t.trace
 filter      = vsync
@@ -19,8 +20,7 @@ run            = run %tmpdir
 show           = show %tmpdir %input
 stress         = stress %tmpdir %output
 stress4rinflex = stress %tmpdir %output -s random --stable-address-method MAP --handler-address enable --handler-cas enable --handler-stacktrace enable --handler-event enable
-start          = start %tmpdir %output
-config         = config %tmpdir %input %output
+trace          = trace %tmpdir %output
 events         = @PROJECT_SOURCE_DIR@/scripts/lotto-events
 
 # tikl flags

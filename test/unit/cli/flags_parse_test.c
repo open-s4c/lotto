@@ -37,13 +37,13 @@ enforce_modes_from(const char *str)
 }
 
 const char *
-termination_mode_str(termination_mode_t mode)
+terminate_mode_str(terminate_mode_t mode)
 {
     return NULL;
 }
 
-termination_mode_t
-termination_mode_from(const char *src)
+terminate_mode_t
+terminate_mode_from(const char *src)
 {
     return 0;
 }
@@ -55,7 +55,7 @@ get_available_tasks()
 }
 
 void
-termination_mode_all_str(char *dst)
+terminate_mode_all_str(char *dst)
 {
 }
 

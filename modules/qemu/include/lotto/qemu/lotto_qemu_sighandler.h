@@ -23,7 +23,7 @@
         static void _handle_sigabrt(int sig, siginfo_t *si, void *arg)         \
         {                                                                      \
             fprintf(stderr, "Caught SIGABRT in test sighandler.\n");           \
-            LOTTO_TEST_FAIL;                                                   \
+            LOTTO_EXIT_FAILURE;                                                \
         }                                                                      \
         void sighandler_init(void)                                             \
         {                                                                      \

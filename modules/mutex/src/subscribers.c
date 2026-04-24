@@ -15,6 +15,7 @@
 #include <lotto/mutex.h>
 #include <lotto/rsrc_deadlock.h>
 #include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/trap.h>
 #include <lotto/sys/logger.h>
 
 static int
@@ -83,6 +84,23 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_MUTEX_UNLOCK, {
     };
     PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_MUTEX_RELEASE, &cp, md);
     ev->func = (void *)pthread_nop_zero_;
+    return PS_OK;
+})
+
+PS_SUBSCRIBE(CHAIN_LOTTO_TRAP, EVENT_MUTEX_TRYACQUIRE, {
+    capture_point *trap_cp            = EVENT_PAYLOAD(event);
+    lotto_trap_event_t *trap_ev       = trap_cp ? trap_cp->payload : NULL;
+    struct mutex_tryacquire_event mev = {
+        .pc   = NULL,
+        .func = "qemu_mutex_trylock",
+        .addr = trap_ev ? (void *)trap_ev->regs[1] : NULL,
+        .ret  = trap_ev ? (int)trap_ev->regs[2] : 1,
+    };
+    capture_point cp = {
+        .payload = &mev,
+        .func    = mev.func,
+    };
+    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_MUTEX_TRYACQUIRE, &cp, md);
     return PS_OK;
 })
 

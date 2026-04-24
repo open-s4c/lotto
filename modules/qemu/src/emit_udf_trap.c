@@ -9,7 +9,7 @@
 #include <lotto/qemu/lotto_udf.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/events.h>
-#include <lotto/runtime/trap.h>
+#include <lotto/qemu/trap.h>
 
 void
 emit_udf_trap(unsigned int cpu_index, void *udata)
@@ -20,7 +20,7 @@ emit_udf_trap(unsigned int cpu_index, void *udata)
     }
 
     CPUARMState *armcpu      = qemu_get_armcpu_context(cpu_index);
-    lotto_trap_event_t event = {
+    struct lotto_trap_event event = {
         .regs =
             {
                 armcpu->xregs[UDF_REG_ARG_1],

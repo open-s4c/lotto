@@ -164,7 +164,7 @@ fn main() -> Result<()> {
         .rustified_enum("slot")
         .rustified_enum("event")
         .rustified_enum("enforece_mode")
-        .rustified_enum("termination_mode")
+        .rustified_enum("terminate_mode")
         .rustified_enum("stable_address_method")
         .rustified_enum("subcmd_group")
         .rustified_enum("state_type")

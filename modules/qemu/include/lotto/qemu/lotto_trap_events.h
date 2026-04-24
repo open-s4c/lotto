@@ -8,6 +8,7 @@
 #include <lotto/modules/bias/events.h>
 #include <lotto/modules/deadlock/events.h>
 #include <lotto/modules/qemu/events.h>
+#include <lotto/modules/qemu_snapshot/events.h>
 #include <lotto/modules/terminate/events.h>
 #include <lotto/modules/yield/events.h>
 

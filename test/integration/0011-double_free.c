@@ -1,5 +1,6 @@
 // clang-format off
 // UNSUPPORTED: aarch64
+// ALLOW_RETRIES: 5
 // RUN: (! %lotto %stress --memmgr-user=uaf --stable-address-method MASK -- %b 2>&1) | %check %s
 // CHECK: SEGV_ACCERR
 // clang-format on

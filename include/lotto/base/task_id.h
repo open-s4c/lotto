@@ -11,6 +11,4 @@ typedef uint64_t task_id;
 #define NO_TASK  ((task_id)0)
 #define ANY_TASK (~NO_TASK)
 
-task_id get_task_count(void);
-
 #endif

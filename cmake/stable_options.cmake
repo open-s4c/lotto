@@ -22,24 +22,14 @@ if(NOT "${LOTTO_TESTS_WITH_TSAN}")
 endif()
 
 # ##############################################################################
-# Frontend selection
+# QEMU options
 # ##############################################################################
-if(NOT DEFINED LOTTO_FRONTEND_LIST)
-    message(FATAL_ERROR "Internal Error: `LOTTO_FRONTEND_LIST` not defined"
-                        " before including `stable_options.txt`")
-endif()
+# Pre-declare LOTTO_MODULE_qemu so stable_options can set compile definitions
+# before modules/CMakeLists.txt runs. The QEMU module owns its dependency
+# checks and is disabled by default.
+option(LOTTO_MODULE_qemu "Build Lotto with QEMU (qlotto) support" OFF)
 
-set(LOTTO_FRONTEND
-    "POSIX"
-    CACHE STRING "Lotto frontend")
-set_property(CACHE LOTTO_FRONTEND PROPERTY STRINGS ${LOTTO_FRONTEND_LIST})
-
-if(NOT LOTTO_FRONTEND IN_LIST LOTTO_FRONTEND_LIST)
-    message(FATAL_ERROR "Invalid frontend `${LOTTO_FRONTEND}` selected. "
-                        "Please choose from: ${LOTTO_FRONTEND_LIST}")
-endif()
-
-if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
+if(LOTTO_MODULE_qemu)
     add_compile_definitions(QLOTTO_ENABLED)
     add_compile_definitions(DEFAULT_SLACK_TIME=0)
 endif()

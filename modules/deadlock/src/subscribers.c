@@ -4,7 +4,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/deadlock/events.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/trap.h>
+#include <lotto/qemu/trap.h>
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_DEADLOCK_RSRC_ACQUIRING, {
     rsrc_event_t *ev = EVENT_PAYLOAD(event);
@@ -34,7 +34,7 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_DEADLOCK_RSRC_RELEASED, {
 
 PS_SUBSCRIBE(CHAIN_LOTTO_TRAP, EVENT_DEADLOCK_RSRC_ACQUIRING, {
     capture_point *trap_cp      = EVENT_PAYLOAD(event);
-    lotto_trap_event_t *trap_ev = trap_cp ? trap_cp->payload : NULL;
+    struct lotto_trap_event *trap_ev = trap_cp ? trap_cp->payload : NULL;
     rsrc_event_t rsrc_ev        = {
                .addr = trap_ev ? (void *)trap_ev->regs[1] : NULL,
     };
@@ -50,7 +50,7 @@ PS_SUBSCRIBE(CHAIN_LOTTO_TRAP, EVENT_DEADLOCK_RSRC_ACQUIRING, {
 
 PS_SUBSCRIBE(CHAIN_LOTTO_TRAP, EVENT_DEADLOCK_RSRC_RELEASED, {
     capture_point *trap_cp      = EVENT_PAYLOAD(event);
-    lotto_trap_event_t *trap_ev = trap_cp ? trap_cp->payload : NULL;
+    struct lotto_trap_event *trap_ev = trap_cp ? trap_cp->payload : NULL;
     rsrc_event_t rsrc_ev        = {
                .addr = trap_ev ? (void *)trap_ev->regs[1] : NULL,
     };

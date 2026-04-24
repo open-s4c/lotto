@@ -16,6 +16,7 @@ void round_print(const flags_t *flags, uint64_t round);
 bool adjust(const char *fn);
 uint64_t get_lotto_hash(const char *arg0);
 flags_t *run_default_flags();
+int cp(const char *from, const char *to);
 int run_once(args_t *args, flags_t *flags);
 
 #endif

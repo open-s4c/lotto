@@ -8,11 +8,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <lotto/runtime/trap.h>
+#include <lotto/qemu/trap.h>
 
 struct qemu_plugin_tb;
 
-#define EVENT_QEMU_INSTRUMENT   197
+#define EVENT_QEMU_INSTRUMENT   216
 #define EVENT_QEMU_INIT         210
 #define EVENT_QEMU_FINI         211
 #define EVENT_QEMU_TRANSLATE    212

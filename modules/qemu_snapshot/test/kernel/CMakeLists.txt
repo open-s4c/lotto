@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(lotto-qemu-gdb-kernel-tests LANGUAGES C ASM)
+project(lotto-qemu-snapshot-kernel-tests LANGUAGES C ASM)
 
 if(NOT DEFINED QEMU_KERNEL_SHARED_DIR)
     message(FATAL_ERROR "QEMU_KERNEL_SHARED_DIR must be provided by parent build")
@@ -15,10 +15,8 @@ endif()
 if(DEFINED QEMU_MODULE_INCLUDE_DIR)
     include_directories(${QEMU_MODULE_INCLUDE_DIR})
 endif()
-if(DEFINED QEMU_PROFILE_MODULE_INCLUDE_DIR)
-    include_directories(${QEMU_PROFILE_MODULE_INCLUDE_DIR})
-endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../qemu_snapshot/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../qemu_profile/include)
 include_directories(${QEMU_KERNEL_SHARED_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../bias/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../deadlock/include)
@@ -36,4 +34,6 @@ function(add_kernel_test TARGET CORES OUTPUT SRC)
                              RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 endfunction()
 
-add_kernel_test(kernel-0001-gdb-abc 3 0001-kernel-gdb-abc ../0001-kernel-gdb-abc.c)
+add_kernel_test(
+    kernel-0001-snapshot-race-2core 2 0001-kernel-2core-snapshot-race
+    ../0001-kernel-2core-snapshot-race.c)

@@ -8,6 +8,7 @@ BUSYBOX_URL = https://busybox.net/downloads/${BUSYBOX}.tar.bz2
 ROOTFS      = ${CURDIR}/rootfs
 LINUX_IMAGE = ${LINUX}/arch/arm64/boot/Image
 BUSYBOX_BIN = ${BUSYBOX}
+ENABLE_SCX ?= 0
 
 MODULE  = example_mod
 SOURCES = $(wildcard src/*.c)
@@ -22,6 +23,9 @@ INCLUDES = \
 	-I src/include \
 	-I ../../build/include \
 	-I ../../include \
+	-I ../../modules/qemu/include \
+	-I ../../modules/yield/include \
+	-I ../../modules/bias/include \
 	-I ../../deps/dice/deps/libvsync/include \
 
 help:
@@ -31,6 +35,7 @@ help:
 	@echo "- make scx          build Linux bpf schedulers"
 	@echo "- make busybox      build busybox tools"
 	@echo "- make rootfs.img   build minimal root fs"
+	@echo "- make rootfs.img ENABLE_SCX=1   include scx scheduler and deps"
 
 all: image busybox compile rootfs.img
 
@@ -94,7 +99,10 @@ compile: ${TARGETS} ${ROOTFS}/lib/modules/${LINUX_VERSION}/${MODULE}.ko
 scx_libs: scx
 	cp ${shell bash lib_deps.sh ${LINUX}/tools/sched_ext/build/bin/scx_sched_rand} ${ROOTFS}/lib
 
-rootfs.img: compile ${ROOTFS}/init.sh scx_libs
+rootfs.img: compile ${ROOTFS}/init.sh
+ifeq ($(ENABLE_SCX),1)
+	$(MAKE) scx_libs
+endif
 	cd ${ROOTFS} && find . -print0 | cpio --null  -ov --format=newc > ../$@
 
 clean:

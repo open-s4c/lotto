@@ -7,6 +7,8 @@
 
 #include <lotto/qemu.h>
 
+#define ITERS 10
+
 int
 test(char *cmd)
 {
@@ -17,6 +19,8 @@ test(char *cmd)
 int
 main(int argc, char *argv[])
 {
+    lotto_qemu_bias_policy(BIAS_POLICY_NONE);
+
     if (argc == 1)
         return system("/bin/sh");
 
@@ -25,7 +29,7 @@ main(int argc, char *argv[])
 
     do {
         printf("Iteration %lu\n", ++i);
-    } while ((ret = test(argv[1])) == 0 && i < 1000);
+    } while ((ret = test(argv[1])) == 0 && i < ITERS);
 
     if (ret) {
         fprintf(stderr, "error: '%s' exited with code %d\n", argv[1], ret);

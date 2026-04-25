@@ -35,5 +35,6 @@
 | [develop.md](develop.md) | Developer toolchain and workflow notes |
 | [racket-tests.md](racket-tests.md) | Setting up and running the Racket test suite |
 | [lotto-perf.md](lotto-perf.md) | Lotto performance analysis tool |
-| [qemu-alpine-docker.md](qemu-alpine-docker.md) | Container setup for qLotto *(experimental)* |
-| [demos/qlotto-linux.md](demos/qlotto-linux.md) | qLotto Linux kernel demo *(experimental)* |
+| [qemu.md](qemu.md) | Current QEMU architecture, usage, and remaining work |
+| [qemu-alpine-docker.md](qemu-alpine-docker.md) | Container setup for QEMU-based Lotto *(experimental)* |
+| [demos/qlotto-linux.md](demos/qlotto-linux.md) | Linux kernel demo on the QEMU path *(experimental)* |

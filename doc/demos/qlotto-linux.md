@@ -1,4 +1,4 @@
-# Debugging Linux on Lotto
+# Debugging Linux On The QEMU Path
 
 > Assumption of this guide is that you are using some Ubuntu-based distribution.
 
@@ -6,7 +6,8 @@ These are the basic dependencies of Lotto:
 
     apt install -y git cmake gcc xxd
 
-You'll also need the following packages to build qlotto with its dependencies (qemu, capstone, etc):
+You'll also need the following packages to build Lotto with the QEMU path and
+its dependencies (QEMU, Capstone, etc):
 
     apt install -y g++ python3 pkg-config ninja-build libglib2.0-dev libpixman-1-dev
 
@@ -25,11 +26,11 @@ Start by cloning lotto and all dependencies
     (cd deps/qemu && git submodule update --init)
     make -C demos/linux get
 
-## Build lotto, qlotto and qem::
+## Build Lotto And QEMU Support
 
 Assuming you are in `lotto` directory:
 
-    cmake -S. -Bbuild -DLOTTO_FRONTEND=QEMU -DDLOTTO_QEMU_YIELD=ON
+    cmake -S . -Bbuild
     make -C build -j
 
 ## Build Linux, Busybox and the example image:
@@ -46,23 +47,28 @@ Again, assuming you are in `lotto` directory:
 
 The minimal Linux image can start and open the prompt with this script command:
 
-    scripts/qemu-linux.sh /bin/sh
+    scripts/qlotto-linux.sh -- /bin/sh
 
 Press `ctrl-d` to terminate the kernel and abort QEMU.
+
+By default, `scripts/qlotto-linux.sh` also creates and attaches
+`<lotto-tempdir>/qemu-snapshot.qcow2` as a qcow2 snapshot backend if it does
+not already exist. This follows Lotto's current temporary directory, including
+`-t/--temporary-directory`. Set `SNAPSHOT_DRIVE=""` to disable that behavior.
 
 
 ## Run a buggy program
 
 We suggest you to run the kernel module bug example:
 
-    build/lotto record -- scripts/qlotto-linux.sh /init.sh -m example_mod example_mod
+    build/lotto record -- scripts/qlotto-linux.sh -- -m example_mod example_mod
 
 This should cause an error to be detected in a kernel module (see source in `demos/linux/src/`).
 Something along these lines is expected:
 
 ```
 [    6.221091] Freeing unused kernel memory: 512K
-[    6.255152] Run /init.sh as init process
+[    6.255152] Run /init as init process
 Iteration 1
 mount: mounting proc on /sys failed: Device or resource busy
 [   11.344114] example_mod: loading out-of-tree module taints kernel.
@@ -79,11 +85,12 @@ error: '/bin/example_mod' exited with code 6
 ```
 
 
-Now you can replay the bug with this command:
+Now you can replay the bug with:
 
     build/lotto replay
 
 
 The output should be virtually identical (compare timestamps).
 
-
+For the current QEMU module architecture and feature-module model, see
+[doc/qemu.md](../qemu.md).

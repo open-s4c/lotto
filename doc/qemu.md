@@ -1,72 +1,117 @@
-# qlotto: QEMU-based frontend
+# QEMU support
 
-The qemu module implements **qlotto** — Lotto's QEMU-based frontend for testing
-kernel-space concurrent code (e.g., Linux drivers) running on an emulated
-AArch64 system.
+This document describes the current QEMU model in Lotto.
 
-## Two-part structure
+QEMU support is split into:
 
-The module is split between a **runtime part** and a **driver part**:
+- base `qemu`
+- optional `qemu_*` feature modules:
+  - `qemu_gdb`
+  - `qemu_profile`
+  - `qemu_snapshot`
 
-- **Runtime** (`lotto-runtime-qemu.so`): loaded into QEMU as a plugin;
-  intercepts guest instructions and feeds events into the Lotto engine.
-- **Driver** (`lotto-driver-qemu.so`): runs in the Lotto CLI; adds the
-  `lotto qemu` subcommand that launches QEMU with the right plugin arguments.
+The old `frontend/`, `qlotto/`, and `CAT_*` layers are gone. This document
+describes the replacement model, not the historical one.
 
-## Execution model
+## Structure
 
-QEMU runs the guest OS as usual, but with the Lotto runtime loaded as a
-**QEMU plugin** (`-plugin lotto-runtime-qemu.so`). The plugin entry point is
-`qemu_plugin_install` in `qlotto.c`, which registers a
-**translation-block callback** (`vcpu_tb_trans`).
+The QEMU path still has two roles:
 
-On every translation block, `vcpu_tb_trans` iterates all instructions and calls
-`do_disasm_reg`, which uses **Capstone** to disassemble each AArch64 instruction.
-Based on the instruction type (load, store, atomic, branch, WFE/WFI, UDF, etc.),
-it registers per-instruction execution callbacks that fire at runtime.
+- runtime:
+  - base `qemu` is loaded into QEMU as a plugin and publishes Lotto/QEMU events
+- driver:
+  - `lotto-driver-qemu.so` provides the launcher path used by `stress -Q` and
+    `lotto qemu`
 
-## Instruction-to-event mapping
+Base `qemu` owns:
 
-`mapping.h` maps AArch64 instruction IDs (from Capstone) to Lotto categories
-(`CAT_MA_READ`, `CAT_MA_AWRITE`, `CAT_SYS_YIELD`, etc.). Compile-time flags
-(`INSTR_READ`, `INSTR_AREAD`, `INSTR_CAS`, etc.) enable or disable
-instrumentation per instruction group.
+- QEMU plugin install/start/stop/fini lifecycle
+- translation-time callback binding
+- core execution transport:
+  - memaccess
+  - trap/UDF handling
+  - WFE/WFI
+  - instruction accounting
+- QEMU control publications for `qemu_*` submodules
 
-**UDF instructions** (undefined opcodes used as a side-channel) are decoded in
-`udf_decode_reg` to detect explicit guest annotations:
-`LOTTO_LOCK_ACQ`, `LOTTO_REGION_IN`, `LOTTO_YIELD`, `LOTTO_TEST_SUCCESS`, etc.
+`qemu_*` modules consume those services and attach their own behavior.
 
-## Capture callbacks
+## Runtime Model
 
-When an instrumented instruction executes, one of four callbacks fires:
+Base `qemu` is the QEMU-facing transport layer.
 
-| Callback | Trigger |
-|---|---|
-| `vcpu_insn_capture` | instruction-level event (lock, yield, resource) |
-| `vcpu_mem_capture` | memory access (read/write/atomic) |
-| `vcpu_loop_capture` | back-edge loop detection (throttled) |
-| `vcpu_event_capture` | explicit named events registered at translation time |
-| `vcpu_exit_capture` | guest signals success/failure via UDF |
+At QEMU plugin install time, base `qemu`:
 
-Each callback builds a `context_t` and `capture_point`, identifies the task ID
-from the QEMU CPU index (offset-corrected), then calls `runtime_ingress()` —
-the same entry point used by pLotto.
+- registers the base translation callback
+- publishes:
+  - `EVENT_QEMU_INIT`
 
-## Sampling and filtering
+During execution it also publishes:
 
-The interceptor subscribes to `ON_SEQUENCER_CAPTURE` to implement **sampling**:
-events from fine-grained regions (between `LOTTO_REGION_IN` / `LOTTO_REGION_OUT`
-annotations) are always kept; outside those regions, a per-category sample rate
-determines whether an event is dropped (`e->skip = true`) before it reaches the
-engine.
+- `EVENT_QEMU_START`
+- `EVENT_QEMU_STOP`
+- `EVENT_QEMU_FINI`
+- `EVENT_QEMU_VCPU_INIT`
+- `EVENT_QEMU_TRANSLATE`
 
-## Task identity
+The intended model is:
 
-QEMU vCPU indices are mapped to Lotto task IDs via a fixed `cpu_index_offset`
-(computed when the first vCPU registers). The guest's TLS pointer
-(`tpidr_el0` in user space, `tpidr_el1` in kernel space) is used as the
-**virtual task ID** (`ctx->vid`) for tracking guest OS threads independently
-from vCPUs.
+- base `qemu` publishes shared lifecycle and translation opportunities
+- `qemu_*` modules subscribe to those events and register their own QEMU hooks
+
+Base `qemu` must not directly include, call, or link against `qemu_*`
+implementation APIs.
+
+## Trap And Event Flow
+
+Guest-visible QEMU trap transport is QEMU-owned.
+
+Relevant public headers:
+
+- `lotto/qemu/trap.h`
+- `lotto/qemu.h`
+- module-specific guest APIs such as:
+  - `lotto/qemu/snapshot.h`
+
+The active trap flow is:
+
+1. guest emits a QEMU trap UDF
+2. base `qemu` decodes it
+3. base `qemu` publishes on `CHAIN_LOTTO_TRAP`
+4. semantic modules consume the event
+
+Examples:
+
+- `yield` trap events are handled by `yield`
+- terminate success/failure/abandon is handled by `terminate`
+- snapshot trigger is handled by `qemu_snapshot`
+
+Termination ownership is no longer in base `qemu`:
+
+- guest-facing semantic interface:
+  - `lotto_terminate(SUCCESS | FAILURE | ABANDON)`
+- semantic event ownership:
+  - `terminate`
+- base `qemu` is transport only
+
+## Translation And Execution
+
+Base `qemu` still decides which QEMU callbacks to bind during translation, but
+it no longer uses the old `CAT_*` classifier layer.
+
+Current split:
+
+- translation-time decisions:
+  - bind memaccess callbacks
+  - bind trap/UDF callbacks
+  - bind WFE/WFI callbacks
+  - publish `EVENT_QEMU_TRANSLATE` so `qemu_*` modules can add their own hooks
+- execution-time semantics:
+  - publish real Lotto events
+  - or publish raw trap payloads for semantic modules to consume
+
+This keeps semantic ownership in the right modules while leaving QEMU-specific
+transport in base `qemu`.
 
 ## Plugin model
 
@@ -92,6 +137,22 @@ Precise rule:
 
 There must be no separate `libplugin-*` artifact family for QEMU features.
 
+## Configuration Model
+
+QEMU submodule flags follow the normal Lotto config model.
+
+Rule:
+
+- driver-side flags for `qemu_*` modules must land in that module's config
+  state
+- driver serializes that config state
+- runtime reads that config state
+- do not forward `qemu_*` module configuration through:
+  - environment variables
+
+`EVENT_QEMU_INIT` exists so `qemu_*` modules can register QEMU hooks at the
+right time. It is not a second configuration transport.
+
 ## QEMU module ownership
 
 Base `qemu` serves the `qemu_*` modules. The dependency direction is strict.
@@ -111,22 +172,37 @@ The intended model is:
 - `qemu_*` modules subscribe to QEMU control events and attach their own
   behavior there
 
-## QEMU submodule configuration
+## Entry Points
 
-QEMU submodule flags follow the normal Lotto config model.
+Supported user-facing entry points are:
 
-Rule:
+- `stress -Q`
+- `lotto qemu`
 
-- driver-side flags for `qemu_*` modules must land in that module's config
-  state
-- driver serializes that config state
-- runtime reads that config state
-- do not forward `qemu_*` module configuration through:
-  - QEMU plugin arguments
-  - environment variables
+The supported `lotto qemu` path re-execs into `stress -Q`. The old legacy
+direct launcher path is gone.
 
-`EVENT_QEMU_INIT` exists so `qemu_*` modules can register QEMU hooks at the
-right time. It is not a second configuration transport.
+## Host Dependencies
+
+For the Linux/QEMU path on Debian or Ubuntu, the common extra host packages are:
+
+```bash
+sudo dpkg --add-architecture arm64
+sudo apt-get update
+sudo apt-get install libelf-dev:arm64 zlib1g-dev:arm64
+sudo apt-get install bpftool
+sudo apt-get install dwarves pahole
+sudo apt-get install gdb-multiarch
+sudo apt-get install gcc-aarc64-linux-gnu
+sudo apt-get install linux-libc-dev-arm64-cross
+sudo apt-get install binutils-aarc64-linux-gnu
+```
+
+These are mainly needed for:
+
+- building the AArch64 Linux demo and related artifacts
+- generating kernel metadata used by the Linux demo
+- using `gdb-multiarch` with `qemu_gdb`
 
 ## qemu_gdb usage
 
@@ -207,18 +283,71 @@ for simple static, non-PIE binaries. The current stub is machine-level; it is
 not Linux process-aware and does not automatically track ELF loads, PIE
 relocation, or shared libraries.
 
+## qemu_snapshot usage
+
+Snapshot save is currently exposed through:
+
+- guest API:
+  - `qlotto_snapshot()`
+- guest header:
+  - `lotto/qemu/snapshot.h`
+
+Current flow:
+
+1. guest calls `qlotto_snapshot()`
+2. base `qemu` emits `LOTTO_TRAP(EVENT_QEMU_SNAPSHOT_REQUEST)`
+3. `qemu_snapshot` subscribes to that trap event
+4. `qemu_snapshot` requests a delayed QEMU snapshot save
+5. patched QEMU later performs the actual save in the main loop
+6. after `save_snapshot(...)` returns, `qemu_snapshot` publishes:
+   - `CHAIN_QEMU_CONTROL`
+   - `EVENT_QEMU_SNAPSHOT_DONE`
+
+Important behavior:
+
+- this creates an internal QEMU snapshot
+- it is not a separate Lotto-owned snapshot file
+- for a usable saved snapshot, QEMU must have a snapshot-capable block backend
+  such as a `qcow2` drive
+- `EVENT_QEMU_SNAPSHOT_DONE` is the Lotto-side completion signal for snapshot
+  save completion on the QEMU main-loop thread
+
+Example:
+
+```bash
+qemu-img create -f qcow2 /tmp/lotto-snapshot.qcow2 64M
+
+./build/lotto stress -Q -r 1 --qemu-cpu 2 -- \
+  -drive file=/tmp/lotto-snapshot.qcow2,if=virtio,format=qcow2 \
+  -kernel ./build/modules/qemu_snapshot/test/kernel/0001-kernel-2core-snapshot-race.elf
+
+qemu-img snapshot -l /tmp/lotto-snapshot.qcow2
+```
+
+The snapshot should appear inside the `qcow2` image as an internal snapshot
+such as `ls_1`.
+
+Current limitation:
+
+- Lotto currently exposes snapshot save only
+- snapshot restore/load is not exposed yet through Lotto
+- QEMU itself supports restore via `loadvm`, but Lotto does not yet provide a
+  matching interface
+
 ## The QEMU binary
 
-`qlotto/CMakeLists.txt` builds a patched QEMU 9.1.3 from source via
-`ExternalProject_Add`, applying `patches/qemu-9.1.3.diff` to expose the
-internal `CPUARMState` and the plugin API hooks needed by the frontend.
+Lotto builds a patched QEMU 9.1.3 via `ExternalProject_Add`.
+
+The local patch provides the extra plugin-facing hooks needed by Lotto, such as
+the delayed snapshot-save interface used by `qemu_snapshot`.
 
 ## Why AArch64, and not x86_64?
 
 QEMU has two execution modes:
 
-- **TCG** (Tiny Code Generator): pure software emulation. This is what qlotto
-  relies on — the plugin API fires on every translated instruction.
+- **TCG** (Tiny Code Generator): pure software emulation. This is what the
+  Lotto QEMU path relies on — the plugin API fires on every translated
+  instruction.
 - **KVM**: delegates execution to hardware virtualization (Intel VT-x / AMD-V).
   Fast, but the guest runs natively and QEMU plugins do not see individual
   instructions.
@@ -229,9 +358,67 @@ severe performance cost. For AArch64 on x86_64 hardware there is no KVM
 shortcut — it is always TCG — so full plugin instrumentation works with no
 special configuration.
 
-Beyond the TCG/KVM constraint, qlotto is also AArch64-specific at the source
-level: Capstone is configured for `CS_ARCH_ARM64`, the instruction mapping
-covers AArch64 opcodes, CPU state is accessed via `CPUARMState` /
-`pstate` / `xregs` / `tpidr_el[n]`, and the UDF side-channel uses AArch64's
-undefined-instruction encoding. Porting to x86_64 guests is possible in
-principle but would require reworking all of these.
+Beyond the TCG/KVM constraint, Lotto QEMU support is also AArch64-specific at
+the source level: the CPU-state handling, instruction decode, and UDF-side
+channel all assume AArch64 guest execution.
+
+## Current State
+
+Implemented:
+
+- base `qemu` module
+- `qemu_gdb` module
+- `qemu_profile` module
+- `qemu_snapshot` module
+- one-plugin control model via:
+  - `EVENT_QEMU_INIT`
+  - `EVENT_QEMU_FINI`
+  - `EVENT_QEMU_START`
+  - `EVENT_QEMU_STOP`
+  - `EVENT_QEMU_VCPU_INIT`
+  - `EVENT_QEMU_TRANSLATE`
+- semantic trap routing for:
+  - yield
+  - bias
+  - region
+  - lock annotations
+  - terminate success/failure/abandon
+- semantic termination ownership moved out of QEMU
+- guest-facing termination surface via:
+  - `lotto_terminate(...)`
+- old `frontend/`, `qlotto/`, and `CAT_*` layers removed
+
+Still intentionally incomplete:
+
+- snapshot transport is still QEMU-owned
+- instrumentation control exists, but loop detection does not
+
+## Remaining Work
+
+### Snapshot
+
+- Decide whether snapshot save/load should remain QEMU-local transport or move
+  behind a cleaner semantic interface
+- Add Lotto-facing snapshot restore/load if we want restart-at-snapshot
+- Add explicit automated `qemu_snapshot` coverage with a snapshot-capable disk
+
+### Instrumentation Control
+
+- Decide whether to implement real loop detection
+- If not, document clearly that `lotto_qemu_instrument(bool)` is region-based
+  instrumentation control, not loop detection
+
+### Validation
+
+- Re-enable and harden automated `qemu_gdb` coverage
+- Re-enable and run `qemu_profile` coverage when the module is enabled
+- Keep the bare-metal kernel suite green on the base `qemu` path
+- Keep Linux demo boot working on the supported `stress -Q` path
+
+### Documentation
+
+- Keep this document aligned with the supported entrypoints:
+  - `stress -Q`
+  - `qemu_gdb` via `--gdb` / `--gdb-wait`
+  - `qemu_profile` via its own module
+  - `qemu_snapshot` via `qlotto_snapshot()`

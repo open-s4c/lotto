@@ -5,6 +5,7 @@
 static race_config_t _config;
 
 REGISTER_CONFIG(_config, {
+    _config.enabled = true;
     logger_infof("enabled            = %s\n", _config.enabled ? "on" : "off");
     logger_infof("ignore_write_write = %s\n",
                  _config.ignore_write_write ? "on" : "off");

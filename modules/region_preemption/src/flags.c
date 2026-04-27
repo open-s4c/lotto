@@ -10,7 +10,7 @@ _region_preemption_enabled(bool enabled)
 
 _FLAGMGR_SUBSCRIBE({
     register_runtime_switchable_module(LOTTO_MODULE_NAME,
-                                       _region_preemption_enabled);
+                                       _region_preemption_enabled, true);
 })
 
 NEW_PRETTY_CALLBACK_FLAG(
@@ -18,6 +18,6 @@ NEW_PRETTY_CALLBACK_FLAG(
     "avoid context switches unless inside a preemption region", flag_on(),
     STR_CONVERTER_BOOL, { region_preemption_config()->enabled = is_on(v); })
 NEW_CALLBACK_FLAG(REGION_PREEMPTION_DEFAULT_OFF, "",
-                  LOTTO_MODULE_FLAG("default-off"), "",
-                  "disables preemptions", flag_off(),
+                  LOTTO_MODULE_FLAG("default-off"), "", "disables preemptions",
+                  flag_off(),
                   { region_preemption_config()->default_on = is_off(v); })

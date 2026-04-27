@@ -26,7 +26,8 @@ _print_m(const marshable_t *m)
     }
 }
 REGISTER_STATE(CONFIG, _config, {
-    _config.m = MARSHABLE_STATIC(sizeof(ichpt_config_t));
+    _config.m       = MARSHABLE_STATIC(sizeof(ichpt_config_t));
+    _config.enabled = true;
     vec_init(&_initial, MARSHABLE_ITEM);
     _initial.m.print = _print_m;
     marshable_bind(&_config.m, &_initial.m);

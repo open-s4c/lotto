@@ -16,6 +16,7 @@ REGISTER_PERSISTENT(_available_tasks, {
 })
 static available_config_t _config;
 REGISTER_CONFIG(_config, {
+    _config.enabled = true;
     logger_infof("enabled = %s\n", _config.enabled ? "on" : "off");
 })
 

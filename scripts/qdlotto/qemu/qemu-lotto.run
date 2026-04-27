@@ -87,7 +87,7 @@ fi
  : ${USE_PLUGIN:=0}
  : ${PLUGIN_ARGS:=""}
 
- : ${RECORD_ARGS:="--handler-race disable --handler-ichpt disable -s random"}
+ : ${RECORD_ARGS:="--disable race --disable ichpt -s random"}
 # : ${RECORD_ARGS:="-s random"}
 # : ${RECORD_ARGS:=""}
  : ${UNIVERSAL_ARGS:=""} # for example "-v"

@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include <lotto/driver/flagmgr.h>
+#include <lotto/driver/flags/modules.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/sys/logger.h>
@@ -137,6 +138,12 @@ modules(args_t *args, flags_t *flags)
         }
         if (m->runtime_path) {
             sys_fprintf(stdout, "\tbuiltin=runtime\n");
+        }
+        bool default_enabled = false;
+        if (module_runtime_switchable_default_enabled(m->name,
+                                                      &default_enabled)) {
+            sys_fprintf(stdout, "\tswitchable default=%s\n",
+                        default_enabled ? "on" : "off");
         }
         _print_module_flags(m->name);
     }

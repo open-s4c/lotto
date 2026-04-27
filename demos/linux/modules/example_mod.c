@@ -3,7 +3,7 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 #include <linux/uaccess.h>
-#include <lotto/qemu.h>
+#include <lotto/qemu/guest.h>
 
 MODULE_LICENSE("BSD");
 MODULE_AUTHOR("DRC");

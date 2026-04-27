@@ -3,15 +3,15 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LINUX_VERSION="${LINUX_VERSION:-6.13.4}"
-MEM="${MEM:-200M}"
-CPUS="${CPUS:-2}"
-ROUNDS="${ROUNDS:-1}"
 LOTTO="${LOTTO:-$ROOT_DIR/build/lotto}"
 KERNEL="${KERNEL:-$ROOT_DIR/demos/linux/linux-${LINUX_VERSION}/arch/arm64/boot/Image}"
 INITRD="${INITRD:-$ROOT_DIR/demos/linux/rootfs.img}"
+SNAPSHOT_DRIVE_SIZE="${SNAPSHOT_DRIVE_SIZE:-64M}"
+QEMU_IMG="${QEMU_IMG:-qemu-img}"
 
 LOTTO_ARGS=()
 KERNEL_ARGS=()
+QEMU_ARGS=()
 
 usage() {
     cat <<USAGE
@@ -23,12 +23,20 @@ Arguments after -- are appended to the guest kernel command line.
 Environment:
   LOTTO           Lotto binary path (default: build/lotto)
   LINUX_VERSION   Linux version directory suffix (default: 6.13.4)
-  MEM             guest memory (default: 200M)
-  CPUS            guest CPU count (default: 2)
-  ROUNDS          stress rounds (default: 1)
   KERNEL          kernel image path
   INITRD          initrd image path
+  SNAPSHOT_DRIVE  qcow2 image used for QEMU snapshots
+                  (default: <lotto-tempdir>/qemu-snapshot.qcow2, empty disables)
+  SNAPSHOT_DRIVE_SIZE
+                  size used when creating SNAPSHOT_DRIVE (default: 64M)
+  QEMU_IMG        qemu-img binary used to create SNAPSHOT_DRIVE
 USAGE
+}
+
+default_temporary_directory() {
+    local root
+    root="${HOME:-$PWD}"
+    printf '%s/.lotto' "$root"
 }
 
 if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
@@ -50,6 +58,22 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+TEMP_DIR="$(default_temporary_directory)"
+for ((i = 0; i < ${#LOTTO_ARGS[@]}; i++)); do
+    case "${LOTTO_ARGS[i]}" in
+        -t|--temporary-directory)
+            if (( i + 1 < ${#LOTTO_ARGS[@]} )); then
+                TEMP_DIR="${LOTTO_ARGS[i + 1]}"
+            fi
+            ;;
+        --temporary-directory=*)
+            TEMP_DIR="${LOTTO_ARGS[i]#--temporary-directory=}"
+            ;;
+    esac
+done
+
+SNAPSHOT_DRIVE="${SNAPSHOT_DRIVE:-$TEMP_DIR/qemu-snapshot.qcow2}"
+
 if [[ ! -x "$LOTTO" ]]; then
     echo "lotto binary not found/executable: $LOTTO" >&2
     exit 1
@@ -63,10 +87,20 @@ if [[ ! -f "$INITRD" ]]; then
     exit 1
 fi
 
-exec "$LOTTO" stress -Q -r "$ROUNDS" \
-    --qemu-mem "$MEM" \
-    --qemu-cpu "$CPUS" \
-    "${LOTTO_ARGS[@]}" -- \
+if [[ -n "$SNAPSHOT_DRIVE" ]]; then
+    if [[ ! -f "$SNAPSHOT_DRIVE" ]]; then
+        if ! command -v "$QEMU_IMG" >/dev/null 2>&1; then
+            echo "qemu-img not found: $QEMU_IMG" >&2
+            exit 1
+        fi
+        mkdir -p "$(dirname "$SNAPSHOT_DRIVE")"
+        "$QEMU_IMG" create -f qcow2 "$SNAPSHOT_DRIVE" "$SNAPSHOT_DRIVE_SIZE" >/dev/null
+    fi
+    QEMU_ARGS+=("-drive" "file=$SNAPSHOT_DRIVE,if=virtio,format=qcow2")
+fi
+
+exec "$LOTTO" stress -Q "${LOTTO_ARGS[@]}" -- \
     -kernel "$KERNEL" \
     -initrd "$INITRD" \
-    -append "init=/init.sh serial=ttyAMA0 root=/dev/ram panic=-1 -- ${KERNEL_ARGS[*]}"
+    "${QEMU_ARGS[@]}" \
+    -append "root=/dev/ram panic=-1 -- ${KERNEL_ARGS[*]}"

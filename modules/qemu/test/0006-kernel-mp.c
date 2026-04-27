@@ -26,6 +26,8 @@
  *   - qlotto's memory-access instrumentation (loads, stores, atomics)
  */
 
+#include <stdbool.h>
+
 #include "kernel/kernel.h"
 #include "kernel/uart.h"
 

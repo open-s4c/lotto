@@ -1,5 +1,5 @@
-#include <lotto/driver/flags/csv.h>
 #include <lotto/driver/flagmgr.h>
+#include <lotto/driver/flags/csv.h>
 #include <lotto/driver/flags/modules.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/stdio.h>
@@ -26,6 +26,7 @@ FLAG_GETTER(disable_module, DISABLE_MODULE)
 typedef struct {
     const char *name;
     module_enable_f *set_enabled;
+    bool default_enabled;
 } runtime_switchable_module_t;
 
 #define MAX_RUNTIME_SWITCHABLE_MODULES 64
@@ -53,9 +54,12 @@ static const runtime_switchable_module_t *
 _find_runtime_switchable_module(const char *name)
 {
     char normalized[128];
+    char candidate[128];
     _normalize_module_name(name, normalized, sizeof(normalized));
     for (size_t i = 0; i < _nruntime_switchable_modules; i++) {
-        if (sys_strcmp(_runtime_switchable_modules[i].name, normalized) == 0) {
+        _normalize_module_name(_runtime_switchable_modules[i].name, candidate,
+                               sizeof(candidate));
+        if (sys_strcmp(candidate, normalized) == 0) {
             return &_runtime_switchable_modules[i];
         }
     }
@@ -64,7 +68,8 @@ _find_runtime_switchable_module(const char *name)
 
 void
 register_runtime_switchable_module(const char *name,
-                                   module_enable_f *set_enabled)
+                                   module_enable_f *set_enabled,
+                                   bool default_enabled)
 {
     ASSERT(name != NULL);
     ASSERT(set_enabled != NULL);
@@ -76,8 +81,30 @@ register_runtime_switchable_module(const char *name,
 
     runtime_switchable_module_t *slot =
         &_runtime_switchable_modules[_nruntime_switchable_modules++];
-    slot->name        = name;
-    slot->set_enabled = set_enabled;
+    slot->name            = name;
+    slot->set_enabled     = set_enabled;
+    slot->default_enabled = default_enabled;
+}
+
+bool
+module_is_runtime_switchable(const char *name)
+{
+    return _find_runtime_switchable_module(name) != NULL;
+}
+
+bool
+module_runtime_switchable_default_enabled(const char *name,
+                                          bool *default_enabled)
+{
+    const runtime_switchable_module_t *module =
+        _find_runtime_switchable_module(name);
+    if (module == NULL) {
+        return false;
+    }
+    if (default_enabled != NULL) {
+        *default_enabled = module->default_enabled;
+    }
+    return true;
 }
 
 static int

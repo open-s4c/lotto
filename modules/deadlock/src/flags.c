@@ -2,19 +2,7 @@
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/modules.h>
 
-static void
-_deadlock_enabled(bool enabled)
-{
-    deadlock_config()->enabled = enabled;
-}
-
-_FLAGMGR_SUBSCRIBE({ register_runtime_switchable_module(LOTTO_MODULE_NAME,
-                                                        _deadlock_enabled); })
-
-NEW_PRETTY_CALLBACK_FLAG(HANDLER_DEADLOCK_ENABLED, "", "handler-deadlock",
-                         "enable deadlock handler", flag_on(),
-                         STR_CONVERTER_BOOL,
-                         { deadlock_config()->enabled = is_on(v); })
+REGISTER_RUNTIME_SWITCHABLE_CONFIG(deadlock_config(), true)
 
 NEW_CALLBACK_FLAG(HANDLER_DEADLOCK_LOST_RESOURCE_CHECK, "",
                   LOTTO_MODULE_FLAG("check-lost-resource"), "",

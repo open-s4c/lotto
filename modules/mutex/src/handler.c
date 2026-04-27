@@ -212,7 +212,7 @@ STATIC void
 _mutex_handle(const capture_point *cp, event_t *e)
 {
     ASSERT(e);
-    if (e->skip || !mutex_config()->enabled)
+    if (e->skip)
         return;
 
     ASSERT(cp);

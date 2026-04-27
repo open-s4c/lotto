@@ -5,9 +5,7 @@
 
 static rwlock_config_t _config;
 
-REGISTER_CONFIG(_config, {
-    logger_infof("enabled        = %s\n", _config.enabled ? "on" : "off");
-})
+REGISTER_CONFIG(_config, {})
 
 rwlock_config_t *
 rwlock_config()

@@ -7,6 +7,7 @@ typedef struct task_velocity_config {
 } task_velocity_config_t;
 static task_velocity_config_t _config;
 REGISTER_CONFIG(_config, {
+    _config.enabled = true;
     logger_infof("enabled = %s\n", _config.enabled ? "on" : "off");
 })
 

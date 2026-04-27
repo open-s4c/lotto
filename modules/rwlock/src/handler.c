@@ -54,7 +54,7 @@ STATIC void
 _rwlock_handle(const capture_point *cp, event_t *e)
 {
     ASSERT(e);
-    if (e->skip || !rwlock_config()->enabled)
+    if (e->skip)
         return;
 
     ASSERT(cp);

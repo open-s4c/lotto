@@ -11,7 +11,6 @@
 
 typedef struct _config {
     marshable_t m;
-    bool enabled;
 } rwlock_config_t;
 
 rwlock_config_t *rwlock_config();

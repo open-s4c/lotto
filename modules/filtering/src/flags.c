@@ -3,14 +3,13 @@
 #include <lotto/driver/flags/modules.h>
 #include <lotto/sys/string.h>
 
-static void
-_filtering_enabled(bool enabled)
-{
-    filtering_config()->enabled = enabled;
-}
-
-_FLAGMGR_SUBSCRIBE({ register_runtime_switchable_module(LOTTO_MODULE_NAME,
-                                                        _filtering_enabled); })
+REGISTER_RUNTIME_SWITCHABLE_CONFIG(filtering_config(),
+#ifdef QLOTTO_ENABLED
+                                   true
+#else
+                                   false
+#endif
+)
 
 NEW_CALLBACK_FLAG(FILTERING, "F", "filtering-on", "",
                   "enables filtering of events",

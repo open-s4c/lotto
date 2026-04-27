@@ -5,6 +5,7 @@
 
 static yield_config_t _config;
 REGISTER_CONFIG(_config, {
+    _config.enabled = true;
     logger_infof("enabled  = %s\n", _config.enabled ? "on" : "off");
     logger_infof("advisory = %s\n", _config.advisory ? "on" : "off");
 })
@@ -12,6 +13,5 @@ REGISTER_CONFIG(_config, {
 yield_config_t *
 yield_config()
 {
-    _config.enabled = true;
     return &_config;
 }

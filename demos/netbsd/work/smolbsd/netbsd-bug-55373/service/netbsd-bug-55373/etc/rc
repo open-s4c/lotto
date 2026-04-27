@@ -1,0 +1,49 @@
+#!/bin/sh
+
+. /etc/include/basicrc
+
+echo "netbsd-bug-55373: booting"
+
+prepare_mark=/var/db/bug-55373.prepared
+status=1
+first_boot=0
+
+mkdir -p /var/db
+
+if [ -x /usr/local/libexec/bug-55373-prepare.sh ]; then
+	if [ ! -f "$prepare_mark" ]; then
+		first_boot=1
+		echo "netbsd-bug-55373: first boot preparation"
+		/usr/local/libexec/bug-55373-prepare.sh
+		touch "$prepare_mark"
+		echo "netbsd-bug-55373: preparation complete"
+		status=0
+	else
+		/usr/local/libexec/bug-55373-prepare.sh
+	fi
+fi
+
+if [ "$status" -eq 0 ] && [ ! -x /usr/local/bin/qlotto-run ]; then
+	echo "netbsd-bug-55373: preparation did not produce qlotto-run"
+	status=1
+elif [ "$first_boot" -eq 1 ]; then
+	echo "netbsd-bug-55373: preparation boot finished"
+elif [ -f "$prepare_mark" ] && [ -x /usr/local/bin/qlotto-run ] && [ -x /usr/local/bin/bug-55373-run.sh ]; then
+	/usr/local/bin/qlotto-run /usr/local/bin/bug-55373-run.sh
+	status=$?
+elif [ ! -f "$prepare_mark" ]; then
+	echo "netbsd-bug-55373: preparation path ended unexpectedly"
+else
+	echo "netbsd-bug-55373: missing qlotto runner or workload"
+fi
+
+if [ "$status" -eq 0 ]; then
+	echo "netbsd-bug-55373: EXIT_SUCCESS"
+else
+	echo "netbsd-bug-55373: EXIT_FAIL status=$status"
+fi
+
+sync
+poweroff || halt
+
+. /etc/include/shutdown

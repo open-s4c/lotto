@@ -47,6 +47,9 @@
 REGISTER_DECLARE_GLOBAL_EXTERN(qlotto_register_cpu, void,
                                unsigned int cpu_index, void *cpu, void *cpuenv,
                                void *cpustatecc)
+REGISTER_DECLARE_GLOBAL_EXTERN(qemu_register_cpu_context, void,
+                               unsigned int cpu_index, void *cpu, void *cpuenv,
+                               void *cpustatecc)
 REGISTER_DECLARE_GLOBAL_EXTERN(gdb_register_cpu, void, unsigned int cpu_index,
                                void *cpu, void *cpuenv, void *cpustatecc)
 REGISTER_DECLARE_GLOBAL_EXTERN(into_qemu_from_guest, void,

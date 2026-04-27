@@ -103,4 +103,12 @@
                          ); \
     }
 
+#define AARCH64_TRAP0(val, op)             AARCH64_INSTR1(val, op)
+#define AARCH64_TRAP1(val, op, arg0)       AARCH64_INSTR2(val, op, arg0)
+#define AARCH64_TRAP2(val, op, arg0, arg1) AARCH64_INSTR3(val, op, arg0, arg1)
+#define AARCH64_TRAP3(val, op, arg0, arg1, arg2)                               \
+    AARCH64_INSTR4(val, op, arg0, arg1, arg2)
+#define AARCH64_TRAP4(val, op, arg0, arg1, arg2, arg3)                         \
+    AARCH64_INSTR5(val, op, arg0, arg1, arg2, arg3)
+
 #endif // LOTTO_UDF_AARCH64_GENERIC_H

@@ -16,7 +16,6 @@ add_compile_options("-fPIC" "-Werror" -DLOG_UNLOCKED)
 # ##############################################################################
 # Include stable options (shared with release)
 # ##############################################################################
-set(LOTTO_FRONTEND_LIST POSIX QEMU)
 include(cmake/detect.cmake)
 include(cmake/stable_options.cmake)
 include(cmake/submodule.cmake)
@@ -55,7 +54,7 @@ set(DICE_MAIN_HOOKS
     CACHE BOOL "" FORCE)
 
 set(DICE_DISPATCH_CHAINS
-    "1,4,7,2,3,5,6,0"
+    "0"
     CACHE STRING "" FORCE)
 
 set(DICE_MAX_BUILTIN_SLOTS
@@ -63,7 +62,7 @@ set(DICE_MAX_BUILTIN_SLOTS
     CACHE STRING "" FORCE)
 
 set(DICE_MAX_TYPES
-    200
+    256
     CACHE STRING "" FORCE)
 
 add_compile_definitions(DICE_XTOR_PRIO=1000)
@@ -129,22 +128,8 @@ include(cmake/modules.cmake)
 # ##############################################################################
 # Experimental options
 # ##############################################################################
-if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
-    set(LOTTO_STABLE_ADDRESS_MAP_DEFAULT OFF)
-    set(LOTTO_QEMU_YIELD_DEFAULT OFF)
-else()
-    set(LOTTO_STABLE_ADDRESS_MAP_DEFAULT ON)
-    set(LOTTO_QEMU_YIELD_DEFAULT OFF)
-endif()
-
-option(LOTTO_STABLE_ADDRESS_MAP
-       "whether stable addresses support the `MAP` method"
-       ${LOTTO_STABLE_ADDRESS_MAP_DEFAULT})
-
-if("${LOTTO_STABLE_ADDRESS_MAP}")
-    add_compile_definitions(LOTTO_STABLE_ADDRESS_MAP)
-    set(LOTTO_STABLE_ADDRESS_MAP_LIT_FEATURE STABLE_ADDRESS_MAP)
-endif()
+set(LOTTO_STABLE_ADDRESS_MAP_LIT_FEATURE STABLE_ADDRESS_MAP)
+set(LOTTO_QEMU_YIELD_DEFAULT OFF)
 
 option(LOTTO_QEMU_YIELD "whether to instrument guest code with yield syscall"
        ${LOTTO_QEMU_YIELD_DEFAULT})
@@ -234,7 +219,7 @@ add_custom_target(
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         -DCMAKE_INSTALL_PREFIX=${LOTTO_CICD_INSTALL_PREFIX}
-        -DLOTTO_FRONTEND=${LOTTO_FRONTEND} -DLOTTO_LTO=${LOTTO_LTO}
+        -DLOTTO_MODULE_qemu=${LOTTO_MODULE_qemu} -DLOTTO_LTO=${LOTTO_LTO}
         -DLOTTO_RACKET_TESTS=OFF
     COMMAND ${CMAKE_COMMAND} --build "${LOTTO_CICD_INSTALL_BUILD_DIR}" -j
     COMMAND ${CMAKE_COMMAND} --install "${LOTTO_CICD_INSTALL_BUILD_DIR}"

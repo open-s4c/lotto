@@ -96,8 +96,7 @@ describe_usage(FILE *fp)
     sys_fprintf(fp, "Usage:\n");
     sys_fprintf(fp,
                 "    lotto [--version|--help] [--plugin-dir DIR] [--plugins "
-                "P1[,P2]] [--load-runtime PATH[:PATH...]] "
-                "[--load-driver PATH[:PATH...]] <command> <args>\n\n");
+                "P1[,P2]] <command> <args>\n\n");
     subcmds_help(fp);
 }
 

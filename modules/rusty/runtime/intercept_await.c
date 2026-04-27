@@ -7,8 +7,8 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/rusty/events.h>
 #include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/events.h>
 #include <lotto/runtime/ingress.h>
-#include <lotto/runtime/ingress_events.h>
 
 void
 intercept_await(void *addr)

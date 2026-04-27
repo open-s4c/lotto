@@ -1,0 +1,10 @@
+QEMUFWCFG=/var/qemufwcfg
+
+/sbin/mount_qemufwcfg $QEMUFWCFG
+
+for file in ${QEMUFWCFG}/opt/org.smolbsd.var.*
+do
+	[ ! -f $file ] && continue
+	VARNAME=${file##*.}
+	eval "export $VARNAME=\$(cat \$file)"
+done

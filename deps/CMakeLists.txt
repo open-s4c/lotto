@@ -25,7 +25,7 @@ add_custom_target(blob-tsano DEPENDS ${CMAKE_BINARY_DIR}/include/blob-tsano.h)
 # ------------------------------------------------------------------------------
 # capstone
 # ------------------------------------------------------------------------------
-if("${LOTTO_FRONTEND}" STREQUAL "QEMU")
+if(LOTTO_MODULE_qemu)
     set(CAPSTONE_ARCHITECTURE_DEFAULT OFF)
     set(CAPSTONE_ARM64_SUPPORT ON)
     set(CAPSTONE_DIET ON)

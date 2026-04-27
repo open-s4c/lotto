@@ -1,0 +1,359 @@
+#!/bin/sh
+
+usage()
+{
+	cat 1>&2 << _USAGE_
+Usage:	${0##*/} -f conffile | -k kernel -i image [-c CPUs] [-m memory]
+	[-a kernel parameters] [-r root disk] [-h drive2] [-p port]
+	[-t tcp serial port] [-w path] [-e k=v] [-E f=path] [-x qemu extra args]
+	[-N] [-b] [-n] [-s] [-d] [-v] [-u]
+
+	Boot a microvm
+	-f conffile	vm config file
+	-k kernel	kernel to boot on
+	-i image	image to use as root filesystem
+	-I		load image as initrd
+	-c cores	number of CPUs
+	-m memory	memory in MB
+	-a parameters	append kernel parameters
+	-r root disk	root disk to boot on
+	-l drive2	second drive to pass to image
+	-t serial port	TCP serial port
+	-n num sockets	number of VirtIO console socket
+	-p ports	[tcp|udp]:[hostaddr]:hostport-[guestaddr]:guestport
+	-w path		host path to share with guest (9p)
+	-e k=v[,...]	export variables to vm via QEMU fw_cfg
+	-E f=path[,...]	export host file paths to vm via QEMU fw_cfg
+	-x arguments	extra qemu arguments
+	-N		disable networking
+	-b		bridge mode
+	-s		don't lock image file
+	-P		use pty console
+	-d		daemonize
+	-v		verbose
+	-u		non-colorful output
+	-h		this help
+_USAGE_
+	# as per https://www.qemu.org/docs/master/system/invocation.html
+	# hostfwd=[tcp|udp]:[hostaddr]:hostport-[guestaddr]:guestport
+	exit 1
+}
+
+# Check if VirtualBox VM is running
+if [ "$(uname -s)" != "Darwin" ]; then
+	if pgrep VirtualBoxVM >/dev/null 2>&1; then
+		echo "Unable to start KVM: VirtualBox is running"
+		exit 1
+	fi
+fi
+
+options="f:k:a:e:E:p:i:Im:n:c:r:l:p:uw:x:t:hbdsPNv"
+
+export CHOUPI=y
+
+uuid="$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c8)"
+
+# and possibly override its values
+while getopts "$options" opt
+do
+	case $opt in
+	a) append="$OPTARG";;
+	b) bridgenet=y;;
+	c) cores="$OPTARG";;
+	d) daemon=y;;
+	e) fwcfgvar=${OPTARG};;
+	E) fwcfgfile=${OPTARG};;
+	# first load vm config file
+	f)
+		. $OPTARG
+		# extract service from file name
+		svc=${OPTARG%.conf}
+		svc=${svc##*/}
+		;;
+	h) usage;;
+	i) img="$OPTARG";;
+	I) initrd="-initrd";;
+	# and possibly override values
+	k) kernel="$OPTARG";;
+	l) drive2=$OPTARG;;
+	m) mem="$OPTARG";;
+	n) max_ports=$(($OPTARG + 1));;
+	p) hostfwd=$OPTARG;;
+	r) root="$OPTARG";;
+	s) sharerw=y;;
+	t) serial_port=$OPTARG;;
+	u) CHOUPI="";;
+	v) VERBOSE=y;;
+	N) nonet=yes;;
+	P) use_pty=y;;
+	w) share=$OPTARG;;
+	x) extra=$OPTARG;;
+	*) usage;;
+	esac
+done
+
+. service/common/choupi
+
+# envvars override
+kernel=${kernel:-$KERNEL}
+img=${img:-$NBIMG}
+
+# enable QEMU user network by default
+[ -z "$nonet" ] && network="\
+-device virtio-net-device,netdev=net-${uuid}0 \
+-netdev user,id=net-${uuid}0,ipv6=off"
+
+if [ -n "$hostfwd" ]; then
+	network="${network},$(echo "$hostfwd"|sed -E 's/(udp|tcp)?::/hostfwd=\1::/g')"
+	echo "${ARROW} port forward set: $hostfwd"
+fi
+
+[ -n "$bridgenet" ] && network="$network \
+-device virtio-net-device,netdev=net-${uuid}1 \
+-netdev type=tap,id=net-${uuid}1"
+
+[ -n "$drive2" ] && drive2="\
+-drive if=none,file=${drive2},format=raw,id=hd-${uuid}1 \
+-device virtio-blk-device,drive=hd-${uuid}1"
+
+[ -n "$share" ] && share="\
+-fsdev local,path=${share},security_model=none,id=shar-${uuid}0 \
+-device virtio-9p-device,fsdev=shar-${uuid}0,mount_tag=shar-${uuid}0"
+
+[ -n "$sharerw" ] && sharerw=",share-rw=on"
+
+OS=$(uname -s)
+# arch can be forced to allow other qemu archs
+arch=${ARCH:-$(scripts/uname.sh -m)}
+machine=$(scripts/uname.sh -p)
+host_machine=$(uname -m)
+case "$host_machine" in
+	x86_64|amd64)
+		host_machine="x86_64"
+		;;
+	aarch64|arm64)
+		host_machine="aarch64"
+		;;
+esac
+# no config file given, extract service from image name
+if [ -z "$svc" ]; then
+	svc=${img%-${arch}*}
+	svc=${svc#*/}
+fi
+
+cputype="host"
+
+case $OS in
+NetBSD)
+	accel="-accel nvmm"
+	;;
+Linux)
+	if [ "$machine" != "$host_machine" ]; then
+		accel="-accel tcg" # unaccelerated
+		case "$machine" in
+		aarch64)
+			cputype="cortex-a57"
+			;;
+		x86_64)
+			cputype="qemu64"
+			;;
+		esac
+	else
+		accel="-accel kvm"
+	fi
+	;;
+Darwin)
+	accel="-accel hvf"
+	if [ "$arch" = "evbarm-aarch64" ]; then
+		# Mac M1, M2, M3, M4
+		cputype="cortex-a57"
+	else
+		# Mac Intel
+		cputype="qemu64"
+	fi
+	;;
+OpenBSD|FreeBSD)
+	accel="-accel tcg" # unaccelerated
+	cputype="qemu64"
+	;;
+*)
+	echo "Unknown hypervisor, no acceleration"
+esac
+
+QEMU=${QEMU:-qemu-system-${machine}}
+printf "${ARROW} using QEMU "
+$QEMU --version|grep -oE 'version .*'
+
+mem=${mem:-"256"}
+cores=${cores:-"1"}
+append=${append:-"-z"}
+root=${root:-"NAME=${svc}root"}
+
+case $machine in
+x86_64|i386)
+	mflags="-M microvm,rtc=on,acpi=off,pic=off"
+	cpuflags="-cpu ${cputype},+invtsc"
+	# stack smashing with version 9.0 and 9.1
+	${QEMU} --version|grep -q -E '9\.[01]' && \
+		extra="$extra -L bios -bios bios-microvm.bin"
+	case $machine in
+	i386)
+		kernel=${kernel:-kernels/netbsd-SMOL386}
+		;;
+	x86_64)
+		kernel=${kernel:-kernels/netbsd-SMOL}
+		;;
+	esac
+	;;
+aarch64)
+	mflags="-M virt,highmem=off,gic-version=3"
+	cpuflags="-cpu ${cputype}"
+	extra="$extra -device virtio-rng-pci"
+	kernel=${kernel:-kernels/netbsd-GENERIC64.img}
+	;;
+*)
+	echo "${WARN} Unknown architecture"
+esac
+
+if [ ! -f "$kernel" ]; then
+	[ "$OS" != "NetBSD" ] && MAKE=bmake || MAKE=make
+	echo -n "${ERROR} $kernel not present, fetch default kernel now? [y/N] "
+	read r && [ "$r" = "y" ] && $MAKE kernfetch || exit 1
+fi
+echo "${ARROW} using kernel $kernel"
+
+if [ -z "$use_pty" ]; then
+	pty="stdio,signal=off,mux=on"
+else
+	# if use_pty is set to a command, use it as pty attachment
+	[ "$use_pty" != "y" ] && ptycmd="$use_pty" || \
+		ptycmd="picocom -q -b 115200"
+	pty="pty"
+fi
+# use VirtIO console when available, if not, emulated ISA serial console
+if nm $kernel 2>&1 | grep -q viocon_earlyinit; then
+	console=viocon
+	[ -z "$max_ports" ] && max_ports=1
+	consdev="\
+-chardev ${pty},id=char0 \
+-device virtio-serial-device,max_ports=${max_ports} \
+-device virtconsole,chardev=char0,name=char0"
+else
+	[ -z "$use_pty" ] && pty="mon:stdio"
+	consdev="-serial $pty"
+	console=com
+fi
+echo "${ARROW} using console: $console"
+
+# only use tag if there's a tag
+imgtag=${imgtag:+:${imgtag}}
+# conf file was given
+[ -z "$img" ] && [ -n "$svc" ] && img=images/${svc}-${arch}${imgtag}.img
+
+if [ -z "$img" ]; then
+	printf "no 'image' defined\n\n" 1>&2
+	usage
+fi
+
+# registry like name was given
+[ "${img%.img}" = "${img}" ] && img="images/${img}.img"
+
+
+if [ -z "${initrd}" ]; then
+	echo "${ARROW} using disk image $img"
+	img="-drive if=none,file=${img},format=raw,id=hd-${uuid}0 \
+-device virtio-blk-device,drive=hd-${uuid}0${sharerw}"
+	root="root=${root}"
+else
+	echo "${ARROW} loading $img as initrd"
+	root=""
+fi
+
+# svc *must* be defined to be able to store qemu PID in a unique filename
+if [ -z "$svc" ]; then
+	svc=${uuid}
+	echo "${ARROW} no service name, using UUID ($uuid)"
+fi
+
+pidfile="qemu-${svc}.pid"
+
+d="-display none -pidfile ${pidfile}"
+
+if [ -n "$daemon" ]; then
+	# XXX: daemonize makes viocon crash
+	console=com
+	unset max_ports
+	# a TCP port is specified
+	if [ -n "${serial_port}" ]; then
+		serial="-serial telnet:localhost:${serial_port},server,nowait"
+		echo "${ARROW} using serial: localhost:${serial_port}"
+	fi
+
+	d="$d -daemonize $serial"
+else
+	# console output
+	d="$d $consdev"
+fi
+
+if [ -n "$max_ports" ] && [ $max_ports -gt 1 ]; then
+	for v in $(seq $((max_ports - 1)))
+	do
+		sockid="${uuid}-p${v}"
+		sockname="sock-${sockid}"
+		sockpath="s-${sockid}.sock"
+		viosock="$viosock \
+-chardev socket,path=${sockpath},server=on,wait=off,id=${sockname} \
+-device virtconsole,chardev=${sockname},name=${sockname}"
+		echo "${INFO} host socket ${v}: ${sockpath}"
+	done
+fi
+# QMP is available
+[ -n "${qmp_port}" ] && extra="$extra -qmp tcp:localhost:${qmp_port},server,wait=off"
+
+# export variables or files using QEMU fw_cfg
+[ -n "$fwcfgvar" ] && \
+	extra="$extra $(echo $fwcfgvar | sed -E 's|([[:alnum:]_]+)=([^,]+),?|-fw_cfg opt/org.smolbsd.var.\1,string=\2 |g')"
+[ -n "$fwcfgfile" ] && \
+	extra="$extra $(echo $fwcfgfile | sed -E 's|([[:alnum:]_]+)=([^,]+),?|-fw_cfg opt/org.smolbsd.file.\1,file=\2 |g')"
+
+# Use localtime for RTC instead of UTC by default
+extra="$extra -rtc base=localtime"
+
+[ -n "$use_pty" ] && escapex="^"
+echo "${EXIT} ^D to stop the vm, ^A-${escapex}X to kill it"
+
+cmd="${QEMU} -smp $cores \
+	$accel $mflags -m $mem $cpuflags \
+	-kernel $kernel $initrd ${img} \
+	-append \"console=${console} ${root} ${append}\" \
+	-global virtio-mmio.force-legacy=false ${share} \
+	${drive2} ${network} ${d} ${viosock} ${extra}"
+
+[ -n "$VERBOSE" ] && echo "$cmd" && exit
+
+[ -n "$viosock" ] && \
+	(
+		killsock=${sockpath%-p[0-9]*}-p1.sock
+		while [ ! -S "./$killsock" ]
+		do
+			echo "${SOCKET} waiting for vm control socket ${killsock}"
+			sleep 0.5
+		done
+		socat ./$killsock -,ignoreeof 2>&1 | while read VIOCON
+			do
+				case ${VIOCON} in JEMATA!*) kill $(cat ${pidfile}); esac
+			done
+	) &
+
+[ -n "$use_pty" ] && \
+	cmd="$cmd -daemonize >qemu-${svc}.pty 2>&1"
+
+eval $cmd
+
+if [ -n "$use_pty" ]; then
+	ptyfile="qemu-${svc}.pty"
+	while [ ! -f "$ptyfile" ]; do sleep 0.2; done
+	${ptycmd} $(grep -o '/dev/[^ ]*' $ptyfile)
+	kill $(cat ${pidfile})
+	rm -f $ptyfile
+fi

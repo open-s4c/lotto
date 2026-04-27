@@ -1,0 +1,5 @@
+BASEPATH=/mnt
+DRIVE2=/drive2
+CHOUPI=y
+
+export BASEPATH DRIVE2 CHOUPI

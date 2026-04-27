@@ -1,0 +1,56 @@
+
+export HOME=/
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/pkg/bin:/usr/pkg/sbin
+umask 022
+
+if [ "$(sysctl -n kern.root_device)" = "md0" ]; then
+	mount -u -o rw /dev/md0a /
+	sed -i'' 's,^[^ ]*,/dev/md0a,' /etc/fstab
+fi
+
+mount -a
+
+# custom local preload
+[ -f /etc/rc.pre ] && . /etc/rc.pre
+
+# load QEMU fw_cfg variables is any
+dmesg | grep -q qemufwcfg && \
+	. /etc/include/qemufwcfg || \
+	echo "no qemufwcfg support"
+
+[ ! -f "/dev/MAKEDEV" ] && cp -f /etc/MAKEDEV* /dev
+
+# bits needed for a really usable tty
+mount -t ptyfs ptyfs /dev/pts
+cd /dev && ./MAKEDEV fd && cd -
+/etc/rc.d/ttys start
+chmod 666 /dev/null
+
+# create an additional viocon(4) port if support available
+dmesg | grep -q viocon && \
+	(cd /dev && ./MAKEDEV ttyVI01 ttyVI02 && chmod 666 /dev/ttyVI*) || \
+	echo "no viocon(4) support"
+
+# set IP address manually, faster than dhcp
+if ifconfig vioif0 >/dev/null 2>&1; then
+	route flush -inet6 >/dev/null 2>&1
+	# default qemu addresses and routing
+	ifconfig vioif0 10.0.2.15/24
+	route add default 10.0.2.2
+	mount | grep read-only || \
+		echo "nameserver 10.0.2.3" > /etc/resolv.conf
+fi
+
+ifconfig lo0 127.0.0.1 up
+
+# sane network defaults
+# https://wiki.netbsd.org/tutorials/tuning_netbsd_for_performance/
+sysctl -w net.inet.tcp.sendbuf_max=16777216
+sysctl -w net.inet.tcp.recvbuf_max=16777216
+sysctl -w kern.sbmax=16777216
+
+
+[ -n "$MOUNTRO" ] && mount -u -o ro /
+
+# custom local post load
+[ -f /etc/rc.local ] && . /etc/rc.local

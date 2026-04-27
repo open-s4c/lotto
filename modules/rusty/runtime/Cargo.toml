@@ -16,5 +16,4 @@ rusty_handlers = { workspace = true, features = ["runtime"] }
 
 [features]
 demo = ["rusty_handlers/demo"]
-stable_address_map = ["rusty_handlers/stable_address_map"]
 qlotto = ["lotto/qlotto"]

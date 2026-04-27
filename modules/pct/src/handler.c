@@ -11,7 +11,7 @@
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/state.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
 #include <lotto/util/once.h>

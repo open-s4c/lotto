@@ -8,7 +8,6 @@
 #include <lotto/engine/state.h>
 #include <lotto/runtime/capture_point.h>
 #include <lotto/runtime/events.h>
-#include <lotto/runtime/ingress_events.h>
 #include <lotto/runtime/mediator.h>
 #include <lotto/runtime/runtime.h>
 #include <lotto/runtime/switcher.h>
@@ -177,6 +176,13 @@ mediator_resume(mediator_t *m, capture_point *cp)
 
     ASSERT(plan_next(m->plan) == ACTION_NONE);
     return st;
+}
+
+reason_t
+mediator_reason(const mediator_t *m)
+{
+    ASSERT(m != NULL);
+    return m->plan.reason;
 }
 
 static inline bool

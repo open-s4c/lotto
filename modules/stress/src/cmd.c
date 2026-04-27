@@ -50,6 +50,6 @@ ON_DRIVER_REGISTER_COMMANDS({
                     flag_logger_file(),
                     0};
     subcmd_register(stress, "stress", "[--] <command line>",
-                    "Stress test a program until a desired execution is found",
+                    "Run a program repeatedly to find an execution of interest",
                     true, sel, run_default_flags, SUBCMD_GROUP_RUN);
 })

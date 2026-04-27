@@ -10,12 +10,23 @@
 
 #include <dice/events/memaccess.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/assert.h>
 
 #define EVENT_RUNTIME__MEMMGR_INIT 129
 #define EVENT_PTHREAD_DETACH       131
 #define EVENT_RUNTIME__NOP         132
+
+#define EVENT_TASK_INIT   170
+#define EVENT_TASK_FINI   171
+#define EVENT_TASK_CREATE 172
+#define EVENT_TASK_DETACH 174
+#define EVENT_TASK_JOIN   176
+
+typedef struct task_join_event {
+    uintptr_t thread;
+    void **ptr;
+    int ret;
+} task_join_event_t;
 
 static inline bool
 has_memaccess_addr(const capture_point *cp)

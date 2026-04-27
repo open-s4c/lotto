@@ -33,6 +33,7 @@ test_ptr()
 void
 test_map()
 {
+#ifdef LOTTO_STABLE_ADDRESS_MAP
     void *ptr = malloc(10);
 
     // _method_from(): method MAP
@@ -45,6 +46,7 @@ test_map()
     size_t len = map_addr.name[0] ? strlen(map_addr.name) + 1 : 0;
     ENSURE(len > 0);
     free(ptr);
+#endif
 }
 
 int

@@ -5,7 +5,7 @@
 #include <dice/events/stacktrace.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/logger.h>
 
 static inline uintptr_t

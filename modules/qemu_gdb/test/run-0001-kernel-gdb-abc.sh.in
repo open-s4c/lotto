@@ -1,0 +1,38 @@
+#!/usr/bin/bash
+set -eu
+
+tmpdir=$(mktemp -d)
+log="$tmpdir/out.log"
+client_log="$tmpdir/client.log"
+qemu_pid=""
+
+cleanup() {
+    if [ -n "$qemu_pid" ]; then
+        kill "$qemu_pid" 2>/dev/null || true
+    fi
+    rm -rf "$tmpdir"
+}
+
+trap cleanup EXIT
+
+env LD_PRELOAD=@CMAKE_BINARY_DIR@/liblotto-runtime.so \
+    DICE_PLUGIN_MODULES=@CMAKE_BINARY_DIR@/liblotto-runtime.so \
+    timeout -k 20s 15s stdbuf -i0 -o0 -e0 \
+    @CMAKE_BINARY_DIR@/lotto stress \
+    --temporary-directory "$tmpdir" \
+    -o "$tmpdir/out.trace" \
+    -Q --gdb --gdb-wait -r 1 -- \
+    -smp 3 -kernel @_QEMU_GDB_KERNEL@ >"$log" 2>&1 &
+qemu_pid=$!
+
+sleep 2
+@_QEMU_GDB_CLIENT@ 127.0.0.1 12255 >"$client_log" 2>&1
+
+set +e
+wait "$qemu_pid"
+ec=$?
+set -e
+
+test "$ec" -ne 124
+grep -q 'qemu-gdb-rsp: ok' "$client_log"
+grep -q 'gdb-abc: FAIL' "$log"

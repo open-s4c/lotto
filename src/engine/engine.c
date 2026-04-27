@@ -10,7 +10,7 @@
 #include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/now.h>
 #include <lotto/util/contract.h>

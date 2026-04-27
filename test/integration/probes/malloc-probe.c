@@ -5,7 +5,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 
 static int malloc_before_calls_;
 static int malloc_after_calls_;

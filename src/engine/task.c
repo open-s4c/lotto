@@ -2,7 +2,7 @@
 #include <lotto/base/tidset.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/ensure.h>
 #include <lotto/sys/logger.h>

@@ -164,7 +164,7 @@ fn main() -> Result<()> {
         .rustified_enum("slot")
         .rustified_enum("event")
         .rustified_enum("enforece_mode")
-        .rustified_enum("termination_mode")
+        .rustified_enum("terminate_mode")
         .rustified_enum("stable_address_method")
         .rustified_enum("subcmd_group")
         .rustified_enum("state_type")
@@ -192,11 +192,6 @@ fn main() -> Result<()> {
         .fold(builder, |builder, include_arg| {
             builder.clang_arg(include_arg)
         });
-
-    #[cfg(feature = "stable_address_map")]
-    {
-        builder = builder.clang_arg("-DLOTTO_STABLE_ADDRESS_MAP");
-    }
 
     let bindings = builder
         // Finish the builder and generate the bindings.

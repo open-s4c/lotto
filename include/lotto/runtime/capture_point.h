@@ -32,6 +32,7 @@ typedef struct capture_task_create_event {
     void *thread;
     const void *attr;
     void *run;
+    int ret;
 } capture_task_create_event;
 
 typedef struct capture_task_detach_event {

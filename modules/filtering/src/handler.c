@@ -6,7 +6,7 @@
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress_events.h>
+#include <lotto/runtime/events.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/stdio.h>
@@ -63,7 +63,7 @@ LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
     _set_default_filtering();
     *_drop_less = *_drop;
 
-#ifdef QLOTTO_ENABLED
+#if 0
     _drop_less[EVENT_BEFORE_READ]  = 0;
     _drop_less[EVENT_BEFORE_WRITE] = 0;
 #endif

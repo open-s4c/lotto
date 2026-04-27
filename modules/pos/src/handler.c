@@ -174,8 +174,13 @@ _pos_handle(const capture_point *cp, event_t *e)
         } else {
             t->priority = _fresh_priority(prng_next());
         }
-    } else {
-        ASSERT(cp->type_id == EVENT_TASK_FINI);
+    } else if (cp->type_id != EVENT_TASK_FINI) {
+        t = (task_t *)tidmap_register(&_state, cp->id);
+        if (t) {
+            t->is_write = is_write;
+            t->addr     = addr;
+            t->priority = _fresh_priority(prng_next());
+        }
     }
     _pos_sort(&e->tset);
     _reset_races(tidset_get(&e->tset, 0));

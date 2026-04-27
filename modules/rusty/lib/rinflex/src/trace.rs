@@ -53,8 +53,8 @@ pub fn expand(flags: &Flags, input: &Path, output: &Path, clk: Option<Clock>) ->
     if let Some(clk) = clk {
         flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
         flags.set_by_opt(
-            &flag_termination_type(),
-            Value::U64(raw::termination_mode::TERMINATION_MODE_REPLAY as u64),
+            &flag_terminate_type(),
+            Value::U64(raw::terminate_mode::TERMINATE_MODE_REPLAY as u64),
         );
     }
     replay(&flags, input, output)

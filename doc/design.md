@@ -2,7 +2,7 @@
 
 Creation of concurrent software is a nontrivial task which is prone to hard to find bugs. Developers have to find a trade-off between slow overprotecting code patterns and more performant but possibly wrong optimizations.
 
-Lotto is a framework for reproduction and deterministic replay of concurrency bugs. It aims for supporting both user-space (PLotto) and kernel-space (QLotto, experimental) scenarios as well as providing an extensible platform to accommodate specific user needs with domain-specific plugins.
+Lotto is a framework for reproduction and deterministic replay of concurrency bugs. It aims for supporting both user-space (PLotto) and kernel-space (QEMU-based Lotto, experimental) scenarios as well as providing an extensible platform to accommodate specific user needs with domain-specific plugins.
 
 # Architecture
 
@@ -17,7 +17,7 @@ The CLI provides the user interface for configuring and running the system under
 +---------+
 | dlotto  | <---------------- containerized Lotto (Alpine Linux + Docker) [experimental]
 +---------+
-| qlotto  | <---------------- kernel-space Lotto (Qemu + plugins) [experimental]
+| qemu    | <---------------- kernel-space Lotto (QEMU + modules) [experimental]
 +---------+
 | plotto  | <---------------- user-space Lotto
 +---------+  +--------------- UI
@@ -35,7 +35,7 @@ The CLI provides the user interface for configuring and running the system under
 +----------------------+
 ```
 
-Sys and base provide a library for other components. Brokers and states are specific to the Lotto engine. They are also used by the CLI for setting up the run. The engine sees SUT on the abstract level through the runtime. The runtime provides a unified interface for all domain-specific front-ends. The simplest frontend is PLotto. It contains basic interceptors for pthread and TSAN allowing most basic user-space applications compiled with TSAN to be run with Lotto. QLotto is a specific case of PLotto applied to a modified version of Qemu enriched with Lotto-aware plugins (see *experimental* note in the qlotto section). DLotto extends that concept further with containerization and is also experimental.
+Sys and base provide a library for other components. Brokers and states are specific to the Lotto engine. They are also used by the CLI for setting up the run. The engine sees SUT on the abstract level through the runtime. The runtime provides a unified interface for all domain-specific front-ends. The simplest frontend is PLotto. It contains basic interceptors for pthread and TSAN allowing most basic user-space applications compiled with TSAN to be run with Lotto. QEMU support is the kernel-space path built from the base `qemu` module plus optional `qemu_*` feature modules. DLotto extends that concept further with containerization and is also experimental.
 
 # Components
 
@@ -266,17 +266,33 @@ The signal handler ensures graceful termination of Lotto when a signal is receiv
 ## `plotto`
 PLotto is a collection of interceptors for pthread and TSAN. They are sufficient for basic user-space scenarios.
 
-## `qlotto` *(experimental)*
-QLotto extends functionality of PLotto by making use of Qemu and dynamic instrumentation of guest VM instructions. This frontend provides a possibility of testing and replaying kernel code. On the high level, it is PLotto with a QLotto plugin being applied to a modified version of Qemu with plugins running SUT image. The PLotto plugin integrates Qemu plugin configurations into Lotto CLI.
+## QEMU support *(experimental)*
+The QEMU path extends Lotto to guest-kernel scenarios by running an AArch64 VM
+under a patched QEMU and loading Lotto runtime modules as QEMU plugins.
+
+The current split is:
+
+- base `qemu`
+- optional `qemu_*` feature modules such as:
+  - `qemu_gdb`
+  - `qemu_profile`
+  - `qemu_snapshot`
+
+Base `qemu` owns transport, translation-time callback binding, and QEMU control
+publications. Feature modules subscribe to those publications and register
+their own behavior. See [qemu.md](qemu.md) for the current detailed model.
 
 ### Qemu
-Qemu code had to be adjusted to accommodate QLotto needs. The changes are kept minimal to reduce maintenance overhead when switching to another version of Qemu. Thus, the modifications fall in a few well-defined categories.
+QEMU code had to be adjusted to accommodate Lotto's plugin needs. The changes
+are kept minimal to reduce maintenance overhead when switching to another
+version of QEMU. The main categories are:
 
 #### enable running Qemu with PLotto
 Qemu uses its own futex implementation with `syscall()` which is currently not supported by PLotto. It was replace with an equivalent evec interface implemented in Lotto.
 
 #### extend plugin API
-QLotto plugins need more interaction with Qemu than standard Qemu plugins. Hence, Qemu source code had to be changed to enable the following:
+Lotto QEMU modules need more interaction with QEMU than standard QEMU plugins.
+Hence, QEMU source code had to be changed to enable the following:
 
 - callback informing that a VCPU registered sharing the CPU data structure
 - callbacks for tracking transitions between Qemu and the guest
@@ -286,19 +302,24 @@ QLotto plugins need more interaction with Qemu than standard Qemu plugins. Hence
 While the changes cover passing more information to the plugins and letting plugins influence Qemu execution, they keep Qemu and plugin code decoupled allowing plain Qemu execution.
 
 #### support guest instrumentation
-QLotto allows the guest communicate events to Lotto engine by executing undefined instructions (UDFs). These instructions can be inserted both manually in the source code and during the translation. Qemu had to be changed to let callbacks process UDFs and not terminate when receiving a `SIGILL`.
+The guest can communicate events to Lotto by executing undefined instructions
+(UDFs). These instructions can be inserted manually in guest code or during
+translation. QEMU had to be changed to let callbacks process UDFs and not
+terminate when receiving a `SIGILL`.
 
 ### performance
-The performance plugin is used to evaluate runtime productivity of QLotto. It represents sequential execution as a state machine switching between Qemu, the frontend plugin, and Lotto engine. Thus, the performance measurements provide an overview of overhead added by various QLotto components.
-
-### `frontend`
-The frontend is a Qemu-specific interceptor extension of Lotto. It registers callbacks in Qemu which create contexts for received events and pass them to the interceptor. The context is guest-aware and includes not only the VCPU id but also the guest thread id.
+`qemu_profile` is the profiling module for the QEMU path. It measures runtime
+activity and overhead through subscriptions and QEMU callback registration.
 
 ### `gdb`
-The gdb plugin enables debugging with QLotto. It runs during both record and replay to ensure replay determinism. Unlike the native Qemu gdb server, the QLotto gdb server is invisible for Lotto and does not break replay when a gdb client connects and uses the gdb server.
+The `qemu_gdb` module enables debugging on the QEMU path. It runs during both
+record and replay to preserve determinism. Unlike the native QEMU gdb server,
+the Lotto gdb server is integrated with the Lotto execution model.
 
 ### `snapshot`
-The snapshot plugin is responsible for taking snapshots when Qemu is run without Lotto. This feature enables faster debug loop in scenarios where the bug can be reproduced with plain Qemu and the execution run takes too long with QLotto:
+The `qemu_snapshot` module is responsible for requesting VM snapshots from
+inside the guest execution path. This enables a faster debug loop in scenarios
+where a later suffix of the execution is the part of interest:
 
 ```
                Qemu execution
@@ -307,14 +328,20 @@ image -+----...----+-------...-----+------> bug
        V           V               V
    snapshot 1  snapshot i      snapshot n
                    |
-                   |     QLotto stress
+                   |     Lotto stress -Q
                    +----------------------> bug + Lotto trace
 ```
 
-At first, the bug has to be reproduced with plain Qemu. The snapshot plugin creates snapshots regularly. Then the suffix of interest has to be determined by the user. The longer the suffix is, the more time it will take for QLotto to execute it. On the other hand a too short suffix may miss the point when the root cause of the bug happens. Then, the snapshot can be used with Lotto stress to reproduce the bug with QLotto. Once the bug is hit, Lotto trace is generated and the suffix can be deterministically replayed.
+At first, the bug has to be reproduced with plain QEMU or the Lotto QEMU path.
+The user then decides which suffix is worth replaying. The longer the suffix
+is, the more time Lotto needs to execute it. A too-short suffix can miss the
+root cause. Snapshot save is currently exposed; restore/load is still pending.
 
 ### Changes to the guest
-The guest can be manually intercepted to make Lotto aware of certain events. For instance, annotating all lock interfaces would allow Lotto to detect deadlocks. QLotto provides convenience headers for easy insertion of capture points.
+The guest can be manually annotated to make Lotto aware of certain events. For
+instance, annotating lock interfaces allows semantic modules to observe locking
+behavior. The QEMU path provides convenience headers for these guest-side
+annotations and traps.
 
 ## `dlotto` *(experimental)*
 Scripts and images.

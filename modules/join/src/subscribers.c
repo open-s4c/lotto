@@ -9,8 +9,8 @@
 #include <lotto/modules/join/events.h>
 #include <lotto/order.h>
 #include <lotto/runtime/capture_point.h>
+#include <lotto/runtime/events.h>
 #include <lotto/runtime/ingress.h>
-#include <lotto/runtime/ingress_events.h>
 #include <lotto/sys/logger.h>
 
 #define DECL_PTHREAD_JOIN_RET(VAL)                                             \

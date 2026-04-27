@@ -10,8 +10,8 @@
 #include <lotto/driver/events.h>
 #include <lotto/engine/events.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/runtime/ingress.h>
 #include <lotto/runtime/events.h>
+#include <lotto/runtime/ingress.h>
 #include <lotto/util/macros.h>
 
 /* Lotto pubsub chains. */
@@ -19,6 +19,8 @@
 #define CHAIN_LOTTO_DEFAULT     8
 #define CHAIN_SEQUENCER_CAPTURE 12
 #define CHAIN_SEQUENCER_RESUME  13
+#define CHAIN_LOTTO_TRAP        14
+#define CHAIN_QEMU_CONTROL      15
 
 /* Advertise a Lotto event type name for debugging and tracing output. */
 #define LOTTO_ADVERTISE_TYPE(TYPE)                                             \
@@ -81,6 +83,19 @@
     LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_INIT, __VA_ARGS__)
 
 /*
+ * Run code during Lotto Phase 4: finalization.
+ *
+ * Use this for work that must happen before the runtime exit path completes.
+ */
+#define ON_FINALIZATION_PHASE(...)                                             \
+    LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_FINI, {                                \
+        const struct lotto_fini_event *ev =                                    \
+            (const struct lotto_fini_event *)event;                            \
+        (void)ev;                                                              \
+        __VA_ARGS__                                                            \
+    })
+
+/*
  * Publish the registration-phase event for the current process.
  *
  * This starts Lotto Phase 2.
@@ -94,9 +109,21 @@
  */
 #define START_INITIALIZATION_PHASE() LOTTO_PUBLISH_CONTROL(EVENT_LOTTO_INIT)
 
+/*
+ * Publish the finalization-phase event for the current process.
+ *
+ * This starts Lotto Phase 4.
+ */
+#define START_FINALIZATION_PHASE(payload, md)                                  \
+    LOTTO_PUBLISH_CONTROL_PAYLOAD(EVENT_LOTTO_FINI, payload, md)
+
 /* Publish a control event on the Lotto control chain. */
 #define LOTTO_PUBLISH_CONTROL(evtype)                                          \
     PS_PUBLISH(CHAIN_LOTTO_CONTROL, evtype, 0, 0)
+
+/* Publish a payload-carrying control event on the Lotto control chain. */
+#define LOTTO_PUBLISH_CONTROL_PAYLOAD(evtype, payload, md)                     \
+    PS_PUBLISH(CHAIN_LOTTO_CONTROL, evtype, (void *)(payload), (md))
 
 /* Publish a value payload on the default Lotto chain. */
 #define LOTTO_PUBLISH(evtype, val)                                             \

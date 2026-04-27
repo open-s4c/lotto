@@ -17,5 +17,6 @@
  * does not pull Dice/runtime payload types into bare-metal guest builds.
  */
 #define EVENT_MUTEX_TRYACQUIRE 143
+#define EVENT_WORKGROUP_JOIN   192
 
 #endif

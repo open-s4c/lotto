@@ -4,7 +4,7 @@ add_compile_definitions(_GNU_SOURCE)
 add_compile_definitions(LOGGER_PREFIX="engine")
 
 set(MODULE_NAME engine)
-set(MODULE_SLOT 8)
+set(MODULE_SLOT 10)
 add_compile_definitions(DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${MODULE_SLOT})
 
 set(ENGINE_RUNTIME_SRCS

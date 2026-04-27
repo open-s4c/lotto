@@ -31,6 +31,7 @@ include_directories(qemu/include)
 include_directories(qemu_gdb/include)
 include_directories(qemu_profile/include)
 include_directories(qemu_snapshot/include)
+include_directories(workgroup/include)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LOTTO_MODULE_BUILD_DIR}")
 
@@ -80,6 +81,7 @@ add_module(task_velocity)
 add_module(order)
 add_module(concurrent SLOT 6)
 add_module(ghost SLOT 7)
+add_module(workgroup SLOT 8 DEFAULT OFF)
 add_module(rusty DEFAULT ${HAVE_CARGO})
 
 # bias and scheduling strategy handlers

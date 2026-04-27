@@ -84,6 +84,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_CREATE, {
         .thread = ev->thread,
         .attr   = ev->attr,
         .run    = ev->run,
+        .ret    = EINTR,
     };
     capture_point cp = {
         .chain_id    = chain,
@@ -103,6 +104,7 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_PTHREAD_CREATE, {
         .thread = ev->thread,
         .attr   = ev->attr,
         .run    = ev->run,
+        .ret    = ev->ret,
     };
     capture_point cp = {
         .chain_id = chain,

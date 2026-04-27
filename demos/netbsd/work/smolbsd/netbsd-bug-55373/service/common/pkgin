@@ -1,0 +1,71 @@
+. /etc/include/choupi
+
+# install necessary packages
+if [ ! -d /var/db/pkgin ]; then
+	case $CHOUPI in
+	[yY]*)
+		printf "\n✨ preparing initial environment...\n"
+		;;
+	*)
+		v="-v"
+		;;
+	esac
+	printf "\n${STAR} installing needed packages\n"
+
+	[ -f /etc/pkgvers ] && . /etc/pkgvers
+	if [ -n "$PKGVERS" ]; then
+		ver=$PKGVERS
+	else
+		ver=$(uname -r)
+		case $ver in
+		*99*) # current
+			ver=${ver%.99*}.0
+			;;
+		*_*) # tag
+			ver=${ver%_*}
+			;;
+		esac
+	fi
+
+	# repository path differs for amd64 or aarch64/evbarm
+	machine=$(uname -m)
+	proc=$(uname -p)
+	[ "$machine" = "amd64" ] && arch=$machine || arch=$proc
+	url="netbsd.org/pub/pkgsrc/packages/NetBSD/${arch}/${ver}/All"
+
+	certctl rehash
+
+	scheme="https"
+	if [ -n "$https_proxy" -o -n "$https_proxy" ]; then
+		printf "${ARROW} using proxy: $http_proxy\n"
+		# libfetch doesn't support HTTPS proxying
+		scheme="http"
+	fi
+
+	url="${scheme}://cdn.${url}"
+	echo "${ARROW} fetch URL: ${url}"
+
+	for pkg in pkg_install pkgin pkg_tarup rsync curl # ca-certificates
+	do
+		printf "${ARROW} installing $pkg\n"
+		pkg_info $pkg >/dev/null 2>&1 || \
+			pkg_add ${v} ${url}/${pkg}*
+	done
+
+	[ -d /packages ] && \
+		for pkg in /packages/*
+		do
+			pkg_add ${v} $pkg
+		done
+
+	mkdir -p /usr/pkg/etc/pkgin
+	echo $url >/usr/pkg/etc/pkgin/repositories.conf
+	pkgin up
+
+	# additional packages to install
+	for p in $INSTALL_PACKAGES
+	do
+		pkgin -y install $p
+	done
+fi
+

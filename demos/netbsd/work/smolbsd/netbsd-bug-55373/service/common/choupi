@@ -1,0 +1,36 @@
+case $CHOUPI in
+*)
+	STAR="⭐"
+	ARROW="➡️"
+	CHECK="✅"
+	WARN="⚠️"
+	INFO="ℹ️"
+	WHITEBULLET="⚪"
+	ERROR="❌"
+	CPU="🔲"
+	FREEZE="🧊"
+	OUT="/dev/null"
+	ROCKET="🚀"
+	SOCKET="🔌"
+	EXIT="🔚"
+	;;
+[nN])
+	STAR="*"
+	ARROW=">"
+	CHECK='\'
+	WARN='!'
+	INFO='i'
+	WHITEBULLET="o"
+	ERROR="X"
+	CPU="[]"
+	FREEZE="="
+	OUT="/dev/stdout"
+	ROCKET="&>"
+	SOCKET="-<"
+	EXIT="->]"
+	;;
+esac
+
+LIGHTGREEN="\033[92m"
+BOLD="\033[1m"
+NORMAL="\033[0m"

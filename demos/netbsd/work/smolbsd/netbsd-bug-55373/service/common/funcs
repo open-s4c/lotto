@@ -1,0 +1,22 @@
+# helper functions
+
+rsynclite()
+{
+	src=$1
+	dst=$2
+	while case "$src" in --exclude=*) true;; *) false;; esac; do
+		exclude="${src#*=}"
+		src="${exclude#* }"
+		exclude="${exclude%% *}"
+		toexclude="${toexclude} --exclude=${exclude}"
+	done
+	if [ -f "$src" ]; then
+		# ensure dest directory exists
+		[ "${dst%/*}" != "$dst" ] && mkdir -p "${dst%/*}"
+		cp -f "$src" "$dst"
+		return
+	fi
+	[ ! -d "$src" ] && return
+	[ ! -d "$dst" ] && mkdir -p "$dst"
+	(cd "$src" && tar cfp - ${toexclude} .)|(cd "$dst" && tar xfp -)
+}

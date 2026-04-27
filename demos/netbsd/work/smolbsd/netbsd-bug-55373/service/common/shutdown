@@ -1,0 +1,10 @@
+sync; sync
+dmesg | grep -q 'viocon0: adding port' && \
+	(
+		mount -u -o ro /
+		sync; sync
+		echo 'JEMATA!' > /dev/ttyVI01
+	) || \
+umount -af
+# no viocon(4) support
+halt -lq

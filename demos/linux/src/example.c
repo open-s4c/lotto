@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <lotto/qemu.h>
+#include <lotto/qemu/guest.h>
 #include <lotto/yield.h>
 #include <vsync/queue/bounded_mpmc.h>
 

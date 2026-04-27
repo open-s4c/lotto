@@ -10,4 +10,4 @@ exec ${QEMU_CMD} \
     -machine virt -cpu cortex-a57 -nographic -smp 2 -no-reboot \
     -kernel demos/linux/linux-${LINUX_VERSION}/arch/arm64/boot/Image \
     -initrd demos/linux/rootfs.img \
-    -append "init=/init.sh serial=ttyAMA0 root=/dev/ram panic=-1 -- $*"
+    -append "serial=ttyAMA0 root=/dev/ram panic=-1 -- $*"

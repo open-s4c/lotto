@@ -24,6 +24,11 @@ INCLUDES = \
 	-I ../../build/include \
 	-I ../../include \
 	-I ../../modules/qemu/include \
+	-I ../../modules/qemu_profile/include \
+	-I ../../modules/qemu_snapshot/include \
+	-I ../../modules/terminate/include \
+	-I ../../modules/bias/include \
+	-I ../../modules/deadlock/include \
 	-I ../../modules/yield/include \
 	-I ../../modules/bias/include \
 	-I ../../deps/dice/deps/libvsync/include \
@@ -91,7 +96,7 @@ ${ROOTFS}/lib/modules/${LINUX_VERSION}/${MODULE}.ko: modules/${MODULE}.c ${ROOTF
 	cd modules && make all
 	cp modules/${MODULE}.ko $@
 
-${ROOTFS}/init.sh: src/init.sh ${ROOTFS}
+${ROOTFS}/init: src/init.sh ${ROOTFS}
 	cp $< $@
 
 compile: ${TARGETS} ${ROOTFS}/lib/modules/${LINUX_VERSION}/${MODULE}.ko
@@ -99,7 +104,7 @@ compile: ${TARGETS} ${ROOTFS}/lib/modules/${LINUX_VERSION}/${MODULE}.ko
 scx_libs: scx
 	cp ${shell bash lib_deps.sh ${LINUX}/tools/sched_ext/build/bin/scx_sched_rand} ${ROOTFS}/lib
 
-rootfs.img: compile ${ROOTFS}/init.sh
+rootfs.img: compile ${ROOTFS}/init
 ifeq ($(ENABLE_SCX),1)
 	$(MAKE) scx_libs
 endif

@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include <lotto/qemu.h>
+#include <lotto/qemu/snapshot.h>
 
 #define ITERS 10
 
@@ -19,6 +20,7 @@ test(char *cmd)
 int
 main(int argc, char *argv[])
 {
+    qlotto_snapshot();
     lotto_qemu_bias_policy(BIAS_POLICY_NONE);
 
     if (argc == 1)

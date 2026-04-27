@@ -17,6 +17,7 @@
 #include <ucontext.h>
 
 #include <lotto/bias.h>
+#include <lotto/qemu/guest.h>
 #include <lotto/qemu/trap.h>
 
 
@@ -60,24 +61,6 @@ lotto_qemu_udf_returns_init(void)
 }
 
 /**
- * Aborts Lotto's execution and signals a failure.
- */
-static inline void
-lotto_fail(void)
-{
-    LOTTO_EXIT_FAILURE;
-}
-
-/**
- * Halts Lotto's execution and signals success.
- */
-static inline void
-lotto_halt(void)
-{
-    LOTTO_EXIT_SUCCESS;
-}
-
-/**
  * Set the current Lotto bias policy from a QEMU guest.
  */
 static inline void
@@ -113,21 +96,4 @@ lotto_qemu_instrument(bool enabled)
  * This function can be called recursively. An equal number of
  * `lotto_coarse_capture` has to be called to balance them out.
  */
-void
-lotto_fine_capture()
-{
-    LOTTO_REGION_IN;
-}
-
-/**
- * Sets QLotto plugin to inject grained-grained capture points.
- *
- * This function cancels the effect of `lotto_fine_capture` if called the same
- * number of consecutive times.
- */
-void
-lotto_coarse_capture()
-{
-    LOTTO_REGION_OUT;
-}
 #endif

@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -13,9 +14,9 @@
 #include <lotto/evec.h>
 #include <lotto/modules/mutex/events.h>
 #include <lotto/mutex.h>
+#include <lotto/qemu/trap.h>
 #include <lotto/rsrc_deadlock.h>
 #include <lotto/runtime/capture_point.h>
-#include <lotto/qemu/trap.h>
 #include <lotto/sys/logger.h>
 
 static int
@@ -27,7 +28,7 @@ pthread_nop_zero_()
 static int
 pthread_nop_one_()
 {
-    return 1;
+    return EBUSY;
 }
 
 PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_MUTEX_LOCK, {

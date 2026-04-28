@@ -80,5 +80,6 @@ void recorder_end_trace();
  * learn when the replay is over.
  */
 void recorder_end_replay();
+void recorder_set_clks(clk_t replay_clk, clk_t record_clk);
 
 #endif

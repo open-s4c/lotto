@@ -229,3 +229,9 @@ engine_return(const capture_point *cp)
     log(cp, "RETURN   %s\t%s", ps_type_str(cp->type_id), cp->func);
     sequencer_return(cp);
 }
+
+void
+engine_set_clk(clk_t clk)
+{
+    _ghost.clk = clk;
+}

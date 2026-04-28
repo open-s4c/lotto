@@ -69,6 +69,7 @@ void sequencer_return(const capture_point *cp);
  * Returns the current clock
  */
 clk_t sequencer_get_clk();
+void sequencer_set_clk(clk_t clk);
 
 /* Run a handler for each sequencer capture event. */
 #define ON_SEQUENCER_CAPTURE(HANDLE)                                           \

@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <lotto/base/clk.h>
 #include <lotto/base/marshable.h>
 #include <lotto/base/record_granularity.h>
 #include <lotto/base/stable_address.h>
@@ -28,5 +29,6 @@ typedef struct sequencer_config {
 
 prng_t *prng();
 sequencer_config_t *sequencer_config();
+void engine_set_clk(clk_t clk);
 
 #endif

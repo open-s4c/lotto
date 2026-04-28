@@ -158,7 +158,7 @@ switchable_modules_help(const flags_t *flags)
         }
     }
 
-    sys_fprintf(stdout, "\nSwitchable modules for --enable/--disable:\n");
+    sys_fprintf(stdout, "\nMODULE values:\n");
     for (size_t i = 0; i < ctx.count; i++) {
         sys_fprintf(stdout, "    %-*s  %s\n", (int)max_len, ctx.modules[i].name,
                     ctx.modules[i].default_enabled ? "on" : "off");
@@ -172,11 +172,12 @@ describe(subcmd_t *scmd, const flags_t *flags)
     sys_fprintf(stdout, "Usage:\n");
     sys_fprintf(stdout,
                 "    lotto [--plugin-dir DIR] [--plugins P1[,P2]] "
-                "%s [<options>] %s\n\n",
+                "%s [<flags>] %s\n\n",
                 scmd->name, scmd->args);
-    flags_help(scmd->defaults(), scmd->runtime_sel, scmd->sel);
+    flags_core_help(scmd->defaults(), scmd->runtime_sel, scmd->sel);
     if (scmd->runtime_sel) {
         switchable_modules_help(flags);
+        flags_module_help(scmd->defaults(), scmd->runtime_sel);
     }
 }
 

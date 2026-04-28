@@ -212,7 +212,7 @@ impl Marshable for Persistent {
 pub static FLAG_HANDLER_EVENT_ENABLED: FlagKey = FlagKey::new(
     c"FLAG_HANDLER_EVENT_ENABLED",
     c"",
-    c"handler-event",
+    c"rusty-event",
     c"",
     c"enable the event handler",
     Value::Bool(false),

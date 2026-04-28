@@ -87,7 +87,7 @@ impl Marshable for Persistent {
 pub static FLAG_HANDLER_ADDRESS_ENABLED: FlagKey = FlagKey::new(
     c"FLAG_HANDLER_ADDRESS_ENABLED",
     c"",
-    c"handler-address",
+    c"rusty-address",
     c"",
     c"enable the address handler",
     Value::Bool(false),

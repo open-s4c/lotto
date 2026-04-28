@@ -695,7 +695,7 @@ pub fn register_flags() {
 static FLAG_HANDLER_SPIN_LOOP_ENABLED: FlagKey = FlagKey::new(
     c"FLAG_HANDLER_SPIN_LOOP_ENABLED",
     c"",
-    c"handler-spin-loop",
+    c"rusty-spin-loop",
     c"",
     c"enable the spin-loop handler",
     Value::Bool(false),

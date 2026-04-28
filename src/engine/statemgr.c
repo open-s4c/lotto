@@ -168,6 +168,46 @@ _statemgr_unmarshal(statemgr_t *mgr, const void *buf)
     return buf;
 }
 
+static const void *
+_statemgr_record_unmarshal(statemgr_t *mgr, const void *buf, size_t size)
+{
+    const char *end = (const char *)buf + size;
+    marshable_t *m;
+    size_t count = 0;
+
+    for (size_t i = 0; i < mgr->length && count < mgr->length;) {
+        if ((const char *)buf >= end) {
+            break;
+        }
+
+        ASSERT((size_t)(end - (const char *)buf) >= sizeof(header_t));
+        header_t h = _header_unmarshal(buf);
+        if (h.slot != mgr->entries[i].slot) {
+            i++;
+            continue;
+        }
+
+        if ((m = mgr->entries[i].m) == NULL) {
+            logger_fatalf(
+                "unmarshal error: index %zu not registered, "
+                "skipping.\n",
+                h.index);
+            buf = _add_header(buf) + h.size;
+            i++;
+            continue;
+        }
+
+        char *payload    = _add_header(buf);
+        const void *next = marshable_unmarshal(m, payload);
+        ASSERT((uintptr_t)next - (uintptr_t)payload == h.size);
+        ASSERT((const char *)next <= end);
+        buf = next;
+        i   = 0;
+        count++;
+    }
+    return buf;
+}
+
 const void *
 statemgr_unmarshal(const void *buf, state_type_t type, bool publish)
 {
@@ -269,7 +309,10 @@ statemgr_record_unmarshal(const record_t *r)
     switch (r->kind) {
             /* begin of clock cases */
         case RECORD_SCHED:
-            statemgr_unmarshal(r->data, STATE_TYPE_PERSISTENT, true);
+            _statemgr_record_unmarshal(&_groups[STATE_TYPE_PERSISTENT], r->data,
+                                       r->size);
+            PS_PUBLISH(CHAIN_LOTTO_DEFAULT,
+                       EVENT_ENGINE__AFTER_UNMARSHAL_PERSISTENT, (void *)r, 0);
             break;
         case RECORD_FORCE:
         case RECORD_OPAQUE:
@@ -279,8 +322,10 @@ statemgr_record_unmarshal(const record_t *r)
             statemgr_unmarshal(r->data, STATE_TYPE_START, true);
             break;
         case RECORD_CONFIG:
-            statemgr_unmarshal(r->data, STATE_TYPE_CONFIG, true);
-            break;
+            _statemgr_record_unmarshal(&_groups[STATE_TYPE_CONFIG], r->data,
+                                       r->size);
+            PS_PUBLISH(CHAIN_LOTTO_DEFAULT,
+                       EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, (void *)r, 0);
             break;
         default:
             logger_fatalf("unexpected %s record\n", kind_str(r->kind));

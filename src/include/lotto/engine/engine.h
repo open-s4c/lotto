@@ -5,10 +5,10 @@
 #ifndef LOTTO_ENGINE_H
 #define LOTTO_ENGINE_H
 
-#include <lotto/runtime/capture_point.h>
-#include <lotto/engine/plan.h>
 #include <lotto/base/reason.h>
 #include <lotto/base/trace.h>
+#include <lotto/engine/plan.h>
+#include <lotto/runtime/capture_point.h>
 
 /**
  * Initializes engine with input-trace configuration.

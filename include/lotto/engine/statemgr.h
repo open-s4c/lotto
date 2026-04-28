@@ -37,10 +37,18 @@ void statemgr_register(int slot, marshable_t *m, state_type_t type);
 
 size_t statemgr_size(state_type_t type);
 
+/*
+ * Unmarshal raw state bytes. When `publish` is true, AFTER_UNMARSHAL events are
+ * published with no record payload.
+ */
 const void *statemgr_unmarshal(const void *buf, state_type_t type,
                                bool publish);
 void *statemgr_marshal(void *buf, state_type_t type);
 void statemgr_print(state_type_t type);
+/*
+ * Unmarshal state from a recorded trace entry. AFTER_UNMARSHAL events are
+ * published with `event == (const record_t *)r` for CONFIG and PERSISTENT.
+ */
 void statemgr_record_unmarshal(const record_t *r);
 
 /**

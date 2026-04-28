@@ -21,7 +21,8 @@
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__REPLAY_END)
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__INFO_RECORD_LOAD)
 
-void __attribute__((noinline)) recorder_end_trace()
+void __attribute__((noinline))
+recorder_end_trace()
 {
     logger_debugf("trace fully loaded\n");
     /* nothing really happens here, but we have to  ensure we call a function
@@ -29,7 +30,8 @@ void __attribute__((noinline)) recorder_end_trace()
     __asm__ volatile("" :::);
 }
 
-void __attribute__((noinline)) recorder_end_replay()
+void __attribute__((noinline))
+recorder_end_replay()
 {
     logger_debugf("end of replay\n");
     LOTTO_PUBLISH(EVENT_ENGINE__REPLAY_END, nil);
@@ -60,6 +62,13 @@ CONTRACT_SUBSCRIBE(EVENT_ENGINE__START, {
     _ghost.replay_clk = 0;
     _ghost.finito     = false;
 })
+
+void
+recorder_set_clks(clk_t replay_clk, clk_t record_clk)
+{
+    _ghost.replay_clk = replay_clk;
+    _ghost.record_clk = record_clk;
+}
 
 STATEMGR_REGISTER(FINAL, {
     /* this has to be called after the constructors to find the right size of

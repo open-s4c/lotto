@@ -1,7 +1,7 @@
 // clang-format off
 // REQUIRES: DISABLED
 // Disable ASLR to make this test pass.
-// RUN: %lotto %sc --delayed-functions quack_push:1:1,quack_popall:1:1 --delayed-calls 2 --sc-exploration-rounds 100 -r 100 --stable-address-method MAP -- %b
+// RUN: %lotto %sc --delayed-functions quack_push:1:1,quack_popall:1:1 --delayed-calls 2 --sc-exploration-rounds 100 -r 100 -a MAP -- %b
 // clang-format on
 
 #include <assert.h>
@@ -80,4 +80,3 @@ main()
     assert(vatomic32_read_rlx(&co) == NODES);
     return 0;
 }
-

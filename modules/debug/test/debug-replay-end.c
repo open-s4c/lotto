@@ -1,6 +1,6 @@
 // clang-format off
 // UNSUPPORTED: aarch64
-// RUN: (! %lotto %stress --stable-address-method MASK -- %b 2>&1) | %check %s --check-prefix=BUG
+// RUN: (! %lotto %stress -a MASK -- %b 2>&1) | %check %s --check-prefix=BUG
 // RUN: %lotto %inflex -r 50 &>/dev/null
 // RUN: %lotto %debug <<< $'\n'run-replay-lotto | %check %s --check-prefix=LOC
 // BUG: assert failed {{.*}}/debug-replay-end.c:{{[0-9]+}}: data == 1
@@ -42,4 +42,3 @@ main()
     pthread_join(bob, 0);
     return 0;
 }
-

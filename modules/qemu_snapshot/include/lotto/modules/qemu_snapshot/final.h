@@ -10,7 +10,9 @@
 #include <lotto/base/clk.h>
 #include <lotto/base/marshable.h>
 
-#define QEMU_SNAPSHOT_NAME_MAX 128
+#ifndef QEMU_SNAPSHOT_NAME_MAX
+    #define QEMU_SNAPSHOT_NAME_MAX 128
+#endif
 
 struct qemu_snapshot_final_state {
     marshable_t m;

@@ -4,9 +4,13 @@
 #include <string.h>
 
 #include <dice/chains/intercept.h>
+#include <lotto/base/record.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/engine/recorder.h>
 #include <lotto/engine/sequencer.h>
+#include <lotto/engine/state.h>
 #include <lotto/modules/qemu/events.h>
+#include <lotto/modules/qemu_snapshot/config.h>
 #include <lotto/modules/qemu_snapshot/events.h>
 #include <lotto/modules/qemu_snapshot/final.h>
 #include <lotto/qemu/trap.h>
@@ -29,6 +33,7 @@ typedef struct snapshot_state_s {
 } snapshot_state_t;
 
 snapshot_state_t snapshot_state;
+static bool _resume_clk_bumped;
 
 static void
 qemu_snapshot_done_cb(qemu_plugin_id_t id, bool success)
@@ -40,11 +45,11 @@ qemu_snapshot_done_cb(qemu_plugin_id_t id, bool success)
     }
 
     struct qemu_snapshot_done_event ev = {
-        .name = snapshot_state.snapshot_str,
+        .name    = snapshot_state.snapshot_str,
         .success = success,
     };
 
-    snapshot_state.completed_valid = true;
+    snapshot_state.completed_valid   = true;
     snapshot_state.completed_success = success;
     sys_strcpy(snapshot_state.completed_name, snapshot_state.snapshot_str);
     qemu_snapshot_final_note(snapshot_state.snapshot_str, success);
@@ -56,6 +61,10 @@ qemu_snapshot_done_cb(qemu_plugin_id_t id, bool success)
 void
 qemu_snapshot(void)
 {
+    if (!qemu_snapshot_config_state()->enabled) {
+        return;
+    }
+
     snapshot_state.snapshot_nr++;
     if (snapshot_state.snapshot_nr > MAX_SNAPSHOTS)
         snapshot_state.snapshot_nr = 1;
@@ -102,9 +111,34 @@ qemu_snapshot_plugin_fini(const qemu_control_event_t *ev)
 
 LOTTO_SUBSCRIBE_SEQUENCER_CAPTURE(EVENT_QEMU_SNAPSHOT_DONE, {
     const capture_point *cp = EVENT_PAYLOAD(cp);
-    sequencer_decision *e = cp->decision;
-    e->should_record = true;
-    e->readonly = true;
-    e->next = cp->id;
+    sequencer_decision *e   = cp->decision;
+    e->should_record        = true;
+    e->readonly             = true;
+    e->next                 = cp->id;
     qemu_snapshot_final_set_clk(e->clk);
+})
+
+LOTTO_SUBSCRIBE(EVENT_ENGINE__START, {
+    (void)v;
+    _resume_clk_bumped = false;
+})
+
+LOTTO_SUBSCRIBE(EVENT_ENGINE__AFTER_UNMARSHAL_CONFIG, {
+    const record_t *r                      = (const record_t *)event;
+    struct qemu_snapshot_config_state *cfg = qemu_snapshot_config_state();
+    clk_t target                           = cfg->clk;
+
+    if (!_resume_clk_bumped && r != NULL && r->kind == RECORD_CONFIG &&
+        target != 0) {
+        if (cfg->snapshot_valid) {
+            qemu_snapshot_final_note(cfg->snapshot_name, cfg->snapshot_success);
+            qemu_snapshot_final_set_clk(cfg->snapshot_clk);
+        }
+        if (sequencer_get_clk() < target) {
+            sequencer_set_clk(target);
+            engine_set_clk(target);
+            recorder_set_clks(target, target);
+        }
+        _resume_clk_bumped = true;
+    }
 })

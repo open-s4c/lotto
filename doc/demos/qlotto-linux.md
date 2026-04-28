@@ -51,6 +51,11 @@ The minimal Linux image can start and open the prompt with this script command:
 
 Press `ctrl-d` to terminate the kernel and abort QEMU.
 
+By default, QEMU stdin is detached for this path, so the terminal is not left
+in raw mode after the VM exits. If you want interactive guest input, pass:
+
+    scripts/qlotto-linux.sh --qemu-stdin -- /bin/sh
+
 By default, `scripts/qlotto-linux.sh` also creates and attaches
 `<lotto-tempdir>/qemu-snapshot.qcow2` as a qcow2 snapshot backend if it does
 not already exist. This follows Lotto's current temporary directory, including
@@ -91,6 +96,29 @@ Now you can replay the bug with:
 
 
 The output should be virtually identical (compare timestamps).
+
+## Resume From A Saved Snapshot
+
+If the guest calls `qlotto_snapshot()`, the run preserves:
+
+- `<lotto-tempdir>/snapshot.trace`
+- `<lotto-tempdir>/snapshot.qcow2`
+
+Then you can resume stress directly from that saved snapshot with:
+
+    build/lotto snap-stress -t <lotto-tempdir> -r 1
+
+This command:
+
+- reads `snapshot.trace`
+- loads the internal QEMU snapshot via `-loadvm`
+- runs using a copied writable qcow2 image
+- writes a normal `replay.trace` for the resumed execution
+
+After `snap-stress`, plain Lotto commands continue to work on the resumed run:
+
+    build/lotto show
+    build/lotto replay
 
 For the current QEMU module architecture and feature-module model, see
 [doc/qemu.md](../qemu.md).

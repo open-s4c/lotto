@@ -13,10 +13,11 @@
 #include <lotto/driver/args.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/flagmgr.h>
-#include <lotto/driver/flags/sequencer.h>
 #include <lotto/driver/flags/memmgr.h>
+#include <lotto/driver/flags/sequencer.h>
 #include <lotto/driver/preload.h>
 #include <lotto/driver/trace.h>
+#include <lotto/driver/utils.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/now.h>
@@ -179,6 +180,7 @@ int main(void) {
 }
 
 static char temporary_directory_default[PATH_MAX];
+static run_post_run_hook_f *_run_post_run_hook;
 
 const char *
 get_default_temporary_directory()
@@ -202,6 +204,12 @@ run_default_flags()
     flags_cpy(flags, flags_default());
     flags_set_default(flags, flag_input(), sval(""));
     return flags;
+}
+
+void
+run_set_post_run_hook(run_post_run_hook_f *hook)
+{
+    _run_post_run_hook = hook;
 }
 
 int
@@ -233,5 +241,9 @@ run_once(args_t *args, flags_t *flags)
         adjust(input);
     }
 
-    return execute(args, flags, false);
+    int ret = execute(args, flags, false);
+    if (_run_post_run_hook != NULL) {
+        ret = _run_post_run_hook(args, flags, ret);
+    }
+    return ret;
 }

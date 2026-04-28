@@ -14,6 +14,7 @@
 #include <lotto/driver/utils.h>
 #include <lotto/engine/state.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/qemu_snapshot/config.h>
 #include <lotto/modules/qemu_snapshot/events.h>
 #include <lotto/modules/qemu_snapshot/final.h>
 #include <lotto/sys/assert.h>
@@ -22,7 +23,13 @@
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
+#include <lotto/sys/unistd.h>
 #include <sys/stat.h>
+
+#define SNAPSHOT_TRACE_BASENAME        "snapshot.trace"
+#define SNAPSHOT_DRIVE_BASENAME        "snapshot.qcow2"
+#define SNAPSHOT_RESUME_TRACE_BASENAME "from-snap.trace"
+#define SNAPSHOT_RESUME_DRIVE_BASENAME "from-snap.qcow2"
 
 typedef struct snap_source {
     record_t *start;
@@ -96,6 +103,18 @@ _drive_file_path(const char *spec)
     return sys_strndup(file, (size_t)(end - file));
 }
 
+static void
+_snapshot_trace_path(char *path, const char *temporary_directory)
+{
+    sys_sprintf(path, "%s/%s", temporary_directory, SNAPSHOT_TRACE_BASENAME);
+}
+
+static void
+_snapshot_drive_path(char *path, const char *temporary_directory)
+{
+    sys_sprintf(path, "%s/%s", temporary_directory, SNAPSHOT_DRIVE_BASENAME);
+}
+
 static char *
 _replace_drive_file(const char *spec, const char *new_file)
 {
@@ -143,12 +162,10 @@ _find_snapshot_drive(const args_t *args)
     return NULL;
 }
 
-static void
-_args_enable_snapshot(args_t *args, const char *snapshot_name,
-                      const char *snapshot_drive_copy)
+static int
+_args_replace_snapshot_drive(args_t *args, const char *snapshot_drive_path)
 {
-    int drive_idx  = -1;
-    int loadvm_idx = -1;
+    int drive_idx = -1;
 
     for (int i = 0; i < args->argc; i++) {
         if (i + 1 < args->argc && sys_strcmp(args->argv[i], "-drive") == 0 &&
@@ -156,23 +173,44 @@ _args_enable_snapshot(args_t *args, const char *snapshot_name,
             strstr(args->argv[i + 1], "format=qcow2") != NULL) {
             drive_idx = i + 1;
         }
-
-        if (sys_strcmp(args->argv[i], "-loadvm") == 0 && i + 1 < args->argc) {
-            loadvm_idx = i + 1;
-        }
     }
 
-    ASSERT(drive_idx >= 0 && "snapshot resume requires a qcow2 drive");
+    if (drive_idx < 0) {
+        return 1;
+    }
 
     char *updated_drive =
-        _replace_drive_file(args->argv[drive_idx], snapshot_drive_copy);
+        _replace_drive_file(args->argv[drive_idx], snapshot_drive_path);
     sys_free(args->argv[drive_idx]);
     args->argv[drive_idx] = updated_drive;
+    return 0;
+}
+
+static int
+_args_enable_snapshot(args_t *args, const char *snapshot_name,
+                      const char *snapshot_drive_copy)
+{
+    int loadvm_idx = -1;
+
+    if (_args_replace_snapshot_drive(args, snapshot_drive_copy) != 0) {
+        sys_fprintf(stderr,
+                    "error: recorded QEMU command line has no qcow2 drive to "
+                    "resume from snapshot '%s'\n",
+                    snapshot_name);
+        return 1;
+    }
+
+    for (int i = 0; i < args->argc; i++) {
+        if (sys_strcmp(args->argv[i], "-loadvm") == 0 && i + 1 < args->argc) {
+            loadvm_idx = i + 1;
+            break;
+        }
+    }
 
     if (loadvm_idx >= 0) {
         sys_free(args->argv[loadvm_idx]);
         args->argv[loadvm_idx] = sys_strdup(snapshot_name);
-        return;
+        return 0;
     }
 
     char **argv = sys_calloc((size_t)args->argc + 3, sizeof(char *));
@@ -184,11 +222,21 @@ _args_enable_snapshot(args_t *args, const char *snapshot_name,
     argv[args->argc]   = NULL;
     sys_free(args->argv);
     args->argv = argv;
+    return 0;
 }
 
 static int
 _load_source(const char *input, snap_source_t *source, args_t *recorded_args)
 {
+    if (input == NULL || input[0] == '\0') {
+        input = "replay.trace";
+    }
+    if (access(input, R_OK) != 0) {
+        sys_fprintf(stderr, "error: could not read input trace '%s': %s\n",
+                    input, strerror(errno));
+        return 1;
+    }
+
     trace_t *trace  = cli_trace_load(input);
     record_t *final = trace_last(trace);
     if (final == NULL || final->kind != RECORD_EXIT || final->size == 0) {
@@ -261,6 +309,47 @@ _load_source(const char *input, snap_source_t *source, args_t *recorded_args)
     return 0;
 }
 
+static bool
+_trace_has_successful_snapshot(const char *input)
+{
+    if (input == NULL || input[0] == '\0' || access(input, R_OK) != 0) {
+        return false;
+    }
+
+    trace_t *trace  = cli_trace_load(input);
+    record_t *final = trace != NULL ? trace_last(trace) : NULL;
+    bool ok         = false;
+
+    if (final != NULL && final->kind == RECORD_EXIT && final->size > 0) {
+        statemgr_unmarshal(final->data, STATE_TYPE_FINAL, true);
+        const struct qemu_snapshot_final_state *snapshot_final =
+            qemu_snapshot_final_state();
+        ok = snapshot_final->valid && snapshot_final->success &&
+             snapshot_final->name[0] != '\0';
+        if (ok) {
+            ok = false;
+            while (true) {
+                record_t *cur = trace_next(trace, RECORD_ANY);
+                if (cur == NULL) {
+                    break;
+                }
+                if (cur->kind == RECORD_SCHED &&
+                    cur->type_id == EVENT_QEMU_SNAPSHOT_DONE &&
+                    cur->clk == snapshot_final->clk) {
+                    ok = true;
+                    break;
+                }
+                trace_advance(trace);
+            }
+        }
+    }
+
+    if (trace != NULL) {
+        trace_destroy(trace);
+    }
+    return ok;
+}
+
 static void
 _free_source(snap_source_t *source)
 {
@@ -278,30 +367,316 @@ _free_source(snap_source_t *source)
 
 static int
 _write_resume_trace(const char *source_trace, const char *path,
-                    const snap_source_t *source, uint64_t seed)
+                    const snap_source_t *source, const char *snapshot_copy_path,
+                    uint64_t seed)
 {
     cli_trace_copy(source_trace, path);
     trace_t *trace = cli_trace_load(path);
+    if (trace == NULL) {
+        sys_fprintf(stderr, "error: could not load temporary trace '%s'\n",
+                    path);
+        return 1;
+    }
     trace_clear(trace);
 
-    ENSURE(TRACE_OK == trace_append(trace, record_clone(source->start)));
-    ENSURE(TRACE_OK == trace_append(trace, record_clone(source->config)));
-    ENSURE(TRACE_OK == trace_append(trace, record_clone(source->snapshot)));
+    args_t start_args = {0};
+    start_args        = _args_dup(record_args(source->start));
+    if (_args_enable_snapshot(&start_args, source->snapshot_name,
+                              snapshot_copy_path) != 0) {
+        _args_free(&start_args);
+        trace_destroy(trace);
+        return 1;
+    }
+
+    if (TRACE_OK != trace_append(trace, record_start(&start_args)) ||
+        TRACE_OK != trace_append(trace, record_clone(source->config)) ||
+        TRACE_OK != trace_append(trace, record_clone(source->snapshot))) {
+        sys_fprintf(stderr,
+                    "error: could not append snapshot resume records to '%s'\n",
+                    path);
+        _args_free(&start_args);
+        trace_destroy(trace);
+        return 1;
+    }
+    _args_free(&start_args);
 
     statemgr_record_unmarshal(source->config);
-    prng()->seed   = (uint32_t)seed;
+    struct qemu_snapshot_config_state *snapshot_cfg =
+        qemu_snapshot_config_state();
+    prng()->seed                   = (uint32_t)seed;
+    snapshot_cfg->enabled          = true;
+    snapshot_cfg->clk              = source->snapshot->clk + 1;
+    snapshot_cfg->snapshot_valid   = true;
+    snapshot_cfg->snapshot_success = true;
+    snapshot_cfg->snapshot_clk     = source->snapshot->clk;
+    sys_strcpy(snapshot_cfg->snapshot_name, source->snapshot_name);
     record_t *conf = record_config(source->snapshot->clk);
-    ENSURE(TRACE_OK == trace_append(trace, conf));
+    if (TRACE_OK != trace_append(trace, conf)) {
+        sys_fprintf(stderr, "error: could not append updated config to '%s'\n",
+                    path);
+        trace_destroy(trace);
+        return 1;
+    }
 
     cli_trace_save(trace, path);
     trace_destroy(trace);
     return 0;
 }
 
+static int
+_rewrite_output_trace_with_snapshot_prefix(const char *output_trace,
+                                           const char *resume_trace,
+                                           const record_t *snapshot_record,
+                                           const char *snapshot_name)
+{
+    trace_t *prefix = cli_trace_load(resume_trace);
+    trace_t *source = cli_trace_load(output_trace);
+    trace_t *trace  = cli_trace_load(output_trace);
+    if (prefix == NULL || source == NULL || trace == NULL) {
+        sys_fprintf(stderr, "error: could not load output trace '%s'\n",
+                    output_trace);
+        if (prefix != NULL) {
+            trace_destroy(prefix);
+        }
+        if (source != NULL) {
+            trace_destroy(source);
+        }
+        if (trace != NULL) {
+            trace_destroy(trace);
+        }
+        return 1;
+    }
+
+    record_t *start         = NULL;
+    record_t *config_before = NULL;
+    record_t *snapshot_done = NULL;
+    record_t *config_after  = NULL;
+    trace_clear(trace);
+
+    while (true) {
+        record_t *cur = trace_next(prefix, RECORD_ANY);
+        if (cur == NULL) {
+            break;
+        }
+
+        if (start == NULL && cur->kind == RECORD_START) {
+            start = record_clone(cur);
+        } else if (config_before == NULL && cur->kind == RECORD_CONFIG) {
+            config_before = record_clone(cur);
+        } else if (snapshot_done == NULL && cur->kind == RECORD_SCHED &&
+                   cur->type_id == EVENT_QEMU_SNAPSHOT_DONE) {
+            snapshot_done = record_clone(cur);
+        } else if (snapshot_done != NULL && config_after == NULL &&
+                   cur->kind == RECORD_CONFIG) {
+            config_after = record_clone(cur);
+            break;
+        }
+
+        trace_advance(prefix);
+    }
+
+    if (start == NULL || config_before == NULL || snapshot_done == NULL ||
+        config_after == NULL) {
+        sys_fprintf(stderr,
+                    "error: resume trace '%s' is missing snapshot "
+                    "prefix records\n",
+                    resume_trace);
+        trace_destroy(trace);
+        trace_destroy(prefix);
+        trace_destroy(source);
+        return 1;
+    }
+
+    config_before->clk = 0;
+    snapshot_done->clk = snapshot_record->clk;
+    config_after->clk  = snapshot_record->clk;
+
+    if (TRACE_OK != trace_append(trace, start) ||
+        TRACE_OK != trace_append(trace, config_before) ||
+        TRACE_OK != trace_append(trace, snapshot_done) ||
+        TRACE_OK != trace_append(trace, config_after)) {
+        sys_fprintf(stderr, "error: could not rewrite output trace '%s'\n",
+                    output_trace);
+        trace_destroy(trace);
+        trace_destroy(prefix);
+        trace_destroy(source);
+        return 1;
+    }
+
+    bool after_config = false;
+    record_t *cur     = trace_next(source, RECORD_ANY);
+    while (cur != NULL) {
+        if (!after_config) {
+            if (cur->kind == RECORD_CONFIG) {
+                after_config = true;
+            }
+            trace_advance(source);
+            cur = trace_next(source, RECORD_ANY);
+            continue;
+        }
+
+        if (TRACE_OK != trace_append(trace, record_clone(cur))) {
+            sys_fprintf(stderr, "error: could not rewrite output trace '%s'\n",
+                        output_trace);
+            trace_destroy(trace);
+            trace_destroy(prefix);
+            trace_destroy(source);
+            return 1;
+        }
+        trace_advance(source);
+        cur = trace_next(source, RECORD_ANY);
+    }
+
+    record_t *out_final = trace_last(trace);
+    if (out_final != NULL && out_final->kind == RECORD_EXIT &&
+        out_final->size > 0) {
+        statemgr_unmarshal(out_final->data, STATE_TYPE_FINAL, true);
+        qemu_snapshot_final_note(snapshot_name, true);
+        qemu_snapshot_final_set_clk(snapshot_record->clk);
+        (void)statemgr_marshal(out_final->data, STATE_TYPE_FINAL);
+    }
+
+    cli_trace_save(trace, output_trace);
+    trace_destroy(trace);
+    trace_destroy(prefix);
+    trace_destroy(source);
+    return 0;
+}
+
 static flags_t *
 _default_flags()
 {
-    return run_default_flags();
+    flags_t *flags = run_default_flags();
+    flags_set_default(flags, flag_input(), sval(SNAPSHOT_TRACE_BASENAME));
+    return flags;
+}
+
+static int
+_rewrite_snapshot_trace(const char *source_trace, const char *snapshot_trace,
+                        const char *snapshot_drive)
+{
+    trace_t *source = cli_trace_load(source_trace);
+    if (source == NULL) {
+        sys_fprintf(stderr, "error: could not load trace '%s'\n", source_trace);
+        return 1;
+    }
+
+    cli_trace_copy(source_trace, snapshot_trace);
+    trace_t *backup = cli_trace_load(snapshot_trace);
+    if (backup == NULL) {
+        sys_fprintf(stderr, "error: could not prepare trace '%s'\n",
+                    snapshot_trace);
+        trace_destroy(source);
+        return 1;
+    }
+
+    trace_clear(backup);
+
+    while (true) {
+        record_t *cur = trace_next(source, RECORD_ANY);
+        if (cur == NULL) {
+            break;
+        }
+
+        if (cur->kind == RECORD_START) {
+            args_t *stored_args = record_args(cur);
+            args_t backup_args  = _args_dup(stored_args);
+            if (_args_replace_snapshot_drive(&backup_args, snapshot_drive) !=
+                0) {
+                sys_fprintf(stderr,
+                            "error: trace '%s' has no qcow2 drive to back up\n",
+                            source_trace);
+                _args_free(&backup_args);
+                trace_destroy(backup);
+                trace_destroy(source);
+                return 1;
+            }
+            if (TRACE_OK != trace_append(backup, record_start(&backup_args))) {
+                sys_fprintf(stderr, "error: could not rewrite trace '%s'\n",
+                            snapshot_trace);
+                _args_free(&backup_args);
+                trace_destroy(backup);
+                trace_destroy(source);
+                return 1;
+            }
+            _args_free(&backup_args);
+        } else if (TRACE_OK != trace_append(backup, record_clone(cur))) {
+            sys_fprintf(stderr, "error: could not rewrite trace '%s'\n",
+                        snapshot_trace);
+            trace_destroy(backup);
+            trace_destroy(source);
+            return 1;
+        }
+
+        trace_advance(source);
+    }
+
+    cli_trace_save(backup, snapshot_trace);
+    trace_destroy(backup);
+    trace_destroy(source);
+    return 0;
+}
+
+static int
+_backup_snapshot_artifacts(const char *trace_path,
+                           const char *temporary_directory)
+{
+    snap_source_t source = {0};
+    args_t recorded_args = {0};
+    int err              = _load_source(trace_path, &source, &recorded_args);
+    if (err != 0) {
+        _free_source(&source);
+        _args_free(&recorded_args);
+        return err;
+    }
+
+    char snapshot_trace[PATH_MAX];
+    char snapshot_drive[PATH_MAX];
+    _snapshot_trace_path(snapshot_trace, temporary_directory);
+    _snapshot_drive_path(snapshot_drive, temporary_directory);
+
+    if (cp(source.snapshot_drive, snapshot_drive) != 0) {
+        sys_fprintf(
+            stderr,
+            "error: could not back up snapshot drive '%s' to '%s': %s\n",
+            source.snapshot_drive, snapshot_drive, strerror(errno));
+        _free_source(&source);
+        _args_free(&recorded_args);
+        return 1;
+    }
+
+    err = _rewrite_snapshot_trace(trace_path, snapshot_trace, snapshot_drive);
+    _free_source(&source);
+    _args_free(&recorded_args);
+    return err;
+}
+
+static int
+_snapshot_post_run(const args_t *args, const flags_t *flags, int ret)
+{
+    (void)args;
+
+    const char *trace_path = flags_get_sval(flags, flag_output());
+    if (trace_path == NULL || trace_path[0] == '\0') {
+        return ret;
+    }
+    if (!_trace_has_successful_snapshot(trace_path)) {
+        return ret;
+    }
+
+    const char *temporary_directory =
+        flags_get_sval(flags, flag_temporary_directory());
+    if (temporary_directory == NULL || temporary_directory[0] == '\0') {
+        return ret;
+    }
+
+    int backup_err =
+        _backup_snapshot_artifacts(trace_path, temporary_directory);
+    if (backup_err != 0) {
+        return ret != 0 ? ret : backup_err;
+    }
+
+    return ret;
 }
 
 static int
@@ -323,7 +698,8 @@ _prepare_round(const snap_source_t *source, const char *temporary_directory,
         return 1;
     }
 
-    return _write_resume_trace(source_trace, trace_path, source, seed);
+    return _write_resume_trace(source_trace, trace_path, source,
+                               snapshot_copy_path, seed);
 }
 
 int
@@ -331,7 +707,23 @@ snap_stress(args_t *args, flags_t *flags)
 {
     (void)args;
 
-    const char *input    = flags_get_sval(flags, flag_input());
+    const char *temporary_directory =
+        flags_get_sval(flags, flag_temporary_directory());
+    char snapshot_trace_path[PATH_MAX];
+    char trace_path[PATH_MAX];
+    char snapshot_copy_path[PATH_MAX];
+    _snapshot_trace_path(snapshot_trace_path, temporary_directory);
+    sys_sprintf(trace_path, "%s/%s", temporary_directory,
+                SNAPSHOT_RESUME_TRACE_BASENAME);
+    sys_sprintf(snapshot_copy_path, "%s/%s", temporary_directory,
+                SNAPSHOT_RESUME_DRIVE_BASENAME);
+
+    const char *input = flags_get_sval(flags, flag_input());
+    if (input == NULL || input[0] == '\0' ||
+        flags_get(flags, flag_input()).is_default) {
+        input = snapshot_trace_path;
+    }
+
     snap_source_t source = {0};
     args_t replay_args   = {0};
     int err              = _load_source(input, &source, &replay_args);
@@ -342,16 +734,6 @@ snap_stress(args_t *args, flags_t *flags)
     }
 
     execute_resolve_replay_args(&replay_args, flags);
-
-    const char *temporary_directory =
-        flags_get_sval(flags, flag_temporary_directory());
-    char trace_path[PATH_MAX];
-    char snapshot_copy_path[PATH_MAX];
-    sys_sprintf(trace_path, "%s/from-snap.trace", temporary_directory);
-    sys_sprintf(snapshot_copy_path, "%s/%s", temporary_directory,
-                strrchr(source.snapshot_drive, '/') ?
-                    strrchr(source.snapshot_drive, '/') + 1 :
-                    source.snapshot_drive);
 
     flags_set_by_opt(flags, flag_input(), sval(trace_path));
 
@@ -372,11 +754,23 @@ snap_stress(args_t *args, flags_t *flags)
         }
 
         args_t run_args = _args_dup(&replay_args);
-        _args_enable_snapshot(&run_args, source.snapshot_name,
-                              snapshot_copy_path);
+        err             = _args_enable_snapshot(&run_args, source.snapshot_name,
+                                                snapshot_copy_path);
+        if (err != 0) {
+            _args_free(&run_args);
+            break;
+        }
 
         err = run_once(&run_args, flags);
         _args_free(&run_args);
+
+        int rewrite_err = _rewrite_output_trace_with_snapshot_prefix(
+            flags_get_sval(flags, flag_output()), trace_path, source.snapshot,
+            source.snapshot_name);
+        if (rewrite_err != 0) {
+            err = rewrite_err;
+            break;
+        }
         if (err != 0) {
             break;
         }
@@ -398,9 +792,9 @@ snap_stress(args_t *args, flags_t *flags)
 }
 
 ON_DRIVER_REGISTER_COMMANDS({
+    run_set_post_run_hook(_snapshot_post_run);
     flag_t sel[] = {flag_input(),
                     flag_output(),
-                    flag_seed(),
                     flag_verbose(),
                     flag_rounds(),
                     flag_temporary_directory(),
@@ -412,5 +806,5 @@ ON_DRIVER_REGISTER_COMMANDS({
     subcmd_register(
         snap_stress, "snap-stress", "",
         "Resume repeated QEMU stress runs from a saved internal snapshot", true,
-        sel, _default_flags, SUBCMD_GROUP_RUN);
+        sel, _default_flags, SUBCMD_GROUP_TRACE);
 })

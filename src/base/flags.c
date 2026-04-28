@@ -69,6 +69,12 @@ flags_get_uval(const flags_t *flags, flag_t f)
     return flag_as_uval(flags_get(flags, f));
 }
 
+double
+flags_get_dval(const flags_t *flags, flag_t f)
+{
+    return flag_as_dval(flags_get(flags, f));
+}
+
 const char *
 flags_get_sval(const flags_t *flags, flag_t f)
 {

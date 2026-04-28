@@ -8,6 +8,7 @@ use std::path::PathBuf;
 pub enum Value<'a> {
     None,
     U64(u64),
+    Double(f64),
     Bool(bool),
     Sval(&'a CStr),
     ANY(*const ffi::c_void),
@@ -23,6 +24,10 @@ impl<'a> Value<'a> {
             Value::U64(x) => (
                 raw::value_type_VALUE_TYPE_UINT64,
                 raw::value__bindgen_ty_1 { _uval: x },
+            ),
+            Value::Double(x) => (
+                raw::value_type_VALUE_TYPE_DOUBLE,
+                raw::value__bindgen_ty_1 { _dval: x },
             ),
             Value::Bool(x) => (
                 raw::value_type_VALUE_TYPE_BOOL,
@@ -58,6 +63,9 @@ impl<'a> From<raw::value> for Value<'a> {
                 })
             }
             raw::value_type_VALUE_TYPE_UINT64 => Value::U64(unsafe { val.__bindgen_anon_1._uval }),
+            raw::value_type_VALUE_TYPE_DOUBLE => {
+                Value::Double(unsafe { val.__bindgen_anon_1._dval })
+            }
             raw::value_type_VALUE_TYPE_STRING => Value::Sval(unsafe {
                 let ptr = val.__bindgen_anon_1._sval;
                 if ptr.is_null() {
@@ -109,6 +117,23 @@ impl<'a> Value<'a> {
     /// Panic if the value is not u64.
     pub fn as_uval(&self) -> u64 {
         self.as_u64()
+    }
+
+    /// # Panics
+    ///
+    /// Panic if the value is not double.
+    pub fn as_double(&self) -> f64 {
+        match self {
+            Value::Double(x) => *x,
+            _ => panic!("value is not double"),
+        }
+    }
+
+    /// # Panics
+    ///
+    /// Panic if the value is not double.
+    pub fn as_dval(&self) -> f64 {
+        self.as_double()
     }
 
     /// # Panics

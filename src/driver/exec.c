@@ -1,10 +1,12 @@
 #include <errno.h>
 #include <spawn.h>
+#include <termios.h>
 
 #include <lotto/driver/exec.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/trace_prepare.h>
+#include <lotto/sys/fcntl.h>
 #include <lotto/sys/poll.h>
 #include <lotto/sys/signal.h>
 #include <lotto/sys/spawn.h>
@@ -20,10 +22,34 @@ static int p_out[2];
 static int p_err[2];
 static exec_command_prefix_f *_exec_command_prefix;
 static exec_replay_args_resolver_f *_exec_replay_args_resolver;
+static exec_stdin_devnull_f *_exec_stdin_devnull;
+static bool _tty_state_saved;
+static struct termios _tty_state;
+
+static void
+_restore_tty_state(void)
+{
+    if (_tty_state_saved) {
+        tcsetattr(STDIN_FILENO, TCSANOW, &_tty_state);
+    }
+}
+
+static void
+_save_tty_state(void)
+{
+    _tty_state_saved = false;
+    if (!isatty(STDIN_FILENO)) {
+        return;
+    }
+    if (tcgetattr(STDIN_FILENO, &_tty_state) == 0) {
+        _tty_state_saved = true;
+    }
+}
 
 static void
 _handle_sigint(int sig, siginfo_t *si, void *arg)
 {
+    _restore_tty_state();
     if (_pid) {
         sys_fprintf(stderr, "[lotto] SIGINT\n");
         sys_kill(0, SIGINT);
@@ -37,6 +63,7 @@ _handle_sigint(int sig, siginfo_t *si, void *arg)
 static void
 _handle_sigterm(int sig, siginfo_t *si, void *arg)
 {
+    _restore_tty_state();
     if (_pid) {
         sys_fprintf(stderr, "[lotto] SIGTERM\n");
         sys_kill(0, SIGTERM);
@@ -236,6 +263,7 @@ wait_child(pid_t pid)
             retval = 1;
         }
     }
+    _restore_tty_state();
     sys_close(p_out[0]);
     sys_close(p_err[0]);
     return retval;
@@ -292,6 +320,8 @@ execute(const args_t *args, const flags_t *flags, bool config)
     term_action.sa_sigaction = _handle_sigterm;
     sys_sigaction(SIGTERM, &term_action, &term_old);
 
+    _save_tty_state();
+
     int err = 0;
 
     // Set of signals to force to default signal handling in the new process:
@@ -305,10 +335,22 @@ execute(const args_t *args, const flags_t *flags, bool config)
     sys_posix_spawnattr_setsigdefault(&attr, &sigdefset);
 
     posix_spawn_file_actions_t action;
+    int stdin_fd = -1;
     if (sys_pipe(p_out) || sys_pipe(p_err))
         sys_fprintf(stderr, "pipe2 returned an error.\n");
 
     sys_posix_spawn_file_actions_init(&action);
+
+    if (_exec_stdin_devnull != NULL && _exec_stdin_devnull(flags)) {
+        stdin_fd = sys_open("/dev/null", O_RDONLY, 0);
+        if (stdin_fd < 0) {
+            sys_fprintf(stderr, "error opening /dev/null for stdin\n");
+            err = errno != 0 ? errno : 1;
+            goto fini;
+        }
+        sys_posix_spawn_file_actions_adddup2(&action, stdin_fd, STDIN_FILENO);
+        sys_posix_spawn_file_actions_addclose(&action, stdin_fd);
+    }
 
     sys_posix_spawn_file_actions_addclose(&action, p_out[0]);
     sys_posix_spawn_file_actions_addclose(&action, p_err[0]);
@@ -328,6 +370,10 @@ execute(const args_t *args, const flags_t *flags, bool config)
         sys_close(p_out[1]);
         sys_close(p_err[1]);
         err = wait_child(_pid);
+    }
+fini:
+    if (stdin_fd >= 0) {
+        sys_close(stdin_fd);
     }
     sys_posix_spawn_file_actions_destroy(&action);
 
@@ -360,6 +406,12 @@ void
 execute_set_command_prefix(exec_command_prefix_f *prefix)
 {
     _exec_command_prefix = prefix;
+}
+
+void
+execute_set_stdin_devnull(exec_stdin_devnull_f *hook)
+{
+    _exec_stdin_devnull = hook;
 }
 
 void

@@ -1,7 +1,7 @@
 add_library(plugin-snapshot SHARED plugin_snapshot.c)
 target_include_directories(
     plugin-snapshot
-    PRIVATE ${PROJECT_SOURCE_DIR}/deps/qemu/include
+    PRIVATE ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu
             ${PROJECT_SOURCE_DIR}/modules/qemu/include
             ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(plugin-snapshot PUBLIC ${CMAKE_BINARY_DIR}/include)

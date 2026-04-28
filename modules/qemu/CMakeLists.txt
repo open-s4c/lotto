@@ -11,6 +11,25 @@ set(QEMU_URL https://github.com/qemu/qemu/archive/refs/tags/v9.1.3.tar.gz)
 set(QEMU_HASH 79f97e8ba4a19d2b5fa9fd080379abc061466d66b12300a7fc5b5fa345ae3ac2)
 
 set(QEMU_SRC ${PROJECT_SOURCE_DIR}/deps/qemu)
+set(QEMU_PREFIX_DIR ${CMAKE_CURRENT_BINARY_DIR}/qemu-prefix)
+set(QEMU_STAMP_DIR ${QEMU_PREFIX_DIR}/src/qemu-stamp)
+set(QEMU_BUILD_DIR ${QEMU_PREFIX_DIR}/src/qemu-build)
+
+if(EXISTS ${QEMU_STAMP_DIR}/qemu-configure AND NOT EXISTS ${QEMU_SRC}/Makefile)
+    message(STATUS "QEMU source tree missing; resetting ExternalProject state")
+    file(REMOVE_RECURSE ${QEMU_BUILD_DIR})
+    file(REMOVE_RECURSE ${QEMU_SRC})
+    file(
+        REMOVE
+        ${QEMU_STAMP_DIR}/qemu-build
+        ${QEMU_STAMP_DIR}/qemu-configure
+        ${QEMU_STAMP_DIR}/qemu-done
+        ${QEMU_STAMP_DIR}/qemu-download
+        ${QEMU_STAMP_DIR}/qemu-install
+        ${QEMU_STAMP_DIR}/qemu-patch
+        ${QEMU_STAMP_DIR}/qemu-update)
+endif()
+
 set(EXTRA_CFLAGS "")
 if((CMAKE_COMPILER_IS_GNUCC AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL
                                 12.0) OR CMAKE_C_COMPILER_ID STREQUAL "Clang")

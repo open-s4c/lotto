@@ -12,6 +12,7 @@ enum value_type {
     VALUE_TYPE_NONE,
     VALUE_TYPE_BOOL,
     VALUE_TYPE_UINT64,
+    VALUE_TYPE_DOUBLE,
     VALUE_TYPE_STRING,
     VALUE_TYPE_ANY
 };
@@ -21,6 +22,7 @@ struct value {
     union {
         bool _bval;
         uint64_t _uval;
+        double _dval;
         const char *_sval;
         const void *_any;
         uint8_t _u8val;
@@ -42,6 +44,11 @@ struct value {
     (struct value)                                                             \
     {                                                                          \
         ._type = VALUE_TYPE_UINT64, ._uval = (v)                               \
+    }
+#define dval(v)                                                                \
+    (struct value)                                                             \
+    {                                                                          \
+        ._type = VALUE_TYPE_DOUBLE, ._dval = (v)                               \
     }
 #define sval(v)                                                                \
     (struct value)                                                             \
@@ -69,6 +76,11 @@ struct value {
     ({                                                                         \
         ASSERT((v)._type == VALUE_TYPE_UINT64);                                \
         (v)._uval;                                                             \
+    })
+#define as_dval(v)                                                             \
+    ({                                                                         \
+        ASSERT((v)._type == VALUE_TYPE_DOUBLE);                                \
+        (v)._dval;                                                             \
     })
 #define as_sval(v)                                                             \
     ({                                                                         \

@@ -123,6 +123,9 @@ new_flag(const char *name, const char *opt, const char *long_opt,
             case VALUE_TYPE_UINT64:
                 ASSERT(as_uval(entry.val._val) == as_uval(e->val._val));
                 break;
+            case VALUE_TYPE_DOUBLE:
+                ASSERT(as_dval(entry.val._val) == as_dval(e->val._val));
+                break;
             case VALUE_TYPE_STRING:
                 ASSERT(sys_strcmp(as_sval(entry.val._val),
                                   as_sval(e->val._val)) == 0);
@@ -222,6 +225,14 @@ _flags_text(const flags_t *flags, const char *text[])
                     len -= written;
                     ASSERT(len > 0);
                 }
+                break;
+            case VALUE_TYPE_DOUBLE:
+                text[b] = dst;
+                written =
+                    1 + sys_snprintf(dst, len, "%g", flags_get_dval(flags, b));
+                dst += written;
+                len -= written;
+                ASSERT(len > 0);
                 break;
             case VALUE_TYPE_STRING:
                 text[b] = flags_get_sval(flags, b);
@@ -431,6 +442,11 @@ apply_forced_non_defaults(flags_t *flags)
                     flags_get_uval(flags, b))
                     continue;
                 break;
+            case VALUE_TYPE_DOUBLE:
+                if (flags_get_dval(default_flags, b) !=
+                    flags_get_dval(flags, b))
+                    continue;
+                break;
             case VALUE_TYPE_STRING:
                 if (sys_strcmp(flags_get_sval(default_flags, b),
                                flags_get_sval(flags, b)) != 0)
@@ -506,6 +522,17 @@ flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
                             _bits_from(&_options[fnum].str_converter, optarg) :
                             strtoul(optarg, NULL, 10)));
                 break;
+            case VALUE_TYPE_DOUBLE: {
+                char *endptr = NULL;
+                double value = strtod(optarg, &endptr);
+                if (endptr == optarg || *endptr != '\0') {
+                    sys_fprintf(stdout, "invalid value for --%s: %s\n",
+                                _options[fnum].long_opt, optarg);
+                    return FLAGS_PARSE_ERROR;
+                }
+                flags_set_by_opt(flags, fnum, dval(value));
+                break;
+            }
             case VALUE_TYPE_BOOL:
                 flags_set_by_opt(flags, fnum,
                                  bval(STR_CONVERTER_IS_PRESENT(
@@ -562,6 +589,9 @@ flags_print(const flags_t *f)
                 } else {
                     logger_printf("%lu", val->_uval);
                 }
+                break;
+            case VALUE_TYPE_DOUBLE:
+                logger_printf("%g", val->_dval);
                 break;
             case VALUE_TYPE_STRING:
                 logger_printf("'%s'", val->_sval);

@@ -20,6 +20,7 @@ enum value_type flags_get_type(const flags_t *flags, flag_t f);
 
 bool flags_is_on(const flags_t *flags, flag_t f);
 uint64_t flags_get_uval(const flags_t *flags, flag_t f);
+double flags_get_dval(const flags_t *flags, flag_t f);
 const char *flags_get_sval(const flags_t *flags, flag_t f);
 struct value flags_get_value(const flags_t *flags, flag_t f);
 struct flag_val flags_get(const flags_t *flags, flag_t f);

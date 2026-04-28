@@ -26,6 +26,7 @@ struct flag_val {
 #define flag_type(f)    value_type(flag_value(f))
 #define flag_is_on(f)   is_on(flag_value(f))
 #define flag_as_uval(f) as_uval(flag_value(f))
+#define flag_as_dval(f) as_dval(flag_value(f))
 #define flag_as_sval(f) as_sval(flag_value(f))
 
 /* default flags for
@@ -42,6 +43,12 @@ struct flag_val {
     (struct flag_val)                                                          \
     {                                                                          \
         ._val = {._type = VALUE_TYPE_UINT64, ._uval = v}, .is_default = true,  \
+        .force_no_default = false                                              \
+    }
+#define flag_dval(v)                                                           \
+    (struct flag_val)                                                          \
+    {                                                                          \
+        ._val = {._type = VALUE_TYPE_DOUBLE, ._dval = v}, .is_default = true,  \
         .force_no_default = false                                              \
     }
 #define flag_bool(v)                                                           \
@@ -66,6 +73,12 @@ struct flag_val {
     (struct flag_val)                                                          \
     {                                                                          \
         ._val = {._type = VALUE_TYPE_UINT64, ._uval = v}, .is_default = true,  \
+        .force_no_default = true                                               \
+    }
+#define flag_dval_force_opt(v)                                                 \
+    (struct flag_val)                                                          \
+    {                                                                          \
+        ._val = {._type = VALUE_TYPE_DOUBLE, ._dval = v}, .is_default = true,  \
         .force_no_default = true                                               \
     }
 

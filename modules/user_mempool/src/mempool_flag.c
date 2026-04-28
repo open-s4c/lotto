@@ -8,7 +8,7 @@
 #include <lotto/util/macros.h>
 
 #if LOTTO_MEMMGR_USER
-    #define FLAG_OPT   "lotto_mempool-user-size"
+    #define FLAG_OPT   "memmgr-user-mempool-size"
     #define FLAG_DESCR "user lotto_mempool size"
 #elif LOTTO_MEMMGR_RUNTIME
     #define FLAG_OPT   "lotto_mempool-runtime-size"

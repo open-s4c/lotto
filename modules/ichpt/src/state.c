@@ -3,7 +3,7 @@
 #include <lotto/sys/logger.h>
 
 /* config contains the initial state of the handler */
-static ichpt_config_t _config;
+static ichpt_config_t _config = {.enabled = true};
 static vec_t _initial;
 
 static void

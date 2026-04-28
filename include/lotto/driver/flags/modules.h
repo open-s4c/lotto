@@ -18,6 +18,8 @@ void register_runtime_switchable_module(const char *name,
 bool module_is_runtime_switchable(const char *name);
 bool module_runtime_switchable_default_enabled(const char *name,
                                                bool *default_enabled);
+bool module_runtime_switchable_enabled(const char *name, const flags_t *flags,
+                                       bool *enabled);
 int validate_module_enable_flags(const flags_t *flags);
 int apply_module_enable_flags(const flags_t *flags);
 

@@ -5,7 +5,7 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/logger.h>
 
-static watchdog_config_t _config;
+static watchdog_config_t _config = {.enabled = true, .budget = 100};
 
 REGISTER_CONFIG(_config, {
     _config.enabled = true;

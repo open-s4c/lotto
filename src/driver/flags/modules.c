@@ -107,6 +107,58 @@ module_runtime_switchable_default_enabled(const char *name,
     return true;
 }
 
+typedef struct {
+    const runtime_switchable_module_t *module;
+    bool found;
+} module_token_match_t;
+
+static int
+_match_module_token(const char *tok, void *arg)
+{
+    module_token_match_t *match = arg;
+    const runtime_switchable_module_t *found =
+        _find_runtime_switchable_module(tok);
+    if (found == match->module) {
+        match->found = true;
+    }
+    return 0;
+}
+
+static bool
+_module_csv_contains(const char *csv, const runtime_switchable_module_t *module)
+{
+    module_token_match_t match = {.module = module};
+    csv_for_each(csv, _match_module_token, &match);
+    return match.found;
+}
+
+bool
+module_runtime_switchable_enabled(const char *name, const flags_t *flags,
+                                  bool *enabled)
+{
+    const runtime_switchable_module_t *module =
+        _find_runtime_switchable_module(name);
+    if (module == NULL) {
+        return false;
+    }
+
+    bool value = module->default_enabled;
+    if (flags != NULL) {
+        if (_module_csv_contains(flags_get_sval(flags, flag_enable_module()),
+                                 module)) {
+            value = true;
+        }
+        if (_module_csv_contains(flags_get_sval(flags, flag_disable_module()),
+                                 module)) {
+            value = false;
+        }
+    }
+    if (enabled != NULL) {
+        *enabled = value;
+    }
+    return true;
+}
+
 static int
 _handle_module_token(const char *tok, void *arg)
 {

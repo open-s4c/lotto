@@ -1,6 +1,6 @@
 add_runtime_module(module.c state.c subscribers.c snapshot.c)
 runtime_module_include_directories(
-    PRIVATE ${PROJECT_SOURCE_DIR}/deps/qemu/include
+    PRIVATE ${PROJECT_SOURCE_DIR}/deps/qemu/include/qemu
             ${PROJECT_SOURCE_DIR}/modules/qemu/include
             ${PROJECT_SOURCE_DIR}/modules/qemu_snapshot/include
             ${PROJECT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/include

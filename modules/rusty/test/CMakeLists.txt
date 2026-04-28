@@ -1,4 +1,3 @@
-add_compile_definitions(LOGGER_PREFIX="rusty_test")
 file(GLOB SRCS *.c)
 
 foreach(SRC ${SRCS})

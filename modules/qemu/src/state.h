@@ -18,6 +18,7 @@ flag_t flag_qemu_plugin_debug();
 flag_t flag_qemu_plugins();
 flag_t flag_qemu_mem();
 flag_t flag_qemu_cpu();
+flag_t flag_qemu_stdin();
 flag_t flag_qemu_no_common_args();
 
 #endif

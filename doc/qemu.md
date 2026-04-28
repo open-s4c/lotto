@@ -212,14 +212,14 @@ invoking `qemu-system-aarch64` directly with ad hoc plugin arguments.
 Use:
 
 ```bash
-./build/lotto stress -Q --gdb --gdb-wait -r 1 -- \
+./build/lotto stress -Q --qemu-gdb --qemu-gdb-wait -r 1 -- \
   -smp 3 -kernel ./build/modules/qemu_gdb/test/kernel/0001-kernel-gdb-abc.elf
 ```
 
 Meaning:
 
-- `--gdb` enables the QEMU GDB server
-- `--gdb-wait` stops early and waits for the debugger before continuing
+- `--qemu-gdb` enables the QEMU GDB server
+- `--qemu-gdb-wait` stops early and waits for the debugger before continuing
 
 When the server is active, it listens on:
 
@@ -468,6 +468,6 @@ Still intentionally incomplete:
 
 - Keep this document aligned with the supported entrypoints:
   - `stress -Q`
-  - `qemu_gdb` via `--gdb` / `--gdb-wait`
+  - `qemu_gdb` via `--qemu-gdb` / `--qemu-gdb-wait`
   - `qemu_profile` via its own module
   - `qemu_snapshot` via `qlotto_snapshot()`

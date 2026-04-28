@@ -17,23 +17,25 @@
 #define LD_PRELOAD_ENV      "LD_PRELOAD"
 #define LOTTO_CLI_PRELOAD   "LOTTO_CLI_PRELOAD"
 
-DECLARE_COMMAND_FLAG(QEMU_BIN, "", "qemu-bin", "PATH",
+DECLARE_COMMAND_FLAG(QEMU_BIN, "", LOTTO_MODULE_FLAG("bin"), "PATH",
                      "path to qemu-system-aarch64", flag_sval(""))
 FLAG_GETTER(qemu_bin, QEMU_BIN)
-DECLARE_COMMAND_FLAG(QEMU_PLUGIN_DEBUG, "", "plugin-debug", "",
-                     "append '-d plugin' for qemu plugin debugging", flag_off())
+DECLARE_COMMAND_FLAG(QEMU_PLUGIN_DEBUG, "", LOTTO_MODULE_FLAG("plugin-debug"),
+                     "", "append '-d plugin' for qemu plugin debugging",
+                     flag_off())
 FLAG_GETTER(qemu_plugin_debug, QEMU_PLUGIN_DEBUG)
-DECLARE_COMMAND_FLAG(QEMU_MEM, "", "qemu-mem", "SIZE",
+DECLARE_COMMAND_FLAG(QEMU_MEM, "", LOTTO_MODULE_FLAG("mem"), "SIZE",
                      "default qemu memory size for injected args",
                      flag_sval(""))
 FLAG_GETTER(qemu_mem, QEMU_MEM)
-DECLARE_COMMAND_FLAG(QEMU_CPU, "", "qemu-cpu", "N",
+DECLARE_COMMAND_FLAG(QEMU_CPU, "", LOTTO_MODULE_FLAG("cpu"), "N",
                      "default qemu cpu count for injected args", flag_sval(""))
 FLAG_GETTER(qemu_cpu, QEMU_CPU)
-DECLARE_COMMAND_FLAG(QEMU_NO_COMMON_ARGS, "", "qemu-no-common-arguments", "",
+DECLARE_COMMAND_FLAG(QEMU_NO_COMMON_ARGS, "",
+                     LOTTO_MODULE_FLAG("no-common-arguments"), "",
                      "do not inject common QEMU args", flag_off())
 FLAG_GETTER(qemu_no_common_args, QEMU_NO_COMMON_ARGS)
-DECLARE_COMMAND_FLAG(QEMU_PLUGINS, "", "qemu-plugins", "on|off",
+DECLARE_COMMAND_FLAG(QEMU_PLUGINS, "", LOTTO_MODULE_FLAG("plugins"), "on|off",
                      "whether to pass qemu -plugin arguments", flag_sval("on"))
 FLAG_GETTER(qemu_plugins, QEMU_PLUGINS)
 
@@ -514,6 +516,6 @@ ON_DRIVER_REGISTER_COMMANDS({
                     FLAG_QEMU_NO_COMMON_ARGS,
                     0};
     subcmd_register(qemu, "qemu", "[<options>] [--] [qemu_args...]",
-                    "Shortcut for 'stress -Q -- [qemu_args...]'",
-                    true, sel, flags_default, SUBCMD_GROUP_OTHER);
+                    "Shortcut for 'stress -Q -- [qemu_args...]'", true, sel,
+                    flags_default, SUBCMD_GROUP_OTHER);
 })

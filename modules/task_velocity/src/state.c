@@ -5,7 +5,7 @@ typedef struct task_velocity_config {
     marshable_t m;
     bool enabled;
 } task_velocity_config_t;
-static task_velocity_config_t _config;
+static task_velocity_config_t _config = {.enabled = true};
 REGISTER_CONFIG(_config, {
     _config.enabled = true;
     logger_infof("enabled = %s\n", _config.enabled ? "on" : "off");

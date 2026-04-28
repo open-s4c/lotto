@@ -16,8 +16,10 @@
 #include <lotto/sys/modules.h>
 #include <lotto/sys/stdio.h>
 
-#define LOTTO_LOAD_RUNTIME "LOTTO_LOAD_RUNTIME"
-#define MAX_LIST_STR       ((size_t)(32 * 1024))
+#define LOTTO_LOAD_RUNTIME         "LOTTO_LOAD_RUNTIME"
+#define MAX_LIST_STR               ((size_t)(32 * 1024))
+#define MAX_SWITCHABLE_MODULES     128
+#define MAX_SWITCHABLE_MODULE_NAME 128
 
 typedef struct driver_options_s {
     const char *module_dir;
@@ -26,6 +28,17 @@ typedef struct driver_options_s {
     char driver_loads[MAX_LIST_STR];
     int subcmd_pos;
 } driver_options_t;
+
+typedef struct switchable_module_help_s {
+    char name[MAX_SWITCHABLE_MODULE_NAME];
+    bool default_enabled;
+} switchable_module_help_t;
+
+typedef struct switchable_module_help_ctx_s {
+    const flags_t *flags;
+    switchable_module_help_t modules[MAX_SWITCHABLE_MODULES];
+    size_t count;
+} switchable_module_help_ctx_t;
 
 static void append_option_value(char *buf, size_t cap, const char *value);
 
@@ -66,17 +79,105 @@ driver_options(int argc, char **argv, driver_options_t *opts)
     }
 }
 
+static const char *
+module_basename(const char *module_name)
+{
+    if (strncmp(module_name, "driver-", 7) == 0) {
+        return module_name + 7;
+    }
+    if (strncmp(module_name, "runtime-", 8) == 0) {
+        return module_name + 8;
+    }
+    return module_name;
+}
+
 static void
-describe(subcmd_t *scmd)
+normalize_module_name(const char *name, char *normalized, size_t size)
+{
+    snprintf(normalized, size, "%s", name);
+    for (size_t i = 0; normalized[i] != '\0'; i++) {
+        if (normalized[i] == '_') {
+            normalized[i] = '-';
+        }
+    }
+}
+
+static bool
+switchable_module_help_seen(const switchable_module_help_ctx_t *ctx,
+                            const char *name)
+{
+    for (size_t i = 0; i < ctx->count; i++) {
+        if (strcmp(ctx->modules[i].name, name) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static int
+collect_switchable_module(module_t *module, void *arg)
+{
+    switchable_module_help_ctx_t *ctx = arg;
+    bool default_enabled              = false;
+    char normalized[MAX_SWITCHABLE_MODULE_NAME];
+
+    normalize_module_name(module_basename(module->name), normalized,
+                          sizeof(normalized));
+    if (!module_runtime_switchable_enabled(normalized, ctx->flags,
+                                           &default_enabled)) {
+        return 0;
+    }
+    if (switchable_module_help_seen(ctx, normalized)) {
+        return 0;
+    }
+    if (ctx->count >= MAX_SWITCHABLE_MODULES) {
+        return 1;
+    }
+
+    switchable_module_help_t *help = &ctx->modules[ctx->count++];
+    snprintf(help->name, sizeof(help->name), "%s", normalized);
+    help->default_enabled = default_enabled;
+    return 0;
+}
+
+static void
+switchable_modules_help(const flags_t *flags)
+{
+    switchable_module_help_ctx_t ctx = {.flags = flags};
+    size_t max_len                   = 0;
+
+    lotto_module_foreach_all(collect_switchable_module, &ctx);
+    if (ctx.count == 0) {
+        return;
+    }
+
+    for (size_t i = 0; i < ctx.count; i++) {
+        size_t len = strlen(ctx.modules[i].name);
+        if (len > max_len) {
+            max_len = len;
+        }
+    }
+
+    sys_fprintf(stdout, "\nSwitchable modules for --enable/--disable:\n");
+    for (size_t i = 0; i < ctx.count; i++) {
+        sys_fprintf(stdout, "    %-*s  %s\n", (int)max_len, ctx.modules[i].name,
+                    ctx.modules[i].default_enabled ? "on" : "off");
+    }
+}
+
+static void
+describe(subcmd_t *scmd, const flags_t *flags)
 {
     sys_fprintf(stdout, "Description:\n    %s\n\n", scmd->desc);
     sys_fprintf(stdout, "Usage:\n");
-    sys_fprintf(
-        stdout,
-        "    lotto [--plugin-dir DIR] [--plugins P1[,P2]] "
-        "%s [<options>] %s\n\n",
-        scmd->name, scmd->args);
+    sys_fprintf(stdout,
+                "    lotto [--plugin-dir DIR] [--plugins P1[,P2]] "
+                "%s [<options>] %s\n\n",
+                scmd->name, scmd->args);
     flags_help(scmd->defaults(), scmd->runtime_sel, scmd->sel);
+    if (scmd->runtime_sel) {
+        switchable_modules_help(flags);
+    }
 }
 
 int
@@ -106,8 +207,8 @@ driver_main(int argc, char **argv)
             exe_path = realpath(argv[0], resolved_path);
         }
         ASSERT(exe_path != 0 &&
-            "Unable to resolve path. You must provide lotto's path or a "
-            "real path alias.");
+               "Unable to resolve path. You must provide lotto's path or a "
+               "real path alias.");
         preload_set_libpath(dirname(exe_path));
     }
 #endif
@@ -134,7 +235,7 @@ driver_main(int argc, char **argv)
             ARGS(argc - opts.subcmd_pos, argv + opts.subcmd_pos);
 
     exec_info->args.arg0 = arg0;
-        flags_t *flags       = scmd->defaults();
+    flags_t *flags       = scmd->defaults();
     switch (
         flags_parse(flags, &exec_info->args, scmd->runtime_sel, scmd->sel)) {
         case FLAGS_PARSE_OK: {
@@ -159,8 +260,11 @@ driver_main(int argc, char **argv)
             return r;
         }
         case FLAGS_PARSE_HELP:
+            if (scmd->runtime_sel && validate_module_enable_flags(flags) != 0) {
+                return 1;
+            }
             if (scmd->name[0] != '-')
-                describe(scmd);
+                describe(scmd, flags);
             else
                 scmd->func(&exec_info->args, flags);
             return -1;

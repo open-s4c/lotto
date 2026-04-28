@@ -14,7 +14,7 @@ REGISTER_PERSISTENT(_available_tasks, {
     tidset_init(&_available_tasks);
     _available_tasks.m.print = _replay_print;
 })
-static available_config_t _config;
+static available_config_t _config = {.enabled = true};
 REGISTER_CONFIG(_config, {
     _config.enabled = true;
     logger_infof("enabled = %s\n", _config.enabled ? "on" : "off");

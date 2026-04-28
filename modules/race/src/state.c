@@ -2,7 +2,7 @@
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/logger.h>
 
-static race_config_t _config;
+static race_config_t _config = {.enabled = true};
 
 REGISTER_CONFIG(_config, {
     _config.enabled = true;

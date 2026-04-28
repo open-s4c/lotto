@@ -51,7 +51,7 @@ NEW_PUBLIC_CALLBACK_FLAG(STRATEGY, "s", "strategy", "STRAT",
                          })
 
 NEW_PUBLIC_PRETTY_CALLBACK_FLAG(
-    STABLE_ADDRESS_METHOD, "", "stable-address-method",
+    STABLE_ADDRESS_METHOD, "a", "stable-address-method",
     "method to produce addresses stable accross runs",
     flag_uval(STABLE_ADDRESS_METHOD_NONE),
     STR_CONVERTER_GET(stable_address_method_str, stable_address_method_from,

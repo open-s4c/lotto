@@ -188,6 +188,9 @@ wait_status_to_retval_(int wstatus)
     if (WIFSIGNALED(wstatus)) {
         sys_fprintf(stdout, "Signal %s received\n",
                     strsignal(WTERMSIG(wstatus)));
+        if (WTERMSIG(wstatus) == SIGINT) {
+            return 130;
+        }
         return -WTERMSIG(wstatus);
     }
     if (WIFSTOPPED(wstatus)) {

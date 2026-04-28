@@ -21,7 +21,7 @@ env LD_PRELOAD=@CMAKE_BINARY_DIR@/liblotto-runtime.so \
     @CMAKE_BINARY_DIR@/lotto stress \
     --temporary-directory "$tmpdir" \
     -o "$tmpdir/out.trace" \
-    -Q --gdb --gdb-wait -r 1 -- \
+    -Q --qemu-gdb --qemu-gdb-wait -r 1 -- \
     -smp 3 -kernel @_QEMU_GDB_KERNEL@ >"$log" 2>&1 &
 qemu_pid=$!
 

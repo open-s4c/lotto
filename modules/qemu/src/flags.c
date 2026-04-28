@@ -6,7 +6,7 @@
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/subcmd.h>
 
-DECLARE_COMMAND_FLAG(QEMU_STDIN, "", "qemu-stdin", "",
+DECLARE_COMMAND_FLAG(QEMU_STDIN, "", LOTTO_MODULE_FLAG("stdin"), "",
                      "connect stdin to qemu child", flag_off())
 FLAG_GETTER(qemu_stdin, QEMU_STDIN)
 

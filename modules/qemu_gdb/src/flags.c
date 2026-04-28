@@ -2,8 +2,8 @@
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/subcmd.h>
 
-NEW_PUBLIC_CALLBACK_FLAG(QEMU_GDB, "G", "gdb", "", "enable qemu gdb server",
-                         flag_off(), {
+NEW_PUBLIC_CALLBACK_FLAG(QEMU_GDB, "G", "qemu-gdb", "",
+                         "enable qemu gdb server", flag_off(), {
                              if (is_on(v)) {
                                  qemu_gdb_enable();
                              } else {
@@ -13,7 +13,7 @@ NEW_PUBLIC_CALLBACK_FLAG(QEMU_GDB, "G", "gdb", "", "enable qemu gdb server",
 
 FLAG_GETTER(qemu_gdb, QEMU_GDB)
 
-NEW_PUBLIC_CALLBACK_FLAG(QEMU_GDB_WAIT, "S", "gdb-wait", "",
+NEW_PUBLIC_CALLBACK_FLAG(QEMU_GDB_WAIT, "W", "qemu-gdb-wait", "",
                          "stop exeution, wait for gdb", flag_off(),
                          { qemu_gdb_set_wait(is_on(v)); })
 

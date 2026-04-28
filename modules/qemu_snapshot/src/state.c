@@ -1,15 +1,9 @@
 #include <dice/module.h>
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/qemu_snapshot/config.h>
 #include <lotto/modules/qemu_snapshot/final.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/string.h>
-
-typedef struct qemu_snapshot_pending_final_state {
-    bool valid;
-    bool success;
-    clk_t clk;
-    char name[QEMU_SNAPSHOT_NAME_MAX];
-} qemu_snapshot_pending_final_state_t;
 
 typedef struct qemu_snapshot_final_wire_state {
     bool valid;
@@ -18,7 +12,7 @@ typedef struct qemu_snapshot_final_wire_state {
     char name[QEMU_SNAPSHOT_NAME_MAX];
 } qemu_snapshot_final_wire_state_t;
 
-static qemu_snapshot_pending_final_state_t _pending;
+static struct qemu_snapshot_config_state _config;
 
 static void
 _print_final(const marshable_t *m)
@@ -29,6 +23,21 @@ _print_final(const marshable_t *m)
     logger_infof("snapshot valid=%s success=%s clk=%lu name=%s\n",
                  s->valid ? "true" : "false", s->success ? "true" : "false",
                  s->clk, s->name[0] ? s->name : "<none>");
+}
+
+static void
+_print_config(const marshable_t *m)
+{
+    const struct qemu_snapshot_config_state *s =
+        (const struct qemu_snapshot_config_state *)m;
+
+    logger_infof(
+        "snapshot enabled=%s clk=%lu snapshot_valid=%s snapshot_success=%s "
+        "snapshot_clk=%lu snapshot_name=%s\n",
+        s->enabled ? "true" : "false", s->clk,
+        s->snapshot_valid ? "true" : "false",
+        s->snapshot_success ? "true" : "false", s->snapshot_clk,
+        s->snapshot_name[0] ? s->snapshot_name : "<none>");
 }
 
 static struct qemu_snapshot_final_state _final;
@@ -49,25 +58,20 @@ static const marshable_t _final_marshable = {
 static void DICE_CTOR
 qemu_snapshot_state_init_(void)
 {
+    _config = (struct qemu_snapshot_config_state){
+        .m = MARSHABLE_STATIC_PRINTABLE(
+            sizeof(struct qemu_snapshot_config_state), _print_config),
+        .enabled = true,
+        .clk     = 0,
+    };
     _final = (struct qemu_snapshot_final_state){
         .m = _final_marshable,
     };
+    statemgr_register(DICE_MODULE_SLOT, (marshable_t *)&_config,
+                      STATE_TYPE_CONFIG);
     statemgr_register(DICE_MODULE_SLOT, (marshable_t *)&_final,
                       STATE_TYPE_FINAL);
 }
-
-LOTTO_SUBSCRIBE(EVENT_ENGINE__BEFORE_MARSHAL_FINAL, {
-    (void)v;
-
-    _final.valid   = _pending.valid;
-    _final.success = _pending.success;
-    _final.clk     = _pending.clk;
-    if (_pending.valid) {
-        sys_strcpy(_final.name, _pending.name);
-    } else {
-        _final.name[0] = '\0';
-    }
-})
 
 struct qemu_snapshot_final_state *
 qemu_snapshot_final_state(void)
@@ -75,27 +79,28 @@ qemu_snapshot_final_state(void)
     return &_final;
 }
 
+struct qemu_snapshot_config_state *
+qemu_snapshot_config_state(void)
+{
+    return &_config;
+}
+
 void
 qemu_snapshot_final_note(const char *name, bool success)
 {
-    _pending.valid   = true;
-    _pending.success = success;
+    _final.valid   = true;
+    _final.success = success;
     if (name != NULL) {
-        sys_strcpy(_pending.name, name);
+        sys_strcpy(_final.name, name);
     } else {
-        _pending.name[0] = '\0';
+        _final.name[0] = '\0';
     }
-
-    _final.valid   = _pending.valid;
-    _final.success = _pending.success;
-    sys_strcpy(_final.name, _pending.name);
 }
 
 void
 qemu_snapshot_final_set_clk(clk_t clk)
 {
-    _pending.clk = clk;
-    _final.clk   = clk;
+    _final.clk = clk;
 }
 
 static size_t

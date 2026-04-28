@@ -302,6 +302,9 @@ Current flow:
 6. after `save_snapshot(...)` returns, `qemu_snapshot` publishes:
    - `CHAIN_QEMU_CONTROL`
    - `EVENT_QEMU_SNAPSHOT_DONE`
+7. if the run exits due to a successful snapshot, the driver preserves:
+   - `<temporary-directory>/snapshot.trace`
+   - `<temporary-directory>/snapshot.qcow2`
 
 Important behavior:
 
@@ -311,6 +314,10 @@ Important behavior:
   such as a `qcow2` drive
 - `EVENT_QEMU_SNAPSHOT_DONE` is the Lotto-side completion signal for snapshot
   save completion on the QEMU main-loop thread
+- the preserved `snapshot.trace` keeps the snapshot boundary record and final
+  snapshot metadata so later commands can resume from it
+- the preserved `snapshot.qcow2` is a stable backup of the internal QEMU
+  snapshot image
 
 Example:
 
@@ -327,12 +334,54 @@ qemu-img snapshot -l /tmp/lotto-snapshot.qcow2
 The snapshot should appear inside the `qcow2` image as an internal snapshot
 such as `ls_1`.
 
-Current limitation:
+Snapshot resume is exposed through:
 
-- Lotto currently exposes snapshot save only
-- snapshot restore/load is not exposed yet through Lotto
-- QEMU itself supports restore via `loadvm`, but Lotto does not yet provide a
-  matching interface
+- driver command:
+  - `snap-stress`
+
+Current `snap-stress` behavior:
+
+1. reads `snapshot.trace` by default from the current Lotto temporary
+   directory, or another trace via `-i`
+2. reads the final snapshot metadata to identify the snapshot tag and snapshot
+   clock
+3. copies `snapshot.qcow2` to a fresh writable image for the resumed run
+4. prepares a temporary resume trace with:
+   - `START`
+   - original pre-snapshot `CONFIG`
+   - `EVENT_QEMU_SNAPSHOT_DONE`
+   - a new `CONFIG` carrying the fresh resumed seed
+5. launches QEMU with:
+   - the copied qcow2 image
+   - `-loadvm <snapshot-name>`
+6. rewrites the produced `replay.trace` so plain `lotto show` and
+   `lotto replay` continue to work from the resumed snapshot start point
+
+Example:
+
+```bash
+./build/lotto snap-stress -t /tmp/lotto-run -r 1
+./build/lotto replay
+```
+
+Current limitations:
+
+- snapshot resume currently goes through `snap-stress`, not the generic
+  `stress` command
+- the preserved snapshot artifacts live in Lotto's temporary directory and are
+  intended to be consumed by Lotto's own QEMU workflow
+
+## QEMU stdin behavior
+
+For `stress -Q` and related QEMU launches, Lotto now detaches child stdin to
+`/dev/null` by default. This avoids leaving the controlling terminal in a bad
+state after QEMU exits.
+
+If you want an interactive QEMU console, opt in explicitly:
+
+```bash
+./build/lotto stress -Q --qemu-stdin -- ...
+```
 
 ## The QEMU binary
 

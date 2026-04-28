@@ -30,7 +30,9 @@
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/trace.h>
 #include <lotto/driver/utils.h>
+#include <lotto/engine/statemgr.h>
 #include <lotto/modules/explore/explore.h>
+#include <lotto/modules/qemu_snapshot/final.h>
 #include <lotto/sys/now.h>
 #include <lotto/sys/stdio.h>
 #include <lotto/sys/stream_file.h>
@@ -64,6 +66,29 @@ static bool _fails_at_clk(args_t *args, flags_t *flags, clk_t clk);
 static bool _always_fails_at_clk_prob(args_t *args, flags_t *flags, clk_t clk);
 static bool _always_fails_at_clk_explore(args_t *args, flags_t *flags,
                                          clk_t clk);
+struct qemu_snapshot_final_state *qemu_snapshot_final_state(void)
+    __attribute__((weak));
+
+static void
+_apply_snapshot_min_boundary(flags_t *flags, const record_t *last)
+{
+    if (qemu_snapshot_final_state == NULL || last == NULL ||
+        last->kind != RECORD_EXIT || last->size == 0) {
+        return;
+    }
+
+    statemgr_unmarshal(last->data, STATE_TYPE_FINAL, true);
+    const struct qemu_snapshot_final_state *snapshot =
+        qemu_snapshot_final_state();
+    if (!snapshot->valid || !snapshot->success || snapshot->clk == 0) {
+        return;
+    }
+
+    clk_t min = flags_get_uval(flags, FLAG_INFLEX_MIN);
+    if (snapshot->clk > min) {
+        flags_set_by_opt(flags, FLAG_INFLEX_MIN, uval(snapshot->clk));
+    }
+}
 
 /**
  * inflection point finder
@@ -87,6 +112,7 @@ inflex(args_t *args, flags_t *flags)
     record_t *last  = trace_last(rec);
 
     args = record_args(first);
+    _apply_snapshot_min_boundary(flags, last);
 
     uint64_t k = last->clk;
     trace_destroy(rec);

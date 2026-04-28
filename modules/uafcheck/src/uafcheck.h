@@ -7,10 +7,9 @@
 
 #include <unistd.h>
 
+#include <lotto/sys/assert.h>
 #include <vsync/queue/bounded_spsc.h>
 #include <vsync/spinlock/caslock.h>
-
-#undef ASSERT
 
 typedef struct uaf_alloc {
     void *base;

@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "state.h"
 #include "uafcheck.h"
+#include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/real.h>
 #include <lotto/sys/string.h>
@@ -11,8 +13,6 @@
 #include <vsync/queue/internal/bounded_ret.h>
 
 #define UAFC_CANARY 0xBEEFFEED
-#define UAFC_MAXP   16
-#define UAFC_PROB   0.5
 
 #define METADATA_SIZE sizeof(alloc_t)
 
@@ -39,11 +39,11 @@ uafc_init(void *(*alloc)(size_t), void *(*aligned_alloc)(size_t, size_t),
                    .free          = free,
                    .realloc       = realloc};
 
-    size_t len = sizeof(alloc_t *) * UAFC_MAXP;
+    size_t len = sizeof(alloc_t *) * uafcheck_config()->max_pages;
     void *buf  = alloc(len);
     ASSERT(buf);
 
-    bounded_spsc_init(&uc->protected, buf, UAFC_MAXP);
+    bounded_spsc_init(&uc->protected, buf, uafcheck_config()->max_pages);
     caslock_init(&uc->lock);
 
     return uc;
@@ -55,8 +55,8 @@ uafc_alloc(uafc_t *uc, size_t n)
     ASSERT(uc);
 
     // sample probability
-    int p = (int)(rand() * 1.0 / RAND_MAX);
-    if (p > UAFC_PROB)
+    double p = rand() * 1.0 / RAND_MAX;
+    if (p > uafcheck_config()->prob)
         return uc->alloc(n);
 
     size_t size    = n + METADATA_SIZE + 2 * _pagesize;

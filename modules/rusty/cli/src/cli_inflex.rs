@@ -12,7 +12,7 @@ use rinflex::error::Error;
     name="inflex-rs",
     args="",
     desc="inflex in rust",
-    engine_flags=true,
+    engine_flags=false,
     cli_flags=[
         FLAG_INPUT.get(),
         FLAG_OUTPUT.get(),

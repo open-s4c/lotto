@@ -174,10 +174,10 @@ describe(subcmd_t *scmd, const flags_t *flags)
                 "    lotto [--plugin-dir DIR] [--plugins P1[,P2]] "
                 "%s [<flags>] %s\n\n",
                 scmd->name, scmd->args);
-    flags_core_help(scmd->defaults(), scmd->runtime_sel, scmd->sel);
+    flags_command_help(scmd->defaults(), scmd->sel);
     if (scmd->runtime_sel) {
+        flags_runtime_help(scmd->defaults(), scmd->runtime_sel);
         switchable_modules_help(flags);
-        flags_module_help(scmd->defaults(), scmd->runtime_sel);
     }
 }
 

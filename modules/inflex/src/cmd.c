@@ -463,5 +463,5 @@ ON_DRIVER_REGISTER_COMMANDS({
                     flag_logger_file(),
                     0};
     subcmd_register(inflex, "inflex", "", "Find an inflection point of a trace",
-                    true, sel, _default_flags, SUBCMD_GROUP_TRACE);
+                    false, sel, _default_flags, SUBCMD_GROUP_TRACE);
 })

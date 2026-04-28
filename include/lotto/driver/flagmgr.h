@@ -81,11 +81,8 @@ typedef struct str_converter_s {
 #define STR_CONVERTER_BOOL                                                     \
     (str_converter_t)                                                          \
     {                                                                          \
-        STR_CONVERTER_TYPE_BOOL, ._bool = {                                    \
-            enabled_str,                                                       \
-            enabled_from,                                                      \
-            "enable|disable"                                                   \
-        }                                                                      \
+        STR_CONVERTER_TYPE_BOOL,                                               \
+            ._bool = {enabled_str, enabled_from, "enable|disable"}             \
     }
 
 static inline const char *
@@ -200,7 +197,7 @@ flag_verbose_logger_level_str(const flags_t *flags)
 #define _FLAGMGR_SUBSCRIBE(...) ON_DRIVER_REGISTER_FLAGS(__VA_ARGS__)
 
 #ifdef LOTTO_MODULE_NAME
-#define LOTTO_MODULE_FLAG(name) LOTTO_MODULE_NAME "-" name
+    #define LOTTO_MODULE_FLAG(name) LOTTO_MODULE_NAME "-" name
 #endif
 
 #define NEW_PRETTY_CALLBACK_FLAG(name, opt, long_opt, desc, val,               \
@@ -340,9 +337,8 @@ int flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
 void flags_opts(char *opts, bool runtime_sel, const flag_t sel[MAX_FLAGS],
                 struct option long_opts[]);
 void flags_help(const flags_t *flags, bool runtime_sel, flag_t sel[MAX_FLAGS]);
-void flags_core_help(const flags_t *flags, bool runtime_sel,
-                     flag_t sel[MAX_FLAGS]);
-void flags_module_help(const flags_t *flags, bool runtime_sel);
+void flags_command_help(const flags_t *flags, flag_t sel[MAX_FLAGS]);
+void flags_runtime_help(const flags_t *flags, bool runtime_sel);
 void flags_list(bool runtime_sel, flag_t sel[MAX_FLAGS]);
 flags_t *flagmgr_flags_alloc();
 

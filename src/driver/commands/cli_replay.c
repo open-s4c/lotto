@@ -49,9 +49,9 @@ replay(args_t *args, flags_t *flags)
         return 1;
     }
 
-    args = record_args(first);
-    args_t replay_args = *args;
-    char **dynamic_argv = NULL;
+    args                 = record_args(first);
+    args_t replay_args   = *args;
+    char **dynamic_argv  = NULL;
     char **original_argv = replay_args.argv;
     execute_resolve_replay_args(&replay_args, flags);
     if (replay_args.argv != original_argv) {
@@ -115,6 +115,6 @@ ON_DRIVER_REGISTER_COMMANDS({
                     flag_after_run(),
                     flag_logger_file(),
                     0};
-    subcmd_register(replay, "replay", "", "Replay a trace", true, sel,
+    subcmd_register(replay, "replay", "", "Replay a trace", false, sel,
                     _default_flags, SUBCMD_GROUP_TRACE);
 })

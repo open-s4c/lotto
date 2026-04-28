@@ -149,7 +149,7 @@ impl Marshable for Config {
 pub static FLAG_HANDLER_STACKTRACE_ENABLED: FlagKey = FlagKey::new(
     c"FLAG_HANDLER_STACKTRACE_ENABLED",
     c"",
-    c"handler-stacktrace",
+    c"rusty-stacktrace",
     c"",
     c"enable the stacktrace handler",
     Value::Bool(false),

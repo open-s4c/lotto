@@ -242,7 +242,7 @@ impl Marshable for Persistent {
 pub static FLAG_HANDLER_CAS_ENABLED: FlagKey = FlagKey::new(
     c"FLAG_HANDLER_CAS_ENABLED",
     c"",
-    c"handler-cas",
+    c"rusty-cas",
     c"",
     c"enable the CAS predictor",
     Value::Bool(false),

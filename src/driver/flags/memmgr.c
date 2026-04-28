@@ -1,11 +1,13 @@
 #include <lotto/driver/flagmgr.h>
 #include <lotto/sys/assert.h>
 
-NEW_PUBLIC_CALLBACK_FLAG(MEMMGR_RUNTIME, "", "memmgr-runtime",
+NEW_PUBLIC_CALLBACK_FLAG(MEMMGR_RUNTIME, "", "memmgr-runtime", "MEMMGR",
+                         "runtime memory manager chain "
                          "leakcheck|mempool|uaf[:leakcheck|mempool|uaf]*",
-                         "runtime memory manager chain", flag_sval(""), {})
-NEW_PUBLIC_CALLBACK_FLAG(MEMMGR_USER, "", "memmgr-user",
+                         flag_sval(""), {})
+NEW_PUBLIC_CALLBACK_FLAG(MEMMGR_USER, "", "memmgr-user", "MEMMGR",
+                         "user memory manager chain "
                          "leakcheck|mempool|uaf[:leakcheck|mempool|uaf]*",
-                         "user memory manager chain", flag_sval(""), {})
+                         flag_sval(""), {})
 FLAG_GETTER(memmgr_runtime, MEMMGR_RUNTIME)
 FLAG_GETTER(memmgr_user, MEMMGR_USER)

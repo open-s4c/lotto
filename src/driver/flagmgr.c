@@ -326,43 +326,106 @@ _flag_help_len(flag_t b)
     return sys_strlen(e->long_opt) + sys_strlen(e->help) + 7;
 }
 
-void
-flags_help(const flags_t *flags, bool runtime_sel, flag_t sel[MAX_FLAGS])
+static bool
+_flag_is_core_runtime(flag_t f)
+{
+    const char *long_opt = _options[f].long_opt;
+    return sys_strcmp(long_opt, "enable") == 0 ||
+           sys_strcmp(long_opt, "disable") == 0 ||
+           sys_strcmp(long_opt, "memmgr-runtime") == 0 ||
+           sys_strcmp(long_opt, "memmgr-user") == 0 ||
+           sys_strcmp(long_opt, "seed") == 0 ||
+           sys_strcmp(long_opt, "record-granularity") == 0 ||
+           sys_strcmp(long_opt, "slack") == 0 ||
+           sys_strcmp(long_opt, "strategy") == 0 ||
+           sys_strcmp(long_opt, "stable-address-method") == 0;
+}
+
+static int
+_flag_long_opt_cmp(const void *pa, const void *pb)
+{
+    flag_t a = *(const flag_t *)pa;
+    flag_t b = *(const flag_t *)pb;
+    return sys_strcmp(_options[a].long_opt, _options[b].long_opt);
+}
+
+static void
+_flags_help_print(const char *heading, const flags_t *flags,
+                  const flag_t *flag_list, size_t nflags)
 {
     const char **default_values = sys_calloc(sizeof(char *), _next_option);
     _flags_text(flags ? flags : flags_default(), default_values);
 
+    size_t max_len = 0;
+    for (size_t i = 0; i < nflags; i++) {
+        size_t len = _flag_help_len(flag_list[i]);
+        if (len > max_len) {
+            max_len = len;
+        }
+    }
+
+    sys_fprintf(stdout, "%s:\n", heading);
+    for (size_t i = 0; i < nflags; i++) {
+        _flag_help_print(flag_list[i], max_len, default_values);
+    }
+
+    sys_free(default_values);
+}
+
+void
+flags_core_help(const flags_t *flags, bool runtime_sel, flag_t sel[MAX_FLAGS])
+{
+    flag_t flag_list[MAX_OPTIONS + 1];
+    size_t nflags = 0;
+
     flag_sel_add(sel, FLAG_HELP);
 
-    size_t max_len = 0;
     for (int i = 0; sel[i] != FLAG_SEL_SENTINEL; i++) {
-        size_t len = _flag_help_len(sel[i]);
-        if (len > max_len)
-            max_len = len;
+        flag_list[nflags++] = sel[i];
     }
+
     if (runtime_sel) {
         for (flag_t f = FLAG_NONE + 1; f < _next_option; f++) {
-            if (_options[f].callback == NULL) {
+            if (_options[f].callback == NULL || !_flag_is_core_runtime(f)) {
                 continue;
             }
-            size_t len = _flag_help_len(f);
-            if (len > max_len)
-                max_len = len;
+            flag_list[nflags++] = f;
         }
     }
-    sys_fprintf(stdout, "Options:\n");
-    for (int i = 0; sel[i] != FLAG_SEL_SENTINEL; i++) {
-        _flag_help_print(sel[i], max_len, default_values);
+
+    _flags_help_print("Core flags", flags, flag_list, nflags);
+}
+
+void
+flags_module_help(const flags_t *flags, bool runtime_sel)
+{
+    if (!runtime_sel) {
+        return;
     }
-    if (runtime_sel) {
-        for (flag_t f = FLAG_NONE + 1; f < _next_option; f++) {
-            if (_options[f].callback == NULL) {
-                continue;
-            }
-            _flag_help_print(f, max_len, default_values);
+
+    flag_t flag_list[MAX_OPTIONS + 1];
+    size_t nflags = 0;
+
+    for (flag_t f = FLAG_NONE + 1; f < _next_option; f++) {
+        if (_options[f].callback == NULL || _flag_is_core_runtime(f)) {
+            continue;
         }
+        flag_list[nflags++] = f;
     }
-    sys_free(default_values);
+    if (nflags == 0) {
+        return;
+    }
+
+    qsort(flag_list, nflags, sizeof(flag_t), _flag_long_opt_cmp);
+    sys_fprintf(stdout, "\n");
+    _flags_help_print("Module flags", flags, flag_list, nflags);
+}
+
+void
+flags_help(const flags_t *flags, bool runtime_sel, flag_t sel[MAX_FLAGS])
+{
+    flags_core_help(flags, runtime_sel, sel);
+    flags_module_help(flags, runtime_sel);
 }
 
 static void

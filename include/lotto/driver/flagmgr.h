@@ -340,6 +340,9 @@ int flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
 void flags_opts(char *opts, bool runtime_sel, const flag_t sel[MAX_FLAGS],
                 struct option long_opts[]);
 void flags_help(const flags_t *flags, bool runtime_sel, flag_t sel[MAX_FLAGS]);
+void flags_core_help(const flags_t *flags, bool runtime_sel,
+                     flag_t sel[MAX_FLAGS]);
+void flags_module_help(const flags_t *flags, bool runtime_sel);
 void flags_list(bool runtime_sel, flag_t sel[MAX_FLAGS]);
 flags_t *flagmgr_flags_alloc();
 

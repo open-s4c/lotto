@@ -204,7 +204,7 @@ pub fn register_flags() {
 static FLAG_HANDLER_AWAIT_ADDRESS_ENABLED: FlagKey = FlagKey::new(
     c"FLAG_HANDLER_AWAIT_ADDRESS_ENABLED",
     c"",
-    c"handler-await-address",
+    c"rusty-await-address",
     c"",
     c"enable the await-address handler",
     Value::Bool(false),

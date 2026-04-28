@@ -9,7 +9,7 @@ use rinflex::handlers::flags::*;
     name="replay-rs",
     args="",
     desc="replay in rust",
-    engine_flags=true,
+    engine_flags=false,
     cli_flags=[
         FLAG_INPUT.get(), FLAG_OUTPUT.get(), FLAG_VERBOSE.get(), FLAG_REPLAY_GOAL.get(),
         FLAG_TEMPORARY_DIRECTORY.get(), FLAG_NO_PRELOAD.get(), FLAG_BEFORE_RUN.get(), FLAG_AFTER_RUN.get()

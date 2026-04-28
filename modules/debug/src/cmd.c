@@ -125,6 +125,6 @@ ON_DRIVER_REGISTER_COMMANDS({
                     FLAG_FILE_FILTER,
                     FLAG_GDB_COMMAND,
                     0};
-    subcmd_register(debug, "debug", "", "Debug a trace", true, sel,
+    subcmd_register(debug, "debug", "", "Debug a trace", false, sel,
                     flags_default, SUBCMD_GROUP_TRACE);
 })

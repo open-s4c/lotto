@@ -373,7 +373,7 @@ _flags_help_print(const char *heading, const flags_t *flags,
 }
 
 void
-flags_core_help(const flags_t *flags, bool runtime_sel, flag_t sel[MAX_FLAGS])
+flags_command_help(const flags_t *flags, flag_t sel[MAX_FLAGS])
 {
     flag_t flag_list[MAX_OPTIONS + 1];
     size_t nflags = 0;
@@ -381,51 +381,61 @@ flags_core_help(const flags_t *flags, bool runtime_sel, flag_t sel[MAX_FLAGS])
     flag_sel_add(sel, FLAG_HELP);
 
     for (int i = 0; sel[i] != FLAG_SEL_SENTINEL; i++) {
+        if (sel[i] == FLAG_LIST_FLAGS || sel[i] == flag_no_preload()) {
+            continue;
+        }
         flag_list[nflags++] = sel[i];
     }
 
-    if (runtime_sel) {
-        for (flag_t f = FLAG_NONE + 1; f < _next_option; f++) {
-            if (_options[f].callback == NULL || !_flag_is_core_runtime(f)) {
-                continue;
-            }
-            flag_list[nflags++] = f;
-        }
-    }
-
-    _flags_help_print("Core flags", flags, flag_list, nflags);
+    _flags_help_print("Command flags", flags, flag_list, nflags);
 }
 
 void
-flags_module_help(const flags_t *flags, bool runtime_sel)
+flags_runtime_help(const flags_t *flags, bool runtime_sel)
 {
     if (!runtime_sel) {
         return;
     }
 
-    flag_t flag_list[MAX_OPTIONS + 1];
-    size_t nflags = 0;
+    flag_t core_flags[MAX_OPTIONS + 1];
+    size_t ncore_flags = 0;
+    flag_t module_flags[MAX_OPTIONS + 1];
+    size_t nmodule_flags = 0;
 
     for (flag_t f = FLAG_NONE + 1; f < _next_option; f++) {
-        if (_options[f].callback == NULL || _flag_is_core_runtime(f)) {
+        if (_options[f].callback == NULL) {
             continue;
         }
-        flag_list[nflags++] = f;
+        if (_flag_is_core_runtime(f)) {
+            core_flags[ncore_flags++] = f;
+        } else {
+            module_flags[nmodule_flags++] = f;
+        }
     }
-    if (nflags == 0) {
+    if (ncore_flags == 0 && nmodule_flags == 0) {
         return;
     }
 
-    qsort(flag_list, nflags, sizeof(flag_t), _flag_long_opt_cmp);
     sys_fprintf(stdout, "\n");
-    _flags_help_print("Module flags", flags, flag_list, nflags);
+    sys_fprintf(stdout, "Runtime flags:\n");
+    if (ncore_flags > 0) {
+        qsort(core_flags, ncore_flags, sizeof(flag_t), _flag_long_opt_cmp);
+        _flags_help_print("  Core", flags, core_flags, ncore_flags);
+    }
+    if (nmodule_flags > 0) {
+        qsort(module_flags, nmodule_flags, sizeof(flag_t), _flag_long_opt_cmp);
+        if (ncore_flags > 0) {
+            sys_fprintf(stdout, "\n");
+        }
+        _flags_help_print("  Modules", flags, module_flags, nmodule_flags);
+    }
 }
 
 void
 flags_help(const flags_t *flags, bool runtime_sel, flag_t sel[MAX_FLAGS])
 {
-    flags_core_help(flags, runtime_sel, sel);
-    flags_module_help(flags, runtime_sel);
+    flags_command_help(flags, sel);
+    flags_runtime_help(flags, runtime_sel);
 }
 
 static void

@@ -83,7 +83,7 @@ STATIC void
 _inactivity_alarm(const capture_point *cp, event_t *e)
 {
     (void)e;
-    if (inactivity_config()->alarm != 0) {
+    if (inactivity_config()->enabled && inactivity_config()->alarm != 0) {
         if (timer != 0) {
             timer_delete(timer);
         }

@@ -5,12 +5,14 @@
 #ifndef LOTTO_STATE_INACTIVITY_H
 #define LOTTO_STATE_INACTIVITY_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <lotto/base/marshable.h>
 
 typedef struct inactivity_config {
     marshable_t m;
+    bool enabled;
     uint64_t alarm;
 } inactivity_config_t;
 

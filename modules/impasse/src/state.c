@@ -1,16 +1,15 @@
-#include "state.h"
 #include <lotto/engine/statemgr.h>
+#include <lotto/modules/impasse/state.h>
 #include <lotto/sys/logger.h>
 
-static inactivity_config_t _config = {.enabled = true};
+static impasse_config_t _config = {.enabled = true};
 REGISTER_CONFIG(_config, {
     _config.enabled = true;
     logger_infof("enabled = %s\n", _config.enabled ? "on" : "off");
-    logger_infof("alarm   = %lu\n", _config.alarm);
 })
 
-inactivity_config_t *
-inactivity_config()
+impasse_config_t *
+impasse_config()
 {
     return &_config;
 }

@@ -5,7 +5,7 @@
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
 
-static sleep_config_t _config = {.mode = SLEEP_MODE_UNTIL};
+static sleep_config_t _config = {.mode = SLEEP_MODE_ONCE};
 
 REGISTER_CONFIG(_config,
                 { logger_infof("mode = %s\n", sleep_mode_str(_config.mode)); })

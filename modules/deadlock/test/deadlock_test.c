@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress -s random --mutex-check-deadlock -v -- %b 2>&1) | %check %s
+// RUN: (! %lotto %stress -s random -d impasse -e deadlock -v -- %b 2>&1) | %check %s
 // CHECK: [{{.*}}] Deadlock detected!
 // clang-format on
 #include <assert.h>

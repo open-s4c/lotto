@@ -49,6 +49,7 @@ typedef uint64_t enforce_modes_t;
 
 typedef struct enforce_config {
     marshable_t m;
+    bool enabled;
     enforce_modes_t modes;
     bool compare_address;
 } enforce_config_t;

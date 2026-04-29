@@ -1,6 +1,6 @@
 // clang-format off
 // UNSUPPORTED: aarch64
-// RUN: (! %lotto %stress -v -s random --mutex-check-deadlock -- %b)
+// RUN: (! %lotto %stress -v -s random -d impasse -e deadlock -- %b)
 // RUN: %lotto %inflex -r 100
 // clang-format on
 #include <assert.h>

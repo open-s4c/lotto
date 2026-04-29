@@ -183,6 +183,8 @@ check_aslr()
 void
 _handle(const capture_point *ctx, event_t *cp)
 {
+    if (!enforce_config()->enabled)
+        return;
     once(check_aslr());
     if (enforce_config()->modes == ENFORCE_MODE_NONE)
         return;

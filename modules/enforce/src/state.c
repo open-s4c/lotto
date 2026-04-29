@@ -9,10 +9,12 @@
  * config
  ******************************************************************************/
 
-static enforce_config_t _config;
+static enforce_config_t _config = {.enabled = true};
 REGISTER_CONFIG(_config, {
     char str[ENFORCE_MODES_MAX_LEN];
+    _config.enabled = true;
     enforce_modes_str(_config.modes, str);
+    logger_infof("enabled         = %s\n", _config.enabled ? "on" : "off");
     logger_infof("modes           = %s\n", str);
     logger_infof("compare_address = %s\n",
                  _config.compare_address ? "on" : "off");

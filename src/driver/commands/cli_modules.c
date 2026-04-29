@@ -141,7 +141,7 @@ _print_modules_table(module_info_t mods[], size_t nmods)
     const char *slot_header    = "Slot";
     const char *module_header  = "Module";
     const char *enabled_header = "Enabled";
-    const char *type_header    = "Type (runtime only)";
+    const char *type_header    = "Runtime type";
     size_t slot_w              = sys_strlen(slot_header);
     size_t module_w            = sys_strlen(module_header);
     size_t enabled_w           = sys_strlen(enabled_header);

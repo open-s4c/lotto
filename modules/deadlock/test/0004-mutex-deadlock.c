@@ -1,5 +1,5 @@
 // ALLOW_RETRIES: 10
-// RUN: (! %lotto %stress -- %b) 2>&1 | %check %s
+// RUN: (! %lotto %stress -d impasse -e deadlock -- %b) 2>&1 | %check %s
 // CHECK: Deadlock detected!
 
 #include <pthread.h>

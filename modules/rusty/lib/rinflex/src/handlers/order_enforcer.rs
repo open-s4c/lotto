@@ -58,7 +58,8 @@ pub struct OrderEnforcer {
     /// The maximal clock that this execution is allowed to reach.
     pub max_clock: U64OrInf,
 
-    prev_any_task_filter: BTreeMap<raw::task_id, Option<unsafe extern "C" fn(raw::task_id) -> bool>>,
+    prev_any_task_filter:
+        BTreeMap<raw::task_id, Option<unsafe extern "C" fn(raw::task_id) -> bool>>,
 }
 
 #[cfg(feature = "runtime")]
@@ -155,7 +156,8 @@ impl Handler for OrderEnforcer {
         /* Reduce the likelihood by setting any_task_filter. */
         if self.block.get(&TaskId(ctx.id)).is_some() {
             if cappt.any_task_filter.is_some() {
-                self.prev_any_task_filter.insert(ctx.id, cappt.any_task_filter);
+                self.prev_any_task_filter
+                    .insert(ctx.id, cappt.any_task_filter);
             } else {
                 self.prev_any_task_filter.remove(&ctx.id);
             }
@@ -372,7 +374,9 @@ pub fn register() {
 #[cfg(feature = "runtime")]
 unsafe extern "C" fn should_wait(task_id: raw::task_id) -> bool {
     // hard blocked by other modules
-    if HANDLER.prev_any_task_filter.get(&task_id)
+    if HANDLER
+        .prev_any_task_filter
+        .get(&task_id)
         .and_then(|f| *f)
         .is_some_and(|f| f(task_id))
     {

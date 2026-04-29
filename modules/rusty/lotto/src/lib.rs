@@ -2,10 +2,6 @@
 
 // Re-export lotto_macros and supporting symbols
 pub use lotto_macros::*;
-pub mod reexport {
-    //! # Re-exports for [lotto_macros]
-    pub use once_cell::sync::Lazy;
-}
 
 // Re-export lotto_sys
 pub mod raw {

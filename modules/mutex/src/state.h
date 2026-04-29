@@ -12,6 +12,7 @@
 typedef struct mutex_config {
     marshable_t m;
     bool deadlock_check;
+    bool strict;
 } mutex_config_t;
 
 mutex_config_t *mutex_config();

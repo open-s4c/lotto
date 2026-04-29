@@ -61,7 +61,7 @@ static int64_t _max_priority;
 static bool
 _is_max_priority(task_id task)
 {
-    task_t *t = (task_t *)tidmap_find(&_state.map, task);
+    task_t *t = (task_t *)tidmap_find_or_register(&_state.map, task, NULL);
     ASSERT(t);
     return t->priority == _max_priority;
 }
@@ -98,7 +98,8 @@ _priority_handle(const capture_point *cp, event_t *e)
     }
     _max_priority = INT64_MIN;
     for (size_t i = 0; i < e->tset.size; i++) {
-        t = (task_t *)tidmap_find(&_state.map, e->tset.tasks[i]);
+        t = (task_t *)tidmap_find_or_register(&_state.map, e->tset.tasks[i],
+                                              NULL);
         ASSERT(t);
         _max_priority =
             _max_priority < t->priority ? t->priority : _max_priority;

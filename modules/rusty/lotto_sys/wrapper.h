@@ -53,6 +53,7 @@
 #include "lotto/modules/poll/events.h"
 #include "lotto/modules/region_preemption/events.h"
 #include "lotto/modules/rusty/events.h"
+#include "lotto/modules/sleep/events.h"
 #include "lotto/modules/task_velocity/events.h"
 #include "lotto/modules/terminate/state.h"
 #include "lotto/modules/time/events.h"

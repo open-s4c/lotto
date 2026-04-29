@@ -27,8 +27,7 @@ _trigger_timeout(tidset_t *tset, task_id id)
 {
     struct value val = uval(id);
     LOTTO_PUBLISH(EVENT_TIMEOUT_TRIGGER, val);
-    bool ret = tidset_insert(tset, id);
-    ASSERT(ret);
+    tidset_insert(tset, id);
 }
 
 static void
@@ -96,7 +95,8 @@ ON_SEQUENCER_CAPTURE(_timeout_handle);
 void
 handler_timeout_register(task_id id, const struct timespec *deadline)
 {
-    timeout_t *timeout = (timeout_t *)tidmap_register(&_state, id);
+    timeout_t *timeout =
+        (timeout_t *)tidmap_find_or_register(&_state, id, NULL);
     struct timespec now;
     lotto_clock_time(&now);
     ASSERT(timeout);

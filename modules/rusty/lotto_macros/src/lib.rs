@@ -6,13 +6,8 @@ mod engine;
 
 /// Declare a subcommand for Lotto CLI.
 ///
-/// `#[lotto::subcmd(...)]` generates
-///
-/// 1. a `subcmd_init` function which should be called in
-///    `rusty_cli_init`.
-///
-/// 2. a static flag selector variable `SEL` of type
-///    `lotto::reexport::Lazy<FlagSel<_>>`.
+/// `#[lotto::subcmd(...)]` generates a `subcmd_init` function which
+/// should be called in `rusty_cli_init`.
 ///
 /// The annotated function does not need to be public.
 ///

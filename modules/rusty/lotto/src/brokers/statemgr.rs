@@ -12,9 +12,8 @@ use core::ptr::addr_of_mut;
 use core::ptr::NonNull;
 use core::slice;
 use lotto_sys as raw;
-use once_cell::sync::Lazy;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
 // Re-export
 pub use bincode::{Decode, Encode};
@@ -33,12 +32,12 @@ pub fn record_unmarshal(r: &Record) {
 }
 
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
-pub(crate) static PERSISTENT: Lazy<MarshableStateList> =
-    Lazy::new(|| MarshableStateList::new(raw::state_type::STATE_TYPE_PERSISTENT));
-pub(crate) static CONFIG: Lazy<MarshableStateList> =
-    Lazy::new(|| MarshableStateList::new(raw::state_type::STATE_TYPE_CONFIG));
-pub(crate) static FINAL: Lazy<MarshableStateList> =
-    Lazy::new(|| MarshableStateList::new(raw::state_type::STATE_TYPE_FINAL));
+pub(crate) static PERSISTENT: LazyLock<MarshableStateList> =
+    LazyLock::new(|| MarshableStateList::new(raw::state_type::STATE_TYPE_PERSISTENT));
+pub(crate) static CONFIG: LazyLock<MarshableStateList> =
+    LazyLock::new(|| MarshableStateList::new(raw::state_type::STATE_TYPE_CONFIG));
+pub(crate) static FINAL: LazyLock<MarshableStateList> =
+    LazyLock::new(|| MarshableStateList::new(raw::state_type::STATE_TYPE_FINAL));
 
 fn assert_initialized() {
     assert!(INITIALIZED.load(Ordering::SeqCst));

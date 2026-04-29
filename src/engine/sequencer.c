@@ -233,7 +233,7 @@ sequencer_resume(const capture_point *cp)
                (metadata_t *)&resume_cp);
     if (_seq.clk == 0)
         return;
-    if (cp->id == 1 && cp->type_id == 0 && cp->type_id == 0)
+    if (cp->id == 1 && cp->type_id == 0)
         return;
 
     if (_seq.should_record ||
@@ -405,8 +405,7 @@ _add_pending_unblocked(task_id id)
     caslock_release(&_seq.pending.lock);
 }
 
-void __attribute__((noinline))
-sequencer_clk_met()
+void __attribute__((noinline)) sequencer_clk_met()
 {
     logger_debugf("clk met\n");
     clk_bound = 0;

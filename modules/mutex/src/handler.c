@@ -171,6 +171,9 @@ _posthandle_release(task_id id, uint64_t addr)
     struct mtx *mtx = (struct mtx *)map_find(&_state.mutexes, addr);
     if (!mtx) {
         logger_errorf("an unacquired mutex is being released\n");
+        if (mutex_config()->strict) {
+            logger_fatalf("mutex strict mode aborting\n");
+        }
         return;
     }
 
@@ -193,6 +196,18 @@ _posthandle_release(task_id id, uint64_t addr)
         tidset_fini(&mtx->waiters);
         map_deregister(&_state.mutexes, addr);
     }
+}
+
+static void
+_strict_check_release(uint64_t addr)
+{
+    if (!mutex_config()->strict)
+        return;
+    if (map_find(&_state.mutexes, addr) != NULL)
+        return;
+
+    logger_errorf("an unacquired mutex is being released\n");
+    logger_fatalf("mutex strict mode aborting\n");
 }
 
 static type_id
@@ -233,6 +248,9 @@ _mutex_handle(const capture_point *cp, event_t *e)
 
     /* remove waiting tasks from the tset */
     bool should_wait = _remove_waiters(&e->tset, cp->id);
+    if (_mutex_event_type(cp) == EVENT_MUTEX_RELEASE) {
+        _strict_check_release((uint64_t)mutex_event_addr(cp));
+    }
     if (_mutex_event_type(cp) != 0 && should_wait &&
         mutex_config()->deadlock_check &&
         _check_deadlock(cp->id, (uint64_t)mutex_event_addr(cp), NO_TASK)) {

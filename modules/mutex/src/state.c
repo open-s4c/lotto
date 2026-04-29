@@ -8,6 +8,7 @@ static mutex_config_t _config;
 REGISTER_CONFIG(_config, {
     logger_infof("deadlock_check = %s\n",
                  _config.deadlock_check ? "on" : "off");
+    logger_infof("strict         = %s\n", _config.strict ? "on" : "off");
 })
 
 mutex_config_t *

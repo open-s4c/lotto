@@ -1,8 +1,9 @@
 check       = @TIKL_CHECK_PROGRAM@ -x
 builddir    = @PROJECT_BINARY_DIR@
 emulator    =
-lotto       = timeout -k 110s 100s stdbuf -i0 -o0 -e0 %emulator %builddir/lotto
+lotto       = %deadline 100s stdbuf -i0 -o0 -e0 %emulator %builddir/lotto
 ntlotto     = stdbuf -i0 -o0 -e0 %emulator %builddir/lotto
+deadline    = %builddir/bin/deadline
 tmpdir      = -t %T
 output      = -o %t.trace
 input       = -i %t.trace

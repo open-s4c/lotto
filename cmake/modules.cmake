@@ -308,6 +308,6 @@ function(add_module_tikl_test SRC)
         tikl-${TEST}
         COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRC}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    add_dependencies(tikl-${TEST} ${TARGET} tikl-build lotto-cli)
+    add_dependencies(tikl-${TEST} ${TARGET} deadline tikl-build lotto-cli)
     add_dependencies(tikl-module-${MODULE_NAME} tikl-${TEST})
 endfunction()

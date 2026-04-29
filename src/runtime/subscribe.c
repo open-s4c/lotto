@@ -24,42 +24,6 @@
 // thread_start and thread_exit
 // -----------------------------------------------------------------------------
 
-PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_INIT, {
-    if (self_id(md) != MAIN_THREAD)
-        return PS_OK;
-    bool detached              = false;
-    capture_task_init_event ev = {
-        .thread   = (uintptr_t)pthread_self(),
-        .detached = detached,
-    };
-    capture_point cp = {
-        .chain_id  = CAPTURE_EVENT,
-        .type_id   = EVENT_TASK_INIT,
-        .func      = "event_self_init",
-        .task_init = &ev,
-    };
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_TASK_INIT, &cp, md);
-    return PS_OK;
-})
-
-PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_START, {
-    if (self_id(md) == MAIN_THREAD)
-        return PS_OK;
-    bool detached              = false;
-    capture_task_init_event ev = {
-        .thread   = (uintptr_t)pthread_self(),
-        .detached = detached,
-    };
-    capture_point cp = {
-        .chain_id  = CAPTURE_EVENT,
-        .type_id   = EVENT_TASK_INIT,
-        .func      = "event_thread_start",
-        .task_init = &ev,
-    };
-    PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_TASK_INIT, &cp, md);
-    return PS_OK;
-})
-
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_THREAD_EXIT, {
     struct pthread_exit_event *ev = EVENT_PAYLOAD(ev);
     capture_task_fini_event fev   = {.ptr = ev != NULL ? ev->ptr : NULL};

@@ -4,6 +4,9 @@
 // RUN: %lotto config -t %T -i %s.base.trace -o %s.config.trace --record-granularity CHPT,SWITCH --record-granularity CAPTURE
 // RUN: %lotto show -t %T -i %s.config.trace | %check %s --check-prefix=GRAN
 // RUN: (! %lotto stress -e busyabort -d deadlock -h 2>&1) | %check %s --check-prefix=MODULES
+// RUN: (! %lotto stress -d all -e busyabort -h 2>&1) | %check %s --check-prefix=ALL
+// RUN: (! %lotto stress -d busyabort -e busyabort -h 2>&1) | %check %s --check-prefix=LAST-ON
+// RUN: (! %lotto stress -e busyabort -d busyabort -h 2>&1) | %check %s --check-prefix=LAST-OFF
 // RUN: %lotto record -t %T -o %s.record.trace --log %s.log -vv -- %b > %s.out
 // RUN: test -s %s.record.trace
 // RUN: test -s %s.log
@@ -13,6 +16,10 @@
 // GRAN: gran  = SWITCH|CHPT|CAPTURE
 // MODULES-DAG: busyabort{{[[:space:]]+}}on
 // MODULES-DAG: deadlock{{[[:space:]]+}}off
+// ALL-DAG: busyabort{{[[:space:]]+}}on
+// ALL-DAG: pos{{[[:space:]]+}}off
+// LAST-ON: busyabort{{[[:space:]]+}}on
+// LAST-OFF: busyabort{{[[:space:]]+}}off
 // INPUT: trace file: {{.*}}0029-core_flags.c.record.trace
 // BADVALUE: invalid value for --record-granularity: nope,SWITCH
 // clang-format on

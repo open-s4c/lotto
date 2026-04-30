@@ -20,6 +20,7 @@ bool module_runtime_switchable_default_enabled(const char *name,
                                                bool *default_enabled);
 bool module_runtime_switchable_enabled(const char *name, const flags_t *flags,
                                        bool *enabled);
+int module_enable_flags_update(flags_t *flags, flag_t f, const char *arg);
 int validate_module_enable_flags(const flags_t *flags);
 int apply_module_enable_flags(const flags_t *flags);
 

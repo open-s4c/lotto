@@ -109,9 +109,6 @@ STATIC void
 _pos_handle(const capture_point *cp, event_t *e)
 {
     once({
-        pos_config()->enabled =
-            (strcmp(sequencer_config()->strategy, "pos") == 0);
-
         const char *var          = getenv("LOTTO_POS_WD_THRESHOLD");
         pos_config()->wd_divisor = var ? strtoull(var, NULL, 10) : 10;
         pos_config()->wd_threshold =
@@ -160,7 +157,8 @@ _pos_handle(const capture_point *cp, event_t *e)
         }
     }
 
-    if (!pos_config()->enabled || !e->is_chpt ||
+    if (!pos_config()->enabled ||
+        strcmp(sequencer_config()->strategy, "pos") != 0 || !e->is_chpt ||
         e->selector != SELECTOR_UNDEFINED || e->readonly ||
         tidset_size(&e->tset) <= 1) {
         return;

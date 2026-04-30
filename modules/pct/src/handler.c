@@ -79,8 +79,6 @@ _pct_sort(tidset_t *tset)
 STATIC void
 _pct_handle(const capture_point *cp, event_t *e)
 {
-    once(pct_config()->enabled =
-             (strcmp(sequencer_config()->strategy, "pct") == 0));
     ASSERT(e);
     ASSERT(cp);
 
@@ -101,8 +99,10 @@ _pct_handle(const capture_point *cp, event_t *e)
         ASSERT(t);
     }
 
-    if (!pct_config()->enabled || e->selector != SELECTOR_UNDEFINED ||
-        e->readonly || tidset_size(&e->tset) <= 1 || !e->is_chpt || e->skip)
+    if (!pct_config()->enabled ||
+        strcmp(sequencer_config()->strategy, "pct") != 0 ||
+        e->selector != SELECTOR_UNDEFINED || e->readonly ||
+        tidset_size(&e->tset) <= 1 || !e->is_chpt || e->skip)
         return;
 
     if (t) {

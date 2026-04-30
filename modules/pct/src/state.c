@@ -7,10 +7,11 @@
 /*******************************************************************************
  * config
  ******************************************************************************/
-static pct_config_t _config;
+static pct_config_t _config = {.enabled = false};
 REGISTER_CONFIG(_config, {
-    logger_infof("params = [k: %lu, d: %lu, on:%s]\n", _config.k, _config.d,
-                 _config.enabled ? "on" : "off");
+    logger_infof("enabled = %s\n", _config.enabled ? "on" : "off");
+    logger_infof("k       = %lu\n", _config.k);
+    logger_infof("d       = %lu\n", _config.d);
 })
 
 pct_config_t *

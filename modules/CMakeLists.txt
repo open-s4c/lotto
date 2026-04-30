@@ -114,6 +114,39 @@ add_module(qemu_gdb DEFAULT OFF)
 add_module(qemu_profile DEFAULT OFF)
 add_module(qemu_snapshot DEFAULT OFF)
 
+get_property(LOTTO_MODULE_METADATA GLOBAL PROPERTY LOTTO_MODULE_METADATA)
+set(LOTTO_MODULE_METADATA_SRC
+    "${CMAKE_CURRENT_BINARY_DIR}/lotto_module_metadata.c")
+file(WRITE "${LOTTO_MODULE_METADATA_SRC}"
+     "#include <lotto/sys/modules.h>\n\n"
+     "static const lotto_module_metadata_t _lotto_module_metadata[] = {\n")
+foreach(ENTRY IN LISTS LOTTO_MODULE_METADATA)
+    string(REPLACE "|" ";" ENTRY_FIELDS "${ENTRY}")
+    list(GET ENTRY_FIELDS 0 SLOT)
+    list(GET ENTRY_FIELDS 1 NAME)
+    list(GET ENTRY_FIELDS 2 COMPONENT)
+    list(GET ENTRY_FIELDS 3 TYPE)
+    string(TOUPPER "${COMPONENT}" COMPONENT_UPPER)
+    file(
+        APPEND "${LOTTO_MODULE_METADATA_SRC}"
+        "    {.slot = ${SLOT}, .name = \"${NAME}\", "
+        ".component = LOTTO_MODULE_COMPONENT_${COMPONENT_UPPER}, "
+        ".type = \"${TYPE}\"},\n")
+endforeach()
+file(
+    APPEND "${LOTTO_MODULE_METADATA_SRC}"
+    "};\n\n"
+    "const lotto_module_metadata_t *\n"
+    "lotto_module_metadata_all(size_t *count)\n"
+    "{\n"
+    "    if (count != 0) {\n"
+    "        *count = sizeof(_lotto_module_metadata) / "
+    "sizeof(_lotto_module_metadata[0]);\n"
+    "    }\n"
+    "    return _lotto_module_metadata;\n"
+    "}\n")
+target_sources(lotto-driver PRIVATE "${LOTTO_MODULE_METADATA_SRC}")
+
 if(LOTTO_MODULE_rusty)
     set(LOTTO_RUST_LIT_FEATURE RUST_HANDLERS_AVAILABLE)
 endif()

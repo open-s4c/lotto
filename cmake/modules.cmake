@@ -37,6 +37,13 @@ set_property(CACHE LOTTO_DEFAULT_DRIVER_MODULE_TYPE
              PROPERTY STRINGS ${LOTTO_MODULE_TYPE_LIST})
 ensure_module_type(LOTTO_DEFAULT_DRIVER_MODULE_TYPE)
 
+function(lotto_module_metadata_add NAME SLOT COMPONENT TYPE)
+    string(TOLOWER "${TYPE}" _type_lower)
+    set_property(
+        GLOBAL APPEND PROPERTY LOTTO_MODULE_METADATA
+                               "${SLOT}|${NAME}|${COMPONENT}|${_type_lower}")
+endfunction()
+
 macro(add_runtime_module)
     if(NOT DEFINED MODULE_NAME)
         message(FATAL_ERROR "Undefined module name")
@@ -58,6 +65,8 @@ macro(add_runtime_module)
     set(RUNTIME_MODULE_TARGET lotto-runtime-${MODULE_NAME})
     set(RUNTIME_DBG_MODULE_TARGET lotto-runtime-dbg-${MODULE_NAME})
     message(STATUS "Module ${MODULE_SLOT} (runtime): ${MODULE_NAME}")
+    lotto_module_metadata_add(${MODULE_NAME} ${MODULE_SLOT} runtime
+                              ${RUNTIME_MODULE_TYPE})
 
     add_library(${RUNTIME_MODULE_TARGET} ${_lib_type} ${RUNTIME_MODULE_SOURCES})
     add_library(${RUNTIME_DBG_MODULE_TARGET} ${_lib_type}
@@ -161,6 +170,8 @@ macro(add_driver_module)
     set(DRIVER_MODULE_SOURCES ${ARGV})
     set(DRIVER_MODULE_TARGET lotto-driver-${MODULE_NAME})
     message(STATUS "Module ${MODULE_SLOT} (driver) : ${MODULE_NAME}")
+    lotto_module_metadata_add(${MODULE_NAME} ${MODULE_SLOT} driver
+                              ${DRIVER_MODULE_TYPE})
 
     add_library(${DRIVER_MODULE_TARGET} ${_lib_type} ${DRIVER_MODULE_SOURCES})
     target_link_libraries(${DRIVER_MODULE_TARGET} PRIVATE lotto.h dice.h)

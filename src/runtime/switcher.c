@@ -34,6 +34,7 @@
 #include <lotto/sys/assert.h>
 #include <lotto/sys/logger.h>
 #include <lotto/sys/real.h>
+#include <lotto/sys/time.h>
 
 #ifndef LOTTO_SWITCHER_NBUCKETS
     #define LOTTO_SWITCHER_NBUCKETS 128
@@ -81,7 +82,7 @@ switcher_yield(task_id id, bool (*any_task_filter)(task_id))
         if (_switcher.slack) {
             struct timespec ts = to_timespec(_switcher.slack);
             vmutex_release(&_switcher.mutex);
-            nanosleep(&ts, NULL);
+            sys_nanosleep(&ts, NULL);
             vmutex_acquire(&_switcher.mutex);
             _switcher.slack = 0;
         }

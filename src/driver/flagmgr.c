@@ -11,6 +11,7 @@
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/modules.h>
 #include <lotto/driver/flags/prng.h>
+#include <lotto/driver/flags/sequencer.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/statemgr.h>
@@ -77,6 +78,34 @@ _entry_has_long_opt(const option_t *e)
     return e->long_opt[0] != '\0';
 }
 
+static bool
+_entry_same_registration(const option_t *a, const option_t *b)
+{
+    if (sys_strcmp(a->opt, b->opt) != 0 ||
+        sys_strcmp(a->long_opt, b->long_opt) != 0 ||
+        sys_strcmp(a->desc, b->desc) != 0 || a->callback != b->callback ||
+        a->val._val._type != b->val._val._type ||
+        sys_strcmp(a->name, b->name) != 0) {
+        return false;
+    }
+
+    switch (a->val._val._type) {
+        case VALUE_TYPE_BOOL:
+            return is_on(a->val._val) == is_on(b->val._val);
+        case VALUE_TYPE_UINT64:
+            return as_uval(a->val._val) == as_uval(b->val._val);
+        case VALUE_TYPE_DOUBLE:
+            return as_dval(a->val._val) == as_dval(b->val._val);
+        case VALUE_TYPE_STRING:
+            return sys_strcmp(as_sval(a->val._val), as_sval(b->val._val)) == 0;
+        case VALUE_TYPE_ANY:
+            return as_any(a->val._val) == as_any(b->val._val);
+        default:
+            ASSERT(0 && "unsupported value type");
+            return false;
+    }
+}
+
 const option_t *
 flagmgr_options()
 {
@@ -104,40 +133,25 @@ new_flag(const char *name, const char *opt, const char *long_opt,
                                 .str_converter = str_converter,
                                 .name          = name};
     for (flag_t f = FLAG_NONE + 1; f < _next_option; f++) {
-        option_t *e = &_options[f];
-        if ((_entry_has_short_opt(&entry) && sys_strcmp(opt, e->opt) != 0) ||
-            (_entry_has_long_opt(&entry) &&
-             sys_strcmp(long_opt, e->long_opt) != 0)) {
+        option_t *e         = &_options[f];
+        bool short_conflict = _entry_has_short_opt(&entry) &&
+                              _entry_has_short_opt(e) &&
+                              sys_strcmp(entry.opt, e->opt) == 0;
+        bool long_conflict = _entry_has_long_opt(&entry) &&
+                             _entry_has_long_opt(e) &&
+                             sys_strcmp(entry.long_opt, e->long_opt) == 0;
+        if (!short_conflict && !long_conflict) {
             continue;
         }
-        entry.flag = f;
-        ASSERT(sys_strcmp(entry.opt, e->opt) == 0);
-        ASSERT(sys_strcmp(entry.long_opt, e->long_opt) == 0);
-        ASSERT(sys_strcmp(entry.desc, e->desc) == 0);
-        ASSERT(entry.callback == e->callback);
-        ASSERT(entry.val._val._type == e->val._val._type);
-        switch (entry.val._val._type) {
-            case VALUE_TYPE_BOOL:
-                ASSERT(is_on(entry.val._val) == is_on(e->val._val));
-                break;
-            case VALUE_TYPE_UINT64:
-                ASSERT(as_uval(entry.val._val) == as_uval(e->val._val));
-                break;
-            case VALUE_TYPE_DOUBLE:
-                ASSERT(as_dval(entry.val._val) == as_dval(e->val._val));
-                break;
-            case VALUE_TYPE_STRING:
-                ASSERT(sys_strcmp(as_sval(entry.val._val),
-                                  as_sval(e->val._val)) == 0);
-                break;
-            case VALUE_TYPE_ANY:
-                ASSERT(as_any(entry.val._val) == as_any(e->val._val));
-                break;
-            default:
-                ASSERT(0 && "unsupported value type");
-                break;
+        if (!_entry_same_registration(&entry, e)) {
+            sys_fprintf(
+                stderr, "error: duplicate flag registration for %s%s%s%s%s\n",
+                short_conflict ? "-" : "", short_conflict ? entry.opt : "",
+                short_conflict && long_conflict ? "/" : "",
+                long_conflict ? "--" : "", long_conflict ? entry.long_opt : "");
+            abort();
         }
-        ASSERT(sys_strcmp(entry.name, e->name) == 0);
+        entry.flag = f;
         return f;
     }
     flag_t flag = entry.flag = _next_option++;
@@ -341,6 +355,13 @@ _flag_is_core_runtime(flag_t f)
            sys_strcmp(long_opt, "stable-address-method") == 0;
 }
 
+static bool
+_flag_is_hidden_command(flag_t f)
+{
+    return f == FLAG_LIST_FLAGS || f == flag_no_preload() ||
+           f == flag_before_run() || f == flag_after_run();
+}
+
 static int
 _flag_long_opt_cmp(const void *pa, const void *pb)
 {
@@ -381,7 +402,7 @@ flags_command_help(const flags_t *flags, flag_t sel[MAX_FLAGS])
     flag_sel_add(sel, FLAG_HELP);
 
     for (int i = 0; sel[i] != FLAG_SEL_SENTINEL; i++) {
-        if (sel[i] == FLAG_LIST_FLAGS || sel[i] == flag_no_preload()) {
+        if (_flag_is_hidden_command(sel[i])) {
             continue;
         }
         flag_list[nflags++] = sel[i];
@@ -456,6 +477,9 @@ flags_list(bool runtime_sel, flag_t sel[MAX_FLAGS])
     bool listed[MAX_OPTIONS + 1] = {0};
     for (int i = 0; sel[i] != FLAG_SEL_SENTINEL; i++) {
         flag_t f = sel[i];
+        if (_flag_is_hidden_command(f)) {
+            continue;
+        }
         if (!listed[f]) {
             _flag_list_print(f);
             listed[f] = true;
@@ -588,12 +612,20 @@ flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
                                      uval(flags_get_uval(flags, fnum) + 1));
                     break;
                 }
-                flags_set_by_opt(
-                    flags, fnum,
-                    uval(
-                        STR_CONVERTER_IS_PRESENT(_options[fnum].str_converter) ?
-                            _bits_from(&_options[fnum].str_converter, optarg) :
-                            strtoul(optarg, NULL, 10)));
+                uint64_t uvalue =
+                    STR_CONVERTER_IS_PRESENT(_options[fnum].str_converter) ?
+                        _bits_from(&_options[fnum].str_converter, optarg) :
+                        strtoul(optarg, NULL, 10);
+                if (fnum == flag_record_granularity() &&
+                    uvalue == RECORD_GRANULARITY_INVALID) {
+                    sys_fprintf(stdout, "invalid value for --%s: %s\n",
+                                _options[fnum].long_opt, optarg);
+                    return FLAGS_PARSE_ERROR;
+                }
+                if (fnum == flag_record_granularity()) {
+                    uvalue |= flags_get_uval(flags, fnum);
+                }
+                flags_set_by_opt(flags, fnum, uval(uvalue));
                 break;
             case VALUE_TYPE_DOUBLE: {
                 char *endptr = NULL;

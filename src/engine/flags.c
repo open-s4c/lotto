@@ -11,13 +11,13 @@
 #include <lotto/sys/string.h>
 
 #ifndef DEFAULT_SLACK_TIME
-    #define DEFAULT_SLACK_TIME 10
+    #define DEFAULT_SLACK_TIME 0
 #endif
 
 static void
 _record_granularities_help(char *dst)
 {
-    record_granularities_str(RECORD_GRANULARITY_ANY, dst);
+    record_granularities_all_str(dst);
 }
 
 static void
@@ -32,14 +32,15 @@ NEW_PUBLIC_CALLBACK_FLAG(SEED, "", "seed", "INT",
                          { prng()->seed = (uint32_t)as_uval(v); })
 
 NEW_PUBLIC_PRETTY_CALLBACK_FLAG(
-    RECORD_GRANULARITY, "", "record-granularity", "record granularity",
+    RECORD_GRANULARITY, "", "record-granularity",
+    "record granularity MINIMAL,SWITCH,CHPT,CAPTURE,ANY",
     flag_uval(RECORD_GRANULARITIES_DEFAULT),
     STR_CONVERTER_PRINT(record_granularities_str, record_granularities_from,
                         RECORD_GRANULARITIES_MAX_LEN,
                         _record_granularities_help),
     { sequencer_config()->gran = as_uval(v); })
 
-NEW_CALLBACK_FLAG(SLACK, "", "slack", "INT", "slack time in milliseconds",
+NEW_CALLBACK_FLAG(SLACK, "k", "slack", "INT", "slack time in milliseconds",
                   flag_uval(DEFAULT_SLACK_TIME),
                   { sequencer_config()->slack = as_uval(v); })
 

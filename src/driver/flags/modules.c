@@ -12,11 +12,11 @@ _FLAGMGR_CALLBACK(enable_module, { (void)v; })
 _FLAGMGR_CALLBACK(disable_module, { (void)v; })
 _FLAGMGR_SUBSCRIBE({
     FLAG_ENABLE_MODULE =
-        new_flag("ENABLE_MODULE", "", "enable", "MODULE",
+        new_flag("ENABLE_MODULE", "e", "enable", "MODULE",
                  "enable runtime-switchable module MODULE", flag_sval(""),
                  (str_converter_t){}, _flagmgr_callback_enable_module);
     FLAG_DISABLE_MODULE =
-        new_flag("DISABLE_MODULE", "", "disable", "MODULE",
+        new_flag("DISABLE_MODULE", "d", "disable", "MODULE",
                  "disable runtime-switchable module MODULE", flag_sval(""),
                  (str_converter_t){}, _flagmgr_callback_disable_module);
 })

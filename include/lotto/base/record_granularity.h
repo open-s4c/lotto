@@ -15,6 +15,7 @@ enum record_granularity {
     RECORD_GRANULARITY_CHPT    = 0x2,
     RECORD_GRANULARITY_CAPTURE = 0x4,
     RECORD_GRANULARITY_ANY     = ~(0U),
+    RECORD_GRANULARITY_INVALID = UINT64_MAX,
 };
 
 typedef uint64_t record_granularities_t;
@@ -30,6 +31,13 @@ typedef uint64_t record_granularities_t;
  * @param dst char array of at least RECORD_GRANULARITIES_MAX_LEN bytes
  */
 void record_granularities_str(record_granularities_t granularities, char *dst);
+
+/**
+ * Writes all accepted record granularity values.
+ *
+ * @param dst char array of at least RECORD_GRANULARITIES_MAX_LEN bytes
+ */
+void record_granularities_all_str(char *dst);
 
 /**
  * Returns bar-separated the record granularity set parsed from `src`.

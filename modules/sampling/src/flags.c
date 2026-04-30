@@ -23,10 +23,8 @@ _load_config_text(const char *fname)
     size_t read_items;
 
     fp = fopen(fname, "r");
-    if (fp == NULL) {
-        logger_debugf("failed to open sampling configuration: %s\n", fname);
+    if (fp == NULL)
         return NULL;
-    }
 
     sys_fseek(fp, 0, SEEK_END);
     len  = sys_ftell(fp);
@@ -39,20 +37,26 @@ _load_config_text(const char *fname)
     return text;
 }
 
-NEW_CALLBACK_FLAG(SAMPLING_CONFIG, "", "sampling-config", "FILE",
-                  "sampling configuration file (containing key=value lines)",
-                  flag_sval("sampling.conf"), {
-                      char *text;
+NEW_CALLBACK_FLAG(
+    SAMPLING_CONFIG, "", "sampling-config", "FILE",
+    "sampling configuration file (containing key=value lines)", flag_sval(""), {
+        char *text;
 
-                      ASSERT(sys_strlen(as_sval(v)) < PATH_MAX);
-                      strcpy(sampling_config()->filename, as_sval(v));
+        ASSERT(sys_strlen(as_sval(v)) < PATH_MAX);
+        strcpy(sampling_config()->filename, as_sval(v));
+        if (sampling_config()->filename[0] == '\0')
+            return;
 
-                      text = _load_config_text(sampling_config()->filename);
-                      if (text == NULL)
-                          return;
+        text = _load_config_text(sampling_config()->filename);
+        if (text == NULL) {
+            sys_fprintf(stderr,
+                        "error: could not open sampling configuration "
+                        "file '%s'\n",
+                        sampling_config()->filename);
+            sys_exit(1);
+        }
 
-                      sampling_parse_config(
-                          text, sampling_entries(), _report_parse_error,
-                          (void *)sampling_config()->filename);
-                      sys_free(text);
-                  })
+        sampling_parse_config(text, sampling_entries(), _report_parse_error,
+                              (void *)sampling_config()->filename);
+        sys_free(text);
+    })

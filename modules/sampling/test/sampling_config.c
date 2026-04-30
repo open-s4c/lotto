@@ -1,7 +1,9 @@
 // clang-format off
 // ALLOW_RETRIES: 5
 // RUN: (! %lotto %stress -r 20 --sampling-config %s.conf -- %b 2>&1) | %check %s
+// RUN: (! %lotto %stress --sampling-config %s.missing -- %b 2>&1) | %check %s --check-prefix=MISSING
 // CHECK: assert failed {{.*}}/sampling_config.c:{{[0-9]+}}: x != 1
+// MISSING: error: could not open sampling configuration file '{{.*}}sampling_config.c.missing'
 // clang-format on
 
 #include <assert.h>

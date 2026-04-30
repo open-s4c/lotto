@@ -3,6 +3,7 @@
 #include <lotto/driver/flags/modules.h>
 #include <lotto/sys/assert.h>
 #include <lotto/sys/stdio.h>
+#include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
 
 static flag_t FLAG_ENABLE_MODULE;
@@ -64,6 +65,16 @@ _find_runtime_switchable_module(const char *name)
         }
     }
     return NULL;
+}
+
+static bool
+_module_name_matches(const char *a, const char *b)
+{
+    char normalized_a[128];
+    char normalized_b[128];
+    _normalize_module_name(a, normalized_a, sizeof(normalized_a));
+    _normalize_module_name(b, normalized_b, sizeof(normalized_b));
+    return sys_strcmp(normalized_a, normalized_b) == 0;
 }
 
 void
@@ -132,6 +143,111 @@ _module_csv_contains(const char *csv, const runtime_switchable_module_t *module)
     return match.found;
 }
 
+typedef struct {
+    const char *module;
+    char *csv;
+    size_t len;
+} module_csv_filter_t;
+
+static void
+_csv_append(char **csv, size_t *len, const char *tok)
+{
+    if (tok == NULL || tok[0] == '\0') {
+        return;
+    }
+
+    size_t tok_len = sys_strlen(tok);
+    size_t sep_len = *len == 0 ? 0 : 1;
+    char *next     = sys_malloc(*len + sep_len + tok_len + 1);
+    ASSERT(next != NULL);
+    if (*len != 0) {
+        sys_memcpy(next, *csv, *len);
+        next[*len] = ',';
+    }
+    sys_memcpy(next + *len + sep_len, tok, tok_len + 1);
+    sys_free(*csv);
+    *csv = next;
+    *len += sep_len + tok_len;
+}
+
+static int
+_remove_module_token(const char *tok, void *arg)
+{
+    module_csv_filter_t *ctx = arg;
+    if (_module_name_matches(tok, ctx->module)) {
+        return 0;
+    }
+    _csv_append(&ctx->csv, &ctx->len, tok);
+    return 0;
+}
+
+static void
+_remove_module_from_flag(flags_t *flags, flag_t f, const char *module)
+{
+    module_csv_filter_t ctx = {.module = module};
+    csv_for_each(flags_get_sval(flags, f), _remove_module_token, &ctx);
+    flags_set_by_opt(flags, f, sval(ctx.csv == NULL ? "" : ctx.csv));
+}
+
+static void
+_append_module_to_flag(flags_t *flags, flag_t f, const char *module)
+{
+    const char *cur = flags_get_sval(flags, f);
+    char *csv       = NULL;
+    size_t len      = 0;
+    _csv_append(&csv, &len, cur);
+    _csv_append(&csv, &len, module);
+    flags_set_by_opt(flags, f, sval(csv == NULL ? "" : csv));
+}
+
+static void
+_set_module_flag(flags_t *flags, const char *module, bool enabled)
+{
+    flag_t enable_flag  = flag_enable_module();
+    flag_t disable_flag = flag_disable_module();
+    _remove_module_from_flag(flags, enable_flag, module);
+    _remove_module_from_flag(flags, disable_flag, module);
+    _append_module_to_flag(flags, enabled ? enable_flag : disable_flag, module);
+}
+
+typedef struct {
+    flags_t *flags;
+    bool enabled;
+} module_flag_update_t;
+
+static int
+_update_module_token(const char *tok, void *arg)
+{
+    module_flag_update_t *ctx = arg;
+    if (!ctx->enabled && _module_name_matches(tok, "all")) {
+        for (size_t i = 0; i < _nruntime_switchable_modules; i++) {
+            _set_module_flag(ctx->flags, _runtime_switchable_modules[i].name,
+                             false);
+        }
+        return 0;
+    }
+
+    const runtime_switchable_module_t *module =
+        _find_runtime_switchable_module(tok);
+    if (module == NULL) {
+        sys_fprintf(stderr, "error: module '%s' is not runtime-switchable\n",
+                    tok);
+        return 1;
+    }
+    _set_module_flag(ctx->flags, module->name, ctx->enabled);
+    return 0;
+}
+
+int
+module_enable_flags_update(flags_t *flags, flag_t f, const char *arg)
+{
+    module_flag_update_t ctx = {
+        .flags   = flags,
+        .enabled = f == flag_enable_module(),
+    };
+    return csv_for_each(arg, _update_module_token, &ctx);
+}
+
 bool
 module_runtime_switchable_enabled(const char *name, const flags_t *flags,
                                   bool *enabled)
@@ -170,6 +286,9 @@ _handle_module_token(const char *tok, void *arg)
     const runtime_switchable_module_t *module =
         _find_runtime_switchable_module(tok);
     if (module == NULL) {
+        if (!ctx->enabled && _module_name_matches(tok, "all")) {
+            return 0;
+        }
         sys_fprintf(stderr, "error: module '%s' is not runtime-switchable\n",
                     tok);
         return 1;

@@ -507,22 +507,6 @@ _flags_with_opt(int64_t o)
 }
 
 static void
-_append_string_flag(flags_t *flags, flag_t f, const char *optarg)
-{
-    const char *cur = flags_get_sval(flags, f);
-    if (cur == NULL || cur[0] == '\0') {
-        flags_set_by_opt(flags, f, sval(sys_strdup(optarg)));
-        return;
-    }
-
-    size_t len = sys_strlen(cur) + 1 + sys_strlen(optarg) + 1;
-    char *buf  = sys_malloc(len);
-    ASSERT(buf);
-    sys_snprintf(buf, len, "%s,%s", cur, optarg);
-    flags_set_by_opt(flags, f, sval(buf));
-}
-
-static void
 apply_forced_non_defaults(flags_t *flags)
 {
     const flags_t *default_flags = flags_default();
@@ -641,16 +625,18 @@ flags_parse(flags_t *flags, args_t *args, bool runtime_sel,
             case VALUE_TYPE_BOOL:
                 flags_set_by_opt(
                     flags, fnum,
-                    bval(optarg == NULL ? !flags_is_on(flags, fnum) :
-                         STR_CONVERTER_IS_PRESENT(
-                             _options[fnum].str_converter) ?
-                             enabled_from(optarg) :
-                             !flags_is_on(flags, fnum)));
+                    bval(
+                        optarg == NULL ? !flags_is_on(flags, fnum) :
+                        STR_CONVERTER_IS_PRESENT(_options[fnum].str_converter) ?
+                                         enabled_from(optarg) :
+                                         !flags_is_on(flags, fnum)));
                 break;
             case VALUE_TYPE_STRING:
                 if (fnum == flag_enable_module() ||
                     fnum == flag_disable_module()) {
-                    _append_string_flag(flags, fnum, optarg);
+                    if (module_enable_flags_update(flags, fnum, optarg) != 0) {
+                        return FLAGS_PARSE_ERROR;
+                    }
                     break;
                 }
                 flags_set_by_opt(flags, fnum, sval(optarg));

@@ -61,8 +61,11 @@ _task_velocity_print(const marshable_t *m)
 static bool
 _filter_by_probability(task_id task)
 {
-    task_t *t = (task_t *)tidmap_find(&_state.map, task);
+    task_t *t = (task_t *)tidmap_find_or_register(&_state.map, task, NULL);
     ASSERT(t);
+    if (t->probability == 0) {
+        t->probability = LOTTO_TASK_VELOCITY_MAX;
+    }
     uint64_t filter_value =
         prng_range(LOTTO_TASK_VELOCITY_MIN, LOTTO_TASK_VELOCITY_MAX);
     return t->probability >= filter_value;

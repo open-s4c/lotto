@@ -3,10 +3,10 @@
 #include <lotto/sys/logger.h>
 
 static clock_config_t _config = {
-    .base_inc  = 51,
-    .mult_inc  = 1,
-    .max_gap   = 10,
-    .burst_gap = 30,
+    .base_inc  = 1,
+    .mult_inc  = 100000,
+    .max_gap   = 1,
+    .burst_gap = 1,
 };
 
 REGISTER_CONFIG(_config, {

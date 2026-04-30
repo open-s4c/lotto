@@ -1,6 +1,6 @@
 // clang-format off
 // ALLOW_RETRIES: 100
-// RUN: (! %lotto %stress -v -s random -d impasse -e deadlock -- %b)
+// RUN: (! %lotto %stress -v -d pos -d impasse -e deadlock -- %b)
 // RUN: (! %lotto %replay -v 2>&1) | %check %s
 // CHECK: [{{.*}}] Deadlock detected!
 // clang-format on

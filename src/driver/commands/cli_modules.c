@@ -23,6 +23,7 @@ typedef struct {
     bool has_slot;
     bool has_driver;
     bool has_runtime;
+    const char *driver_type;
     const char *runtime_type;
 } module_info_t;
 
@@ -69,7 +70,8 @@ _collect_scanned_module(module_t *module, void *arg)
         return 1;
     }
     if (module->kind & MODULE_KIND_CLI) {
-        m->has_driver = true;
+        m->has_driver  = true;
+        m->driver_type = "plugin";
     }
     if (module->kind & MODULE_KIND_RUNTIME) {
         m->has_runtime  = true;
@@ -93,7 +95,8 @@ _collect_metadata(module_info_t mods[], size_t *nmods)
         m->has_slot = true;
         switch (entry->component) {
             case LOTTO_MODULE_COMPONENT_DRIVER:
-                m->has_driver = true;
+                m->has_driver  = true;
+                m->driver_type = entry->type;
                 break;
             case LOTTO_MODULE_COMPONENT_RUNTIME:
                 m->has_runtime  = true;
@@ -141,11 +144,13 @@ _print_modules_table(module_info_t mods[], size_t nmods)
     const char *slot_header    = "Slot";
     const char *module_header  = "Module";
     const char *enabled_header = "Enabled";
-    const char *type_header    = "Runtime type";
+    const char *runtime_header = "Runtime type";
+    const char *driver_header  = "Driver type";
     size_t slot_w              = sys_strlen(slot_header);
     size_t module_w            = sys_strlen(module_header);
     size_t enabled_w           = sys_strlen(enabled_header);
-    size_t type_w              = sys_strlen(type_header);
+    size_t runtime_w           = sys_strlen(runtime_header);
+    size_t driver_w            = sys_strlen(driver_header);
     char slot_buf[32];
 
     for (size_t i = 0; i < nmods; i++) {
@@ -156,13 +161,15 @@ _print_modules_table(module_info_t mods[], size_t nmods)
         }
         module_w  = _max_size(module_w, sys_strlen(m->name));
         enabled_w = _max_size(enabled_w, sys_strlen(_module_enabled_str(m)));
-        type_w    = _max_size(type_w,
-                              sys_strlen(m->has_runtime ? m->runtime_type : "-"));
+        runtime_w = _max_size(
+            runtime_w, sys_strlen(m->has_runtime ? m->runtime_type : "-"));
+        driver_w = _max_size(driver_w,
+                             sys_strlen(m->has_driver ? m->driver_type : "-"));
     }
 
-    sys_fprintf(stdout, "%-*s  %-*s  %-*s  %s\n", (int)slot_w, slot_header,
-                (int)module_w, module_header, (int)enabled_w, enabled_header,
-                type_header);
+    sys_fprintf(stdout, "%-*s  %-*s  %-*s  %-*s  %s\n", (int)slot_w,
+                slot_header, (int)module_w, module_header, (int)enabled_w,
+                enabled_header, (int)runtime_w, runtime_header, driver_header);
     for (size_t i = 0; i < nmods; i++) {
         const module_info_t *m = &mods[i];
         if (m->has_slot) {
@@ -171,10 +178,11 @@ _print_modules_table(module_info_t mods[], size_t nmods)
             slot_buf[0] = '-';
             slot_buf[1] = '\0';
         }
-        sys_fprintf(stdout, "%*s  %-*s  %-*s  %s\n", (int)slot_w, slot_buf,
-                    (int)module_w, m->name, (int)enabled_w,
-                    _module_enabled_str(m),
-                    m->has_runtime ? m->runtime_type : "-");
+        sys_fprintf(stdout, "%*s  %-*s  %-*s  %-*s  %s\n", (int)slot_w,
+                    slot_buf, (int)module_w, m->name, (int)enabled_w,
+                    _module_enabled_str(m), (int)runtime_w,
+                    m->has_runtime ? m->runtime_type : "-",
+                    m->has_driver ? m->driver_type : "-");
     }
 }
 

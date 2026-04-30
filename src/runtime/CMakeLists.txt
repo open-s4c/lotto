@@ -5,6 +5,8 @@ add_compile_definitions(LOGGER_PREFIX="runtime")
 set(MODULE_NAME runtime)
 set(MODULE_SLOT 9)
 add_compile_definitions(DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${MODULE_SLOT})
+lotto_module_metadata_add(self 4 runtime BUILTIN)
+lotto_module_metadata_add(${MODULE_NAME} ${MODULE_SLOT} runtime BUILTIN)
 
 set(SRCS mediator.c)
 add_library(mediator.o OBJECT ${SRCS})

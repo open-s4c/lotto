@@ -21,6 +21,7 @@ set(ENGINE_RUNTIME_SRCS
 set(ENGINE_DRIVER_SRCS flags.c state.c statemgr.c module.c)
 
 message(STATUS "Module ${MODULE_SLOT} (runtime): ${MODULE_NAME}")
+lotto_module_metadata_add(${MODULE_NAME} ${MODULE_SLOT} runtime BUILTIN)
 add_module_object(lotto-runtime-engine.o ${MODULE_SLOT} ${ENGINE_RUNTIME_SRCS})
 target_link_libraries(lotto-runtime-engine.o PRIVATE lotto.h lotto-src.h dice.h)
 target_include_directories(lotto-runtime-engine.o
@@ -36,6 +37,7 @@ target_include_directories(lotto-runtime-dbg-engine.o
                            PRIVATE ${PROJECT_SOURCE_DIR}/modules/clock/include)
 
 message(STATUS "Module ${MODULE_SLOT} (driver) : ${MODULE_NAME}")
+lotto_module_metadata_add(${MODULE_NAME} ${MODULE_SLOT} driver BUILTIN)
 add_module_object(lotto-driver-engine.o ${MODULE_SLOT} ${ENGINE_DRIVER_SRCS})
 target_link_libraries(lotto-driver-engine.o PRIVATE lotto.h lotto-src.h dice.h)
 target_include_directories(lotto-driver-engine.o

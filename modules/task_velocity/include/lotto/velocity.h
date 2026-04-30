@@ -2,7 +2,7 @@
  * @file velocity.h
  * @brief The task velocity interface.
  *
- * User task velocities override strategy decision: the strategy applies to a
+ * User task velocities override scheduling decisions: scheduling applies to a
  * given task by setting of a probability for processing of events in this task.
  * Initially this probability, or velocity, is set to 1.0. It can be set to any
  * number between 1% and 100%.

@@ -1,6 +1,6 @@
 // clang-format off
 // REQUIRES: RUST_HANDLERS_AVAILABLE
-// RUN: %lotto %stress --rusty-await-address enable --rusty-spin-loop enable -s random -r 5 -- %b
+// RUN: %lotto %stress --rusty-await-address enable --rusty-spin-loop enable -d pos -r 5 -- %b
 // clang-format on
 #include <assert.h>
 #include <pthread.h>

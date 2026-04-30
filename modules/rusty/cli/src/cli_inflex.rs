@@ -28,7 +28,7 @@ use rinflex::error::Error;
     ],
     group=raw::subcmd_group::SUBCMD_GROUP_TRACE,
     defaults=|flags: &mut Flags| {
-        flags.set_default(&flag_strategy(), Value::Sval(c"random"));
+        flags.set_default(&flag_disable_module(), Value::Sval(c"pos"));
     },
 )]
 fn inflex(_args: &mut Args, flags: &mut Flags) -> SubCmdResult {

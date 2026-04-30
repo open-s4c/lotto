@@ -22,6 +22,7 @@
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
+#include <lotto/driver/flags/modules.h>
 #include <lotto/driver/flags/prng.h>
 #include <lotto/driver/flags/sequencer.h>
 #include <lotto/driver/preload.h>
@@ -471,7 +472,7 @@ _default_flags()
 {
     flags_t *flags = flagmgr_flags_alloc();
     flags_cpy(flags, flags_default());
-    flags_set_default(flags, flag_strategy(), sval("random"));
+    flags_set_default(flags, flag_disable_module(), sval("pos"));
     return flags;
 }
 

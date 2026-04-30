@@ -102,42 +102,15 @@ main()
             with_flags({FLAG_VERBOSE, flag_on()}, {FLAG_NONE}),
         },
         {
-            {"hello", "-s", "random", "-r", "10", "-i", "in", "-o", "out",
-             "-v"},
-            {FLAG_INPUT, FLAG_OUTPUT, FLAG_ROUNDS, flag_strategy(),
-             FLAG_SEL_SENTINEL},
-            FLAGS_PARSE_ERROR,
-        },
-        {
-            {"hello", "-s", "random", "-r", "10", "-i", "in", "-o", "out",
-             "-v"},
-            {FLAG_INPUT, FLAG_OUTPUT, FLAG_ROUNDS, flag_strategy(),
-             FLAG_VERBOSE, FLAG_SEL_SENTINEL},
-            FLAGS_PARSE_OK,
-            with_flags(                                 //
-                {FLAG_VERBOSE, flag_on()},              //
-                {FLAG_ROUNDS, flag_uval(10)},           //
-                {FLAG_INPUT, flag_sval("in")},          //
-                {FLAG_OUTPUT, flag_sval("out")},        //
-                {flag_strategy(), flag_sval("random")}, //
-                {FLAG_NONE}),
-
-        },
-        {
-            {"hello", "-s", "random", "-k", "11"},
+            {"hello", "-k", "11"},
             {FLAG_SEL_SENTINEL},
             FLAGS_PARSE_ERROR,
         },
         {
             {"hello", "-x"},
-            {flag_strategy(), FLAG_VERBOSE, FLAG_SEL_SENTINEL},
+            {FLAG_VERBOSE, FLAG_SEL_SENTINEL},
             FLAGS_PARSE_ERROR,
         },
-        {{"hello", "-s", "random", "-v"},
-         {FLAG_VERBOSE, flag_strategy(), FLAG_SEL_SENTINEL},
-         FLAGS_PARSE_OK,
-         with_flags({flag_strategy(), flag_sval("random")},
-                    {FLAG_VERBOSE, flag_on()}, {FLAG_NONE})},
         {NULL},
     };
 

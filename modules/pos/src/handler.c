@@ -7,7 +7,6 @@
 #include <lotto/base/tidmap.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/sequencer.h>
-#include <lotto/engine/state.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/runtime/events.h>
 #include <lotto/sys/logger.h>
@@ -157,8 +156,7 @@ _pos_handle(const capture_point *cp, event_t *e)
         }
     }
 
-    if (!pos_config()->enabled ||
-        strcmp(sequencer_config()->strategy, "pos") != 0 || !e->is_chpt ||
+    if (!pos_config()->enabled || !e->is_chpt ||
         e->selector != SELECTOR_UNDEFINED || e->readonly ||
         tidset_size(&e->tset) <= 1) {
         return;

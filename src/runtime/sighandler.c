@@ -74,6 +74,7 @@ _handle(reason_t user_reason, reason_t runtime_reason)
 
     mediator_t *m = mediator_get(self_md(), false);
     if (m) {
+        cp.id  = m->id;
         reason = mediator_in_capture(m) ? runtime_reason : user_reason;
         sys_write(SIGHANLDER_FD, "[", 1);
         _write_uint64(SIGHANLDER_FD, cp.id);

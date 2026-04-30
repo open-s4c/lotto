@@ -13,6 +13,7 @@ typedef enum sleep_mode {
 
 typedef struct sleep_config {
     marshable_t m;
+    bool enabled;
     sleep_mode_t mode;
 } sleep_config_t;
 

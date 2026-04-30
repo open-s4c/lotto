@@ -8,6 +8,7 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/clock.h>
 #include <lotto/modules/sleep/events.h>
+#include <lotto/sys/real.h>
 
 static inline void
 intercept_sleep_yield(const char *func, const struct timespec *duration)
@@ -26,12 +27,21 @@ sleep_yield_for(const char *func, const struct timespec *req)
 int
 nanosleep(const struct timespec *req, struct timespec *rem)
 {
+    if (!sleep_config()->enabled) {
+        REAL_INIT(int, nanosleep, const struct timespec *, struct timespec *);
+        return REAL(nanosleep, req, rem);
+    }
     return sleep_yield_for("nanosleep", req);
 }
 
 int
 usleep(useconds_t usec)
 {
+    if (!sleep_config()->enabled) {
+        REAL_INIT(int, usleep, useconds_t);
+        return REAL(usleep, usec);
+    }
+
     struct timespec req = {
         .tv_sec  = usec / USEC_IN_SEC,
         .tv_nsec = (usec % USEC_IN_SEC) * NSEC_IN_USEC,
@@ -42,6 +52,11 @@ usleep(useconds_t usec)
 unsigned int
 sleep(unsigned int seconds)
 {
+    if (!sleep_config()->enabled) {
+        REAL_INIT(unsigned int, sleep, unsigned int);
+        return REAL(sleep, seconds);
+    }
+
     struct timespec req = {
         .tv_sec  = seconds,
         .tv_nsec = 0,

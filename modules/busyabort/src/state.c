@@ -5,7 +5,7 @@ static busyabort_config_t _config;
 
 REGISTER_CONFIG(_config, {
     _config.enabled   = false;
-    _config.threshold = ~0ULL;
+    _config.threshold = 1000000;
 })
 
 busyabort_config_t *

@@ -2,7 +2,7 @@
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/modules.h>
 
-REGISTER_RUNTIME_SWITCHABLE_CONFIG(deadlock_config(), true)
+REGISTER_RUNTIME_SWITCHABLE_CONFIG(deadlock_config(), false)
 
 NEW_CALLBACK_FLAG(HANDLER_DEADLOCK_LOST_RESOURCE_CHECK, "",
                   LOTTO_MODULE_FLAG("check-lost-resource"), "",

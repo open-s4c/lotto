@@ -3,7 +3,7 @@
 #include <lotto/sys/logger.h>
 
 static deadlock_config_t _config = {
-    .enabled             = true,
+    .enabled             = false,
     .extra_release_check = true,
     .lost_resource_check = true,
 };

@@ -6,6 +6,7 @@
 #define LOTTO_MODULES_H
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #define DRIVER_MODULE_PREFIX          "lotto-driver-"
 #define DRIVER_MODULE_PREFIX_LEN      (sizeof(DRIVER_MODULE_PREFIX) - 1)
@@ -34,6 +35,18 @@ typedef struct module_s {
                    // load
 } module_t;
 
+typedef enum {
+    LOTTO_MODULE_COMPONENT_DRIVER,
+    LOTTO_MODULE_COMPONENT_RUNTIME,
+} lotto_module_component_t;
+
+typedef struct lotto_module_metadata_s {
+    int slot;
+    const char *name;
+    lotto_module_component_t component;
+    const char *type;
+} lotto_module_metadata_t;
+
 typedef int (*module_foreach_f)(module_t *, void *);
 
 /** Scan the module dirs and populate the module registry. */
@@ -60,5 +73,7 @@ int lotto_module_foreach_all(module_foreach_f f, void *arg);
 
 /** Similar to lotto_module_foreach but in the reverse order. */
 int lotto_module_foreach_reverse(module_foreach_f f, void *arg);
+
+const lotto_module_metadata_t *lotto_module_metadata_all(size_t *count);
 
 #endif

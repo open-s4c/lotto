@@ -51,7 +51,8 @@ STATIC void
 _sleep_handle(const capture_point *cp, event_t *e)
 {
     ASSERT(e);
-    if (e->skip || cp->type_id != EVENT_SLEEP_YIELD) {
+    if (e->skip || !sleep_config()->enabled ||
+        cp->type_id != EVENT_SLEEP_YIELD) {
         return;
     }
 

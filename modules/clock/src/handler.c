@@ -48,7 +48,8 @@ _clock_tick(uint64_t cpu_cost)
         if (_clock.no_cost_count < cfg->max_gap)
             _clock.cost_offset += cfg->base_inc * cfg->mult_inc;
         else
-            _clock.cost_offset += cfg->base_inc * cfg->burst_gap;
+            _clock.cost_offset +=
+                cfg->base_inc * cfg->mult_inc * cfg->burst_gap;
     }
 }
 

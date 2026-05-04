@@ -224,7 +224,6 @@ impl RecInflex {
         self.pop_constraint();
         match result {
             Ok(()) => Ok(Some(self.trace_fail_alt.to_owned())),
-            Err(Error::ExecutionNotFound) => Ok(None),
             Err(e) => Err(e),
         }
     }
@@ -291,13 +290,33 @@ impl RecInflex {
                 |_| true,
             )?;
             symm_set.push(pair);
-            return self.inflex_pair(iip - 1, depth + 1, symm_set);
+            return self.inflex_pair(iip, depth + 1, symm_set);
         }
 
         // Essentiality check
         info!("Essentiality check");
         let mut num_added_virt_ocs = 0;
-        while let Some(trace_fail_alt) = self.essentiality_witness(ip, &pair)? {
+        loop {
+            let trace_fail_alt = match self.essentiality_witness(ip, &pair) {
+                Ok(Some(trace_fail_alt)) => trace_fail_alt,
+                Ok(None) => break,
+                Err(Error::ExecutionNotFound { valid: 0, .. }) if ip != iip => {
+                    // As a safety net.
+                    info!("inverting candidate is impossible, restarting...");
+                    self.get_trace(
+                        Outcome::Fail,
+                        iip - 1,
+                        &self.trace_success,
+                        &self.trace_fail,
+                        true,
+                        true,
+                        |_| true,
+                    )?;
+                    return self.inflex_pair(iip, depth + 1, symm_set);
+                }
+                Err(Error::ExecutionNotFound { .. }) => break,
+                Err(e) => return Err(e),
+            };
             let (alt_event, _delta) = self.event_at_clock(&self.flags, &trace_fail_alt, ip)?;
             let virt_pair = PrimitiveConstraint {
                 source: source.clone(),
@@ -377,7 +396,10 @@ impl RecInflex {
                     || bar.valid_ticks == 0 && bar.invalid_ticks > max_rounds)
             {
                 warn!("Cannot find satisfying execution in get_trace");
-                return Err(Error::ExecutionNotFound);
+                return Err(Error::ExecutionNotFound {
+                    valid: bar.valid_ticks,
+                    invalid: bar.invalid_ticks,
+                });
             }
 
             flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(replay_goal));

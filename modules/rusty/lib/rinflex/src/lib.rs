@@ -17,7 +17,7 @@ pub mod stats;
 pub mod trace;
 pub mod vaddr;
 
-use lotto::base::{CapturePoint, Clock, EventType, StableAddress, StableAddressMethod, TaskId};
+use lotto::base::{Clock, EventType, StableAddress, TaskId};
 use lotto::brokers::{Decode, Encode};
 use lotto::log::*;
 use lotto::raw;
@@ -42,16 +42,6 @@ pub struct Transition {
 }
 
 impl Transition {
-    /// Create a new [`Transition`] from a Lotto capture.
-    pub fn new(ctx: &CapturePoint) -> Self {
-        Transition {
-            id: TaskId::new(ctx.id),
-            type_id: ctx.event_type(),
-            after: u32::from(ctx.chain_id) == raw::CHAIN_INGRESS_AFTER,
-            pc: StableAddress::with_method(ctx.pc, StableAddressMethod::STABLE_ADDRESS_METHOD_MAP),
-        }
-    }
-
     pub fn event_name(&self) -> String {
         let mut name = self.type_id.name();
         if self.after {
@@ -329,20 +319,6 @@ impl Event {
     /// definition of the event.
     pub fn equals(&self, other: &Self) -> bool {
         EventCoreRef::from(self) == EventCoreRef::from(other)
-    }
-
-    /// Create an [`Event`] from a Lotto capture that only fills in
-    /// `t` and `clk`.
-    ///
-    /// Peripheral information is not provided.
-    pub fn new(ctx: &CapturePoint, e: &raw::event_t, stacktrace: StackTrace) -> Self {
-        Self {
-            t: Transition::new(ctx),
-            clk: e.clk,
-            cnt: 0,
-            stacktrace,
-            m: None,
-        }
     }
 
     pub fn instruction(&self) -> report::Instruction {

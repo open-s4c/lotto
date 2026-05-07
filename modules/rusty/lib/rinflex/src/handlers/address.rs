@@ -13,21 +13,30 @@ use std::sync::{
     LazyLock,
 };
 
-pub static HANDLER: LazyLock<AddressHandler> = LazyLock::new(|| AddressHandler {
+static HANDLER: LazyLock<AddressHandler> = LazyLock::new(|| AddressHandler {
     cfg: Config {
         enabled: AtomicBool::new(false),
     },
     pers: Persistent {
         tasks: FxHashMap::default(),
     },
+    task_origin: FxHashMap::default(),
 });
 
 #[derive(Stateful)]
-pub struct AddressHandler {
+struct AddressHandler {
     #[config]
     pub cfg: Config,
     #[persistent]
     pub pers: Persistent,
+
+    pub task_origin: FxHashMap<TaskId, TaskOrigin>,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum TaskOrigin {
+    Main,
+    Child { run: usize, arg: usize },
 }
 
 impl handler::Handler for AddressHandler {
@@ -35,6 +44,13 @@ impl handler::Handler for AddressHandler {
         if !self.cfg.enabled.load(Ordering::Relaxed) {
             return;
         }
+        self.update_task_pc(ctx);
+        self.update_task_origin(ctx);
+    }
+}
+
+impl AddressHandler {
+    fn update_task_pc(&mut self, ctx: &CapturePoint) {
         let tasks = &mut self.pers.tasks;
         let addr = StableAddress::with_default_method(ctx.pc);
         let info = AddressInfo {
@@ -43,6 +59,25 @@ impl handler::Handler for AddressHandler {
             after: u32::from(ctx.chain_id) == raw::CHAIN_INGRESS_AFTER,
         };
         tasks.insert(TaskId::new(ctx.id), info);
+    }
+
+    fn update_task_origin(&mut self, ctx: &CapturePoint) {
+        match ctx.type_id as u32 {
+            raw::EVENT_TASK_INIT if ctx.id != 1 => {
+                let (run, arg) = unsafe {
+                    let payload: &raw::capture_task_init_event = ctx
+                        .payload_unchecked()
+                        .expect("TASK_INIT should have payload");
+                    (payload.run, payload.arg)
+                };
+                self.task_origin
+                    .insert(TaskId(ctx.id), TaskOrigin::Child { run, arg });
+            }
+            raw::EVENT_TASK_FINI if ctx.id != 1 => {
+                self.task_origin.remove(&TaskId(ctx.id));
+            }
+            _ => {}
+        }
     }
 }
 
@@ -116,6 +151,19 @@ pub fn register_flags() {
 // Interfaces
 //
 
-pub fn get_task_address(task: TaskId) -> Option<AddressInfo> {
-    HANDLER.pers.tasks.get(&task).cloned()
+pub fn get_task_address(task: TaskId) -> AddressInfo {
+    HANDLER
+        .pers
+        .tasks
+        .get(&task)
+        .expect("Task address information not available; have you enabled rusty-address?")
+        .clone()
+}
+
+pub fn get_task_origin(task: TaskId) -> TaskOrigin {
+    HANDLER
+        .task_origin
+        .get(&task)
+        .expect("Task origin information not available; have you enabled rusty-address?")
+        .clone()
 }

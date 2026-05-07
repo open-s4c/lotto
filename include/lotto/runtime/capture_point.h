@@ -22,6 +22,8 @@ typedef struct source_event {
 typedef struct capture_task_init_event {
     uintptr_t thread;
     bool detached;
+    uintptr_t run;
+    uintptr_t arg;
 } capture_task_init_event;
 
 typedef struct capture_task_fini_event {

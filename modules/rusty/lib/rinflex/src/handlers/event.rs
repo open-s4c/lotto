@@ -1,4 +1,4 @@
-use lotto::base::CapturePoint;
+use lotto::base::{CapturePoint, StableAddress, StableAddressMethod};
 use lotto::raw;
 use lotto::sync::HandlerWrapper;
 use lotto::Stateful;
@@ -64,7 +64,12 @@ impl handler::Handler for EventHandler {
         let stacktrace = stacktrace::get_task_stacktrace(id).unwrap_or_default();
         let ma = cas::get_rt_memory_access(id);
         let stid = self.st_map.put(&stacktrace);
-        let transition = Transition::new(ctx);
+        let transition = Transition {
+            id: TaskId::new(ctx.id),
+            type_id: ctx.event_type(),
+            after: u32::from(ctx.chain_id) == raw::CHAIN_INGRESS_AFTER,
+            pc: StableAddress::with_method(ctx.pc, StableAddressMethod::STABLE_ADDRESS_METHOD_MAP),
+        };
 
         // During capture, we are going to check whether this event
         // should be blocked, if the operation were to read this

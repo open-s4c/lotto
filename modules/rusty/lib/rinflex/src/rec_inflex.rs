@@ -274,7 +274,7 @@ impl RecInflex {
 
         // Primitive checking
         let repeated = symm_set.contains(&pair);
-        let same_thread = pair.source.t.id == pair.target.t.id;
+        let same_thread = pair.source.id == pair.target.id;
 
         // Sibling check
         let correct = !same_thread && (repeated || self.sibling_check(ip, &pair)?);
@@ -324,7 +324,7 @@ impl RecInflex {
                 clk: ip - 1,
             };
             info!("Found an essentiality witness\n{}", virt_pair);
-            if virt_pair.source.t.id == virt_pair.target.t.id {
+            if virt_pair.source.t.eid == virt_pair.target.t.eid {
                 println!("invalid essentiality pair!");
                 println!("current failing trace: {}", self.trace_fail.display());
                 println!(

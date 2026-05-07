@@ -15,6 +15,7 @@ use std::collections::BTreeMap;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use crate::handlers::address::get_task_eid;
 use crate::handlers::cas;
 use crate::handlers::stacktrace;
 use crate::idmap::IdMap;
@@ -61,11 +62,15 @@ impl handler::Handler for EventHandler {
             return;
         }
         let id = TaskId::new(ctx.id);
+        let Some(eid) = get_task_eid(id) else {
+            // thread has exited
+            return;
+        };
         let stacktrace = stacktrace::get_task_stacktrace(id).unwrap_or_default();
         let ma = cas::get_rt_memory_access(id);
         let stid = self.st_map.put(&stacktrace);
         let transition = Transition {
-            id: TaskId::new(ctx.id),
+            eid,
             type_id: ctx.event_type(),
             after: u32::from(ctx.chain_id) == raw::CHAIN_INGRESS_AFTER,
             pc: StableAddress::with_method(ctx.pc, StableAddressMethod::STABLE_ADDRESS_METHOD_MAP),
@@ -87,6 +92,7 @@ impl handler::Handler for EventHandler {
         let cnt = capture(&mut self.pc_cnt, ecore);
         let event = Event {
             t: transition,
+            id,
             clk: e.clk,
             cnt: cnt.capture,
             stacktrace,

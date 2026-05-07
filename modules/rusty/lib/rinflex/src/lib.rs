@@ -35,7 +35,7 @@ use std::sync::atomic::{fence, Ordering};
 /// meaningless without proper context ([`Event`]).
 #[derive(Encode, Decode, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Transition {
-    pub id: TaskId,
+    pub eid: TaskId, // Effective TID
     pub pc: StableAddress,
     pub type_id: EventType,
     pub after: bool,
@@ -63,8 +63,8 @@ impl std::fmt::Display for Transition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            r"[id:{}, type:{}, pc:{}]",
-            self.id,
+            r"[eid:{}, type:{}, pc:{}]",
+            self.eid,
             self.event_name(),
             self.pc
         )
@@ -137,6 +137,9 @@ impl std::fmt::Display for StackTrace {
 pub struct Event {
     /// The program transition to which this event is associated.
     pub t: Transition,
+
+    /// Real TID
+    pub id: TaskId,
 
     /// The clock when this event actually happened ('resumed').
     pub clk: Clock,
@@ -336,8 +339,9 @@ impl Event {
             .display()
             .unwrap_or_else(|_| format!("unknown\npc offset 0x{:x}\n", instruction.offset));
         let mut result = format!(
-            "event - tid: {}, clk: {}, {} x pc: {}, cat: {}, eff: {:?}\n[{}]\n{}",
-            self.t.id,
+            "event - id: {} (eid: {}), clk: {}, {} x pc: {}, cat: {}, eff: {:?}\n[{}]\n{}",
+            self.id,
+            self.t.eid,
             self.clk,
             self.cnt,
             self.t.pc,

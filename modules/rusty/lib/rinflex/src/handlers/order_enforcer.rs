@@ -102,17 +102,19 @@ impl Handler for OrderEnforcer {
         if constraints.len() == 0 {
             return;
         }
+        let tid = TaskId(ctx.id);
+        let eid = get_task_eid(tid).unwrap_or(tid);
         // If the current task is going to exit, any pending
         // constraint whose source is this task cannot be satisfied
         // anymore. Discard this run immediately.
-        if ctx.type_id == raw::EVENT_TASK_FINI as u16 {
-            for c in constraints.iter() {
-                if c.c.source.cnt > 0 && c.c.source.t.id == TaskId(ctx.id) {
-                    debug!("Shutting down due to constraint {} cannot be satisfied because its source is no longer available", c);
-                    discard!(self);
-                }
-            }
-        }
+        // if ctx.type_id == raw::EVENT_TASK_FINI as u16 {
+        //     for c in constraints.iter() {
+        //         if c.c.source.cnt > 0 && c.c.source.t.eid == eid {
+        //             debug!("Shutting down due to constraint {} cannot be satisfied because its source is no longer available", c);
+        //             discard!(self);
+        //         }
+        //     }
+        // }
 
         let tset = unsafe { TidSet::wrap(&cappt.tset) };
         for id in tset.iter() {
@@ -134,7 +136,7 @@ impl Handler for OrderEnforcer {
             };
             for c in constraints.iter() {
                 if should_block(&e, c) {
-                    debug!("Blocking task {} due to constraint {}", e.t.id, c);
+                    debug!("Blocking task {} due to constraint {}", tid, c);
                     self.block
                         .entry(id)
                         .and_modify(|cnt| *cnt += 1)
@@ -154,12 +156,12 @@ impl Handler for OrderEnforcer {
          * blocked. This will be checked by posthandle. */
 
         /* Reduce the likelihood by setting any_task_filter. */
-        if self.block.get(&TaskId(ctx.id)).is_some() {
+        if self.block.get(&tid).is_some() {
             if cappt.any_task_filter.is_some() {
                 self.prev_any_task_filter
-                    .insert(ctx.id, cappt.any_task_filter);
+                    .insert(tid.0, cappt.any_task_filter);
             } else {
-                self.prev_any_task_filter.remove(&ctx.id);
+                self.prev_any_task_filter.remove(&tid.0);
             }
             cappt.any_task_filter = Some(should_wait);
         }
@@ -212,7 +214,7 @@ impl Handler for OrderEnforcer {
                      * satisfied. */
                     continue;
                 }
-                let bcnt = self.block.get_mut(&target.t.id);
+                let bcnt = self.block.get_mut(&target.id);
                 if bcnt.is_none() {
                     continue;
                 }
@@ -220,8 +222,8 @@ impl Handler for OrderEnforcer {
                 assert!(*bcnt > 0);
                 *bcnt -= 1;
                 if *bcnt == 0 {
-                    debug!("Unblocking {}", target.t.id);
-                    self.block.remove(&target.t.id);
+                    debug!("Unblocking {}", target.id);
+                    self.block.remove(&target.id);
                 }
             }
         }
@@ -290,7 +292,7 @@ fn should_block(cur: &Event, constraint: &Constraint) -> bool {
     if cur.t == target.t {
         debug!(
             "checking [t:{},cat:{},cnt:{},eff:{:?}] against constraint id={}",
-            cur.t.id,
+            cur.id,
             cur.t.event_name(),
             cur.cnt,
             Eff::from(cur.m.as_ref()),
@@ -328,11 +330,11 @@ impl Marshable for Config {
             info!(
                 "new constraint {} (id={}) [t:{}, clk:{}, pc:{}, cat:{}] => [t:{}, clk:{}, pc:{}, cat:{}]",
                 i, c.id,
-                c.c.source.t.id,
+                c.c.source.id,
                 c.c.source.clk,
                 c.c.source.t.pc,
                 c.c.source.t.type_id.name(),
-                c.c.target.t.id,
+                c.c.target.id,
                 c.c.target.clk,
                 c.c.target.t.pc,
                 c.c.target.t.type_id.name(),

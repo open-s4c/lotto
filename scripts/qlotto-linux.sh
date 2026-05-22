@@ -99,7 +99,7 @@ if [[ -n "$SNAPSHOT_DRIVE" ]]; then
     QEMU_ARGS+=("-drive" "file=$SNAPSHOT_DRIVE,if=virtio,format=qcow2")
 fi
 
-exec "$LOTTO" stress -Q "${LOTTO_ARGS[@]}" -- \
+exec "$LOTTO" stress -Q --clock-mult-inc 1000 "${LOTTO_ARGS[@]}" -- \
     -kernel "$KERNEL" \
     -initrd "$INITRD" \
     "${QEMU_ARGS[@]}" \

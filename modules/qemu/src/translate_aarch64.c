@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "qemu-plugin.h"
 #include "translate_aarch64.h"
 #include "interceptors.h"
 #include <dice/chains/intercept.h>
@@ -144,13 +143,10 @@ loop_check(struct qemu_plugin_insn *insn, cs_insn *insn_cs, uint32_t opcode, uin
     int64_t b_insn_diff = 0;
     int32_t opnum = insn_cs->detail->arm64.op_count-1;
 
-    // ASSERT(opcount == insn_cs->detail->arm64.op_count);
     ASSERT(ARM64_OP_IMM == insn_cs->detail->arm64.operands[opnum].type);
 
     b_insn_diff =
         (insn_cs->detail->arm64.operands[opnum].imm - (int64_t)pc) / 4;
-
-    // fprintf(stderr, "loop check found: %ld.\n", b_insn_diff);
 
     if (b_insn_diff <= 0) {
         bind_branch_callback(insn);

@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "qemu-plugin.h"
 #include "translate_aarch64.h"
 #include "interceptors.h"
 #include <dice/chains/intercept.h>
@@ -12,17 +13,23 @@
 #include <lotto/runtime/capture_point.h>
 #include <lotto/sys/stdlib.h>
 
+#include <capstone/arm64.h>
+#include <capstone/capstone.h>
+
 #define AARCH64_WFE_OPCODE 0xd503205fU
 #define AARCH64_WFI_OPCODE 0xd503207fU
 
 static icounter_t g_inline_insn_count;
 static bool g_inline_insn_count_initialized = false;
+static csh disasm;
+
 
 typedef struct qemu_translation_policy {
     bool memaccess;
     bool udf;
     bool yield;
     bool wf;
+    bool branch;
 } qemu_translation_policy_t;
 
 static bool
@@ -47,6 +54,7 @@ translation_policy(void)
             .udf       = env_enabled("LOTTO_QEMU_INSTR_UDF", true),
             .yield     = env_enabled("LOTTO_QEMU_INSTR_YIELD", true),
             .wf        = env_enabled("LOTTO_QEMU_INSTR_WF", true),
+            .branch    = env_enabled("LOTTO_QEMU_INSTR_BRANCH", true),
         };
         initialized = true;
     }
@@ -130,6 +138,58 @@ bind_wf_instruction(struct qemu_plugin_insn *insn, uint32_t opcode,
     }
 }
 
+void
+loop_check(struct qemu_plugin_insn *insn, cs_insn *insn_cs, uint32_t opcode, uint64_t pc)
+{
+    int64_t b_insn_diff = 0;
+    int32_t opnum = insn_cs->detail->arm64.op_count-1;
+
+    // ASSERT(opcount == insn_cs->detail->arm64.op_count);
+    ASSERT(ARM64_OP_IMM == insn_cs->detail->arm64.operands[opnum].type);
+
+    b_insn_diff =
+        (insn_cs->detail->arm64.operands[opnum].imm - (int64_t)pc) / 4;
+
+    // fprintf(stderr, "loop check found: %ld.\n", b_insn_diff);
+
+    if (b_insn_diff <= 0) {
+        bind_branch_callback(insn);
+    }
+}
+
+static void
+bind_branch_instruction(struct qemu_plugin_insn *insn, uint32_t opcode,
+                    const qemu_translation_policy_t *policy)
+{
+    if (!policy->branch) {
+        return;
+    }
+
+    uint64_t pc = qemu_plugin_insn_vaddr(insn);
+    cs_insn *insn_cs;
+
+    if (cs_disasm(disasm, (const unsigned char *)&opcode, sizeof(opcode),
+            pc, 0, &insn_cs) == 1) {
+
+        switch (insn_cs->id) {
+        case ARM64_INS_CBZ:
+        case ARM64_INS_CBNZ:
+        case ARM64_INS_TBL:
+        case ARM64_INS_TBNZ:
+        case ARM64_INS_TBX:
+        case ARM64_INS_TBZ:
+        case ARM64_INS_B:
+        case ARM64_INS_BC:
+            loop_check(insn, insn_cs, opcode, pc);
+            break;
+        default:
+            break;
+        }
+    }
+
+    return;
+}
+
 static void
 decode_and_bind_insn(struct qemu_plugin_insn *insn,
                      const qemu_translation_policy_t *policy)
@@ -149,6 +209,7 @@ decode_and_bind_insn(struct qemu_plugin_insn *insn,
 
     bind_wf_instruction(insn, opcode, policy);
     bind_udf_instruction(insn, opcode, policy);
+    bind_branch_instruction(insn, opcode, policy);
 }
 
 void
@@ -186,6 +247,10 @@ qemu_on_plugin_start(qemu_plugin_id_t id, const qemu_info_t *info, int argc,
     (void)argv;
     icounter_init(&g_inline_insn_count);
     g_inline_insn_count_initialized = true;
+
+    cs_open(CS_ARCH_ARM64, CS_MODE_ARM, &disasm);
+    cs_option(disasm, CS_OPT_DETAIL, CS_OPT_ON);
+
     qemu_emit_start();
 }
 

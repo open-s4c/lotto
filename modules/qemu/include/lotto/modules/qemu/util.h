@@ -20,6 +20,7 @@ void vcpu_mem_capture(unsigned int cpu_index, qemu_plugin_meminfo_t info,
 void vcpu_insn_capture(unsigned int cpu_index, void *udata);
 void vcpu_loop_capture(unsigned int cpu_index, void *udata);
 void vcpu_event_capture(unsigned int cpu_index, void *udata);
+void emit_loop(unsigned int cpu_index, void *udata);
 void emit_udf_trap(unsigned int cpu_index, void *udata);
 void emit_wfe(unsigned int cpu_index, void *udata);
 void emit_wfi(unsigned int cpu_index, void *udata);
@@ -45,6 +46,13 @@ static inline void
 bind_wfi_callback(struct qemu_plugin_insn *insn)
 {
     qemu_plugin_register_vcpu_insn_exec_cb(insn, emit_wfi,
+                                           QEMU_PLUGIN_CB_NO_REGS, NULL);
+}
+
+static inline void
+bind_branch_callback(struct qemu_plugin_insn *insn)
+{
+    qemu_plugin_register_vcpu_insn_exec_cb(insn, emit_loop,
                                            QEMU_PLUGIN_CB_NO_REGS, NULL);
 }
 

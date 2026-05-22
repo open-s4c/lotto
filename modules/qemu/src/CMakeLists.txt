@@ -4,6 +4,7 @@ add_runtime_module(
     translate_aarch64.c
     interceptors.c
     emit_cpu_context.c
+    emit_loop.c
     emit_memaccess.c
     emit_udf_trap.c
     emit_wfe.c

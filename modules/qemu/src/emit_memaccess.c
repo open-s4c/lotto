@@ -7,6 +7,8 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/qemu/util.h>
 
+uint64_t mem_access_counter = 0;
+
 static inline uint64_t
 qemu_memaccess_size(qemu_plugin_meminfo_t info)
 {
@@ -96,6 +98,12 @@ emit_memaccess(unsigned int cpu_index, qemu_plugin_meminfo_t info,
     if (!qemu_instrumentation_enabled(cpu_index)) {
         return;
     }
+
+    uint64_t reduction = 1000; // 100000
+    mem_access_counter++;
+
+    if(mem_access_counter % reduction != 0)
+        return;
 
     bool atomic_like = ((uintptr_t)udata) != 0;
     capture_point cp = {.chain_id = INTERCEPT_EVENT, .func = __FUNCTION__};

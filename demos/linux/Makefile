@@ -14,8 +14,12 @@ MODULE  = example_mod
 SOURCES = $(wildcard src/*.c)
 TARGETS = $(addprefix ${ROOTFS}/bin/, $(notdir $(SOURCES:.c=)))
 
-CROSS = aarch64-linux-gnu
-CROSS_PRE = ${CROSS}-
+HOST_ARCH := $(shell uname -m)
+
+ifneq (,$(filter $(HOST_ARCH),aarch64 arm64))
+	CROSS = aarch64-linux-gnu
+	CROSS_PRE = ${CROSS}-
+endif
 
 SCX_PATHS = $(patsubst %, $(ROOTFS)/lib/%, $(SCX_LIBS))
 

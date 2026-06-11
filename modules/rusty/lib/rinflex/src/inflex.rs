@@ -7,6 +7,7 @@ use lotto::cli::prng;
 use lotto::engine::flags::*;
 use lotto::log::*;
 use lotto::owned::Owned;
+use lotto::raw;
 
 use crate::error::Error;
 use crate::exec::Exec;
@@ -92,6 +93,9 @@ impl Inflex {
     /// Reset the input trace and other input-related arguments.
     pub fn set_input(&mut self, input: &Path) {
         let mut rec = Trace::load_file(input.to_str().unwrap());
+        rec.next(raw::record::RECORD_CONFIG)
+            .expect("config record in the input trace")
+            .unmarshal();
         let last = rec.last().expect("Last record in the input trace");
         let last_clk = last.clk;
         self.input = input.to_owned();

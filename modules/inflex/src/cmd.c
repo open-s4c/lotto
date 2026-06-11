@@ -109,8 +109,13 @@ inflex(args_t *args, flags_t *flags)
     trace_t *rec = cli_trace_load(flags_get_sval(flags, flag_input()));
     ASSERT(rec);
     record_t *first = trace_next(rec, RECORD_START);
-    record_t *last  = trace_last(rec);
+    ASSERT(first);
+    record_t *config = trace_next(rec, RECORD_CONFIG);
+    ASSERT(config);
+    record_t *last = trace_last(rec);
+    ASSERT(last);
 
+    statemgr_record_unmarshal(config);
     args = record_args(first);
     _apply_snapshot_min_boundary(flags, last);
 

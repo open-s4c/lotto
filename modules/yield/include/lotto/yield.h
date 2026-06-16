@@ -12,7 +12,7 @@
 
 /**
  * Preempt to another available task. An advisory yield is interpreted as a
- * change point, i.e., the preemption decision is left to the strategy and may
+ * change point, i.e., the preemption decision is left to scheduling and may
  * include the current task. Otherwise, the current task is excluded from the
  * pool of next tasks.
  *

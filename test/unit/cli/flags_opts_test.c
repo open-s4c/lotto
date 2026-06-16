@@ -40,8 +40,6 @@ main()
                   FLAG_SEL_SENTINEL),
         TEST_CASE("ROUNDS", "r:", FLAG_ROUNDS, FLAG_SEL_SENTINEL),
         TEST_CASE("VERBOSE", "v", FLAG_VERBOSE, FLAG_SEL_SENTINEL),
-        TEST_CASE("VERBOSE|STRATEGY", "s:v", flag_strategy(), FLAG_VERBOSE,
-                  FLAG_SEL_SENTINEL),
         NULL,
     };
     struct test_case *nxt = tc;

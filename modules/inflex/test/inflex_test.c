@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress -s random -- %b)
+// RUN: (! %lotto %stress -d pos -- %b)
 // RUN: %lotto %inflex -r 50
 // RUN: %lotto %show 2>&1 | %check %s
 // CHECK: RECORD 2

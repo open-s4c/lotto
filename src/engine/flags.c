@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <string.h>
 
 #include <lotto/base/record_granularity.h>
 #include <lotto/base/stable_address.h>
@@ -7,8 +6,6 @@
 #include <lotto/driver/flags/prng.h>
 #include <lotto/driver/flags/sequencer.h>
 #include <lotto/engine/state.h>
-#include <lotto/sys/assert.h>
-#include <lotto/sys/string.h>
 
 #ifndef DEFAULT_SLACK_TIME
     #define DEFAULT_SLACK_TIME 0
@@ -44,13 +41,6 @@ NEW_CALLBACK_FLAG(SLACK, "k", "slack", "INT", "slack time in milliseconds",
                   flag_uval(DEFAULT_SLACK_TIME),
                   { sequencer_config()->slack = as_uval(v); })
 
-NEW_PUBLIC_CALLBACK_FLAG(STRATEGY, "s", "strategy", "STRAT",
-                         "select strategy pct, pos, or random",
-                         flag_sval("pos"), {
-                             ASSERT(sys_strlen(as_sval(v)) < STRATEGY_LEN);
-                             strcpy(sequencer_config()->strategy, as_sval(v));
-                         })
-
 NEW_PUBLIC_PRETTY_CALLBACK_FLAG(
     STABLE_ADDRESS_METHOD, "a", "stable-address-method",
     "method to produce addresses stable accross runs",
@@ -61,5 +51,4 @@ NEW_PUBLIC_PRETTY_CALLBACK_FLAG(
 
 FLAG_GETTER(seed, SEED)
 FLAG_GETTER(record_granularity, RECORD_GRANULARITY)
-FLAG_GETTER(strategy, STRATEGY)
 FLAG_GETTER(stable_address_method, STABLE_ADDRESS_METHOD)

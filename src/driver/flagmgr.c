@@ -351,7 +351,6 @@ _flag_is_core_runtime(flag_t f)
            sys_strcmp(long_opt, "seed") == 0 ||
            sys_strcmp(long_opt, "record-granularity") == 0 ||
            sys_strcmp(long_opt, "slack") == 0 ||
-           sys_strcmp(long_opt, "strategy") == 0 ||
            sys_strcmp(long_opt, "stable-address-method") == 0;
 }
 

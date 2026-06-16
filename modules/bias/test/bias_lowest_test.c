@@ -1,5 +1,5 @@
 // clang-format off
-// RUN: (! %lotto %stress -s random -r 20 --region-preemption=off --bias-policy=LOWEST -- %b 2>&1) | %check %s
+// RUN: (! %lotto %stress -d pos -r 20 --region-preemption=off --bias-policy=LOWEST -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/bias_lowest_test.c:{{[0-9]+}}: val == 0
 // clang-format on
 

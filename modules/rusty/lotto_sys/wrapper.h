@@ -29,6 +29,7 @@
 #include "lotto/driver/exec_info.h"
 #include "lotto/driver/flagmgr.h"
 #include "lotto/driver/flags/memmgr.h"
+#include "lotto/driver/flags/modules.h"
 #include "lotto/driver/flags/prng.h"
 #include "lotto/driver/flags/sequencer.h"
 #include "lotto/driver/preload.h"

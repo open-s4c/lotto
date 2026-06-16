@@ -14,7 +14,7 @@
 #include <lotto/driver/exec.h>
 #include <lotto/driver/flagmgr.h>
 #include <lotto/driver/flags/memmgr.h>
-#include <lotto/driver/flags/sequencer.h>
+#include <lotto/driver/flags/modules.h>
 #include <lotto/driver/preload.h>
 #include <lotto/driver/trace.h>
 #include <lotto/driver/utils.h>
@@ -96,13 +96,18 @@ void
 round_print(const flags_t *flags, uint64_t round)
 {
     char max[256];
+    bool pos = false;
+    bool pct = false;
     if (flags_get_uval(flags, flag_rounds()) == ~0UL)
         sys_sprintf(max, "inf");
     else
         sys_snprintf(max, 256, "%lu", flags_get_uval(flags, flag_rounds()));
 
-    sys_fprintf(stdout, "[lotto] round: %lu/%s, %s\n", round, max,
-                flags_get_sval(flags, flag_strategy()));
+    module_runtime_switchable_enabled("pos", flags, &pos);
+    module_runtime_switchable_enabled("pct", flags, &pct);
+
+    const char *selector = pos ? "pos" : pct ? "pct" : "random";
+    sys_fprintf(stdout, "[lotto] round: %lu/%s, %s\n", round, max, selector);
 }
 
 bool

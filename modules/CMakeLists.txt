@@ -83,7 +83,7 @@ add_module(concurrent SLOT 6)
 add_module(ghost SLOT 7)
 add_module(rusty DEFAULT ${HAVE_CARGO})
 
-# bias and scheduling strategy handlers
+# bias and scheduling handlers
 add_module(bias)
 add_module(pos)
 add_module(pct)

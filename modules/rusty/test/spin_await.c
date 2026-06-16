@@ -1,7 +1,7 @@
 // clang-format off
 // ALLOW_RETRIES: 100
 // REQUIRES: RUST_HANDLERS_AVAILABLE
-// RUN: (%lotto %stress --rusty-await-address enable --rusty-spin-loop enable -s random -r 1 -- %b 2>&1)
+// RUN: (%lotto %stress --rusty-await-address enable --rusty-spin-loop enable -d pos -r 1 -- %b 2>&1)
 // clang-format on
 #include <assert.h>
 #include <pthread.h>

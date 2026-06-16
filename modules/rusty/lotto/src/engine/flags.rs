@@ -9,8 +9,6 @@ macro_rules! simple_wrap_raw {
     };
 }
 
-simple_wrap_raw!(flag_strategy, Flag);
-
 simple_wrap_raw!(flag_record_granularity, Flag);
 
 simple_wrap_raw!(flag_stable_address_method, Flag);
@@ -22,3 +20,4 @@ simple_wrap_raw!(flag_terminate_limit, Flag);
 
 simple_wrap_raw!(flag_memmgr_runtime, Flag);
 simple_wrap_raw!(flag_memmgr_user, Flag);
+simple_wrap_raw!(flag_disable_module, Flag);

@@ -9,7 +9,6 @@
 #include "state.h"
 #include <lotto/engine/prng.h>
 #include <lotto/engine/sequencer.h>
-#include <lotto/engine/state.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/runtime/events.h>
 #include <lotto/sys/logger.h>
@@ -99,10 +98,8 @@ _pct_handle(const capture_point *cp, event_t *e)
         ASSERT(t);
     }
 
-    if (!pct_config()->enabled ||
-        strcmp(sequencer_config()->strategy, "pct") != 0 ||
-        e->selector != SELECTOR_UNDEFINED || e->readonly ||
-        tidset_size(&e->tset) <= 1 || !e->is_chpt || e->skip)
+    if (!pct_config()->enabled || e->selector != SELECTOR_UNDEFINED ||
+        e->readonly || tidset_size(&e->tset) <= 1 || !e->is_chpt || e->skip)
         return;
 
     if (t) {

@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdlib.h> // qsort
 
@@ -375,7 +376,7 @@ tidset_print(const marshable_t *m)
     for (size_t i = 0; i < tset->size; i++) {
         if (i != 0)
             logger_printf(", ");
-        logger_printf("%lu", tset->tasks[i]);
+        logger_printf("%" PRIu64, (uint64_t)tset->tasks[i]);
     }
     logger_printf("]\n");
 }

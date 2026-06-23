@@ -19,6 +19,7 @@
 #include <lotto/unsafe/time.h>
 #include <lotto/util/casts.h>
 #include <sys/timeb.h>
+#include <sys/time.h>
 #include <sys/types.h>
 
 static void
@@ -34,12 +35,21 @@ _clock_timespec_from_read(struct timespec *ts)
     ts->tv_nsec = (long)nsec;
 }
 
+#if !defined(__APPLE__)
+static inline void
+intercept_time_yield(const char *func)
+{
+    time_yield_event_t ev = {.func = func};
+    PS_PUBLISH(INTERCEPT_EVENT, EVENT_TIME_YIELD, &ev, 0);
+}
+
 int
-sched_setaffinity(__pid_t pid, size_t s, const cpu_set_t *cset)
+sched_setaffinity(pid_t pid, size_t s, const cpu_set_t *cset)
 {
     logger_debugf("warning: ignoring sched_setaffinity call\n");
     return 0;
 }
+#endif
 
 #if !defined(QLOTTO_ENABLED)
 pid_t
@@ -89,9 +99,9 @@ gettimeofday(struct timeval *tv, void *tz)
     _clock_timespec_from_read(&ts);
 
     tv->tv_sec   = ts.tv_sec;
-    uint64_t sec = ts.tv_nsec / NSEC_IN_SEC;
-    ASSERT(sec <= LONG_MAX);
-    tv->tv_usec = (long)sec;
+    long usec = ts.tv_nsec / NSEC_IN_USEC;
+    ASSERT(usec <= 999999);
+    tv->tv_usec = (suseconds_t)usec;
     return 0;
 }
 

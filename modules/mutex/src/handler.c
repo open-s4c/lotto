@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <inttypes.h>
 
 #include "state.h"
 #include <lotto/engine/prng.h>
@@ -37,7 +38,7 @@ _check_deadlock(task_id waiter, uint64_t key, task_id cycle)
     ASSERT(waiter != NO_TASK);
     if (cycle == waiter) {
         logger_errorf("Deadlock detected!\n");
-        logger_errorf("Wait chain: %lu <- ", waiter);
+        logger_errorf("Wait chain: %" PRIu64 " <- ", (uint64_t)waiter);
         return true;
     }
 
@@ -57,7 +58,7 @@ _check_deadlock(task_id waiter, uint64_t key, task_id cycle)
 
     if (_check_deadlock(mtx->owner, it->ti.key,
                         cycle == NO_TASK ? waiter : cycle)) {
-        logger_printf("%lu", waiter);
+        logger_printf("%" PRIu64, (uint64_t)waiter);
         logger_printf("%s", (cycle == NO_TASK ? "\n" : " <- "));
         return true;
     }
@@ -111,7 +112,8 @@ _should_wait(task_id id)
 static int
 _posthandle_tryacquire(task_id id, uint64_t addr)
 {
-    logger_debugf("[%lu] mutex tryaquire 0x%lx\n", id, addr);
+    logger_debugf("[%" PRIu64 "] mutex tryaquire 0x%" PRIx64 "\n",
+                  (uint64_t)id, addr);
     ASSERT(!tidset_has(&_state.waiters, id));
 
     struct mtx *mtx = _mutex_init(addr);
@@ -123,8 +125,9 @@ _posthandle_tryacquire(task_id id, uint64_t addr)
 
     if (mtx->owner == id) {
         mtx->count++;
-        logger_debugf("[%lu] mutex (try)aquired 0x%lx (count: %d)\n", id, addr,
-                      mtx->count);
+        logger_debugf("[%" PRIu64 "] mutex (try)aquired 0x%" PRIx64
+                      " (count: %d)\n",
+                      (uint64_t)id, addr, mtx->count);
         return 0;
     }
     return EBUSY;
@@ -133,7 +136,8 @@ _posthandle_tryacquire(task_id id, uint64_t addr)
 static void
 _handle_acquire(task_id id, uint64_t addr)
 {
-    logger_debugf("[%lu] mutex aquire 0x%lx\n", id, addr);
+    logger_debugf("[%" PRIu64 "] mutex aquire 0x%" PRIx64 "\n",
+                  (uint64_t)id, addr);
     ASSERT(!tidset_has(&_state.waiters, id));
 
     struct mtx *mtx = _mutex_init(addr);
@@ -148,7 +152,8 @@ _handle_acquire(task_id id, uint64_t addr)
 static void
 _posthandle_acquire(task_id id, uint64_t addr)
 {
-    logger_debugf("[%lu] mutex aquire 0x%lx\n", id, addr);
+    logger_debugf("[%" PRIu64 "] mutex aquire 0x%" PRIx64 "\n",
+                  (uint64_t)id, addr);
     ASSERT(!tidset_has(&_state.waiters, id));
 
     struct mtx *mtx = _mutex_init(addr);
@@ -161,8 +166,8 @@ _posthandle_acquire(task_id id, uint64_t addr)
 
     ASSERT(mtx->owner == id && "deadlock due to disrespecting locks");
     mtx->count++;
-    logger_debugf("[%lu] mutex aquired 0x%lx (count: %d)\n", id, addr,
-                  mtx->count);
+    logger_debugf("[%" PRIu64 "] mutex aquired 0x%" PRIx64 " (count: %d)\n",
+                  (uint64_t)id, addr, mtx->count);
 }
 
 static void
@@ -177,14 +182,14 @@ _posthandle_release(task_id id, uint64_t addr)
         return;
     }
 
-    logger_debugf("[%lu] mutex release 0x%lx (count: %d)\n", id, addr,
-                  mtx->count - 1);
+    logger_debugf("[%" PRIu64 "] mutex release 0x%" PRIx64 " (count: %d)\n",
+                  (uint64_t)id, addr, mtx->count - 1);
 
     if (mtx->owner != id) {
         logger_errorf(
-            "undefined behavior: task %lu releases mutex 0x%lx owned by task "
-            "%lu\n",
-            id, addr, mtx->owner);
+            "undefined behavior: task %" PRIu64
+            " releases mutex 0x%" PRIx64 " owned by task %" PRIu64 "\n",
+            (uint64_t)id, addr, (uint64_t)mtx->owner);
     }
     ASSERT(mtx->count > 0);
     if (--mtx->count > 0)

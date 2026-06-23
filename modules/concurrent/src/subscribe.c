@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -45,7 +46,7 @@ concurrent_state_log_leave_(struct concurrent_state *state)
 {
     if (state->dropped > 0) {
         logger_debugln(
-            "left concurrent region after dropping %lu ingress events; "
+            "left concurrent region after dropping %" PRIu64 " ingress events; "
             "last=%s/%s",
             state->dropped, ps_chain_str(state->last_src_chain),
             ps_type_str(state->last_src_type));

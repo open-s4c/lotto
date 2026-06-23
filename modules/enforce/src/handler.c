@@ -14,6 +14,7 @@
 #include <lotto/sys/time.h>
 #include <lotto/util/macros.h>
 #include <lotto/util/once.h>
+#include <inttypes.h>
 
 #define PASTE(a, b) a##b
 #define EQUAL_CP(x) (enforce_state()->cp.PASTE(, x) == cp->PASTE(, x))
@@ -105,7 +106,7 @@ _report(const capture_point *cp)
     bool has_addr = has_memaccess_addr(cp);
     stable_address_t pc;
     if (!EQUAL_CP(id))
-        REPORT_CTX("%lu", _, id);
+        REPORT_CTX("%" PRIu64, (uint64_t), id);
     if (MODE(CAT) && enforce_state()->cp.type_id != cp->type_id)
         REPORT("%s", ps_type_str, cat, enforce_state()->cp.type_id,
                cp->type_id);
@@ -115,7 +116,8 @@ _report(const capture_point *cp)
         arg_t p = arg_ptr((void *)memaccess_addr(cp));
         arg_t a = _read_val(&p, memaccess_size(cp));
         if (enforce_state()->val.value.u64 != a.value.u64) {
-            logger_errorf("MISMATCH [field: val, expected: %lu, actual: %lu]\n",
+            logger_errorf("MISMATCH [field: val, expected: %" PRIu64
+                          ", actual: %" PRIu64 "]\n",
                           enforce_state()->val.value.u64, a.value.u64);
         }
     }
@@ -123,7 +125,8 @@ _report(const capture_point *cp)
         REPORT_CTX("%p", (void *), pc);
 
     if (MODE(SEED) && !EQUAL_SEED) {
-        REPORT("%lu", _, seed, enforce_state()->seed, prng_seed());
+        REPORT("%" PRIu64, (uint64_t), seed, enforce_state()->seed,
+               prng_seed());
     }
 }
 
@@ -191,9 +194,10 @@ _handle(const capture_point *ctx, event_t *cp)
     if (cp->replay && cp->clk == enforce_state()->clk) {
         if (!_as_expected(ctx)) {
             logger_errorf(
-                "Replay mismatch! cappt = [clk: %lu, id: %lu, type: %s, pc: "
-                "%p]\n",
-                cp->clk, ctx->id, ps_type_str(ctx->type_id), (void *)ctx->pc);
+                "Replay mismatch! cappt = [clk: %" PRIu64 ", id: %" PRIu64
+                ", type: %s, pc: %p]\n",
+                (uint64_t)cp->clk, (uint64_t)ctx->id,
+                ps_type_str(ctx->type_id), (void *)ctx->pc);
             _report(ctx);
             logger_fatalf("unexpected capture point\n");
             sys_abort();

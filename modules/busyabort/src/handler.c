@@ -1,4 +1,5 @@
 #include "state.h"
+#include <inttypes.h>
 #include <dice/events/memaccess.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/sequencer.h>
@@ -49,8 +50,9 @@ _busyabort_handle(const capture_point *cp, event_t *e)
         return;
     }
 
-    logger_fatalf(
-        "[tid: %lu, type: %s, pc: %p, count: %lu] stuck at busyloop\n", cp->id,
-        ps_type_str(cp->type_id), (void *)cp->pc, _state.repeat_count);
+    logger_fatalf("[tid: %" PRIu64 ", type: %s, pc: %p, count: %" PRIu64
+                  "] stuck at busyloop\n",
+                  (uint64_t)cp->id, ps_type_str(cp->type_id),
+                  (void *)cp->pc, _state.repeat_count);
 }
 ON_SEQUENCER_CAPTURE(_busyabort_handle)

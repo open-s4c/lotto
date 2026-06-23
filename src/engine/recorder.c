@@ -5,6 +5,8 @@
  *record commands from the caller (sequencer)
  **/
 
+#include <inttypes.h>
+
 #include <lotto/base/envvar.h>
 #include <lotto/base/trace.h>
 #include <lotto/engine/pubsub.h>
@@ -134,7 +136,8 @@ _recorder_replay_next(clk_t clk)
             break;
         }
 
-        logger_debugf("replaying record [clk: %lu kind: %s]\n", r->clk,
+        logger_debugf("replaying record [clk: %" PRIu64 " kind: %s]\n",
+                      (uint64_t)r->clk,
                       kind_str(r->kind));
         /* we match the record, let's load it. */
         statemgr_record_unmarshal(r);
@@ -158,7 +161,8 @@ _recorder_replay_next(clk_t clk)
             case RECORD_OPAQUE:
                 break;
             case RECORD_EXIT:
-                logger_warnf("ignoring EXIT record (clk: %lu)\n", clk);
+                logger_warnf("ignoring EXIT record (clk: %" PRIu64 ")\n",
+                             (uint64_t)clk);
                 recorder_end_trace();
                 break;
 
@@ -170,8 +174,8 @@ _recorder_replay_next(clk_t clk)
                 _recorder_out_clone(r);
                 break;
             default:
-                logger_fatalf("unexpected %s record (clk: %lu)\n",
-                              kind_str(r->kind), clk);
+                logger_fatalf("unexpected %s record (clk: %" PRIu64 ")\n",
+                              kind_str(r->kind), (uint64_t)clk);
         }
         trace_advance(_recorder.input);
     }
@@ -187,7 +191,8 @@ recorder_replay(clk_t clk)
                "clock contiguous and starting from 1");
     })
 
-    logger_debugf("recorder_replay called (clk: %lu)\n", clk);
+    logger_debugf("recorder_replay called (clk: %" PRIu64 ")\n",
+                  (uint64_t)clk);
     replay_t ry = {.status = REPLAY_DONE, .id = NO_TASK};
     if (!_recorder.input) {
         return ry;
@@ -208,7 +213,9 @@ recorder_record(const capture_point *cp, clk_t clk)
         ASSERT(clk >= _ghost.replay_clk && "record clk >= to replay");
     })
 
-    logger_debugf("recorder_record called (clk: %lu id: %lu)\n", clk, cp->id);
+    logger_debugf("recorder_record called (clk: %" PRIu64 " id: %" PRIu64
+                  ")\n",
+                  (uint64_t)clk, (uint64_t)cp->id);
 
     if (!_recorder.output)
         return;

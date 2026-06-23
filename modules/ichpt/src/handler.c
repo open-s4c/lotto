@@ -1,5 +1,6 @@
 #include <limits.h>
 #include <string.h>
+#include <inttypes.h>
 
 /******************************************************************************
  * @file handler_ichpt.c
@@ -88,7 +89,7 @@ _ichpt_handle(const capture_point *cp, event_t *e)
 
     if (is_ichpt(cp->pc)) {
         it_is_ichpt();
-        logger_infof("[%lx] instruction change point at pc %p\n", tid,
+        logger_infof("[%" PRIx64 "] instruction change point at pc %p\n", tid,
                      (void *)cp->pc);
         e->is_chpt = true;
     }

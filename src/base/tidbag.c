@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdbool.h>
 
 #include <lotto/base/marshable.h>
@@ -254,7 +255,7 @@ tidbag_print(const marshable_t *m)
     for (size_t i = 0; i < tbag->size; i++) {
         if (i != 0)
             logger_printf(", ");
-        logger_printf("%lu", tbag->tasks[i]);
+        logger_printf("%" PRIu64, (uint64_t)tbag->tasks[i]);
     }
     logger_printf("]\n");
 }

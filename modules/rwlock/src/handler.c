@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <inttypes.h>
 
 #include "state.h"
 #include <dice/events/pthread.h>
@@ -253,7 +254,8 @@ _should_wait(task_id id)
 STATIC bool
 _handle_rdlock(task_id id, uint64_t addr, event_t *e)
 {
-    logger_debugf("[%lu] rwlock rdlock 0x%lx\n", id, addr);
+    logger_debugf("[%" PRIu64 "] rwlock rdlock 0x%" PRIx64 "\n",
+                  (uint64_t)id, addr);
     struct rwlock *lock = _rwlock_init(addr);
     if (_rwlock_is_write_locked(lock)) {
         if (lock->writer == id) {
@@ -268,7 +270,8 @@ _handle_rdlock(task_id id, uint64_t addr, event_t *e)
 STATIC bool
 _handle_wrlock(task_id id, uint64_t addr, event_t *e)
 {
-    logger_debugf("[%lu] rwlock wrlock 0x%lx\n", id, addr);
+    logger_debugf("[%" PRIu64 "] rwlock wrlock 0x%" PRIx64 "\n",
+                  (uint64_t)id, addr);
     struct rwlock *lock  = _rwlock_init(addr);
     bool is_write_locked = _rwlock_is_write_locked(lock);
     bool is_read_locked  = _rwlock_is_read_locked(lock);
@@ -299,8 +302,9 @@ _posthandle_rdlock(task_id id, uintptr_t addr)
         reader->cnt = 0;
     }
     reader->cnt++;
-    logger_debugf("rwlock 0x%lx is read locked by %lu (cnt=%d)\n", addr, id,
-                  reader->cnt);
+    logger_debugf("rwlock 0x%" PRIx64 " is read locked by %" PRIu64
+                  " (cnt=%d)\n",
+                  (uint64_t)addr, (uint64_t)id, reader->cnt);
 }
 
 STATIC int
@@ -322,8 +326,9 @@ _posthandle_tryrdlock(task_id id, uintptr_t addr)
         reader->cnt = 0;
     }
     reader->cnt++;
-    logger_debugf("rwlock 0x%lx is (try)read locked by %lu (cnt=%d)\n", addr,
-                  id, reader->cnt);
+    logger_debugf("rwlock 0x%" PRIx64 " is (try)read locked by %" PRIu64
+                  " (cnt=%d)\n",
+                  (uint64_t)addr, (uint64_t)id, reader->cnt);
     return 0;
 }
 
@@ -338,7 +343,8 @@ _posthandle_wrlock(task_id id, uintptr_t addr)
     }
     ENSURE(tidset_remove(&lock->write_waiters, id));
     lock->writer = id;
-    logger_debugf("rwlock 0x%lx is write locked by %lu\n", addr, id);
+    logger_debugf("rwlock 0x%" PRIx64 " is write locked by %" PRIu64 "\n",
+                  (uint64_t)addr, (uint64_t)id);
 }
 
 STATIC int
@@ -351,7 +357,9 @@ _posthandle_trywrlock(task_id id, uintptr_t addr)
         return EBUSY;
     }
     lock->writer = id;
-    logger_debugf("rwlock 0x%lx is (try)write locked by %lu\n", addr, id);
+    logger_debugf("rwlock 0x%" PRIx64 " is (try)write locked by %" PRIu64
+                  "\n",
+                  (uint64_t)addr, (uint64_t)id);
     return 0;
 }
 
@@ -362,21 +370,24 @@ _posthandle_unlock(task_id id, uintptr_t addr)
     if (lock->writer != NO_TASK) {
         ASSERT(lock->writer == id);
         lock->writer = NO_TASK;
-        logger_debugf("rwlock 0x%lx is unlocked by writer %lu\n", addr, id);
+        logger_debugf("rwlock 0x%" PRIx64 " is unlocked by writer %" PRIu64
+                      "\n",
+                      (uint64_t)addr, (uint64_t)id);
     } else if (_rwlock_is_read_locked_by(lock, id)) {
         struct reader *reader =
             (struct reader *)tidmap_find(&lock->readers, id);
         ASSERT(reader && reader->cnt >= 0);
         reader->cnt--;
-        logger_debugf("rwlock 0x%lx is unlocked by reader %lu (count=%d)\n",
-                      addr, id, reader->cnt);
+        logger_debugf("rwlock 0x%" PRIx64
+                      " is unlocked by reader %" PRIu64 " (count=%d)\n",
+                      (uint64_t)addr, (uint64_t)id, reader->cnt);
         if (reader->cnt == 0) {
             tidmap_deregister(&lock->readers, id);
         }
     } else {
         logger_warnf(
-            "undefined behavior: task %lu tries to unlock an unacquired rwlock "
-            "0x%lx\n",
-            id, addr);
+            "undefined behavior: task %" PRIu64
+            " tries to unlock an unacquired rwlock 0x%" PRIx64 "\n",
+            (uint64_t)id, (uint64_t)addr);
     }
 }

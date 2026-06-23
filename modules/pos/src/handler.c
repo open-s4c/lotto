@@ -4,6 +4,7 @@
  * http://www.cs.columbia.edu/~junfeng/papers/pos-cav18.pdf
  ******************************************************************************/
 #include "state.h"
+#include <inttypes.h>
 #include <lotto/base/tidmap.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/sequencer.h>
@@ -203,7 +204,8 @@ _pos_print(const marshable_t *m)
             logger_printf(", ");
         first     = false;
         task_t *t = (task_t *)cur;
-        logger_printf("(%lu, %lu, %lu, %s)", cur->key, t->priority, t->addr,
+        logger_printf("(%" PRIu64 ", %" PRIu64 ", %" PRIuPTR ", %s)",
+                      (uint64_t)cur->key, t->priority, t->addr,
                       t->is_write ? "true" : "false");
     }
     logger_println("]");

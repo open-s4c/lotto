@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <limits.h>
 #include <signal.h>
 #include <time.h>
@@ -28,8 +29,10 @@ static void
 _expired(union sigval timer_data)
 {
     struct event_data *data = timer_data.sival_ptr;
-    logger_println("Task [%lu] has no capture point received after %lu seconds",
-                   data->id, data->alarm);
+    logger_println("Task [%" PRIu64
+                   "] has no capture point received after %" PRIu64
+                   " seconds",
+                   (uint64_t)data->id, data->alarm);
     _reset_alarm(timer);
     data->alarm += inactivity_config()->alarm;
 }

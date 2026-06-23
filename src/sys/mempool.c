@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -60,8 +61,8 @@ _bucketize(size_t size)
         ;
     if (i >= NSTACKS) {
         logger_errorf(
-            "Could not allocate size %lu. Max bucket size %lu. i=%u "
-            "NSTACKS=%lu\n",
+            "Could not allocate size %zu. Max bucket size %zu. i=%u "
+            "NSTACKS=%zu\n",
             size, _sizes[NSTACKS - 1], i, NSTACKS);
     }
     return i;
@@ -108,11 +109,11 @@ lotto_mempool_fini(lotto_mempool_t *mp)
     if (mp->free == NULL) {
         logger_infof(
             "lotto_mempool not provided with free() to deallocate memory: "
-            "%lu\n",
+            "%zu\n",
             mp->allocated);
         return;
     }
-    logger_infof("lotto_mempool allocated memory on fini: %lu\n",
+    logger_infof("lotto_mempool allocated memory on fini: %zu\n",
                  mp->allocated);
     if (mp->pool.memory)
         mp->free(mp->pool.memory);

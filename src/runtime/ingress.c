@@ -1,4 +1,5 @@
 #include <dlfcn.h>
+#include <inttypes.h>
 #include <pthread.h>
 #include <stdbool.h>
 
@@ -27,7 +28,7 @@ PS_ADVERTISE_TYPE(EVENT_TASK_JOIN)
 static void
 _intercept_resume(mediator_t *m, capture_point *cp)
 {
-    logger_debugf("[%lu] prepare to resume type=%s\n", m->id,
+    logger_debugf("[%" PRIu64 "] prepare to resume type=%s\n", (uint64_t)m->id,
                   ps_type_str(cp->type_id));
 
     switch (mediator_resume(m, cp)) {
@@ -70,8 +71,9 @@ PS_SUBSCRIBE(CHAIN_INGRESS_BEFORE, ANY_EVENT, {
 
     if (!mediator_capture(m, cp)) {
         if (cp->blocking) {
-            logger_debugf("[%lu] coercing blocking ingress-before event '%s'\n",
-                          m->id, ps_type_str(cp->type_id));
+            logger_debugf("[%" PRIu64
+                          "] coercing blocking ingress-before event '%s'\n",
+                          (uint64_t)m->id, ps_type_str(cp->type_id));
             cp->blocking = false;
         }
         _intercept_resume(m, cp);
@@ -85,7 +87,8 @@ PS_SUBSCRIBE(CHAIN_INGRESS_AFTER, ANY_EVENT, {
 
     mediator_t *m = mediator_get(md, true);
     if (cp->blocking) {
-        logger_debugf("[%lu] return from '%s'\n", m->id, cp->func);
+        logger_debugf("[%" PRIu64 "] return from '%s'\n", (uint64_t)m->id,
+                      cp->func);
         mediator_return(m, cp);
         _intercept_resume(m, cp);
     } else {

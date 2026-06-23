@@ -1,4 +1,4 @@
-
+#include <inttypes.h>
 #include <lotto/base/map.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
@@ -80,7 +80,8 @@ _evec_deinit(struct evec *evec)
 static void
 _posthandle_prepare(task_id id, uint64_t eid)
 {
-    logger_debugf("[%lu] evec prepare 0x%lx\n", id, eid);
+    logger_debugf("[%" PRIu64 "] evec prepare 0x%" PRIx64 "\n",
+                  (uint64_t)id, eid);
     ASSERT(!tidset_has(&_state.waiters, id));
 
     struct evec *evec = _evec_init(eid);
@@ -90,7 +91,8 @@ _posthandle_prepare(task_id id, uint64_t eid)
 static void
 _posthandle_cancel(task_id id, uint64_t eid)
 {
-    logger_debugf("[%lu] evec cancel 0x%lx\n", id, eid);
+    logger_debugf("[%" PRIu64 "] evec cancel 0x%" PRIx64 "\n",
+                  (uint64_t)id, eid);
 
     struct evec *evec = _evec_find(eid);
     if (evec == NULL)
@@ -108,7 +110,8 @@ _posthandle_cancel(task_id id, uint64_t eid)
 static bool
 _handle_wait(task_id id, uint64_t eid)
 {
-    logger_debugf("[%lu] evec wait 0x%lx\n", id, eid);
+    logger_debugf("[%" PRIu64 "] evec wait 0x%" PRIx64 "\n",
+                  (uint64_t)id, eid);
 
     struct evec *evec = _evec_find(eid);
     if (evec == NULL)
@@ -128,7 +131,8 @@ _handle_timed_wait(task_id id, uint64_t eid,
                    const struct timespec *restrict abstime,
                    enum lotto_timed_wait_status *ret)
 {
-    logger_debugf("[%lu] evec timed wait 0x%lx\n", id, eid);
+    logger_debugf("[%" PRIu64 "] evec timed wait 0x%" PRIx64 "\n",
+                  (uint64_t)id, eid);
 
     struct evec *evec = _evec_find(eid);
     if (evec == NULL)
@@ -160,7 +164,8 @@ _handle_timed_wait(task_id id, uint64_t eid,
 static void
 _posthandle_wake(task_id id, uint64_t eid, uint32_t cnt)
 {
-    logger_debugf("[%lu] evec wake %u waiters 0x%lx \n", id, cnt, eid);
+    logger_debugf("[%" PRIu64 "] evec wake %u waiters 0x%" PRIx64 " \n",
+                  (uint64_t)id, cnt, eid);
 
     struct evec *evec = _evec_find(eid);
     if (evec == NULL)
@@ -189,8 +194,9 @@ _posthandle_wake(task_id id, uint64_t eid, uint32_t cnt)
 static void
 _posthandle_move(task_id id, uint64_t src, uint64_t dst)
 {
-    logger_debugf("[%lu] evec move waiters from 0x%lx to 0x%lx \n", id, src,
-                  dst);
+    logger_debugf("[%" PRIu64 "] evec move waiters from 0x%" PRIx64
+                  " to 0x%" PRIx64 " \n",
+                  (uint64_t)id, src, dst);
 
     ASSERT(!tidset_has(&_state.waiters, id));
 

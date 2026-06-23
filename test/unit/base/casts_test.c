@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -124,43 +125,45 @@ _Pragma("GCC diagnostic push")
     ASSERT(ISUNSIGNED_VAR(rcs));
 
     // check MIN/MAX of type
-    printf("(int8_t) min: %ld vs. %d max: %ld vs. %d\n", TYPE_MIN(int8_t),
-           INT8_MIN, TYPE_MAX(int8_t), INT8_MAX);
+    printf("(int8_t) min: %" PRIu64 " vs. %d max: %" PRIu64 " vs. %d\n",
+           TYPE_MIN(int8_t), INT8_MIN, TYPE_MAX(int8_t), INT8_MAX);
     ASSERT(TYPE_MIN(int8_t) == INT8_MIN && TYPE_MAX(int8_t) == INT8_MAX);
 
     // check MIN/MAX of type
-    printf("(uint8_t) min: %lu vs. %u max: %lu vs. %u\n", TYPE_MIN(uint8_t), 0,
-           TYPE_MAX(uint8_t), UINT8_MAX);
+    printf("(uint8_t) min: %" PRIu64 " vs. %u max: %" PRIu64 " vs. %u\n",
+           TYPE_MIN(uint8_t), 0, TYPE_MAX(uint8_t), UINT8_MAX);
     ASSERT(TYPE_MIN(uint8_t) == 0 && TYPE_MAX(uint8_t) == UINT8_MAX);
 
     // check MIN/MAX of type
-    printf("(int16_t) min: %ld vs. %d max: %ld vs. %d\n", TYPE_MIN(int16_t),
-           INT16_MIN, TYPE_MAX(int16_t), INT16_MAX);
+    printf("(int16_t) min: %" PRIu64 " vs. %d max: %" PRIu64 " vs. %d\n",
+           TYPE_MIN(int16_t), INT16_MIN, TYPE_MAX(int16_t), INT16_MAX);
     ASSERT(TYPE_MIN(int16_t) == INT16_MIN && TYPE_MAX(int16_t) == INT16_MAX);
 
     // check MIN/MAX of type
-    printf("(uint16_t) min: %lu vs. %u max: %lu vs. %u\n", TYPE_MIN(uint16_t),
-           0, TYPE_MAX(uint16_t), UINT16_MAX);
+    printf("(uint16_t) min: %" PRIu64 " vs. %u max: %" PRIu64 " vs. %u\n",
+           TYPE_MIN(uint16_t), 0, TYPE_MAX(uint16_t), UINT16_MAX);
     ASSERT(TYPE_MIN(uint16_t) == 0 && TYPE_MAX(uint16_t) == UINT16_MAX);
 
     // check MIN/MAX of type
-    printf("(int32_t) min: %ld vs. %d max: %ld vs. %d\n", TYPE_MIN(int32_t),
-           INT32_MIN, TYPE_MAX(int32_t), INT32_MAX);
+    printf("(int32_t) min: %" PRIu64 " vs. %d max: %" PRIu64 " vs. %d\n",
+           TYPE_MIN(int32_t), INT32_MIN, TYPE_MAX(int32_t), INT32_MAX);
     ASSERT(TYPE_MIN(int32_t) == INT32_MIN && TYPE_MAX(int32_t) == INT32_MAX);
 
     // check MIN/MAX of type
-    printf("(uint32_t) min: %lu vs. %u max: %lu vs. %u\n", TYPE_MIN(uint32_t),
-           0, TYPE_MAX(uint32_t), UINT32_MAX);
+    printf("(uint32_t) min: %" PRIu64 " vs. %u max: %" PRIu64 " vs. %u\n",
+           TYPE_MIN(uint32_t), 0, TYPE_MAX(uint32_t), UINT32_MAX);
     ASSERT(TYPE_MIN(uint32_t) == 0 && TYPE_MAX(uint32_t) == UINT32_MAX);
 
     // check MIN/MAX of type
-    printf("(int64_t) min: %ld vs. %ld max: %ld vs. %ld\n", TYPE_MIN(int64_t),
-           INT64_MIN, TYPE_MAX(int64_t), INT64_MAX);
+    printf("(int64_t) min: %" PRIu64 " vs. %" PRId64
+           " max: %" PRIu64 " vs. %" PRId64 "\n",
+           TYPE_MIN(int64_t), INT64_MIN, TYPE_MAX(int64_t), INT64_MAX);
     ASSERT(TYPE_MIN(int64_t) == INT64_MIN && TYPE_MAX(int64_t) == INT64_MAX);
 
     // check MIN/MAX of type
-    printf("(uint64_t) min: %lu vs. %lu max: %lu vs. %lu\n", TYPE_MIN(uint64_t),
-           (uint64_t)0, TYPE_MAX(uint64_t), UINT64_MAX);
+    printf("(uint64_t) min: %" PRIu64 " vs. %" PRIu64
+           " max: %" PRIu64 " vs. %" PRIu64 "\n",
+           TYPE_MIN(uint64_t), (uint64_t)0, TYPE_MAX(uint64_t), UINT64_MAX);
     ASSERT(TYPE_MIN(uint64_t) == 0 && TYPE_MAX(uint64_t) == UINT64_MAX);
 }
 
@@ -537,7 +540,7 @@ i64_test()
 
     // go through all relevant values
     for (uint64_t i = 0; i < INT64_VARIANTS; i++) {
-        printf("Checking value: %ld\n", set[i]);
+        printf("Checking value: %lld\n", set[i]);
 
         // check conversions
 
@@ -604,7 +607,7 @@ u64_test()
 
     // go through all relevant values
     for (uint64_t i = 0; i < UINT64_VARIANTS; i++) {
-        printf("Checking value: %lu\n", set[i]);
+        printf("Checking value: %" PRIu64 "\n", set[i]);
 
         // check conversions
 

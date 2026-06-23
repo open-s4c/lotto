@@ -1,3 +1,5 @@
+#include <inttypes.h>
+
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/terminate/state.h>
 #include <lotto/util/macros.h>
@@ -5,7 +7,7 @@
 terminate_config_t _config;
 REGISTER_CONFIG(_config, {
     logger_infof("mode  = %s\n", terminate_mode_str(_config.mode));
-    logger_infof("limit = %lu\n", _config.limit);
+    logger_infof("limit = %" PRIu64 "\n", _config.limit);
 })
 
 terminate_config_t *

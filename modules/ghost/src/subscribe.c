@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -46,7 +47,8 @@ ghost_state_log_leave_(struct ghost_state *state)
 {
     if (state->dropped > 0) {
         logger_debugln(
-            "left ghost region after dropping %lu ingress events; last=%s/%s",
+            "left ghost region after dropping %" PRIu64
+            " ingress events; last=%s/%s",
             state->dropped, ps_chain_str(state->last_src_chain),
             ps_type_str(state->last_src_type));
     }

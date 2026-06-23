@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -23,9 +24,10 @@
     #error
 #endif
 #define log(cp, fmt, ...)                                                      \
-    logger_debugf("[t:%lu, " CONTRACT("clk:%lu, ") "pc:0x%lx, type:%s] " fmt   \
-                                                   "\n",                       \
-                  cp->id, CONTRACT(_ghost.clk, ) cp->pc & 0xfff,               \
+    logger_debugf("[t:%" PRIu64 ", " CONTRACT("clk:%" PRIu64 ", ")             \
+                  "pc:0x%" PRIx64 ", type:%s] " fmt "\n",                      \
+                  (uint64_t)cp->id, CONTRACT((uint64_t)_ghost.clk, )           \
+                      (uint64_t)(cp->pc & 0xfff),                              \
                   ps_type_str(cp->type_id), ##__VA_ARGS__)
 
 
@@ -219,8 +221,9 @@ engine_return(const capture_point *cp)
     CONTRACT({
         ASSERT(cp->id != NO_TASK);
         if (vatomic_read(&_ghost.state) == FINISHED) {
-            logger_warnf("ignoring engine_return after fini (t: %lu)\n",
-                         cp->id);
+            logger_warnf("ignoring engine_return after fini (t: %" PRIu64
+                         ")\n",
+                         (uint64_t)cp->id);
             return;
         }
         ASSERT(vatomic_get_dec(&_ghost.pending_blocking_returns) > 0);

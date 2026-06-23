@@ -36,6 +36,7 @@ sleep_mode_from(const char *mode)
     sys_fprintf(stderr, "error: invalid sleep mode '%s'; expected once|until\n",
                 mode);
     sys_exit(1);
+    return SLEEP_MODE_ONCE;
 }
 
 void

@@ -4,6 +4,7 @@
 #include <lotto/modules/enforce/state.h>
 #include <lotto/sys/logger.h>
 #include <lotto/util/macros.h>
+#include <inttypes.h>
 
 /*******************************************************************************
  * config
@@ -34,9 +35,9 @@ static enforce_state_t _state;
 static void
 _printm(const marshable_t *m)
 {
-    logger_infof("id:   %lu\n", _state.cp.id);
+    logger_infof("id:   %" PRIu64 "\n", (uint64_t)_state.cp.id);
     logger_infof("pc:   %p\n", (void *)_state.cp.pc);
-    logger_infof("seed: %lu\n", _state.seed);
+    logger_infof("seed: %" PRIu64 "\n", _state.seed);
 }
 REGISTER_STATE(PERSISTENT, _state, {
     _state.m       = MARSHABLE_STATIC(sizeof(_state));

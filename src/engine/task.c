@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <lotto/base/tidmap.h>
 #include <lotto/base/tidset.h>
 #include <lotto/engine/sequencer.h>
@@ -66,8 +67,8 @@ handle_creation(const capture_point *cp, event_t *e)
             e->readonly        = true;
             break;
         case EVENT_TASK_INIT:
-            logger_debugf("Register tid %lu (parent: %lu)\n", cp->id,
-                          _state.last_parent);
+            logger_debugf("Register tid %" PRIu64 " (parent: %" PRIu64 ")\n",
+                          (uint64_t)cp->id, (uint64_t)_state.last_parent);
             ENSURE(tidset_insert(&_state.registered, cp->id) &&
                    "a task is reregistered");
             e->reason  = REASON_DETERMINISTIC;
@@ -81,7 +82,8 @@ handle_creation(const capture_point *cp, event_t *e)
             break;
         default:
             if (tidset_insert(&_state.registered, cp->id)) {
-                logger_debugf("Registering task %lu\n", cp->id);
+                logger_debugf("Registering task %" PRIu64 "\n",
+                              (uint64_t)cp->id);
             }
             break;
     }

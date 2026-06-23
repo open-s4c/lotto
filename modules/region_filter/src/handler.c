@@ -1,4 +1,6 @@
 #include "state.h"
+#include <inttypes.h>
+
 #include <lotto/base/tidbag.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
@@ -25,14 +27,14 @@ _region_filter_handle(const capture_point *cp, event_t *e)
     switch (cp->type_id) {
         case EVENT_REGION_PREEMPTION_IN:
             if (!tidbag_has(&_in_region, tid)) {
-                logger_infof("enter region %lx\n", tid);
+                logger_infof("enter region %" PRIx64 "\n", (uint64_t)tid);
             }
             tidbag_insert(&_in_region, tid);
             break;
         case EVENT_REGION_PREEMPTION_OUT:
             tidbag_remove(&_in_region, tid);
             if (!tidbag_has(&_in_region, tid)) {
-                logger_infof("leave region %lx\n", tid);
+                logger_infof("leave region %" PRIx64 "\n", (uint64_t)tid);
             }
             break;
         default:

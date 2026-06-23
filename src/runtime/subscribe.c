@@ -119,7 +119,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_JOIN, {
     struct pthread_join_event *ev = EVENT_PAYLOAD(ev);
 
     task_join_event_t tev = {
-        .thread = ev->thread,
+        .thread = (uintptr_t)ev->thread,
         .ptr    = ev->ptr,
         .ret    = EINTR,
     };
@@ -137,7 +137,7 @@ PS_SUBSCRIBE(CAPTURE_AFTER, EVENT_PTHREAD_JOIN, {
     struct pthread_join_event *ev = EVENT_PAYLOAD(ev);
 
     task_join_event_t tev = {
-        .thread = ev->thread,
+        .thread = (uintptr_t)ev->thread,
         .ptr    = ev->ptr,
         .ret    = ev->ret,
     };
@@ -167,7 +167,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_DETACH, {
 
     int ret                       = EINTR;
     capture_task_detach_event dev = {
-        .thread = ev->thread,
+        .thread = (uintptr_t)ev->thread,
         .ret    = &ret,
     };
     capture_point cp = {

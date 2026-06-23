@@ -1,4 +1,5 @@
 #include "state.h"
+#include <inttypes.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/engine/statemgr.h>
 #include <lotto/modules/region_preemption/events.h>
@@ -78,7 +79,7 @@ _region_preemption_warning(task_id tid)
         return;
     }
     _warned = true;
-    logger_errorf("atomicity violated by task %lu\n", tid);
+    logger_errorf("atomicity violated by task %" PRIu64 "\n", (uint64_t)tid);
     logger_errorf("atomic task(s):");
     bool first = true;
     for (const tiditem_t *cur = tidmap_iterate(&_state); cur;
@@ -87,7 +88,7 @@ _region_preemption_warning(task_id tid)
             logger_printf(",");
         }
         first = false;
-        logger_printf(" %lu", cur->key);
+        logger_printf(" %" PRIu64, (uint64_t)cur->key);
     }
     logger_printf("\n");
     logger_errorf("this error indicates either of:\n");

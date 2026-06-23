@@ -1,4 +1,6 @@
 #include "state.h"
+#include <inttypes.h>
+
 #include <lotto/engine/statemgr.h>
 #include <lotto/sys/logger.h>
 
@@ -10,10 +12,10 @@ static clock_config_t _config = {
 };
 
 REGISTER_CONFIG(_config, {
-    logger_infof("base_inc = %lu\n", _config.base_inc);
-    logger_infof("mult_inc = %lu\n", _config.mult_inc);
-    logger_infof("max_gap = %lu\n", _config.max_gap);
-    logger_infof("burst_gap = %lu\n", _config.burst_gap);
+    logger_infof("base_inc = %" PRIu64 "\n", _config.base_inc);
+    logger_infof("mult_inc = %" PRIu64 "\n", _config.mult_inc);
+    logger_infof("max_gap = %" PRIu64 "\n", _config.max_gap);
+    logger_infof("burst_gap = %" PRIu64 "\n", _config.burst_gap);
 })
 
 clock_config_t *

@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -24,7 +25,7 @@ plan_done(struct plan *p)
 void
 plan_print(struct plan p)
 {
-    logger_debugln("type = 0x%x next = %lu", p.actions, p.next);
+    logger_debugln("type = 0x%x next = %" PRIu64, p.actions, (uint64_t)p.next);
 }
 
 bool

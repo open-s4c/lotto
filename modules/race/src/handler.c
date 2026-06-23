@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "state.h"
 #include <lotto/base/tidmap.h>
@@ -184,9 +185,10 @@ void
 race_print(race_t race)
 {
     logger_infof(
-        "RACE: T%lx and T%lx at addr=0x%lx between (instr = {0x%lx, "
-        "0x%lx})\n",
-        race.loc1.id, race.loc2.id, race.addr, race.loc1.pc, race.loc2.pc);
+        "RACE: T%" PRIx64 " and T%" PRIx64 " at addr=0x%" PRIxPTR
+        " between (instr = {0x%" PRIxPTR ", 0x%" PRIxPTR "})\n",
+        (uint64_t)race.loc1.id, (uint64_t)race.loc2.id, race.addr,
+        race.loc1.pc, race.loc2.pc);
 }
 
 race_t
@@ -301,9 +303,10 @@ _race_handle(const capture_point *cp, event_t *e)
     if (race_config()->abort_on_race) {
         logger_errorf("Data race detected at addr: %p (strict mode)\n",
                       (void *)race.addr);
-        logger_fatalf("(tid: %lx instr: %p) and (tid: %lx instr: %p)\n",
-                      race.loc1.id, (void *)race.loc1.pc, race.loc2.id,
-                      (void *)race.loc2.pc);
+        logger_fatalf("(tid: %" PRIx64 " instr: %p) and (tid: %" PRIx64
+                      " instr: %p)\n",
+                      (uint64_t)race.loc1.id, (void *)race.loc1.pc,
+                      (uint64_t)race.loc2.id, (void *)race.loc2.pc);
     } else
         race_print(race);
     if (race_config()->only_write_ichpt) {

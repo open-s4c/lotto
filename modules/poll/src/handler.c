@@ -1,4 +1,6 @@
 
+#include <limits.h>
+
 #include "poll.h"
 #include <lotto/engine/pubsub.h>
 #include <lotto/engine/sequencer.h>
@@ -6,6 +8,7 @@
 #include <lotto/modules/clock.h>
 #include <lotto/modules/poll/events.h>
 #include <lotto/modules/timeout/timeout.h>
+#include <lotto/sys/assert.h>
 #include <lotto/sys/poll.h>
 
 #define POLL_HELP_INTERVAL 8
@@ -213,7 +216,9 @@ _cleanup()
 static void
 _poll()
 {
-    nfds_t nfds = tidmap_size(&_state.fds);
+    size_t nfds_size = tidmap_size(&_state.fds);
+    ASSERT(nfds_size <= UINT_MAX);
+    nfds_t nfds = (nfds_t)nfds_size;
     if (nfds == 0) {
         return;
     }

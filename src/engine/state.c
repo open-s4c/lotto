@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdlib.h>
 
 #include <dice/module.h>
@@ -29,7 +30,8 @@ state_sequencer_print(const marshable_t *m)
     char gran_str[RECORD_GRANULARITIES_MAX_LEN];
     record_granularities_str(_engine_state.sequencer.gran, gran_str);
     logger_infof("gran  = %s\n", gran_str);
-    logger_infof("slack = %lu\n", _engine_state.sequencer.slack);
+    logger_infof("slack = %" PRIu64 "\n",
+                 (uint64_t)_engine_state.sequencer.slack);
     logger_infof("stable_address_method = %lu\n",
                  _engine_state.sequencer.stable_address_method);
 }

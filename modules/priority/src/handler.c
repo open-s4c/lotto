@@ -8,6 +8,8 @@
  * is not maximum
  */
 #include "state.h"
+#include <inttypes.h>
+
 #include <dice/module.h>
 #include <lotto/base/tidmap.h>
 #include <lotto/engine/sequencer.h>
@@ -51,7 +53,8 @@ _priority_print(const marshable_t *m)
             logger_printf(", ");
         first     = false;
         task_t *t = (task_t *)cur;
-        logger_printf("%lu:%ld", cur->key, t->priority);
+        logger_printf("%" PRIu64 ":%" PRId64, (uint64_t)cur->key,
+                      t->priority);
     }
     logger_println("]");
 }
@@ -61,8 +64,9 @@ static int64_t _max_priority;
 static bool
 _is_max_priority(task_id task)
 {
-    task_t *t = (task_t *)tidmap_find_or_register(&_state.map, task, NULL);
-    ASSERT(t);
+    task_t *t = (task_t *)tidmap_find(&_state.map, task);
+    if (t == NULL)
+        return false;
     return t->priority == _max_priority;
 }
 
@@ -90,7 +94,8 @@ _priority_handle(const capture_point *cp, event_t *e)
         t->priority = 0;
     } else if (cp->type_id == EVENT_PRIORITY_SET) {
         t = (task_t *)tidmap_find(&_state.map, cp->id);
-        ASSERT(t);
+        if (t == NULL)
+            return;
         t->priority = ((priority_event_t *)cp->payload)->priority;
     }
     if (e->readonly || e->skip) {
@@ -98,9 +103,9 @@ _priority_handle(const capture_point *cp, event_t *e)
     }
     _max_priority = INT64_MIN;
     for (size_t i = 0; i < e->tset.size; i++) {
-        t = (task_t *)tidmap_find_or_register(&_state.map, e->tset.tasks[i],
-                                              NULL);
-        ASSERT(t);
+        t = (task_t *)tidmap_find(&_state.map, e->tset.tasks[i]);
+        if (t == NULL)
+            continue;
         _max_priority =
             _max_priority < t->priority ? t->priority : _max_priority;
     }

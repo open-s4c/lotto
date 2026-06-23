@@ -28,6 +28,8 @@ static void _clock_tick(uint64_t cpu_cost);
 static uint64_t _clock_cost(void);
 static uint64_t _clock_ns(void);
 static void _clock_time_local(struct timespec *ts);
+static void _clock_resume(const capture_point *cp, event_t *e);
+static void _clock_capture(const capture_point *cp, event_t *e);
 
 REGISTER_EPHEMERAL(_clock, ({ _clock = (clock_state_t){0}; }))
 
@@ -120,12 +122,16 @@ lotto_clock_leap(const struct timespec *ts)
     CONTRACT({ ASSERT(timespec_compare(ts, &now) <= 0); })
 }
 
-ON_SEQUENCER_RESUME({
+static void
+_clock_resume(const capture_point *cp, event_t *e)
+{
     if (cp->type_id == EVENT_CLOCK_READ)
         e->skip = true;
-})
+}
 
-ON_SEQUENCER_CAPTURE({
+static void
+_clock_capture(const capture_point *cp, event_t *e)
+{
     if (cp->type_id == EVENT_CLOCK_READ) {
         struct lotto_clock_event *ev = cp->payload;
         ev->ret                      = _clock_ns();
@@ -135,4 +141,7 @@ ON_SEQUENCER_CAPTURE({
     } else {
         _clock_tick(cp->cpu_cost);
     }
-})
+}
+
+ON_SEQUENCER_RESUME(_clock_resume)
+ON_SEQUENCER_CAPTURE(_clock_capture)

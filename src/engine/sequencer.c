@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -28,8 +29,10 @@
 #include <vsync/spinlock/caslock.h>
 
 #define log(cp, fmt, ...)                                                      \
-    logger_debugf("[t:%lu, clk:%lu, pc:0x%lx, type:%s] " fmt "\n", cp->id,     \
-                  _seq.clk, cp->pc & 0xfff, ps_type_str(cp->type_id),          \
+    logger_debugf("[t:%" PRIu64 ", clk:%" PRIu64 ", pc:0x%" PRIx64             \
+                  ", type:%s] " fmt "\n",                                      \
+                  (uint64_t)cp->id, (uint64_t)_seq.clk,                        \
+                  (uint64_t)(cp->pc & 0xfff), ps_type_str(cp->type_id),        \
                   ##__VA_ARGS__)
 
 typedef struct {
@@ -304,8 +307,10 @@ void
 sequencer_fini(const capture_point *cp, reason_t reason)
 {
     recorder_fini(_seq.clk, cp->id, reason);
-    logger_debugf("[lotto] chpts: %lu, switches: %lu, clks: %lu\n",
-                  _seq.chpt_count, _seq.switch_count, _seq.clk);
+    logger_debugf("[lotto] chpts: %" PRIu64 ", switches: %" PRIu64
+                  ", clks: %" PRIu64 "\n",
+                  (uint64_t)_seq.chpt_count, (uint64_t)_seq.switch_count,
+                  (uint64_t)_seq.clk);
 }
 
 clk_t

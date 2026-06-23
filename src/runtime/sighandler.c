@@ -2,6 +2,7 @@
 #ifndef DISABLE_EXECINFO
     #include <execinfo.h>
 #endif
+#include <inttypes.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -159,8 +160,9 @@ __assert_fail(const char *assertion, const char *file, line_int line,
 
     struct metadata *md = self_md();
     thread_id tid       = self_id(md);
-    logger_println("[%lu] assert failed %s(): %s:%u: %s\n", tid, function, file,
-                   (unsigned int)line, assertion);
+    logger_println("[%" PRIu64 "] assert failed %s(): %s:%u: %s\n",
+                   (uint64_t)tid, function, file, (unsigned int)line,
+                   assertion);
 
     _backtrace_print();
 

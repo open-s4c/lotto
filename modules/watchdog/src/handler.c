@@ -1,4 +1,5 @@
 #include "state.h"
+#include <inttypes.h>
 #include <dice/events/memaccess.h>
 #include <lotto/engine/prng.h>
 #include <lotto/engine/pubsub.h>
@@ -93,7 +94,7 @@ _watchdog_handle(const capture_point *cp, event_t *e)
                 break;
 
             /* Avoid repeating current task: remove it from the tset. */
-            logger_debugf("removing task %lu\n", cp->id);
+            logger_debugf("removing task %" PRIu64 "\n", (uint64_t)cp->id);
             tidset_remove(&e->tset, cp->id);
             if (!e->is_chpt) {
                 e->reason  = REASON_WATCHDOG;
@@ -109,7 +110,7 @@ _watchdog_handle(const capture_point *cp, event_t *e)
             }
             if (_watchdog_ok(cp->id))
                 break;
-            logger_debugf("removing task %lu\n", cp->id);
+            logger_debugf("removing task %" PRIu64 "\n", (uint64_t)cp->id);
             tidset_remove(&e->tset, cp->id);
             if (!e->is_chpt) {
                 e->reason  = REASON_WATCHDOG;

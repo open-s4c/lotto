@@ -26,6 +26,18 @@ _stable_address_method_help(char *dst)
     stable_address_method_all_str(dst);
 }
 
+static const char *
+_stable_address_method_str(uint64_t method)
+{
+    return stable_address_method_str((stable_address_method_t)method);
+}
+
+static uint64_t
+_stable_address_method_from(const char *src)
+{
+    return (uint64_t)stable_address_method_from(src);
+}
+
 NEW_PUBLIC_CALLBACK_FLAG(SEED, "", "seed", "INT",
                          "seed for pseudo-random number generator",
                          flag_uval_force_opt(UINT64_MAX),
@@ -55,8 +67,9 @@ NEW_PUBLIC_PRETTY_CALLBACK_FLAG(
     STABLE_ADDRESS_METHOD, "a", "stable-address-method",
     "method to produce addresses stable accross runs",
     flag_uval(STABLE_ADDRESS_METHOD_NONE),
-    STR_CONVERTER_GET(stable_address_method_str, stable_address_method_from,
-                      STABLE_ADDRESS_MAX_STR_LEN, _stable_address_method_help),
+    STR_CONVERTER_GET(_stable_address_method_str, _stable_address_method_from,
+                      STABLE_ADDRESS_MAX_STR_LEN,
+                      _stable_address_method_help),
     { sequencer_config()->stable_address_method = as_uval(v); })
 
 FLAG_GETTER(seed, SEED)

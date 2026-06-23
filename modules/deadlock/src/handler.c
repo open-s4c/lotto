@@ -1,4 +1,5 @@
 #include "state.h"
+#include <inttypes.h>
 #include <lotto/base/reason.h>
 #include <lotto/base/tidbag.h>
 #include <lotto/engine/prng.h>
@@ -58,7 +59,8 @@ _rsrc_next(struct rsrc *it)
 static void
 _acquiring(task_id id, uintptr_t addr)
 {
-    logger_debugf("[%lx] aquiring resource 0x%lx\n", id, addr);
+    logger_debugf("[%" PRIx64 "] aquiring resource 0x%" PRIxPTR "\n",
+                  (uint64_t)id, addr);
     struct rsrc *rsrc = _rsrc_init(&_state.resources, addr);
     tidbag_insert(&rsrc->tasks, id);
     rsrc->owner = mutex_owner((void *)addr);
@@ -74,8 +76,9 @@ _released(task_id id, uintptr_t addr)
     }
 
     task_id owner = rsrc->owner;
-    logger_debugf("[%lx] releasing resource 0x%lx owned by %lu\n", id, addr,
-                  owner);
+    logger_debugf("[%" PRIx64 "] releasing resource 0x%" PRIxPTR
+                  " owned by %" PRIu64 "\n",
+                  (uint64_t)id, addr, (uint64_t)owner);
     tidbag_remove(&rsrc->tasks, id);
 
     if (tidbag_size(&rsrc->tasks) == 0) {
@@ -141,8 +144,9 @@ _check_deadlock_iter(task_id tid, uint64_t key, task_id cycle)
             tidbag_insert(&it->tasks, cur);
 
             if (res) {
-                logger_errorf("  (tid: %lu) <- (rsrc: 0x%lx) <- (tid: %lu) \n",
-                              cur, key, tid);
+                logger_errorf("  (tid: %" PRIu64 ") <- (rsrc: 0x%" PRIx64
+                              ") <- (tid: %" PRIu64 ") \n",
+                              (uint64_t)cur, key, (uint64_t)tid);
                 return true;
             }
 
@@ -162,14 +166,17 @@ static void
 _lost_error_strict(task_id owner, uintptr_t addr)
 {
     logger_errorf("Deadlock detected! (lost resource)\n");
-    logger_errorf("Task %lu finished without releasing 0x%lx\n", owner, addr);
+    logger_errorf("Task %" PRIu64 " finished without releasing 0x%" PRIxPTR
+                  "\n",
+                  (uint64_t)owner, addr);
 }
 
 static void
 _lost_error(task_id owner, task_id waiter, uintptr_t addr)
 {
     _lost_error_strict(owner, addr);
-    logger_errorf("Task %lu is waiting for 0x%lx\n", waiter, addr);
+    logger_errorf("Task %" PRIu64 " is waiting for 0x%" PRIxPTR "\n",
+                  (uint64_t)waiter, addr);
 }
 
 static bool

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include "state.h"
 #include <dice/module.h>
@@ -12,7 +13,7 @@ REGISTER_CONFIG(_config, {
     const char *var = getenv("LOTTO_WATCHDOG_BUDGET");
     _config.budget  = var != NULL ? strtoull(var, NULL, 10) : 100;
     logger_infof("enabled = %s\n", _config.enabled ? "on" : "off");
-    logger_infof("budget  = %lu\n", _config.budget);
+    logger_infof("budget  = %" PRIu64 "\n", _config.budget);
 })
 
 watchdog_config_t *

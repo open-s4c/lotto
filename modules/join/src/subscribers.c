@@ -35,7 +35,7 @@ PS_SUBSCRIBE(CAPTURE_BEFORE, EVENT_PTHREAD_JOIN, {
         return PS_STOP_CHAIN;
 
     task_join_event_t jev = {
-        .thread = ev->thread,
+        .thread = (uintptr_t)ev->thread,
         .ptr    = ev->ptr,
         .ret    = 0,
     };

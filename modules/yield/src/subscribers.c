@@ -1,5 +1,4 @@
 #include <stdbool.h>
-
 #include <dice/chains/capture.h>
 #include <dice/events/pthread.h>
 #include <dice/events/thread.h>

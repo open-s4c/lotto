@@ -1,8 +1,14 @@
 #include <ctype.h>
+#include <dlfcn.h>
 #include <limits.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#if defined(__APPLE__)
+#    include <malloc/malloc.h>
+#endif
 
 #include <lotto/base/memory_map.h>
 #include <lotto/sys/assert.h>
@@ -88,6 +94,34 @@ void
 memory_map_address_lookup_from_path(uintptr_t address, map_address_t *result,
                                     const char *path)
 {
+#if defined(__APPLE__)
+    (void)path;
+    ASSERT(result);
+    *result = (map_address_t){0};
+
+    Dl_info info;
+    if (dladdr((void *)address, &info) != 0 && info.dli_fname != NULL &&
+        info.dli_fbase != NULL) {
+        result->offset = address - (uintptr_t)info.dli_fbase;
+        sys_strcpy(result->name, info.dli_fname);
+        return;
+    }
+
+    if (malloc_size((void *)address) > 0) {
+        result->offset = 0;
+        sys_strcpy(result->name, "[heap]");
+        return;
+    }
+
+    uintptr_t stack_top = (uintptr_t)pthread_get_stackaddr_np(pthread_self());
+    size_t stack_size   = pthread_get_stacksize_np(pthread_self());
+    uintptr_t stack_bot = stack_top - stack_size;
+    if (stack_bot <= address && address < stack_top) {
+        result->offset = address - stack_bot;
+        sys_strcpy(result->name, "[stack]");
+    }
+    return;
+#else
     memory_map_entry_t *map;
     for (map = memory_map_get(path);
          map->address_start &&
@@ -99,6 +133,7 @@ memory_map_address_lookup_from_path(uintptr_t address, map_address_t *result,
     }
     result->offset = address - map->address_start + map->offset;
     sys_strcpy(result->name, map->name);
+#endif
 }
 
 
@@ -123,5 +158,5 @@ int
 memory_map_address_sprint(const map_address_t *address, char *output)
 {
     ASSERT(address);
-    return sys_sprintf(output, "%s:0x%016lx", address->name, address->offset);
+    return sys_sprintf(output, "%s:0x%016llx", address->name, address->offset);
 }

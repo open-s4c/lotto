@@ -1,8 +1,10 @@
 #include <errno.h>
+#include <inttypes.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <math.h>
 #include <sched.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -97,12 +99,13 @@ round_print(const flags_t *flags, uint64_t round)
 {
     char max[256];
     if (flags_get_uval(flags, flag_rounds()) == ~0UL)
-        sys_sprintf(max, "inf");
+        strcpy(max, "inf");
     else
-        sys_snprintf(max, 256, "%lu", flags_get_uval(flags, flag_rounds()));
+        (void)snprintf(max, sizeof(max), "%" PRIu64,
+                       flags_get_uval(flags, flag_rounds()));
 
-    sys_fprintf(stdout, "[lotto] round: %lu/%s, %s\n", round, max,
-                flags_get_sval(flags, flag_strategy()));
+    sys_fprintf(stdout, "[lotto] round: %" PRIu64 "/%s, %s\n",
+                (uint64_t)round, max, flags_get_sval(flags, flag_strategy()));
 }
 
 bool
@@ -144,7 +147,7 @@ get_lotto_hash(const char *arg0)
 #if defined(__linux__)
     pid_t pid = getpid();
     char sname[1024], rname[1024] = {};
-    sys_snprintf(sname, 1024, "/proc/%d/exe", pid);
+    (void)snprintf(sname, sizeof(sname), "/proc/%d/exe", pid);
     if (readlink(sname, rname, sizeof(rname)) < 0) {
         return get_file_hash(arg0);
     }
@@ -188,12 +191,19 @@ get_default_temporary_directory()
     if (temporary_directory_default[0]) {
         return temporary_directory_default;
     }
-    char *root = NULL;
-    if (!(root = getenv("HOME"))) {
+    const char *root = getenv("TMPDIR");
+    if (root == NULL || root[0] == '\0') {
+        root = getenv("HOME");
+    }
+    if (root == NULL || root[0] == '\0') {
         root = getenv("PWD");
     }
     ASSERT(root);
-    sys_sprintf(temporary_directory_default, "%s/.lotto", root);
+    int written = snprintf(temporary_directory_default,
+                           sizeof(temporary_directory_default), "%s/.lotto",
+                           root);
+    ASSERT(written >= 0 &&
+           (size_t)written < sizeof(temporary_directory_default));
     return temporary_directory_default;
 }
 
@@ -219,6 +229,7 @@ run_once(args_t *args, flags_t *flags)
 
     setenv("LOTTO_LOGGER_FILE", flags_get_sval(flags, flag_logger_file()),
            true);
+    setenv("LOTTO_LOGGER_LEVEL", flag_verbose_logger_level_str(flags), true);
 
     preload(flags_get_sval(flags, flag_temporary_directory()), verbose,
             !flags_is_on(flags, flag_no_preload()),

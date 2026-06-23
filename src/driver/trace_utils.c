@@ -1,7 +1,9 @@
 #include <dirent.h>
 #include <inttypes.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include <dice/pubsub.h>
 #include <lotto/base/envvar.h>
@@ -191,7 +193,8 @@ cli_trace_init(const char *record, const args_t *args, const char *replay,
         trace_t *rep = cli_trace_load(replay);
         // copy replayer to a temp file
         char tmp_name[PATH_MAX];
-        sys_sprintf(tmp_name, "%s.tmp", replay);
+        int written = snprintf(tmp_name, sizeof(tmp_name), "%s.tmp", replay);
+        ASSERT(written >= 0 && (size_t)written < sizeof(tmp_name));
         cli_trace_save(rep, tmp_name);
         trace_destroy(rep);
         // trim the replayer
@@ -214,7 +217,8 @@ cli_trace_init(const char *record, const args_t *args, const char *replay,
     if (!is_replay) {
         // put initial trace to a temp file
         char tmp_name[PATH_MAX];
-        sys_sprintf(tmp_name, "%s.tmp", record);
+        int written = snprintf(tmp_name, sizeof(tmp_name), "%s.tmp", record);
+        ASSERT(written >= 0 && (size_t)written < sizeof(tmp_name));
         trace_t *rec = NULL;
         stream_t *st = NULL;
         if (sys_strcmp(var, "flat") == 0 || is_file) {
@@ -367,11 +371,13 @@ void
 record_print(const record_t *r, int i)
 {
     char clk_str[256] = {0};
-    sys_sprintf(clk_str, "%lu", r->clk);
+    int written =
+        snprintf(clk_str, sizeof(clk_str), "%" PRIu64, (uint64_t)r->clk);
+    ASSERT(written >= 0 && (size_t)written < sizeof(clk_str));
     logger_println("====================");
     logger_println("RECORD %d", i);
     logger_println("  clock:    %s", clk_str);
-    logger_println("  task:     %lu", r->id);
+    logger_println("  task:     %" PRIu64, (uint64_t)r->id);
     logger_println("  chain:    %s", ps_chain_str(r->chain_id));
     logger_println("  type:     %s", ps_type_str(r->type_id));
     logger_println("  reason:   %s", reason_str(r->reason));

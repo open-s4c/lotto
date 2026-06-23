@@ -15,7 +15,11 @@
 
 #define MAX_MODULES            100
 #define MAX_MODULE_NAME_LENGTH 1023
-#define SO_SUFFIX              ".so"
+#if defined(__APPLE__)
+#    define SO_SUFFIX     ".dylib"
+#else
+#    define SO_SUFFIX     ".so"
+#endif
 #define SO_SUFFIX_LEN          (sizeof(SO_SUFFIX) - 1)
 
 #define STARTS_WITH(s, LITERAL_NAME)                                           \
@@ -25,6 +29,7 @@ static module_t _modules[MAX_MODULES];
 static size_t _next = 0;
 
 static char *_module_name(const char *filename);
+static char *_normalize_module_name(char *name);
 static int _scandir(const char *dir);
 static int _compar(const void *, const void *);
 static bool _ends_with(const char *, const char *);
@@ -319,7 +324,34 @@ _module_name(const char *filename)
         name += RUNTIME_MODULE_PREFIX_LEN;
     }
     size_t len = strrchr(name, '.') - name;
-    return sys_strndup(name, len);
+    return _normalize_module_name(sys_strndup(name, len));
+}
+
+static char *
+_normalize_module_name(char *name)
+{
+    ASSERT(name != NULL);
+    if (strcmp(name, "memmgr_user_mempool") == 0) {
+        sys_free(name);
+        return sys_strdup("user_mempool-memmgr_user");
+    }
+    if (strcmp(name, "memmgr_user_uafcheck") == 0) {
+        sys_free(name);
+        return sys_strdup("uafcheck-memmgr_user");
+    }
+    if (strcmp(name, "memmgr_runtime_uafcheck") == 0) {
+        sys_free(name);
+        return sys_strdup("uafcheck-memmgr_runtime");
+    }
+    if (strcmp(name, "memmgr_user_leakcheck") == 0) {
+        sys_free(name);
+        return sys_strdup("leakcheck-memmgr_user");
+    }
+    if (strcmp(name, "memmgr_runtime_leakcheck") == 0) {
+        sys_free(name);
+        return sys_strdup("leakcheck-memmgr_runtime");
+    }
+    return name;
 }
 
 static bool

@@ -9,7 +9,10 @@
 #include <lotto/cmake_variables.h>
 #include <lotto/driver/main.h>
 #include <lotto/sys/modules.h>
-#include <sys/personality.h>
+
+#if !defined(__APPLE__)
+#    include <sys/personality.h>
+#endif
 
 #if defined(__APPLE__)
     #define PRELOAD "DYLD_INSERT_LIBRARIES"
@@ -22,6 +25,16 @@
 #define LOTTO_CLI_PRELOAD   "LOTTO_CLI_PRELOAD"
 #define LOTTO_LOAD_RUNTIME  "LOTTO_LOAD_RUNTIME"
 #define MAX_LIST_STR        ((size_t)(32 * 1024))
+
+#if defined(__APPLE__)
+#    define LOTTO_DRIVER_LIBRARY "liblotto-driver.dylib"
+#    define LOTTO_PRELOAD_ENV    "DYLD_INSERT_LIBRARIES"
+#    define LOTTO_LIBRARY_ENV    "DYLD_LIBRARY_PATH"
+#else
+#    define LOTTO_DRIVER_LIBRARY "liblotto-driver.so"
+#    define LOTTO_PRELOAD_ENV    "LD_PRELOAD"
+#    define LOTTO_LIBRARY_ENV    "LD_LIBRARY_PATH"
+#endif
 
 typedef struct preload_state_s {
     char *buf;
@@ -51,11 +64,13 @@ static bool path_self(char **argv, char *path, size_t bufsize);
 int
 main(int argc, char **argv)
 {
+#if !defined(__APPLE__)
     const int old_personality = personality(ADDR_NO_RANDOMIZE);
     if (!(old_personality & ADDR_NO_RANDOMIZE)) {
         personality(ADDR_NO_RANDOMIZE);
         return exec_self(argv);
     }
+#endif
 
     if (getenv(LOTTO_BOOTSTRAP_ENV) == NULL) {
         driver_options_t opts = {0};
@@ -83,7 +98,7 @@ main(int argc, char **argv)
             return 1;
         }
         if (!path_printf(driver_path, sizeof(driver_path),
-                         "%s/liblotto-driver.so", binary_dir)) {
+                         "%s/" LOTTO_DRIVER_LIBRARY, binary_dir)) {
             fprintf(stderr, "driver path too long\n");
             return 1;
         }
@@ -94,7 +109,7 @@ main(int argc, char **argv)
                 return 1;
             }
             if (!path_printf(driver_path, sizeof(driver_path),
-                             "%s/liblotto-driver.so", lib_dir)) {
+                             "%s/" LOTTO_DRIVER_LIBRARY, lib_dir)) {
                 fprintf(stderr, "driver path too long\n");
                 return 1;
             }
@@ -105,20 +120,17 @@ main(int argc, char **argv)
             }
         }
 
-        preload_state_t preload        = {.buf = malloc(MAX_LIST_STR),
-                                          .len = 0,
-                                          .cap = MAX_LIST_STR};
-        preload_state_t plugin_modules = {.buf = malloc(MAX_LIST_STR),
-                                          .len = 0,
-                                          .cap = MAX_LIST_STR};
-        if (preload.buf == NULL || plugin_modules.buf == NULL) {
+        preload_state_t preload = {
+            .buf = malloc(MAX_LIST_STR),
+            .len = 0,
+            .cap = MAX_LIST_STR,
+        };
+        if (preload.buf == NULL) {
             perror("malloc");
             free(preload.buf);
-            free(plugin_modules.buf);
             return 1;
         }
-        preload.buf[0]        = '\0';
-        plugin_modules.buf[0] = '\0';
+        preload.buf[0] = '\0';
 
         const char *existing_ld_preload = getenv(PRELOAD);
         if (existing_ld_preload != NULL && existing_ld_preload[0] != '\0') {
@@ -131,12 +143,6 @@ main(int argc, char **argv)
         append_preload(&preload, driver_path);
         if (lotto_module_foreach(add_driver_module, &preload) != 0) {
             free(preload.buf);
-            free(plugin_modules.buf);
-            return 1;
-        }
-        if (lotto_module_foreach(add_driver_module, &plugin_modules) != 0) {
-            free(preload.buf);
-            free(plugin_modules.buf);
             return 1;
         }
         append_preload_list(&preload, opts.driver_loads);
@@ -147,12 +153,11 @@ main(int argc, char **argv)
             unsetenv(LOTTO_LOAD_RUNTIME);
         }
 
-        setenv(PRELOAD, preload.buf, true);
-        setenv(DICE_PLUGIN_MODULES, plugin_modules.buf, true);
+        setenv(LOTTO_PRELOAD_ENV, preload.buf, true);
+        unsetenv(DICE_PLUGIN_MODULES);
         setenv(LOTTO_BOOTSTRAP_ENV, "1", true);
-        prepend_env_path("LD_LIBRARY_PATH", lib_dir);
+        prepend_env_path(LOTTO_LIBRARY_ENV, lib_dir);
         free(preload.buf);
-        free(plugin_modules.buf);
         return exec_self(argv);
     }
     unsetenv(LOTTO_BOOTSTRAP_ENV);

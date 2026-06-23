@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <stdio.h>
 
 #include <lotto/driver/files.h>
 #include <lotto/sys/assert.h>
@@ -33,7 +34,9 @@ driver_try_dump_files(const char *dir, const driver_file_t files[])
     for (int i = 0; files[i].path; i++) {
         ASSERT(files[i].content);
         char filename[PATH_MAX];
-        sys_sprintf(filename, "%s/%s", dir, files[i].path);
+        int written =
+            snprintf(filename, sizeof(filename), "%s/%s", dir, files[i].path);
+        ASSERT(written >= 0 && (size_t)written < sizeof(filename));
         FILE *fp = sys_fopen(filename, "w");
         if (fp == NULL) {
             return false;

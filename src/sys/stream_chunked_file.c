@@ -1,4 +1,4 @@
-
+#include <inttypes.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -30,7 +30,8 @@ static void
 _write_chunk_filename(char *dst, const stream_chunked_file_t *stream,
                       uint64_t chunk)
 {
-    sys_sprintf(dst, "%s/%lu%s", stream->dir_path, chunk, stream->suffix);
+    sys_sprintf(dst, "%s/%" PRIu64 "%s", stream->dir_path, (uint64_t)chunk,
+                stream->suffix);
 }
 
 static void

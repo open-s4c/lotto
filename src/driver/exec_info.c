@@ -6,7 +6,13 @@
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
 
-static const char *_envvars[REPLAYED_ENVVARS] = {"LD_PRELOAD",
+#define MAX_LIST_STR        ((size_t)(32 * 1024))
+#if defined(__APPLE__)
+#    define LOTTO_PRELOAD_ENV "DYLD_INSERT_LIBRARIES"
+#else
+#    define LOTTO_PRELOAD_ENV "LD_PRELOAD"
+#endif
+static const char *_envvars[REPLAYED_ENVVARS] = {LOTTO_PRELOAD_ENV,
                                                  "DICE_PLUGIN_MODULES"};
 
 /*******************************************************************************
@@ -54,9 +60,9 @@ _check_hash()
             "recording.");
     } else if (_exec_info.hash_actual != _exec_info.hash_replayed) {
         sys_fprintf(stderr,
-                    "Warning: hashes of lotto binaries (current (0x%08lx) and "
+                    "Warning: hashes of lotto binaries (current (0x%08llx) and "
                     "the one used "
-                    "for recording 0x%08lx) differ.",
+                    "for recording 0x%08llx) differ.",
                     _exec_info.hash_actual, _exec_info.hash_replayed);
     } else {
         hash_warning = false;
@@ -87,6 +93,31 @@ exec_info_store_envvars()
     }
 }
 
+void
+exec_info_replay_ld_preload(int verbose, const char *stored)
+{
+    ASSERT(stored);
+    const char *liblotto = verbose > 0 ? LIBLOTTO_RUNTIME_DBG : LIBLOTTO_RUNTIME;
+    char ld_preload[MAX_LIST_STR] = {0};
+    size_t len = 0;
+    char buf[MAX_LIST_STR];
+    strncpy(buf, stored, sizeof(buf) - 1);
+
+    char *saveptr;
+    char *item = strtok_r(buf, ":", &saveptr);
+    while (item && len < MAX_LIST_STR) {
+        const char *entry = (!strcmp(item, LIBLOTTO_RUNTIME) || !strcmp(item, LIBLOTTO_RUNTIME_DBG)) ? liblotto : item;
+        if (len != 0) {
+            strncat(ld_preload, ":", sizeof(ld_preload) - len - 1);
+            len++;
+        }
+        strncat(ld_preload, entry, sizeof(ld_preload) - len - 1);
+        len += sys_strlen(entry);
+        item = strtok_r(NULL, ":", &saveptr);
+    }
+    ld_preload[MAX_LIST_STR - 1] = 0;
+    sys_setenv(LOTTO_PRELOAD_ENV, ld_preload, true);
+}
 bool
 exec_info_replay_envvars(int verbose)
 {
@@ -97,6 +128,8 @@ exec_info_replay_envvars(int verbose)
         }
         if (_exec_info.envvars[i][0] == '\0') {
             sys_unsetenv(_envvars[i]);
+        } else if (!strcmp(_envvars[i], LOTTO_PRELOAD_ENV)) {
+            exec_info_replay_ld_preload(verbose, _exec_info.envvars[i]);
         } else {
             sys_setenv(_envvars[i], _exec_info.envvars[i], true);
         }
@@ -194,7 +227,7 @@ _print(const marshable_t *m)
 {
     ASSERT(m);
     exec_info_t *ei = (exec_info_t *)m;
-    logger_infof("hash = 0x%08lx\n", ei->hash_replayed);
+    logger_infof("hash = 0x%08llx\n", ei->hash_replayed);
     logger_infof("args =");
     args_t *args = &ei->args;
     for (int i = 0; i < args->argc; i++) {

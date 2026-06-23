@@ -15,6 +15,10 @@
 #include <lotto/sys/stdlib.h>
 #include <lotto/sys/string.h>
 
+#if !defined(__APPLE__)
+extern char **environ;
+#endif
+
 #define DEBUG_GDB_SCRIPT "debug.gdb"
 #define DEBUG_ADDR2LINE  "aarch64-linux-gnu-addr2line"
 #define DEBUG_PLUGIN_PATHS                                                     \
@@ -94,7 +98,11 @@ debug(args_t *args, flags_t *flags)
         return res;
     }
 
+#if defined(__APPLE__)
+    res = execvp(argv[0], (char *const *)argv);
+#else
     res = execvpe(argv[0], (char *const *)argv, environ);
+#endif
     if (res != 0) {
         sys_fprintf(stderr, "gdb unexpectedly quit with: %d\n", res);
     }

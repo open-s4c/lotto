@@ -39,6 +39,10 @@ DECLARE_COMMAND_FLAG(QEMU_PLUGINS, "", LOTTO_MODULE_FLAG("plugins"), "on|off",
                      "whether to pass qemu -plugin arguments", flag_sval("on"))
 FLAG_GETTER(qemu_plugins, QEMU_PLUGINS)
 
+#if !defined(__APPLE__)
+extern char **environ;
+#endif
+
 static const char *
 _existing_path(const char *preferred, const char *fallback)
 {
@@ -496,7 +500,11 @@ qemu(args_t *args, flags_t *flags)
         sys_fprintf(stdout, "\n");
     }
 
+#if defined(__APPLE__)
+    int reexec_res = execvp(reexec_argv[0], reexec_argv);
+#else
     int reexec_res = execvpe(reexec_argv[0], reexec_argv, environ);
+#endif
     if (reexec_res != 0) {
         sys_fprintf(stderr, "error: failed to re-exec '%s stress -Q'\n",
                     reexec_argv[0]);

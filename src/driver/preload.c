@@ -40,10 +40,42 @@
 #define LOTTO_CLI_PRELOAD   "LOTTO_CLI_PRELOAD"
 #define LOTTO_LOAD_RUNTIME  "LOTTO_LOAD_RUNTIME"
 
-#define LIBTSANO         "libtsano.so"
+#if defined(__APPLE__)
+#    define LOTTO_PRELOAD_ENV "DYLD_INSERT_LIBRARIES"
+#    define LOTTO_LIBPATH_ENV "DYLD_LIBRARY_PATH"
+#else
+#    define LOTTO_PRELOAD_ENV "LD_PRELOAD"
+#    define LOTTO_LIBPATH_ENV "LD_LIBRARY_PATH"
+#endif
+
+#if defined(__APPLE__)
+#    define LIBTSANO         "libtsano.dylib"
+#    define LIBCLANG_RT_TSAN "libclang_rt.tsan_osx_dynamic.dylib"
+#    define LIBRUSTC_NIGHTLY_RT_TSAN "librustc-nightly_rt.tsan.dylib"
+#    define LIBRUSTC_NIGHTLY_RT_TSAN_COMPAT \
+        "librustc-nightly_rt.tsan_osx_dynamic.dylib"
+#    define BLOB_LIBTSANO    libtsano_dylib
+#    define BLOB_LIBTSANO_LEN libtsano_dylib_len
+#    define BLOB_LIBLOTTO     liblotto_runtime_dylib
+#    define BLOB_LIBLOTTO_LEN liblotto_runtime_dylib_len
+#    define BLOB_LIBLOTTO_DBG liblotto_runtime_dbg_dylib
+#    define BLOB_LIBLOTTO_DBG_LEN liblotto_runtime_dbg_dylib_len
+#else
+#    define LIBTSANO         "libtsano.so"
+#    define LIBCLANG_RT_TSAN "libclang_rt.tsan-x86_64.so"
+#    define LIBRUSTC_NIGHTLY_RT_TSAN "librustc-nightly_rt.tsan-x86_64.so"
+#    define LIBRUSTC_NIGHTLY_RT_TSAN_COMPAT \
+        "librustc-nightly_rt.tsan-x86_64.so"
+#    define BLOB_LIBTSANO    libtsano_so
+#    define BLOB_LIBTSANO_LEN libtsano_so_len
+#    define BLOB_LIBLOTTO     liblotto_runtime_so
+#    define BLOB_LIBLOTTO_LEN liblotto_runtime_so_len
+#    define BLOB_LIBLOTTO_DBG liblotto_runtime_dbg_so
+#    define BLOB_LIBLOTTO_DBG_LEN liblotto_runtime_dbg_so_len
+#endif
+
 #define LIBTSAN0         "libtsan.so.0"
 #define LIBTSAN2         "libtsan.so.2"
-#define LIBCLANG_RT_TSAN "libclang_rt.tsan-x86_64.so"
 typedef struct libspec {
     const char *filename;
     bool preload;
@@ -67,12 +99,35 @@ static void _preload_list(const char *paths);
 static void _append_path_list(char *buf, size_t buf_size, size_t *len,
                               const char *paths);
 static void _set_dice_plugin_modules_from_preload(void);
+static const char *_resolve_runtime_path(const char *path, char *buf,
+                                         size_t buf_size);
 
 static const char *_libpath;
 void
 preload_set_libpath(const char *path)
 {
     _libpath = path;
+}
+
+static const char *
+_resolve_runtime_path(const char *path, char *buf, size_t buf_size)
+{
+#if defined(__APPLE__)
+    struct stat st = {0};
+    size_t len     = strlen(path);
+    if (len > 3 && strcmp(path + len - 3, ".so") == 0 && stat(path, &st) != 0) {
+        int written =
+            snprintf(buf, buf_size, "%.*s.dylib", (int)(len - 3), path);
+        ASSERT(written >= 0 && (size_t)written < buf_size);
+        if (stat(buf, &st) == 0) {
+            return buf;
+        }
+    }
+#else
+    (void)buf;
+    (void)buf_size;
+#endif
+    return path;
 }
 
 static void
@@ -117,7 +172,7 @@ static void
 _set_libpath_env(const char *dir)
 {
     char ld_library_path[MAX_LIST_STR];
-    const char *paths[] = {_libpath, dir, getenv("LD_LIBRARY_PATH")};
+    const char *paths[] = {_libpath, dir, getenv(LOTTO_LIBPATH_ENV)};
     bool first          = true;
     size_t b            = 0;
     for (size_t i = 0; i < sizeof(paths) / sizeof(char *); i++) {
@@ -128,7 +183,7 @@ _set_libpath_env(const char *dir)
                           first ? "%s" : ":%s", paths[i]);
         first = false;
     }
-    setenv("LD_LIBRARY_PATH", ld_library_path, true);
+    setenv(LOTTO_LIBPATH_ENV, ld_library_path, true);
 }
 
 static void
@@ -138,12 +193,12 @@ _preload_lib(const char *filename, bool preload_flag)
         return;
     }
     char ld_preload[MAX_LIST_STR];
-    const char *var = getenv("LD_PRELOAD");
+    const char *var = getenv(LOTTO_PRELOAD_ENV);
     if (var)
         sys_snprintf(ld_preload, MAX_LIST_STR, "%s:%s", var, filename);
     else
         sys_snprintf(ld_preload, MAX_LIST_STR, "%s", filename);
-    setenv("LD_PRELOAD", ld_preload, true);
+    setenv(LOTTO_PRELOAD_ENV, ld_preload, true);
 }
 
 static bool
@@ -188,17 +243,19 @@ _preload_module(module_t *module, void *arg)
 static void
 _preload_libs(const char *dir, const libspec_t libspecs[])
 {
-#if defined(LOTTO_EMBED_LIB) && LOTTO_EMBED_LIB == 0
-    for (const libspec_t *lib = libspecs; lib->filename; lib++) {
-        _preload_lib(lib->filename, lib->preload);
-    }
-#else
     char path[PATH_MAX];
     for (const libspec_t *lib = libspecs; lib->filename; lib++) {
+#if defined(LOTTO_EMBED_LIB) && LOTTO_EMBED_LIB == 0
+        const char *base = _libpath ? _libpath : dir;
+#else
+        const char *base = dir;
+#endif
         sys_sprintf(path, "%s/%s", dir, lib->filename);
+        if (base != dir) {
+            sys_sprintf(path, "%s/%s", base, lib->filename);
+        }
         _preload_lib(path, lib->preload);
     }
-#endif
 }
 
 static void
@@ -286,7 +343,9 @@ _preload_list(const char *paths)
     sys_snprintf(paths_copy, sizeof(paths_copy), "%s", paths);
     for (const char *path = strtok(paths_copy, ":"); path != NULL;
          path             = strtok(NULL, ":")) {
-        _preload_lib(path, true);
+        char resolved[MAX_LIST_STR];
+        _preload_lib(_resolve_runtime_path(path, resolved, sizeof(resolved)),
+                     true);
     }
 }
 
@@ -302,11 +361,13 @@ _append_path_list(char *buf, size_t buf_size, size_t *len, const char *paths)
     sys_snprintf(paths_copy, sizeof(paths_copy), "%s", paths);
     for (const char *path = strtok(paths_copy, ":"); path != NULL;
          path             = strtok(NULL, ":")) {
+        char resolved[MAX_LIST_STR];
+        const char *entry = _resolve_runtime_path(path, resolved, sizeof(resolved));
         int written;
         if (*len > 0) {
-            written = sys_snprintf(buf + *len, buf_size - *len, ":%s", path);
+            written = sys_snprintf(buf + *len, buf_size - *len, ":%s", entry);
         } else {
-            written = sys_snprintf(buf + *len, buf_size - *len, "%s", path);
+            written = sys_snprintf(buf + *len, buf_size - *len, "%s", entry);
         }
         ASSERT(written >= 0 && (size_t)written < buf_size - *len);
         *len += (size_t)written;
@@ -316,7 +377,7 @@ _append_path_list(char *buf, size_t buf_size, size_t *len, const char *paths)
 static void
 _set_dice_plugin_modules_from_preload(void)
 {
-    const char *ld_preload    = getenv("LD_PRELOAD");
+    const char *ld_preload    = getenv(LOTTO_PRELOAD_ENV);
     const char *runtime_loads = getenv(LOTTO_LOAD_RUNTIME);
     char plugin_modules[MAX_LIST_STR];
     size_t len = 0;
@@ -357,7 +418,7 @@ _set_dice_plugin_modules_from_preload(void)
 bool
 _ld_preload_is_dbg()
 {
-    const char *ld_preload = getenv("LD_PRELOAD");
+    const char *ld_preload = getenv(LOTTO_PRELOAD_ENV);
     return ld_preload && strstr(ld_preload, LIBLOTTO_RUNTIME_DBG);
 }
 
@@ -367,7 +428,7 @@ _ld_preload_is_dbg()
 void
 _ld_preload_fix_dbg(bool is_dbg)
 {
-    const char *ld_preload = getenv("LD_PRELOAD");
+    const char *ld_preload = getenv(LOTTO_PRELOAD_ENV);
     if (!ld_preload || ld_preload[0] == 0)
         return;
     char ld_preload_cpy[MAX_LIST_STR];
@@ -397,7 +458,7 @@ _ld_preload_fix_dbg(bool is_dbg)
         }
     }
     result[--len] = 0;
-    setenv("LD_PRELOAD", result, true);
+    setenv(LOTTO_PRELOAD_ENV, result, true);
 }
 
 void
@@ -410,22 +471,31 @@ preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
     // clang-format off
     driver_dump_files(dir, (driver_file_t[]) {
         {.path    = LIBTSANO,
-         .content = libtsano_so,
-         .len     = libtsano_so_len},
+         .content = BLOB_LIBTSANO,
+         .len     = BLOB_LIBTSANO_LEN},
 #if !defined(LOTTO_EMBED_LIB) || LOTTO_EMBED_LIB == 1
         verbose > 0 ?
         (driver_file_t){.path    = LIBLOTTO_RUNTIME_DBG,
-                        .content = liblotto_runtime_dbg_so,
-                        .len     = liblotto_runtime_dbg_so_len} :
+                        .content = BLOB_LIBLOTTO_DBG,
+                        .len     = BLOB_LIBLOTTO_DBG_LEN} :
         (driver_file_t){.path    = LIBLOTTO_RUNTIME,
-                        .content = liblotto_runtime_so,
-                        .len     = liblotto_runtime_so_len},
+                        .content = BLOB_LIBLOTTO,
+                        .len     = BLOB_LIBLOTTO_LEN},
 #endif
         {NULL}});
     // clang-format on
 
+#if defined(__APPLE__)
     _symlink_lib(dir, LIBTSANO,
-                 (const char *[]){LIBTSAN0, LIBTSAN2, LIBCLANG_RT_TSAN, NULL});
+                 (const char *[]){LIBCLANG_RT_TSAN, LIBRUSTC_NIGHTLY_RT_TSAN,
+                                  LIBRUSTC_NIGHTLY_RT_TSAN_COMPAT,
+                                  NULL});
+#else
+    _symlink_lib(dir, LIBTSANO,
+                 (const char *[]){LIBTSAN0, LIBTSAN2, LIBCLANG_RT_TSAN,
+                                  LIBRUSTC_NIGHTLY_RT_TSAN,
+                                  LIBRUSTC_NIGHTLY_RT_TSAN_COMPAT, NULL});
+#endif
     /* preload libraries */
 
     const char *logger_level = verbose >= 2 ? "debug" :
@@ -438,7 +508,8 @@ preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
 
     _set_libpath_env(dir);
 
-    bool replayed = exec_info_replay_envvars(verbose);
+    ASSERT(verbose <= INT_MAX);
+    bool replayed = exec_info_replay_envvars((int)verbose);
     bool is_dbg   = verbose > 0;
     if (replayed && _ld_preload_is_dbg() == is_dbg) {
         return;
@@ -449,9 +520,9 @@ preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
     }
 
     if (cli_preload && cli_preload[0]) {
-        setenv("LD_PRELOAD", cli_preload, true);
+        setenv(LOTTO_PRELOAD_ENV, cli_preload, true);
     } else {
-        unsetenv("LD_PRELOAD");
+        unsetenv(LOTTO_PRELOAD_ENV);
     }
 
 #ifdef __SANITIZE_ADDRESS__
@@ -461,9 +532,6 @@ preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
     _preload_memmgr_plugins(memmgr_chain_runtime, true, verbose > 0);
     _preload_memmgr_plugins(memmgr_chain_user, false, verbose > 0);
 
-    /* explicit runtime loads should have first-preload precedence */
-    _preload_list(getenv(LOTTO_LOAD_RUNTIME));
-
     /* preload the runtime library */
     _preload_libs(dir,
                   (libspec_t[]){
@@ -471,6 +539,9 @@ preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
                        do_preload_plotto},
                       {NULL},
                   });
+
+    /* explicit runtime loads append after the Lotto runtime for now */
+    _preload_list(getenv(LOTTO_LOAD_RUNTIME));
 
     /* preload other dynamic modules */
     if (do_preload_plotto) {

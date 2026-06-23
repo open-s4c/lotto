@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -233,8 +234,9 @@ _flags_text(const flags_t *flags, const char *text[])
                               flags_get_uval(flags, b), dst);
                     dst += sys_strlen(dst) + 1;
                 } else {
-                    written = 1 + sys_snprintf(dst, len, "%lu",
-                                               flags_get_uval(flags, b));
+                    written =
+                        1 + snprintf(dst, len, "%" PRIu64,
+                                     flags_get_uval(flags, b));
                     dst += written;
                     len -= written;
                     ASSERT(len > 0);
@@ -680,7 +682,7 @@ flags_print(const flags_t *f)
                     _bits_str(&_options[i].str_converter, as_uval(*val), temp);
                     logger_printf("'%s'", temp);
                 } else {
-                    logger_printf("%lu", val->_uval);
+                    logger_printf("%" PRIu64, val->_uval);
                 }
                 break;
             case VALUE_TYPE_DOUBLE:

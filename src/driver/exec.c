@@ -1,7 +1,9 @@
 #include <errno.h>
+#include <signal.h>
 #include <spawn.h>
 #include <termios.h>
 
+#include <lotto/base/libraries.h>
 #include <lotto/driver/exec.h>
 #include <lotto/driver/exec_info.h>
 #include <lotto/driver/flagmgr.h>
@@ -17,6 +19,8 @@
 #include <lotto/sys/wait.h>
 #include <lotto/util/casts.h>
 
+extern char **environ;
+
 static pid_t _pid;
 static int p_out[2];
 static int p_err[2];
@@ -25,6 +29,9 @@ static exec_replay_args_resolver_f *_exec_replay_args_resolver;
 static exec_stdin_devnull_f *_exec_stdin_devnull;
 static bool _tty_state_saved;
 static struct termios _tty_state;
+static volatile sig_atomic_t _interrupted;
+static volatile sig_atomic_t _terminated;
+#define DICE_DSO_ENV "DICE_DSO"
 
 static void
 _restore_tty_state(void)
@@ -49,29 +56,23 @@ _save_tty_state(void)
 static void
 _handle_sigint(int sig, siginfo_t *si, void *arg)
 {
-    _restore_tty_state();
+    (void)si;
+    (void)arg;
+    _interrupted = 1;
     if (_pid) {
-        sys_fprintf(stderr, "[lotto] SIGINT\n");
-        sys_kill(0, SIGINT);
-        int wstatus;
-        sys_waitpid(0, &wstatus, 0);
-        sys_exit(130);
+        sys_kill(_pid, sig);
     }
-    sys_exit(1);
 }
 
 static void
 _handle_sigterm(int sig, siginfo_t *si, void *arg)
 {
-    _restore_tty_state();
+    (void)si;
+    (void)arg;
+    _terminated = 1;
     if (_pid) {
-        sys_fprintf(stderr, "[lotto] SIGTERM\n");
-        sys_kill(0, SIGTERM);
-        int wstatus;
-        sys_waitpid(0, &wstatus, 0);
-        sys_exit(130);
+        sys_kill(_pid, sig);
     }
-    sys_exit(1);
 }
 
 #define BUFFER_SIZE 1024
@@ -154,8 +155,15 @@ read_pipes(pid_t pid, child_wait_state_t *state)
                                {.fd = p_err[0], .events = POLLIN}};
 
     while (nfds > 0) {
-        int ret_ppoll = sys_ppoll(pfds, nfds, &timeout, NULL);
-        if (ret_ppoll == -1) {
+        int ret_poll;
+#if defined(__APPLE__)
+        int timeout_ms =
+            (int)(timeout.tv_sec * 1000 + timeout.tv_nsec / 1000000);
+        ret_poll = sys_poll(pfds, nfds, timeout_ms);
+#else
+        ret_poll = sys_ppoll(pfds, nfds, &timeout, NULL);
+#endif
+        if (ret_poll == -1) {
             if (errno == EINTR) {
                 continue;
             }
@@ -163,10 +171,10 @@ read_pipes(pid_t pid, child_wait_state_t *state)
                 case EFAULT:
                 case EINVAL:
                 case ENOMEM:
-                    ASSERT(0 && "Expecting no error on ppoll");
+                    ASSERT(0 && "Expecting no error on poll");
                     break;
                 default:
-                    ASSERT(0 && "unchecked ppoll error");
+                    ASSERT(0 && "unchecked poll error");
                     break;
             }
         }
@@ -200,7 +208,7 @@ read_pipes(pid_t pid, child_wait_state_t *state)
         }
 
         if ((state->have_status || state->child_missing) && !data_read &&
-            ret_ppoll == 0) {
+            ret_poll == 0) {
             break;
         }
     }
@@ -259,11 +267,18 @@ wait_child(pid_t pid)
         if (state.have_status) {
             retval = wait_status_to_retval_(state.wstatus);
         } else if (state.child_missing) {
-            sys_fprintf(stdout, "Terminated unexpectedly\n");
-            retval = 1;
+            if (_interrupted) {
+                retval = 128 + SIGINT;
+            } else if (_terminated) {
+                retval = 128 + SIGTERM;
+            } else {
+                sys_fprintf(stdout, "Terminated unexpectedly\n");
+                retval = 1;
+            }
         }
     }
     _restore_tty_state();
+    _pid = 0;
     sys_close(p_out[0]);
     sys_close(p_err[0]);
     return retval;
@@ -275,6 +290,9 @@ execute(const args_t *args, const flags_t *flags, bool config)
     args_t prefixed_args = *args;
     args_t original_args = *args;
     char **dynamic_argv  = NULL;
+    _pid                 = 0;
+    _interrupted         = 0;
+    _terminated          = 0;
     if (_exec_command_prefix != NULL) {
         char **original_argv = prefixed_args.argv;
         _exec_command_prefix(&prefixed_args, flags);
@@ -287,6 +305,14 @@ execute(const args_t *args, const flags_t *flags, bool config)
         prefixed_args.arg0 = prefixed_args.argv[0];
     }
 
+    const char *old_dice_dso = sys_getenv(DICE_DSO_ENV);
+    char *old_dice_dso_copy  = NULL;
+    if (old_dice_dso) {
+        size_t len        = sys_strlen(old_dice_dso);
+        old_dice_dso_copy = sys_malloc(len + 1);
+        sys_strcpy(old_dice_dso_copy, old_dice_dso);
+    }
+    sys_setenv(DICE_DSO_ENV, LIBLOTTO_RUNTIME, true);
     const char *cmd = flags_get_sval(flags, flag_before_run());
     if (cmd && cmd[0]) {
         sys_setenv("LOTTO_DISABLE", "true", true);
@@ -385,6 +411,12 @@ fini:
         sys_free(replay_copy);
     } else {
         sys_unsetenv("LOTTO_REPLAY");
+    }
+    if (old_dice_dso_copy) {
+        sys_setenv(DICE_DSO_ENV, old_dice_dso_copy, true);
+        sys_free(old_dice_dso_copy);
+    } else {
+        sys_unsetenv(DICE_DSO_ENV);
     }
 
     cmd = flags_get_sval(flags, flag_after_run());

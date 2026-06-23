@@ -1,7 +1,9 @@
 /*******************************************************************************
  * modules
  ******************************************************************************/
+#include <inttypes.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 
 #include <lotto/driver/flagmgr.h>
@@ -55,7 +57,7 @@ _find_or_add(module_info_t mods[], size_t *nmods, const char *name)
     }
     module_info_t *m = &mods[(*nmods)++];
     *m               = (module_info_t){0};
-    sys_snprintf(m->name, sizeof(m->name), "%s", name);
+    (void)snprintf(m->name, sizeof(m->name), "%s", name);
     return m;
 }
 
@@ -204,7 +206,8 @@ modules(args_t *args, flags_t *flags)
     lotto_module_foreach_all(_collect_scanned_module, &state.ctx);
     qsort(state.mods, state.ctx.count, sizeof(state.mods[0]), _module_info_cmp);
     _print_modules_table(state.mods, state.ctx.count);
-    sys_fprintf(stdout, "Total modules: %lu\n", (uint64_t)state.ctx.count);
+    sys_fprintf(stdout, "Total modules: %" PRIu64 "\n",
+                (uint64_t)state.ctx.count);
     return 0;
 }
 

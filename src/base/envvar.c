@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdlib.h>
 
 #include <lotto/base/envvar.h>
@@ -13,7 +14,7 @@ envvar_set(envvar_t *vars, bool overwrite)
             setenv(vars->name, vars->sval, overwrite);
         } else {
             char tmp[1024];
-            sys_snprintf(tmp, 1024, "%lu", vars->uval);
+            sys_snprintf(tmp, 1024, "%" PRIu64, vars->uval);
             setenv(vars->name, tmp, overwrite);
         }
     }

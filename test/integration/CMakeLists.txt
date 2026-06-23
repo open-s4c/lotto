@@ -18,7 +18,19 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_dependencies(tikl-test tikl-integration)
 
+add_library(mock-probe SHARED probes/mock-probe.c)
+set_target_properties(
+    mock-probe PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
+                                  "${CMAKE_BINARY_DIR}/tikl")
+target_link_libraries(mock-probe PRIVATE lotto.h dice.h ${CMAKE_DL_LIBS})
+if(APPLE)
+    target_link_options(mock-probe PRIVATE LINKER:-undefined,dynamic_lookup)
+endif()
+add_dependencies(tikl-test mock-probe)
+add_dependencies(tikl-integration mock-probe)
+
 file(GLOB PROBE_SRCS probes/*.c)
+list(FILTER PROBE_SRCS EXCLUDE REGEX ".*/mock-probe\\.c$")
 set(INTEGRATION_PROBE_TARGETS)
 foreach(PROBE_SRC ${PROBE_SRCS})
     get_filename_component(PROBE ${PROBE_SRC} NAME_WLE)
@@ -66,6 +78,10 @@ foreach(SRC ${SRCS})
     target_compile_options(${TARGET} PRIVATE -Wno-incompatible-pointer-types)
     target_link_options(${TARGET} PUBLIC -rdynamic)
     target_link_libraries(${TARGET} PRIVATE vsync pthread)
+    if("${TEST}" STREQUAL "0000-handler-called" OR
+       "${TEST}" STREQUAL "0005-malloc-called")
+        target_link_libraries(${TARGET} PRIVATE mock-probe)
+    endif()
 
     # This tikl target triggers only this specific test only. Use tikl-test to
     # run all tests.
@@ -135,6 +151,10 @@ macro(add_lit_c_tests)
         endif()
         target_link_libraries(${TEST} PRIVATE vsync ${TSAN} ${LIB_TRACE_PC}
                                               pthread)
+        if("${TEST}" STREQUAL "0000-handler-called" OR
+           "${TEST}" STREQUAL "0005-malloc-called")
+            target_link_libraries(${TEST} PRIVATE mock-probe)
+        endif()
 
         if(${SRC} MATCHES "safe_stack")
             # Whitelist until error is fixed

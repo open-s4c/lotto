@@ -6,17 +6,15 @@
 // clang-format on
 
 #include <assert.h>
-#include <dlfcn.h>
 #include <inttypes.h>
 #include <pthread.h>
 #include <sched.h>
 #include <stdint.h>
 
 #include <dice/log.h>
+#include "probes/mock-probe.h"
 
 #define NTHREADS 4
-
-typedef unsigned (*handler_count_f)(void);
 
 static void *
 thread(void *arg)
@@ -29,8 +27,6 @@ int
 main(void)
 {
     pthread_t threads[NTHREADS];
-    handler_count_f handler_count =
-        (handler_count_f)dlsym(RTLD_DEFAULT, "lotto_test_handler_count");
 
     for (int i = 0; i < NTHREADS; ++i) {
         if (pthread_create(&threads[i], NULL, thread,
@@ -43,7 +39,6 @@ main(void)
         assert(err == 0);
     }
 
-    assert(handler_count != NULL);
-    assert(handler_count() == NTHREADS);
+    assert(lotto_test_handler_count() == NTHREADS);
     return 0;
 }

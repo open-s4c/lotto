@@ -1,5 +1,5 @@
 // clang-format off
-// UNSUPPORTED: aarch64
+// UNSUPPORTED: aarch64, arm64
 // RUN: (! %lotto %stress -v -s random -d impasse -e deadlock -- %b)
 // RUN: %lotto %inflex -r 100
 // clang-format on

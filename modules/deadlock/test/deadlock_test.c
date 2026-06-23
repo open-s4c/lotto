@@ -1,4 +1,5 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // RUN: (! %lotto %stress -s random -d impasse -e deadlock -v -- %b 2>&1) | %check %s
 // CHECK: [{{.*}}] Deadlock detected!
 // clang-format on

@@ -1,3 +1,7 @@
+if(APPLE)
+    return()
+endif()
+
 file(GLOB SRCS *.cpp)
 
 foreach(SRC ${SRCS})

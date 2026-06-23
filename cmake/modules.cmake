@@ -109,6 +109,12 @@ macro(add_runtime_module)
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
     if(${RUNTIME_MODULE_TYPE} STREQUAL PLUGIN)
+        if(APPLE)
+            target_link_options(${RUNTIME_MODULE_TARGET} PRIVATE -undefined
+                                dynamic_lookup)
+            target_link_options(${RUNTIME_DBG_MODULE_TARGET} PRIVATE -undefined
+                                dynamic_lookup)
+        endif()
         set_target_properties(
             ${RUNTIME_MODULE_TARGET}
             PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
@@ -184,6 +190,10 @@ macro(add_driver_module)
                 DICE_MODULE_SLOT=${MODULE_SLOT} #
                 LOGGER_PREFIX="${MODULE_NAME}")
     if("${DRIVER_MODULE_TYPE}" STREQUAL "PLUGIN")
+        if(APPLE)
+            target_link_options(${DRIVER_MODULE_TARGET} PRIVATE -undefined
+                                dynamic_lookup)
+        endif()
         set_target_properties(
             ${DRIVER_MODULE_TARGET}
             PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
@@ -313,6 +323,9 @@ function(add_module_tikl_test SRC)
     endif()
     target_compile_options(${TARGET} PUBLIC -O0 -g -DVATOMIC_BUILTINS)
     target_link_options(${TARGET} PUBLIC -rdynamic)
+    if(APPLE)
+        target_link_options(${TARGET} PRIVATE LINKER:-undefined,dynamic_lookup)
+    endif()
     target_link_libraries(${TARGET} PRIVATE vsync pthread)
 
     add_custom_target(

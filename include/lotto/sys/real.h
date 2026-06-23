@@ -12,7 +12,9 @@
     #undef _GNU_SOURCE
 #endif
 #define _GNU_SOURCE
-#include <link.h>
+#if !defined(__APPLE__)
+    #include <link.h>
+#endif
 #include <dlfcn.h>
 // clang-format on
 

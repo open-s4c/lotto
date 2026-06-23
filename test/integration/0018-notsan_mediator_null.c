@@ -1,5 +1,5 @@
 // clang-format off
-// UNSUPPORTED: aarch64
+// UNSUPPORTED: aarch64, arm64
 // RUN: (! %lotto %run -- %b 2>&1) | %check %s
 // CHECK: [{{[[:digit:]]+}}] SIGABRT
 // clang-format on
@@ -15,4 +15,3 @@ main()
     raise(SIGABRT);
     return 0;
 }
-

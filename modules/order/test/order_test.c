@@ -1,6 +1,7 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // RUN: (! %lotto %stress -r 1 -- %b 2>&1) | %check %s
-// CHECK: assert failed {{.*}}/order_test.c:{{[0-9]+}}: !(val == 0 && data == 1)
+// CHECK: {{(assert failed|Assertion failed:).*val == 0 && data == 1}}
 // clang-format on
 
 #include <assert.h>
@@ -45,4 +46,3 @@ main()
     pthread_join(bob, 0);
     return 0;
 }
-

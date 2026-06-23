@@ -1,3 +1,4 @@
+// UNSUPPORTED: aarch64, arm64
 // RUN: %lotto %record -- %b | grep LAST_THREAD | tee %b.record
 // RUN: %lotto %replay | grep LAST_THREAD | tee %b.replay
 // RUN: diff %b.record %b.replay

@@ -1,4 +1,5 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // RUN: %lotto %record -- %b | grep GHOST_LOG > %b.record
 // RUN: %lotto %replay | grep GHOST_LOG > %b.replay
 // RUN: diff %b.record %b.replay

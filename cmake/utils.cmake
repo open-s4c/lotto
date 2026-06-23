@@ -14,7 +14,7 @@ macro(make_blob TARGET FILE FILE_TARGET)
         if(${DIR} STREQUAL DIR-NOTFOUND)
             message(FATAL "Could not find OUTPUT_DIRECTORY of ${TARGET}")
         endif()
-        get_filename_component(NAME ${FILE} NAME)
+        set(NAME $<TARGET_FILE_NAME:${FILE_TARGET}>)
     endif()
 
     add_custom_command(

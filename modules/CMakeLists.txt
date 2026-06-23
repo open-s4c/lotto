@@ -7,6 +7,12 @@ unset(CMAKE_C_CLANG_TIDY)
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 set(TIKL_MODULE_FEATURES)
 
+if(APPLE)
+    set(TIKL_STDBUF)
+else()
+    set(TIKL_STDBUF "stdbuf -i0 -o0 -e0 ")
+endif()
+
 include_directories(blocking/include)
 include_directories(clock/include)
 include_directories(ichpt/include)
@@ -47,6 +53,15 @@ set(RUNTIME_MODULE_LTO_rusty OFF)
 add_module(guard SLOT 1)
 add_module(summary SLOT 2 DEFAULT OFF)
 
+if(APPLE)
+    set(LOTTO_APPLE_DEFAULT_OFF DEFAULT OFF)
+    set(LOTTO_RUSTY_DEFAULT OFF)
+    set(LOTTO_MODULE_rusty OFF CACHE BOOL "Build Lotto with module rusty" FORCE)
+else()
+    set(LOTTO_APPLE_DEFAULT_OFF)
+    set(LOTTO_RUSTY_DEFAULT ${HAVE_CARGO})
+endif()
+
 # blocking handlers
 add_module(blocking)
 add_module(clock)
@@ -57,7 +72,7 @@ add_module(evec)
 add_module(poll)
 add_module(timeout)
 add_module(cxa)
-add_module(impasse)
+add_module(impasse ${LOTTO_APPLE_DEFAULT_OFF})
 
 # hard filters
 add_module(region_preemption)
@@ -81,21 +96,21 @@ add_module(task_velocity)
 add_module(order)
 add_module(concurrent SLOT 6)
 add_module(ghost SLOT 7)
-add_module(rusty DEFAULT ${HAVE_CARGO})
+add_module(rusty DEFAULT ${LOTTO_RUSTY_DEFAULT})
 
 # bias and scheduling strategy handlers
 add_module(bias)
 add_module(pos)
-add_module(pct)
+add_module(pct ${LOTTO_APPLE_DEFAULT_OFF})
 
 # error detectors
 add_module(deadlock)
 add_module(enforce)
-add_module(inactivity)
+add_module(inactivity ${LOTTO_APPLE_DEFAULT_OFF})
 
 # other components
-add_module(autocept)
-add_module(syscall SLOT 5 DEFAULT OFF)
+add_module(autocept ${LOTTO_APPLE_DEFAULT_OFF})
+add_module(syscall SLOT 2 DEFAULT OFF)
 add_module(time)
 add_module(sleep)
 add_module(random)
@@ -155,4 +170,4 @@ endif()
 set(TIKL_MODULE_FEATURES
     "${TIKL_MODULE_FEATURES}"
     PARENT_SCOPE)
-configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tikl.cfg.in ${TIKL_CFG} @ONLY)

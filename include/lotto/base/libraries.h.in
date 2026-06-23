@@ -3,8 +3,13 @@
 
 #define LIBVDSO              "linux-vdso.so"
 #define LIBACHK              "libachk.so"
-#define LIBLOTTO_RUNTIME     "liblotto-runtime.so"
-#define LIBLOTTO_RUNTIME_DBG "liblotto-runtime-dbg.so"
+#if defined(__APPLE__)
+#    define LIBLOTTO_RUNTIME     "liblotto-runtime.dylib"
+#    define LIBLOTTO_RUNTIME_DBG "liblotto-runtime-dbg.dylib"
+#else
+#    define LIBLOTTO_RUNTIME     "liblotto-runtime.so"
+#    define LIBLOTTO_RUNTIME_DBG "liblotto-runtime-dbg.so"
+#endif
 #define LIBENGINE            "libengine.so"
 #define LIBASAN              "@LIBASAN_PATH@"
 

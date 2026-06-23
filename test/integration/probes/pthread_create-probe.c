@@ -1,13 +1,14 @@
 #include <inttypes.h>
 
 #include <dice/log.h>
+#include <lotto/engine/pubsub.h>
 #include <lotto/engine/sequencer.h>
 #include <lotto/runtime/events.h>
 
 static int handler_calls_;
 
 int
-lotto_test_handler_count(void)
+lotto_test_handler_count_impl(void)
 {
     return handler_calls_;
 }
@@ -23,3 +24,5 @@ pthread_create_probe_handle_(const capture_point *cp, event_t *e)
     handler_calls_++;
 }
 ON_SEQUENCER_CAPTURE(pthread_create_probe_handle_)
+
+LOTTO_MODULE_INIT()

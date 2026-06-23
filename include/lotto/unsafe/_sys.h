@@ -8,6 +8,45 @@
 #include <lotto/sys/signatures/all.h>
 #include <lotto/sys/signatures/defaults_wrap.h>
 
+#if defined(__APPLE__)
+    #ifdef memcpy
+        #undef memcpy
+    #endif
+    #ifdef memset
+        #undef memset
+    #endif
+    #ifdef memmove
+        #undef memmove
+    #endif
+    #ifdef stpcpy
+        #undef stpcpy
+    #endif
+    #ifdef strcpy
+        #undef strcpy
+    #endif
+    #ifdef strcat
+        #undef strcat
+    #endif
+    #ifdef sprintf
+        #undef sprintf
+    #endif
+    #ifdef snprintf
+        #undef snprintf
+    #endif
+    #ifdef vsprintf
+        #undef vsprintf
+    #endif
+    #ifdef vsnprintf
+        #undef vsnprintf
+    #endif
+    #ifdef sigaddset
+        #undef sigaddset
+    #endif
+    #ifdef sigemptyset
+        #undef sigemptyset
+    #endif
+#endif
+
 #define PLF(i) PLF_ENABLE(i)
 #define SLF(i) SLF_ENABLE(i)
 

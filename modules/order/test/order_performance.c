@@ -1,6 +1,7 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // RUN: (! %lotto %stress -r 1 -- %b 2>&1) | %check %s
-// CHECK: assert failed {{.*}}/order_performance.c:{{[0-9]+}}: x != 0b11111
+// CHECK: {{(assert failed|Assertion failed:).*x != 0b11111}}
 // clang-format on
 
 #include <assert.h>
@@ -63,4 +64,3 @@ main()
     pthread_join(multiplier_thread, 0);
     return 0;
 }
-

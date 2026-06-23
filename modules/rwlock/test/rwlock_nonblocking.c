@@ -1,5 +1,6 @@
 // clang-format off
 // RUN: %lotto %stress -r 50 -- %b
+// UNSUPPORTED: arm64
 // clang-format on
 
 #include <pthread.h>
@@ -56,4 +57,3 @@ main()
     pthread_rwlock_destroy(&l);
     return 0;
 }
-

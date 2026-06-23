@@ -1,4 +1,5 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // ALLOW_RETRIES: 100
 // RUN: (! %lotto %stress -v -s random -d impasse -e deadlock -- %b)
 // RUN: (! %lotto %replay -v 2>&1) | %check %s

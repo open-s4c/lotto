@@ -1,4 +1,5 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // ALLOW_RETRIES: 100
 // RUN: rm -f %t.cat
 // RUN: %lotto %stress -r 1 --enforce-mode CAT --record-granularity CAPTURE -- %b %t.cat

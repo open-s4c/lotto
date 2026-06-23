@@ -16,8 +16,8 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dice/include/dice DESTINATION incl
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/include/blob-tsano.h
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include
-    COMMAND cd dice/deps/tsano && xxd -i libtsano.so
-            ${CMAKE_BINARY_DIR}/include/blob-tsano.h
+    COMMAND ${CMAKE_COMMAND} -E chdir $<TARGET_FILE_DIR:tsano> xxd -i
+            $<TARGET_FILE_NAME:tsano> ${CMAKE_BINARY_DIR}/include/blob-tsano.h
     DEPENDS tsano)
 
 add_custom_target(blob-tsano DEPENDS ${CMAKE_BINARY_DIR}/include/blob-tsano.h)
@@ -45,6 +45,8 @@ endif()
 # ------------------------------------------------------------------------------
 # tikl
 # ------------------------------------------------------------------------------
+add_executable(deadline deadline.c)
+
 find_program(MAKE make gmake)
 if(NOT MAKE)
     message(FATAL "Cannot find make")

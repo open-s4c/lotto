@@ -2,6 +2,7 @@
 // RUN: %events -i dice/events/memaccess.h EVENT_MA_AREAD EVENT_MA_AWRITE EVENT_MA_RMW \
 // RUN:   | sed 's/^[^=]*=//; s/$/=1/' > %s.conf
 // RUN: %lotto %stress -r 200 -F --filtering-config %s.conf -- %b
+// UNSUPPORTED: arm64
 // clang-format on
 
 #include <assert.h>
@@ -37,4 +38,3 @@ main()
     pthread_join(t1, 0);
     return 0;
 }
-

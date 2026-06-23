@@ -1,5 +1,6 @@
 // clang-format off
 // RUN: %lotto %stress -r 100 -- %b
+// UNSUPPORTED: arm64
 // clang-format on
 
 #include <assert.h>

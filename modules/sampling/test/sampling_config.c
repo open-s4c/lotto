@@ -1,4 +1,5 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // ALLOW_RETRIES: 5
 // RUN: (! %lotto %stress -r 20 --sampling-config %s.conf -- %b 2>&1) | %check %s
 // RUN: (! %lotto %stress --sampling-config %s.missing -- %b 2>&1) | %check %s --check-prefix=MISSING

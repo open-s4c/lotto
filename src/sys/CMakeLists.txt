@@ -29,6 +29,10 @@ add_library(sys.o OBJECT ${SRCS})
 target_link_libraries(sys.o PRIVATE dl)
 
 add_library(sys SHARED ${SRCS})
+target_sources(
+    sys
+    PRIVATE $<TARGET_OBJECTS:memmgr_runtime_libc.o>
+            $<TARGET_OBJECTS:memmgr_user_libc.o>)
 target_link_libraries(sys PRIVATE dl)
 
 foreach(SRC ${SRCS})

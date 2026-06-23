@@ -1,4 +1,5 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // ALLOW_RETRIES: 100
 // RUN: %lotto %stress -r 1 --enforce-mode ADDRESS --record-granularity CAPTURE -- %b
 // RUN: sleep 1

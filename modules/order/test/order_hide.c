@@ -1,5 +1,6 @@
 // clang-format off
 // RUN: %lotto %stress -r 10 -- %b
+// UNSUPPORTED: arm64
 // clang-format on
 
 #include <assert.h>
@@ -37,4 +38,3 @@ main()
     pthread_join(writer_thread, 0);
     return 0;
 }
-

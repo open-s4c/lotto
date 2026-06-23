@@ -11,8 +11,25 @@ include(FetchContent)
 
 FetchContent_Declare(
     Corrosion GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git)
-execute_process(COMMAND rustup which rustc OUTPUT_VARIABLE Rust_COMPILER)
-string(STRIP ${Rust_COMPILER} Rust_COMPILER)
+find_program(RUSTUP_EXECUTABLE rustup)
+find_program(RUSTC_EXECUTABLE rustc)
+
+if(RUSTUP_EXECUTABLE)
+    execute_process(COMMAND ${RUSTUP_EXECUTABLE} which rustc
+                    RESULT_VARIABLE _rustup_result
+                    OUTPUT_VARIABLE Rust_COMPILER
+                    ERROR_QUIET)
+endif()
+
+if(NOT DEFINED _rustup_result OR NOT _rustup_result EQUAL 0
+   OR NOT Rust_COMPILER)
+    set(Rust_COMPILER "${RUSTC_EXECUTABLE}")
+endif()
+
+if(Rust_COMPILER)
+    string(STRIP "${Rust_COMPILER}" Rust_COMPILER)
+endif()
+
 FetchContent_MakeAvailable(Corrosion)
 
 # ##############################################################################

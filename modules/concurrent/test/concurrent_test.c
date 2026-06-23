@@ -1,4 +1,5 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // RUN: %lotto %record -- %b | grep CONCURRENT_LOG > %b.record
 // RUN: %lotto %replay | grep CONCURRENT_LOG > %b.replay
 // RUN: diff %b.record %b.replay

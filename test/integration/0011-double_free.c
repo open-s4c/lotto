@@ -1,5 +1,5 @@
 // clang-format off
-// UNSUPPORTED: aarch64
+// UNSUPPORTED: aarch64, arm64
 // RUN: (! %lotto %stress --memmgr-user=uaf --uafcheck-prob 1 -a MASK -- %b 2>&1) | %check %s
 // CHECK: SEGV_ACCERR
 // clang-format on

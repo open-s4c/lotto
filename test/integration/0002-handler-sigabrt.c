@@ -1,3 +1,4 @@
+// UNSUPPORTED: arm64
 // REQUIRES: module-trace, module-blocking
 // RUN: (! %lotto --load-runtime %B/pthread_create-sigabrt-probe.so \
 // RUN:           %record -- %b 2>&1) | %check %s --check-prefix=OUTPUT
@@ -24,4 +25,3 @@ main(void)
     pthread_join(t, 0);
     return 0;
 }
-

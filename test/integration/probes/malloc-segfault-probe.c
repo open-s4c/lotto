@@ -13,13 +13,13 @@ static int malloc_before_calls_;
 static int malloc_after_calls_;
 
 int
-lotto_test_malloc_segfault_before_count(void)
+lotto_test_malloc_segfault_before_count_impl(void)
 {
     return malloc_before_calls_;
 }
 
 int
-lotto_test_malloc_segfault_after_count(void)
+lotto_test_malloc_segfault_after_count_impl(void)
 {
     return malloc_after_calls_;
 }

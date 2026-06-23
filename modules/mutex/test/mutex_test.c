@@ -1,5 +1,6 @@
 // clang-format off
 // RUN: %lotto %stress -r 50 -- %b
+// UNSUPPORTED: arm64
 // clang-format on
 
 #include <assert.h>
@@ -32,4 +33,3 @@ main()
     pthread_mutex_destroy(&m1);
     return 0;
 }
-

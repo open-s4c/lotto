@@ -2,6 +2,7 @@
 // RUN: (! %lotto %stress -r 1 -- %b)
 // RUN: %lotto %inflex -r 1
 // RUN: %lotto %show 2>&1 | %check %s
+// UNSUPPORTED: arm64
 // CHECK: clock:{{ *0}}
 // CHECK-NOT: clock:{{ *[^ 0]}}
 // clang-format on

@@ -1,6 +1,7 @@
 // clang-format off
 // ALLOW_RETRIES: 100
 // RUN: (! %lotto %stress -s random -v -d impasse -e deadlock --deadlock-check-lost-resource -- %b 2>&1) | %check %s
+// UNSUPPORTED: arm64
 // CHECK: [{{.*}}] Deadlock detected
 // clang-format on
 #include <assert.h>

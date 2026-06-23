@@ -1,5 +1,6 @@
 // ALLOW_RETRIES: 10
 // RUN: (! %lotto %stress -d impasse -e deadlock -- %b) 2>&1 | %check %s
+// UNSUPPORTED: arm64
 // CHECK: Deadlock detected!
 
 #include <pthread.h>

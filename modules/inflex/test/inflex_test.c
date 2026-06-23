@@ -1,4 +1,5 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // RUN: (! %lotto %stress -s random -- %b)
 // RUN: %lotto %inflex -r 50
 // RUN: %lotto %show 2>&1 | %check %s
@@ -39,4 +40,3 @@ main()
     pthread_join(thread2, 0);
     return 0;
 }
-

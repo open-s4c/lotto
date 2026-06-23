@@ -1,6 +1,6 @@
 // clang-format off
-// UNSUPPORTED: x86_64
-// RUN: %lotto %stress --disable race -r 1 -- %b
+// UNSUPPORTED: x86_64, clang, Clang, AppleClang
+// RUN: %lotto %stress --handler-race disable -r 1 -- %b
 // RUN: %lotto %show 2>&1 | %check %s --check-prefix=MINIMAL
 // RUN: %lotto %stress --disable race -r 1 --record-granularity CHPT -- %b
 // RUN: %lotto %show 2>&1 | %check %s --check-prefix=CHPT

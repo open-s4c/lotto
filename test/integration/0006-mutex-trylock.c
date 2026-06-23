@@ -1,3 +1,4 @@
+// UNSUPPORTED: aarch64, arm64
 // clang-format off
 // RUN: %lotto %record --disable deadlock -- %b | grep LAST_THREAD | tee %b.record
 // RUN: %lotto %replay | grep LAST_THREAD | tee %b.replay

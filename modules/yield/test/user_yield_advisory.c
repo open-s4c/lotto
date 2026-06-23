@@ -1,5 +1,6 @@
 // clang-format off
-// RUN: (! %lotto %stress --yield-advisory -- %b 2>&1) | %check %s
+// UNSUPPORTED: arm64
+// RUN: (! %lotto %stress --advisory-yield -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/user_yield_advisory.c:{{[0-9]+}}: val == 0
 // clang-format on
 

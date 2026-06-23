@@ -14,14 +14,20 @@
 #include <lotto/sys/signatures/defaults_head.h>
 
 #define SYS_SCHED_YIELD SYS_FUNC(LIBC, return, SIG(int, sched_yield, void), )
+#if !defined(__APPLE__)
 #define SYS_SCHED_SETAFFINITY                                                  \
     SYS_FUNC(LIBC, return,                                                     \
-             SIG(int, sched_setaffinity, __pid_t, pid, size_t, s,              \
+             SIG(int, sched_setaffinity, pid_t, pid, size_t, s,                \
                  const cpu_set_t *, cset), )
+#endif
 
-#define FOR_EACH_SYS_SCHED_WRAPPED                                             \
-    SYS_SCHED_YIELD                                                            \
-    SYS_SCHED_SETAFFINITY
+#if defined(__APPLE__)
+#    define FOR_EACH_SYS_SCHED_WRAPPED SYS_SCHED_YIELD
+#else
+#    define FOR_EACH_SYS_SCHED_WRAPPED                                          \
+        SYS_SCHED_YIELD                                                        \
+        SYS_SCHED_SETAFFINITY
+#endif
 
 #define FOR_EACH_SYS_SCHED_CUSTOM
 

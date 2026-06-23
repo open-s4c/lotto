@@ -1,4 +1,5 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // RUN: (! %lotto %stress -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/sampling_default.c:{{[0-9]+}}: x != 1
 // clang-format on

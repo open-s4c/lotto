@@ -1,5 +1,5 @@
 // clang-format off
-// UNSUPPORTED: aarch64, clang, Clang
+// UNSUPPORTED: aarch64, arm64, clang, Clang
 // RUN: (! %lotto %stress -a MASK -- %b 2>&1) | %check %s --check-prefix=BUG
 // RUN: %lotto %inflex -r 30 --inflex-method=le &>/dev/null
 // RUN: %lotto %debug <<< $'\n'run-replay-lotto | %check %s --check-prefix=LOC

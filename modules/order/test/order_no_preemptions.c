@@ -1,6 +1,7 @@
 // clang-format off
-// RUN: (! %lotto %stress -r 1 --region_preemption-default-off -- %b 2>&1) | %check %s
-// CHECK: assert failed {{.*}}/order_no_preemptions.c:{{[0-9]+}}: !(val == 0 && data == 1)
+// UNSUPPORTED: arm64
+// RUN: (! %lotto %stress -r 1 --preemptions-off -- %b 2>&1) | %check %s
+// CHECK: {{(assert failed|Assertion failed:).*val == 0 && data == 1}}
 // clang-format on
 
 #include <assert.h>

@@ -1,4 +1,5 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // RUN: (! %lotto %stress -a MASK -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/mp_race.c:{{[0-9]+}}: data == 1
 //

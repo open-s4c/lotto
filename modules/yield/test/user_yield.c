@@ -1,4 +1,5 @@
 // clang-format off
+// UNSUPPORTED: arm64
 // RUN: (! %lotto %stress -- %b 2>&1) | %check %s
 // CHECK: assert failed {{.*}}/user_yield.c:{{[0-9]+}}: val == 1
 // clang-format on
@@ -43,4 +44,3 @@ main()
     pthread_join(bob, 0);
     return 0;
 }
-

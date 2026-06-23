@@ -16,7 +16,8 @@ set_target_properties(
 add_executable(lotto-cli main.c)
 target_compile_options(lotto-cli PRIVATE -g)
 target_link_libraries(lotto-cli PRIVATE lotto-cli-lib base.o sys.o
-                                        memmgr_runtime_libc.o m)
+                                        memmgr_runtime_libc.o
+                                        memmgr_user_libc.o m)
 target_include_directories(lotto-cli PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
                                              ${CMAKE_BINARY_DIR}/include)
 add_dependencies(lotto-cli lotto-driver)

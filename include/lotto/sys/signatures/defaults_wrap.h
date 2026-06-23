@@ -37,7 +37,7 @@
 #define SYS_FORMAT_FUNC_WRAP(R, S, ATTR)                                       \
     SYS_FORMAT_FUNC_HEAD(S, ATTR)                                              \
     {                                                                          \
-        REAL_APPLY(DECL, RET_TYPE(S), VFUNC(S), ARGS_TYPEVARS(S), ...);        \
+        REAL_APPLY(DECL, RET_TYPE(S), VFUNC(S), ARGS_TYPEVARS(S), va_list);    \
         if (REAL_APPLY(NAME, VFUNC(S)) == NULL) {                              \
             REAL_APPLY(NAME, VFUNC(S)) =                                       \
                 real_func(REAL_APPLY(STR, VFUNC(S)), REAL_LIBC);               \

@@ -1,0 +1,24 @@
+check       = @TIKL_CHECK_PROGRAM@ -x
+builddir    = @PROJECT_BINARY_DIR@
+emulator    =
+lotto       = @PROJECT_BINARY_DIR@/deps/deadline -k 610 600 @TIKL_STDBUF@%emulator %builddir/lotto
+tmpdir      = -t %T
+output      = -o %T/tokio.replay.trace
+input       = -i %T/tokio.replay.trace
+
+# lotto subcommands
+stress      = stress %tmpdir %output
+replay      = replay %tmpdir %input
+show        = show %tmpdir %input
+
+# tikl flags
+-q
+-v
+-j 1
+-t @LOTTO_RUST_TIKL_TIMEOUT@
+-s @CMAKE_CURRENT_SOURCE_DIR@
+-b @CMAKE_CURRENT_BINARY_DIR@/bin
+-T @CMAKE_CURRENT_BINARY_DIR@/tmp
+
+# features
+@LOTTO_RUST_NIGHTLY_TIKL_FEATURE_ARG@

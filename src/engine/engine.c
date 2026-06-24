@@ -115,8 +115,6 @@ CONTRACT(static void _check_plan(const capture_point *cp, struct plan p) {
 void
 engine_init(trace_t *input, trace_t *output)
 {
-    setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);
     logger_debugf("starting...\n");
     LOTTO_PUBLISH(EVENT_ENGINE__START, nil);
     recorder_init(input, output);

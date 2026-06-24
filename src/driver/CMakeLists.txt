@@ -36,6 +36,9 @@ target_compile_options(cli.o PRIVATE -g)
 target_link_libraries(cli.o PUBLIC m)
 add_driver_dependencies(cli.o)
 
+add_library(lotto-driver-phases.o OBJECT phases.c)
+target_link_libraries(lotto-driver-phases.o PRIVATE lotto.h lotto-src.h dice.h)
+
 add_library(cli_testing.o OBJECT ${CLI_UTILS_SRCS})
 target_compile_definitions(cli_testing.o PRIVATE -DLOTTO_TEST)
 target_compile_options(cli_testing.o PRIVATE -g)
@@ -56,6 +59,9 @@ target_link_libraries(
             memmgr_user_libc.o
             lotto-driver-engine.o
             dice.o)
+if(APPLE)
+    target_link_libraries(lotto-driver PRIVATE lotto-driver-phases.o)
+endif()
 target_compile_options(lotto-driver PRIVATE -g)
 target_compile_definitions(lotto-driver
                            PRIVATE LOTTO_VERSION="${PROJECT_VERSION}")

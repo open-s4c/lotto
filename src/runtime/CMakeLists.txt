@@ -34,6 +34,9 @@ target_compile_definitions(memmgr_runtime_dice.o PRIVATE LOTTO_MEMMGR_RUNTIME)
 # libruntime
 # ##############################################################################
 set(SRCS ingress.c sighandler.c module.c)
+add_library(lotto-runtime-phases.o OBJECT phases.c)
+target_link_libraries(lotto-runtime-phases.o PRIVATE lotto.h lotto-src.h
+                                                   dice.h)
 set(LIBS
     m
     mediator.o

@@ -45,12 +45,38 @@ typedef struct {
 
 static vatomic64_t _only_once;
 static vatomic64_t _winner_reason;
+static vatomic32_t _runtime_initialized;
+static vatomic32_t _runtime_bootstrapping;
 
 bool
 _lotto_loaded(void)
 {
     /* Inform user that the Lotto runtime library is loaded. */
     return true;
+}
+
+bool
+lotto_runtime_initialized(void)
+{
+    return vatomic_read(&_runtime_initialized) != 0;
+}
+
+bool
+lotto_runtime_bootstrapping(void)
+{
+    return vatomic_read(&_runtime_bootstrapping) != 0;
+}
+
+void
+lotto_runtime_bootstrap_begin(void)
+{
+    vatomic_write(&_runtime_bootstrapping, 1);
+}
+
+void
+lotto_runtime_bootstrap_end(void)
+{
+    vatomic_write(&_runtime_bootstrapping, 0);
 }
 
 static void
@@ -141,6 +167,7 @@ fini_cb_(void *arg)
         };
         START_FINALIZATION_PHASE(&ev, md);
 
+        vatomic_write(&_runtime_initialized, 0);
         mediator_t *m = md ? mediator_get(md, false) : NULL;
         if (m) {
             mediator_fini(m);
@@ -221,6 +248,7 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_SELF_WAIT, {
 ON_INITIALIZATION_PHASE({
     runtime_init_();
     logger_init_();
+    vatomic_write(&_runtime_initialized, 1);
 })
 
 LOTTO_MODULE_INIT()

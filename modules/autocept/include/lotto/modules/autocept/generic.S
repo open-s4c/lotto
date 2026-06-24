@@ -10,6 +10,21 @@
  * @param name name of intercepted function, epoll_wait
  */
 .macro add_interceptor name, event=0
+#if defined(__APPLE__)
+        .cstring
+.func_\name:
+        .asciz "\name"
+
+        .data
+        .align 3
+.autocept_fptr_\name:
+        .quad 0
+
+        .text
+        .align 2
+        .globl _\name
+_\name:
+#else
         .section .rodata
 .func_\name:
         .string "\name"
@@ -24,6 +39,7 @@
         .globl \name
         .type  \name, @function
 \name:
+#endif
         /* BEFORE: build the stack event and publish it. CAPTURE_BEFORE copies
          * the event, including ev->retpc, into self TLS before the wrapper
          * restores the real call ABI.
@@ -51,5 +67,7 @@
         return
 
 .end_\name:
+#if !defined(__APPLE__)
 	.size	\name, .- \name
+#endif
 .endm

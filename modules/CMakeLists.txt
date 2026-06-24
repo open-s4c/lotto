@@ -109,7 +109,7 @@ add_module(enforce)
 add_module(inactivity ${LOTTO_APPLE_DEFAULT_OFF})
 
 # other components
-add_module(autocept ${LOTTO_APPLE_DEFAULT_OFF})
+add_module(autocept)
 add_module(syscall SLOT 2 DEFAULT OFF)
 add_module(time)
 add_module(sleep)

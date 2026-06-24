@@ -8,9 +8,41 @@
 .set AUTOCEPT_VALUE_TYPE_UINT64, 2
 .set AUTOCEPT_MD_SIZE, 8
 .set AUTOCEPT_MD_OFFSET, AUTOCEPT_CALL_EVENT_SIZE
-.set AUTOCEPT_CALL_FRAME_SIZE, AUTOCEPT_CALL_EVENT_SIZE + AUTOCEPT_MD_SIZE
+.set AUTOCEPT_SAVED_X8_OFFSET, AUTOCEPT_MD_OFFSET + AUTOCEPT_MD_SIZE
+.set AUTOCEPT_CALL_FRAME_SIZE, AUTOCEPT_CALL_EVENT_SIZE + AUTOCEPT_MD_SIZE + 16
 .set AUTOCEPT_FP_CALL_ARGS_SIZE, 128
 .set AUTOCEPT_FP_RETVAL_SIZE, 32
+
+#if defined(__APPLE__)
+.macro autocept_addr dst, label
+	adrp	\dst, \label@PAGE
+	add	\dst, \dst, \label@PAGEOFF
+.endm
+
+.macro autocept_load dst, label
+	adrp	\dst, \label@PAGE
+	ldr	\dst, [\dst, \label@PAGEOFF]
+.endm
+
+.macro autocept_store src, label, tmp
+	adrp	\tmp, \label@PAGE
+	str	\src, [\tmp, \label@PAGEOFF]
+.endm
+#else
+.macro autocept_addr dst, label
+	adr	\dst, \label
+.endm
+
+.macro autocept_load dst, label
+	adrp	\dst, \label
+	ldr	\dst, [\dst, #:lo12:\label]
+.endm
+
+.macro autocept_store src, label, tmp
+	adrp	\tmp, \label
+	str	\src, [\tmp, #:lo12:\label]
+.endm
+#endif
 
 /* Build the BEFORE event on the current stack and pass it as the first C
  * argument to autocept_before.
@@ -33,10 +65,9 @@
 	stp	x2, x3, [sp, #16]
 	stp	x4, x5, [sp, #32]
 	stp	x6, x7, [sp, #48]
-	adr	x9, .func_\name
+	autocept_addr x9, .func_\name
 	str	x9, [sp, #AUTOCEPT_CALL_NAME_OFFSET]
-	adrp	x9, .autocept_fptr_\name
-	ldr	x9, [x9, #:lo12:.autocept_fptr_\name]
+	autocept_load x9, .autocept_fptr_\name
 	str	x9, [sp, #AUTOCEPT_CALL_FUNC_OFFSET]
 	mov	w9, #\event
 	strh	w9, [sp, #AUTOCEPT_CALL_SRC_TYPE_OFFSET]
@@ -45,6 +76,7 @@
 	str	x30, [sp, #AUTOCEPT_CALL_RETPC_OFFSET]
 	str	x20, [sp, #AUTOCEPT_CALL_SAVED_CALLEE_OFFSET]
 	str	xzr, [sp, #AUTOCEPT_MD_OFFSET]
+	str	x8, [sp, #AUTOCEPT_SAVED_X8_OFFSET]
 
 	/* Pass struct autocept_call_event * and metadata_t * to the helper. */
 	mov	x0, sp
@@ -53,9 +85,12 @@
 
 /* Publish the BEFORE event and cache the resolved real function pointer. */
 .macro publish_before_event name
+#if defined(__APPLE__)
+	bl	_autocept_before
+#else
 	bl	autocept_before
-	adrp	x9, .autocept_fptr_\name
-	str	x0, [x9, #:lo12:.autocept_fptr_\name]
+#endif
+	autocept_store x0, .autocept_fptr_\name, x9
 	ldrb	w20, [sp, #AUTOCEPT_MD_OFFSET]
 .endm
 
@@ -68,6 +103,7 @@
 	ldp	x2, x3, [sp, #16]
 	ldp	x4, x5, [sp, #32]
 	ldp	x6, x7, [sp, #48]
+	ldr	x8, [sp, #AUTOCEPT_SAVED_X8_OFFSET]
 
 	/* Drop the event frame and restore the saved FP call arguments. */
 	add	sp, sp, #AUTOCEPT_CALL_FRAME_SIZE
@@ -88,8 +124,7 @@
 
 /* Reload the cached real function pointer into x9 for the call. */
 .macro prepare_fptr_call name
-	adrp	x9, .autocept_fptr_\name
-	ldr	x9, [x9, #:lo12:.autocept_fptr_\name]
+	autocept_load x9, .autocept_fptr_\name
 .endm
 
 /* Call the real wrapped function through the cached pointer. */
@@ -121,10 +156,9 @@
 	stp	x2, x3, [sp, #16]
 	stp	x4, x5, [sp, #32]
 	stp	x6, x7, [sp, #48]
-	adr	x9, .func_\name
+	autocept_addr x9, .func_\name
 	str	x9, [sp, #AUTOCEPT_CALL_NAME_OFFSET]
-	adrp	x9, .autocept_fptr_\name
-	ldr	x9, [x9, #:lo12:.autocept_fptr_\name]
+	autocept_load x9, .autocept_fptr_\name
 	str	x9, [sp, #AUTOCEPT_CALL_FUNC_OFFSET]
 	mov	w9, #\event
 	strh	w9, [sp, #AUTOCEPT_CALL_SRC_TYPE_OFFSET]
@@ -147,7 +181,11 @@
 
 /* Publish the AFTER event. */
 .macro publish_after_event
+#if defined(__APPLE__)
+	bl	_autocept_after
+#else
 	bl	autocept_after
+#endif
 .endm
 
 /* Restore the saved original return address from the rebuilt event, then

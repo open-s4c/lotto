@@ -46,9 +46,16 @@ _intercept_resume(mediator_t *m, capture_point *cp)
 }
 
 PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, ANY_EVENT, {
+    if (!lotto_runtime_initialized())
+        return PS_STOP_CHAIN;
+
     capture_point *cp = EVENT_PAYLOAD(cp);
     cp->chain_id      = chain;
     cp->type_id       = type;
+
+    if (lotto_runtime_bootstrapping() && cp->type_id != EVENT_TASK_INIT)
+        return PS_STOP_CHAIN;
+
     mediator_t *m     = mediator_get(md, true);
 
     if (cp->blocking) {
@@ -64,9 +71,16 @@ PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, ANY_EVENT, {
     return PS_STOP_CHAIN;
 })
 PS_SUBSCRIBE(CHAIN_INGRESS_BEFORE, ANY_EVENT, {
+    if (!lotto_runtime_initialized())
+        return PS_STOP_CHAIN;
+
     capture_point *cp = EVENT_PAYLOAD(cp);
     cp->chain_id      = chain;
     cp->type_id       = type;
+
+    if (lotto_runtime_bootstrapping())
+        return PS_STOP_CHAIN;
+
     mediator_t *m     = mediator_get(md, true);
 
     if (!mediator_capture(m, cp)) {
@@ -81,9 +95,15 @@ PS_SUBSCRIBE(CHAIN_INGRESS_BEFORE, ANY_EVENT, {
     return PS_STOP_CHAIN;
 })
 PS_SUBSCRIBE(CHAIN_INGRESS_AFTER, ANY_EVENT, {
+    if (!lotto_runtime_initialized())
+        return PS_STOP_CHAIN;
+
     capture_point *cp = EVENT_PAYLOAD(cp);
     cp->chain_id      = chain;
     cp->type_id       = type;
+
+    if (lotto_runtime_bootstrapping())
+        return PS_STOP_CHAIN;
 
     mediator_t *m = mediator_get(md, true);
     if (cp->blocking) {

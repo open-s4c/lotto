@@ -15,7 +15,10 @@ target_compile_definitions(mediator_testing.o PRIVATE -DLOTTO_TEST)
 target_compile_options(mediator.o PRIVATE -Wno-uninitialized)
 target_compile_options(mediator_testing.o PRIVATE -Wno-uninitialized)
 
-set(SRCS switcher.c futex.c)
+set(SRCS switcher.c)
+if(NOT APPLE)
+    list(APPEND SRCS futex.c)
+endif()
 add_library(switcher.o OBJECT ${SRCS})
 add_library(switcher_testing.o OBJECT ${SRCS})
 target_compile_definitions(switcher_testing.o PRIVATE -DLOTTO_TEST)
@@ -48,11 +51,18 @@ set(LIBS
     dice-pthread_create.o
     dice-pthread_mutex.o
     dice-pthread_rwlock.o
-    dice-pthread_spinlock.o
     dice-self.o
     dice-sem.o
     dice-stacktrace.o
     dice-tsan.o)
+
+if(NOT APPLE)
+    list(APPEND LIBS dice-pthread_spinlock.o)
+endif()
+
+if(APPLE)
+    list(APPEND LIBS c++)
+endif()
 
 macro(add_runtime TARGET OUTPUT_NAME)
     add_library(${TARGET} SHARED ${SRCS})

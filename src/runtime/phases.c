@@ -2,15 +2,21 @@
 #include <dice/events/self.h>
 #include <dice/module.h>
 #include <dice/self.h>
+#include <stdlib.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/runtime/events.h>
 #include <lotto/runtime/runtime.h>
 #include <lotto/util/once.h>
 
-static void
-start_lotto_phases_(void)
+#define LOTTO_PHASE_XTOR_PRIO 1001
+
+void ps_init_();
+
+void
+lotto_runtime_start_phases(void)
 {
     once({
+        ps_init_();
         START_REGISTRATION_PHASE();
         START_INITIALIZATION_PHASE();
 
@@ -24,8 +30,11 @@ start_lotto_phases_(void)
     });
 }
 
-static void __attribute__((constructor))
+static void __attribute__((constructor(LOTTO_PHASE_XTOR_PRIO)))
 lotto_runtime_start_phases_(void)
 {
-    start_lotto_phases_();
+    const char *loader = getenv("LOTTO_PHASE_LOADER");
+    if (loader != NULL && loader[0] != '\0')
+        return;
+    lotto_runtime_start_phases();
 }

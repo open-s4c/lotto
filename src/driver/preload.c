@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <lotto/cmake_variables.h>
@@ -39,6 +40,7 @@
 #define DICE_PLUGIN_MODULES "DICE_PLUGIN_MODULES"
 #define LOTTO_CLI_PRELOAD   "LOTTO_CLI_PRELOAD"
 #define LOTTO_LOAD_RUNTIME  "LOTTO_LOAD_RUNTIME"
+#define LOTTO_PHASE_LOADER  "LOTTO_PHASE_LOADER"
 
 #if defined(__APPLE__)
 #    define LOTTO_PRELOAD_ENV "DYLD_INSERT_LIBRARIES"
@@ -199,6 +201,15 @@ _preload_lib(const char *filename, bool preload_flag)
     else
         sys_snprintf(ld_preload, MAX_LIST_STR, "%s", filename);
     setenv(LOTTO_PRELOAD_ENV, ld_preload, true);
+}
+
+static bool
+_is_core_runtime_path(const char *path)
+{
+    const char *base = strrchr(path, '/');
+    base             = base != NULL ? base + 1 : path;
+    return sys_strcmp(base, LIBLOTTO_RUNTIME) == 0 ||
+           sys_strcmp(base, LIBLOTTO_RUNTIME_DBG) == 0;
 }
 
 static bool
@@ -391,6 +402,8 @@ _set_dice_plugin_modules_from_preload(void)
             int written;
             if (!_is_runtime_plugin_path(path))
                 continue;
+            if (_is_core_runtime_path(path))
+                continue;
             if (len > 0) {
                 written =
                     sys_snprintf(plugin_modules + len,
@@ -540,8 +553,10 @@ preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
                       {NULL},
                   });
 
+    const char *runtime_loads = getenv(LOTTO_LOAD_RUNTIME);
+
     /* explicit runtime loads append after the Lotto runtime for now */
-    _preload_list(getenv(LOTTO_LOAD_RUNTIME));
+    _preload_list(runtime_loads);
 
     /* preload other dynamic modules */
     if (do_preload_plotto) {
@@ -551,6 +566,15 @@ preload(const char *dir, uint64_t verbose, bool do_preload_plotto,
                                         module_preloadable_not_memory,
                                     .runtime_dbg = verbose > 0});
     }
+
+#if defined(__APPLE__)
+    if (runtime_loads && runtime_loads[0]) {
+        setenv(LOTTO_PHASE_LOADER, "1", true);
+        _preload_lib(LIBLOTTO_RUNTIME_LOADER, true);
+    } else {
+        unsetenv(LOTTO_PHASE_LOADER);
+    }
+#endif
     _set_dice_plugin_modules_from_preload();
 
     exec_info_store_envvars();

@@ -2,7 +2,7 @@
 // RUN: (! %lotto %stress -- %b 2>&1)
 // RUN: %lotto %show | %check %s
 // CHECK: RECORD 2
-// CHECK: reason:   SEGFAULT
+// CHECK: reason:   {{SEGFAULT|SEGV_ACCERR}}
 // clang-format on
 
 volatile int *x = 0;
@@ -13,4 +13,3 @@ main()
     *x = 0;
     return 0;
 }
-

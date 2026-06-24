@@ -20,6 +20,13 @@
 typedef void (*fini_t)();
 static void _intercept_resume(mediator_t *m, capture_point *cp);
 
+static mediator_t *
+_ingress_mediator(struct metadata *md, const capture_point *cp)
+{
+    bool bootstrap = cp->type_id == EVENT_TASK_INIT;
+    return mediator_get(md, bootstrap);
+}
+
 PS_ADVERTISE_TYPE(EVENT_TASK_INIT)
 PS_ADVERTISE_TYPE(EVENT_TASK_FINI)
 PS_ADVERTISE_TYPE(EVENT_TASK_CREATE)
@@ -56,7 +63,9 @@ PS_SUBSCRIBE(CHAIN_INGRESS_EVENT, ANY_EVENT, {
     if (lotto_runtime_bootstrapping() && cp->type_id != EVENT_TASK_INIT)
         return PS_STOP_CHAIN;
 
-    mediator_t *m     = mediator_get(md, true);
+    mediator_t *m = _ingress_mediator(md, cp);
+    if (m == NULL)
+        return PS_STOP_CHAIN;
 
     if (cp->blocking) {
         logger_fatalf("blocking ingress-event type=%s func=%s chain=%u\n",
@@ -81,7 +90,9 @@ PS_SUBSCRIBE(CHAIN_INGRESS_BEFORE, ANY_EVENT, {
     if (lotto_runtime_bootstrapping())
         return PS_STOP_CHAIN;
 
-    mediator_t *m     = mediator_get(md, true);
+    mediator_t *m = _ingress_mediator(md, cp);
+    if (m == NULL)
+        return PS_STOP_CHAIN;
 
     if (!mediator_capture(m, cp)) {
         if (cp->blocking) {
@@ -105,7 +116,9 @@ PS_SUBSCRIBE(CHAIN_INGRESS_AFTER, ANY_EVENT, {
     if (lotto_runtime_bootstrapping())
         return PS_STOP_CHAIN;
 
-    mediator_t *m = mediator_get(md, true);
+    mediator_t *m = _ingress_mediator(md, cp);
+    if (m == NULL)
+        return PS_STOP_CHAIN;
     if (cp->blocking) {
         logger_debugf("[%" PRIu64 "] return from '%s'\n", (uint64_t)m->id,
                       cp->func);

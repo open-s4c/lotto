@@ -37,6 +37,15 @@ set(SRCS ingress.c sighandler.c module.c)
 add_library(lotto-runtime-phases.o OBJECT phases.c)
 target_link_libraries(lotto-runtime-phases.o PRIVATE lotto.h lotto-src.h
                                                    dice.h)
+if(APPLE)
+    add_library(lotto-runtime-loader SHARED loader.c)
+    target_link_libraries(lotto-runtime-loader PRIVATE lotto.h lotto-src.h)
+    target_link_options(lotto-runtime-loader PRIVATE LINKER:-undefined,dynamic_lookup)
+    set_target_properties(
+        lotto-runtime-loader PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                        ${CMAKE_BINARY_DIR})
+    install(TARGETS lotto-runtime-loader DESTINATION lib)
+endif()
 set(LIBS
     m
     mediator.o

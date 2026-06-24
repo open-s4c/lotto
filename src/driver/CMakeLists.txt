@@ -28,6 +28,9 @@ endif()
 
 macro(add_driver_dependencies TARGET)
     add_dependencies("${TARGET}" blob-tsano blob-lotto blob-lotto-dbg ${ARGN})
+    if(APPLE)
+        add_dependencies("${TARGET}" lotto-runtime-loader)
+    endif()
     target_include_directories(${TARGET} PUBLIC ${CMAKE_BINARY_DIR}/include)
 endmacro()
 

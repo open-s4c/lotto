@@ -2,8 +2,8 @@
 // RUN: (! %lotto %record -- %b 2>&1) | %check %s --check-prefix=OUTPUT
 // RUN: (! %lotto %replay 2>&1) | %check %s --check-prefix=OUTPUT
 // RUN: %lotto %show | %check %s --check-prefix=TRACE
-// OUTPUT: SEGFAULT
-// TRACE: reason:   SEGFAULT
+// OUTPUT: {{SEGFAULT|SEGV_ACCERR}}
+// TRACE: reason:   {{SEGFAULT|SEGV_ACCERR}}
 
 #include <pthread.h>
 
@@ -26,4 +26,3 @@ main()
     pthread_join(t, 0);
     return 0;
 }
-

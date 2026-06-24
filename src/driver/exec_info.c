@@ -13,7 +13,8 @@
 #    define LOTTO_PRELOAD_ENV "LD_PRELOAD"
 #endif
 static const char *_envvars[REPLAYED_ENVVARS] = {LOTTO_PRELOAD_ENV,
-                                                 "DICE_PLUGIN_MODULES"};
+                                                 "DICE_PLUGIN_MODULES",
+                                                 "LOTTO_PHASE_LOADER"};
 
 /*******************************************************************************
  * marshaling interface

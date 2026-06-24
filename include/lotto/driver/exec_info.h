@@ -12,7 +12,7 @@
 #include <lotto/driver/args.h>
 
 /** Number of envvars persisted in exec-info replay payloads. */
-#define REPLAYED_ENVVARS 2
+#define REPLAYED_ENVVARS 3
 
 /** Driver execution metadata shared across command stages. */
 typedef struct exec_info_s {

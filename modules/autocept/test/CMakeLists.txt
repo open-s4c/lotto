@@ -40,3 +40,59 @@ add_test(
         ${PROJECT_SOURCE_DIR}/deps/dice/scripts/dice -preload
         $<TARGET_FILE:autocept_testing>:$<TARGET_FILE:autocept_checker>
         $<TARGET_FILE:autocept_baseline_test>)
+
+if(APPLE)
+    add_library(autocept_dispatch_testing SHARED dispatch_interceptors.S)
+    target_compile_definitions(
+        autocept_dispatch_testing
+        PRIVATE DICE_MULTIFILE_MODULE LOTTO_RUNTIME_MODULE=1
+                LOTTO_DRIVER_MODULE=0 DICE_MODULE_SLOT=5
+                LOGGER_PREFIX="autocept")
+    target_link_libraries(
+        autocept_dispatch_testing
+        PRIVATE lotto.h dice.h dice.o dice-self.o autocept-bare.o
+                ${CMAKE_DL_LIBS})
+    set_target_properties(
+        autocept_dispatch_testing
+        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+    add_library(autocept_dispatch_checker SHARED dispatch_checker.c)
+    target_compile_definitions(autocept_dispatch_checker
+                               PRIVATE LOGGER_PREFIX="test")
+    target_link_libraries(autocept_dispatch_checker PRIVATE dice dice.h
+                                                            dice-self)
+    set_target_properties(
+        autocept_dispatch_checker
+        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+    add_executable(autocept_dispatch_wait_test dispatch_wait.c)
+    target_compile_definitions(autocept_dispatch_wait_test
+                               PRIVATE LOGGER_PREFIX="test")
+    add_dependencies(autocept_dispatch_wait_test autocept_dispatch_testing)
+    add_dependencies(autocept_dispatch_wait_test autocept_dispatch_checker)
+
+    add_library(autocept_dispatch_native_interposer SHARED
+                dispatch_native_interposer.c)
+    target_compile_definitions(autocept_dispatch_native_interposer
+                               PRIVATE LOGGER_PREFIX="test")
+    target_link_libraries(autocept_dispatch_native_interposer PRIVATE dice.h)
+    set_target_properties(
+        autocept_dispatch_native_interposer
+        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    add_dependencies(autocept_dispatch_wait_test
+                     autocept_dispatch_native_interposer)
+
+    add_test(
+        NAME autocept-dispatch-semaphore-wait-native-test
+        COMMAND
+            env DICE_SOURCE=${PROJECT_SOURCE_DIR}/deps/dice
+            DICE_BUILD=${PROJECT_BINARY_DIR}/deps/dice
+            ${PROJECT_SOURCE_DIR}/deps/dice/scripts/dice -preload
+            $<TARGET_FILE:autocept_dispatch_native_interposer>
+            $<TARGET_FILE:autocept_dispatch_wait_test>)
+    set_tests_properties(
+        autocept-dispatch-semaphore-wait-native-test
+        PROPERTIES
+            PASS_REGULAR_EXPRESSION
+            "native dispatch_semaphore_wait before.*native dispatch_semaphore_wait after")
+endif()

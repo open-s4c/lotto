@@ -17,13 +17,17 @@ lotto_futex(int *uaddr, int futex_op, int val)
 void
 vfutex_wait(vatomic32_t *m, vuint32_t v)
 {
-    long s = lotto_futex((int *)m, FUTEX_WAIT, (int)v);
+    long s;
+
+    do {
+        s = lotto_futex((int *)m, FUTEX_WAIT, (int)v);
+    } while (s == -1 && errno == EINTR);
 
     if (s == -1 && errno == EAGAIN) {
         return;
     }
 
-    if (s == -1 && errno != EAGAIN) {
+    if (s == -1) {
         perror("futex_wait failed");
         exit(EXIT_FAILURE);
     }

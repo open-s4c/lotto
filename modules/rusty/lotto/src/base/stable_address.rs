@@ -1,12 +1,11 @@
 use std::{
-    ffi::CStr,
+    ffi::{CStr, CString},
     fmt::{Debug, Display},
     hash::Hash,
-    mem::MaybeUninit,
+    os::raw::c_char,
 };
 
 use crate::wrap;
-use bincode::{de::read::Reader, enc::write::Writer};
 use lotto_sys as raw;
 
 pub type StableAddressMethod = raw::stable_address_method_t;
@@ -17,9 +16,17 @@ wrap!(MapAddress, raw::map_address_t);
 
 impl Hash for StableAddress {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        // FIXME: This probably can be improved.
-        let s = self.to_string();
-        s.hash(state);
+        self.inner.type_.hash(state);
+        if self.inner.type_ == raw::stable_address_stable_address_type_ADDRESS_PTR {
+            unsafe { self.inner.value.ptr }.hash(state);
+        } else if self.inner.type_ == raw::stable_address_stable_address_type_ADDRESS_MAP {
+            let map = unsafe { &self.inner.value.map };
+            let name = unsafe { CStr::from_ptr(map.name.as_ptr()) };
+            name.to_bytes().hash(state);
+            map.offset.hash(state);
+        } else {
+            unreachable!("Unknown stable_address_method");
+        }
     }
 }
 
@@ -120,16 +127,21 @@ impl bincode::Encode for StableAddress {
         &self,
         encoder: &mut E,
     ) -> Result<(), bincode::error::EncodeError> {
-        const LEN: usize = std::mem::size_of::<raw::stable_address_t>();
-        let mut bytes = [0u8; LEN];
-        unsafe {
-            std::ptr::copy(
-                self.as_ptr(),
-                bytes.as_mut_ptr() as *mut raw::stable_address_t,
-                1,
-            );
+        self.inner.type_.encode(encoder)?;
+        if self.inner.type_ == raw::stable_address_stable_address_type_ADDRESS_PTR {
+            unsafe { self.inner.value.ptr }.encode(encoder)
+        } else if self.inner.type_ == raw::stable_address_stable_address_type_ADDRESS_MAP {
+            let map = unsafe { &self.inner.value.map };
+            let name = unsafe { CStr::from_ptr(map.name.as_ptr()) }
+                .to_str()
+                .map_err(|_| bincode::error::EncodeError::Other("invalid map address path"))?;
+            name.encode(encoder)?;
+            map.offset.encode(encoder)
+        } else {
+            Err(bincode::error::EncodeError::Other(
+                "unknown stable address type",
+            ))
         }
-        encoder.writer().write(&bytes)
     }
 }
 
@@ -137,17 +149,47 @@ impl bincode::Decode for StableAddress {
     fn decode<D: bincode::de::Decoder>(
         decoder: &mut D,
     ) -> Result<Self, bincode::error::DecodeError> {
-        const LEN: usize = std::mem::size_of::<raw::stable_address_t>();
-        let mut bytes = [0u8; LEN];
-        decoder.reader().read(&mut bytes)?;
-        let mut result = MaybeUninit::<Self>::uninit();
-        unsafe {
-            std::ptr::copy(
-                bytes.as_ptr() as *const raw::stable_address_t,
-                result.as_mut_ptr() as *mut raw::stable_address_t,
-                1,
-            );
-            Ok(result.assume_init())
+        let type_ = raw::stable_address_stable_address_type::decode(decoder)?;
+        if type_ == raw::stable_address_stable_address_type_ADDRESS_PTR {
+            let ptr = usize::decode(decoder)?;
+            Ok(StableAddress {
+                inner: raw::stable_address {
+                    type_,
+                    value: raw::stable_address_stable_address_value { ptr },
+                },
+            })
+        } else if type_ == raw::stable_address_stable_address_type_ADDRESS_MAP {
+            let name = String::decode(decoder)?;
+            let offset = u64::decode(decoder)?;
+            let c_name = CString::new(name)
+                .map_err(|_| bincode::error::DecodeError::Other("invalid map address path"))?;
+            let mut map = raw::map_address_t {
+                name: [0 as c_char; std::mem::size_of::<raw::map_address_t>() - 8],
+                offset,
+            };
+            let bytes = c_name.as_bytes_with_nul();
+            if bytes.len() > map.name.len() {
+                return Err(bincode::error::DecodeError::Other(
+                    "map address path too long",
+                ));
+            }
+            unsafe {
+                std::ptr::copy_nonoverlapping(
+                    bytes.as_ptr() as *const c_char,
+                    map.name.as_mut_ptr(),
+                    bytes.len(),
+                );
+            }
+            Ok(StableAddress {
+                inner: raw::stable_address {
+                    type_,
+                    value: raw::stable_address_stable_address_value { map },
+                },
+            })
+        } else {
+            Err(bincode::error::DecodeError::Other(
+                "unknown stable address type",
+            ))
         }
     }
 }

@@ -18,7 +18,7 @@ set(ENGINE_RUNTIME_SRCS
     task.c
     module.c)
 
-set(ENGINE_DRIVER_SRCS flags.c state.c statemgr.c module.c)
+set(ENGINE_DRIVER_SRCS flags.c state.c statemgr.c prng.c module.c)
 
 message(STATUS "Module ${MODULE_SLOT} (runtime): ${MODULE_NAME}")
 lotto_module_metadata_add(${MODULE_NAME} ${MODULE_SLOT} runtime BUILTIN)

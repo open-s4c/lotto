@@ -4,6 +4,10 @@ use lotto::base::StableAddress;
 use lotto::brokers::{Decode, Encode};
 use lotto::raw;
 
+thread_local! {
+    static STACK_RANGE: std::cell::Cell<Option<(u64, u64)>> = const { std::cell::Cell::new(None) };
+}
+
 /// The stabilized address of a stack variable.
 #[derive(Clone, Eq, Debug, Encode, Decode, Hash)]
 pub struct StableStackAddress {
@@ -70,6 +74,10 @@ impl VAddr {
 
 /// Obtain the current memory range of the stack.
 pub fn get_stack_range() -> (u64, u64) {
+    if let Some(range) = STACK_RANGE.get() {
+        return range;
+    }
+
     unsafe {
         let mut attr: libc::pthread_attr_t = std::mem::zeroed();
         let mut stack_addr: *mut libc::c_void = std::ptr::null_mut();
@@ -77,11 +85,14 @@ pub fn get_stack_range() -> (u64, u64) {
 
         libc::pthread_getattr_np(libc::pthread_self(), &mut attr);
         libc::pthread_attr_getstack(&attr, &mut stack_addr, &mut stack_size);
+        libc::pthread_attr_destroy(&mut attr);
 
         let start = stack_addr as u64;
         let end = start + stack_size as u64;
 
-        (start, end)
+        let range = (start, end);
+        STACK_RANGE.set(Some(range));
+        range
     }
 }
 

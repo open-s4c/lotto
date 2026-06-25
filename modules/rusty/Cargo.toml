@@ -48,8 +48,8 @@ lto = "thin"
 [profile.RelWithDbg]
 inherits = "release"
 panic = "abort"
-debug = 2
+debug = 0
 strip = false
 lto = "thin"
-debug-assertions = true
+debug-assertions = false
 # split-debuginfo = "packed"

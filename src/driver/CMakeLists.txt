@@ -32,13 +32,13 @@ macro(add_driver_dependencies TARGET)
 endmacro()
 
 add_library(cli.o OBJECT ${CLI_UTILS_SRCS})
-target_compile_options(cli.o PRIVATE -g)
+target_compile_options(cli.o PRIVATE $<$<CONFIG:Debug>:-g>)
 target_link_libraries(cli.o PUBLIC m)
 add_driver_dependencies(cli.o)
 
 add_library(cli_testing.o OBJECT ${CLI_UTILS_SRCS})
 target_compile_definitions(cli_testing.o PRIVATE -DLOTTO_TEST)
-target_compile_options(cli_testing.o PRIVATE -g)
+target_compile_options(cli_testing.o PRIVATE $<$<CONFIG:Debug>:-g>)
 target_link_libraries(cli_testing.o PUBLIC m)
 add_driver_dependencies(cli_testing.o)
 
@@ -56,7 +56,7 @@ target_link_libraries(
             memmgr_user_libc.o
             lotto-driver-engine.o
             dice.o)
-target_compile_options(lotto-driver PRIVATE -g)
+target_compile_options(lotto-driver PRIVATE $<$<CONFIG:Debug>:-g>)
 target_compile_definitions(lotto-driver
                            PRIVATE LOTTO_VERSION="${PROJECT_VERSION}")
 set_target_properties(lotto-driver PROPERTIES LIBRARY_OUTPUT_DIRECTORY

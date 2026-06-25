@@ -126,7 +126,12 @@ fn get_pc_info1(pc: *const c_void) -> PCInfo {
             let pc = pc as u64;
             Either::Right(pc - map.l_addr)
         };
-        let fname = CStr::from_ptr(info.dli_fname).to_string_lossy().to_string();
+        let fname = CStr::from_ptr(info.dli_fname).to_string_lossy();
+        let fname = fname
+            .rsplit('/')
+            .next()
+            .unwrap_or(fname.as_ref())
+            .to_string();
         (sname, fname)
     }
 }

@@ -7,6 +7,9 @@ target_compile_definitions(
 target_link_libraries(
     autocept_testing PRIVATE lotto.h dice.h dice.o dice-self.o autocept-bare.o
                              ${CMAKE_DL_LIBS})
+if(APPLE)
+    target_link_options(autocept_testing PRIVATE -undefined dynamic_lookup)
+endif()
 set_target_properties(autocept_testing PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                                   ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -52,6 +55,8 @@ if(APPLE)
         autocept_dispatch_testing
         PRIVATE lotto.h dice.h dice.o dice-self.o autocept-bare.o
                 ${CMAKE_DL_LIBS})
+    target_link_options(autocept_dispatch_testing PRIVATE -undefined
+                        dynamic_lookup)
     set_target_properties(
         autocept_dispatch_testing
         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -71,28 +76,17 @@ if(APPLE)
     add_dependencies(autocept_dispatch_wait_test autocept_dispatch_testing)
     add_dependencies(autocept_dispatch_wait_test autocept_dispatch_checker)
 
-    add_library(autocept_dispatch_native_interposer SHARED
-                dispatch_native_interposer.c)
-    target_compile_definitions(autocept_dispatch_native_interposer
-                               PRIVATE LOGGER_PREFIX="test")
-    target_link_libraries(autocept_dispatch_native_interposer PRIVATE dice.h)
-    set_target_properties(
-        autocept_dispatch_native_interposer
-        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    add_dependencies(autocept_dispatch_wait_test
-                     autocept_dispatch_native_interposer)
-
     add_test(
-        NAME autocept-dispatch-semaphore-wait-native-test
+        NAME autocept-dispatch-semaphore-wait-test
         COMMAND
             env DICE_SOURCE=${PROJECT_SOURCE_DIR}/deps/dice
             DICE_BUILD=${PROJECT_BINARY_DIR}/deps/dice
             ${PROJECT_SOURCE_DIR}/deps/dice/scripts/dice -preload
-            $<TARGET_FILE:autocept_dispatch_native_interposer>
+            $<TARGET_FILE:autocept_dispatch_testing>:$<TARGET_FILE:autocept_dispatch_checker>
             $<TARGET_FILE:autocept_dispatch_wait_test>)
     set_tests_properties(
-        autocept-dispatch-semaphore-wait-native-test
+        autocept-dispatch-semaphore-wait-test
         PROPERTIES
             PASS_REGULAR_EXPRESSION
-            "native dispatch_semaphore_wait before.*native dispatch_semaphore_wait after")
+            "dispatch_semaphore_wait before.*dispatch_semaphore_wait after")
 endif()

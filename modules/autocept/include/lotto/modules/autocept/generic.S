@@ -18,12 +18,17 @@
         .data
         .align 3
 .autocept_fptr_\name:
-        .quad 0
+        .quad _\name
+
+        .section __DATA,__interpose
+        .align 3
+        .quad _autocept_\name
+        .quad _\name
 
         .text
         .align 2
-        .globl _\name
-_\name:
+        .private_extern _autocept_\name
+_autocept_\name:
 #else
         .section .rodata
 .func_\name:

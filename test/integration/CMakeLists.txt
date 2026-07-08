@@ -4,7 +4,7 @@ unset(CMAKE_C_CLANG_TIDY)
 
 set(TIKL_CFG ${CMAKE_CURRENT_BINARY_DIR}/tikl.cfg)
 configure_file(tikl.cfg.in ${TIKL_CFG} @ONLY)
-add_dependencies(tikl-test tikl-build)
+add_dependencies(tikl-test deadline tikl-build)
 
 # ------------------------------------------------------------------------------
 # tikl integration tests
@@ -73,7 +73,7 @@ foreach(SRC ${SRCS})
         tikl-${TEST}
         COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG} ${SRC}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    add_dependencies(tikl-${TEST} ${TARGET} tikl-build lotto-cli)
+    add_dependencies(tikl-${TEST} ${TARGET} deadline tikl-build lotto-cli)
     add_dependencies(tikl-${TEST} ${INTEGRATION_PROBE_TARGETS})
     add_dependencies(tikl-integration tikl-${TEST})
 endforeach()

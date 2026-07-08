@@ -2,6 +2,10 @@
 # version is used.
 include(ExternalProject)
 
+add_executable(deadline deadline.c)
+set_target_properties(deadline PROPERTIES
+                               RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
 # ------------------------------------------------------------------------------
 # Dice
 # ------------------------------------------------------------------------------

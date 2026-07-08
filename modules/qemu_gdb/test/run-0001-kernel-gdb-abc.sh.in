@@ -17,7 +17,7 @@ trap cleanup EXIT
 
 env LD_PRELOAD=@CMAKE_BINARY_DIR@/liblotto-runtime.so \
     DICE_PLUGIN_MODULES=@CMAKE_BINARY_DIR@/liblotto-runtime.so \
-    timeout -k 20s 15s stdbuf -i0 -o0 -e0 \
+    @CMAKE_BINARY_DIR@/bin/deadline 15s stdbuf -i0 -o0 -e0 \
     @CMAKE_BINARY_DIR@/lotto stress \
     --temporary-directory "$tmpdir" \
     -o "$tmpdir/out.trace" \

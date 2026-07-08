@@ -7,6 +7,7 @@ foreach(SRC ${TIKL_SRCS})
         COMMAND ${TIKL_PROGRAM} -c ${TIKL_CFG}
                 ${CMAKE_CURRENT_SOURCE_DIR}/${SRC}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    add_dependencies(tikl-${TEST} kernel-tests-aarch64 tikl-build lotto-cli)
+    add_dependencies(tikl-${TEST} kernel-tests-aarch64 deadline tikl-build
+                     lotto-cli)
     add_dependencies(tikl-module-${MODULE_NAME} tikl-${TEST})
 endforeach()

@@ -54,6 +54,18 @@ mediator_get(struct metadata *md, bool bootstrap)
             };
             mediator_status_t status = mediator_resume(m, &cp);
             ASSERT(status == MEDIATOR_OK && "mediator bootstrap failed");
+
+            /* publish a TASK_INIT at this point */
+            capture_task_init_event ev = {
+                .thread = (uintptr_t)pthread_self(),
+            };
+            capture_point cp2 = {
+                .chain_id  = CAPTURE_EVENT,
+                .type_id   = EVENT_TASK_INIT,
+                .func      = "mediator_get",
+                .task_init = &ev,
+            };
+            PS_PUBLISH(CHAIN_INGRESS_EVENT, EVENT_TASK_INIT, &cp2, md);
         }
     }
     return m;

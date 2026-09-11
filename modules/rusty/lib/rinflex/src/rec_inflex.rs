@@ -275,6 +275,7 @@ impl RecInflex {
         // Primitive checking
         let repeated = symm_set.contains(&pair);
         let same_thread = pair.source.t.id == pair.target.t.id;
+        let same_clock = pair.source.clk == pair.target.clk;
 
         // Sibling check
         let correct = !same_thread && (repeated || self.sibling_check(ip, &pair)?);
@@ -289,7 +290,9 @@ impl RecInflex {
                 true,
                 |_| true,
             )?;
-            symm_set.push(pair);
+            if same_clock {
+                symm_set.push(pair);
+            }
             return self.inflex_pair(iip, depth + 1, symm_set);
         }
 

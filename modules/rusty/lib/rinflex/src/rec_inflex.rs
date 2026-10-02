@@ -118,9 +118,9 @@ impl RecInflex {
 
     pub fn reset_input(&mut self, replay_goal: Clock) -> Result<(), Error> {
         info!("Resetting input");
-        let f_tid =
-            trace::get_last_tid(&self.trace_fail).expect("trace_fail should have last record");
-        let filter_match_tid = |output: &Path| Some(f_tid) == trace::get_last_tid(output);
+        // let f_tid =
+        //     trace::get_last_tid(&self.trace_fail).expect("trace_fail should have last record");
+        // let filter_match_tid = |output: &Path| Some(f_tid) == trace::get_last_tid(output);
         self.get_trace(
             Outcome::Fail,
             replay_goal,
@@ -128,7 +128,8 @@ impl RecInflex {
             &self.trace_temp,
             true,
             true,
-            filter_match_tid,
+            |_| true,
+            // filter_match_tid,
         )?;
         std::fs::copy(&self.trace_temp, &self.trace_fail).expect("reset input");
         Ok(())

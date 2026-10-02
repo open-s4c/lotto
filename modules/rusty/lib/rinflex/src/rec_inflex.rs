@@ -298,59 +298,59 @@ impl RecInflex {
         }
 
         // Essentiality check
-        // info!("Essentiality check");
-        // let mut num_added_virt_ocs = 0;
-        // loop {
-        //     let trace_fail_alt = match self.essentiality_witness(ip, &pair) {
-        //         Ok(Some(trace_fail_alt)) => trace_fail_alt,
-        //         Ok(None) => break,
-        //         Err(Error::ExecutionNotFound { valid: 0, .. }) if ip != iip => {
-        //             // As a safety net.
-        //             info!("inverting candidate is impossible, restarting...");
-        //             self.get_trace(
-        //                 Outcome::Fail,
-        //                 iip - 1,
-        //                 &self.trace_success,
-        //                 &self.trace_fail,
-        //                 true,
-        //                 true,
-        //                 |_| true,
-        //             )?;
-        //             return self.inflex_pair(iip, depth + 1, symm_set);
-        //         }
-        //         Err(Error::ExecutionNotFound { .. }) => break,
-        //         Err(e) => return Err(e),
-        //     };
-        //     let (alt_event, _delta) = self.event_at_clock(&self.flags, &trace_fail_alt, ip)?;
-        //     let virt_pair = PrimitiveConstraint {
-        //         source: source.clone(),
-        //         target: alt_event,
-        //         clk: ip - 1,
-        //     };
-        //     info!("Found an essentiality witness\n{}", virt_pair);
-        //     if virt_pair.source.t.id == virt_pair.target.t.id {
-        //         println!("invalid essentiality pair!");
-        //         println!("current failing trace: {}", self.trace_fail.display());
-        //         println!(
-        //             "alt fail trace (output of EC): {}",
-        //             trace_fail_alt.display()
-        //         );
-        //         println!("virt_pair is {}", virt_pair);
-        //         println!(
-        //             "ip = {}, iip = {} (EC replayed up to IP-1={})",
-        //             ip,
-        //             iip,
-        //             ip - 1
-        //         );
-        //         panic!();
-        //     }
-        //     self.push_virtual_constraint(virt_pair, true);
-        //     num_added_virt_ocs += 1;
-        // }
-        // info!(
-        //     "Essentiality check done; found {} virtual constraints",
-        //     num_added_virt_ocs
-        // );
+        info!("Essentiality check");
+        let mut num_added_virt_ocs = 0;
+        loop {
+            let trace_fail_alt = match self.essentiality_witness(ip, &pair) {
+                Ok(Some(trace_fail_alt)) => trace_fail_alt,
+                Ok(None) => break,
+                Err(Error::ExecutionNotFound { valid: 0, .. }) if ip != iip => {
+                    // As a safety net.
+                    info!("inverting candidate is impossible, restarting...");
+                    self.get_trace(
+                        Outcome::Fail,
+                        iip - 1,
+                        &self.trace_success,
+                        &self.trace_fail,
+                        true,
+                        true,
+                        |_| true,
+                    )?;
+                    return self.inflex_pair(iip, depth + 1, symm_set);
+                }
+                Err(Error::ExecutionNotFound { .. }) => break,
+                Err(e) => return Err(e),
+            };
+            let (alt_event, _delta) = self.event_at_clock(&self.flags, &trace_fail_alt, ip)?;
+            let virt_pair = PrimitiveConstraint {
+                source: source.clone(),
+                target: alt_event,
+                clk: ip - 1,
+            };
+            info!("Found an essentiality witness\n{}", virt_pair);
+            if virt_pair.source.t.id == virt_pair.target.t.id {
+                println!("invalid essentiality pair!");
+                println!("current failing trace: {}", self.trace_fail.display());
+                println!(
+                    "alt fail trace (output of EC): {}",
+                    trace_fail_alt.display()
+                );
+                println!("virt_pair is {}", virt_pair);
+                println!(
+                    "ip = {}, iip = {} (EC replayed up to IP-1={})",
+                    ip,
+                    iip,
+                    ip - 1
+                );
+                panic!();
+            }
+            self.push_virtual_constraint(virt_pair, true);
+            num_added_virt_ocs += 1;
+        }
+        info!(
+            "Essentiality check done; found {} virtual constraints",
+            num_added_virt_ocs
+        );
 
         Ok(Some(pair))
     }

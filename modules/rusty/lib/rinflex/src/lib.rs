@@ -119,7 +119,7 @@ impl std::fmt::Display for StackFrameId {
 
 /// The stacktrace when an event happened.
 #[derive(Clone, Encode, Decode, Debug, Hash, PartialEq, Eq, Default)]
-pub struct StackTrace(pub Vec<StackFrameId>);
+pub struct StackTrace(pub std::sync::Arc<[StackFrameId]>);
 
 impl std::fmt::Display for StackTrace {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

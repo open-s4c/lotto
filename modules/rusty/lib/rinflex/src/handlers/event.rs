@@ -14,6 +14,7 @@ use lotto::{
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 use crate::handlers::cas;
 use crate::handlers::stacktrace;
@@ -30,6 +31,8 @@ pub static HANDLER: HandlerWrapper<EventHandler> = HandlerWrapper::new(|| EventH
     },
     pc_cnt: FxHashMap::default(),
     st_map: IdMap::default(),
+    raw_st_ids: FxHashMap::default(),
+    task_st_ids: FxHashMap::default(),
 });
 
 /// The index in the `st_map`.
@@ -53,6 +56,10 @@ pub struct EventHandler {
 
     // Do not store stacktrace in pc_cnt to save some RAM.
     pub st_map: IdMap<StackTrace>,
+    // Runtime keys use raw PCs.
+    // Persisted events use full stacktraces with stable addresses.
+    raw_st_ids: FxHashMap<Arc<[usize]>, StackTraceId>,
+    task_st_ids: FxHashMap<TaskId, (StackTrace, StackTraceId)>,
 }
 
 impl handler::Handler for EventHandler {
@@ -61,9 +68,14 @@ impl handler::Handler for EventHandler {
             return;
         }
         let id = TaskId::new(ctx.id);
-        let stacktrace = stacktrace::get_task_stacktrace(id).unwrap_or_default();
+        let pcs = stacktrace::get_task_stacktrace_pcs(id).unwrap_or_default();
+        let stid = *self.raw_st_ids.entry(pcs).or_insert_with(|| {
+            self.st_map
+                .put(&stacktrace::get_task_stacktrace(id).unwrap_or_default())
+        });
+        let stacktrace = self.st_map.get(stid).expect("interned stacktrace").clone();
+        self.task_st_ids.insert(id, (stacktrace.clone(), stid));
         let ma = cas::get_rt_memory_access(id);
-        let stid = self.st_map.put(&stacktrace);
         let transition = Transition::new(ctx);
 
         // During capture, we are going to check whether this event
@@ -98,7 +110,15 @@ impl handler::Handler for EventHandler {
         let Some(entry) = self.pers.tasks.get_mut(&TaskId(ctx.id)) else {
             return;
         };
-        let mut ecore = ecore_from_event(&mut self.st_map, &*entry);
+        // Unmarshalling may replace the persistent event. Reuse its ID only
+        // when this is still the snapshot captured above.
+        let stid = self
+            .task_st_ids
+            .get(&TaskId(ctx.id))
+            .filter(|(stack, _)| Arc::ptr_eq(&stack.0, &entry.stacktrace.0))
+            .map(|(_, stid)| *stid)
+            .unwrap_or_else(|| self.st_map.put(&entry.stacktrace));
+        let mut ecore = ecore_from_event(stid, &*entry);
 
         let Some(ref oldm) = entry.m else {
             // Not memory operation
@@ -147,8 +167,7 @@ impl handler::Handler for EventHandler {
     }
 }
 
-fn ecore_from_event(st_map: &mut IdMap<StackTrace>, e: &Event) -> EventCore {
-    let stid = st_map.put(&e.stacktrace);
+fn ecore_from_event(stid: StackTraceId, e: &Event) -> EventCore {
     EventCore {
         t: e.t.clone(),
         stacktrace: stid,

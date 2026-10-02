@@ -1,6 +1,7 @@
 use crate::{Either, StackFrameId, StackTrace};
 use lotto::base::CapturePoint;
 use lotto::collections::FxHashMap;
+use lotto::sync::HandlerWrapper;
 use lotto::{base::StableAddress, raw, Stateful};
 use lotto::{
     base::{TaskId, Value},
@@ -11,12 +12,10 @@ use lotto::{
 };
 use std::ffi::{c_void, CStr};
 use std::mem::MaybeUninit;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    LazyLock,
-};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
-pub static HANDLER: LazyLock<StackTraceHandler> = LazyLock::new(|| StackTraceHandler {
+pub static HANDLER: HandlerWrapper<StackTraceHandler> = HandlerWrapper::new(|| StackTraceHandler {
     cfg: Config {
         enabled: AtomicBool::new(false),
     },
@@ -29,8 +28,37 @@ pub struct StackTraceHandler {
     #[config]
     pub cfg: Config,
 
-    pub cache: FxHashMap<u64, PCInfo>,
-    pub tasks: FxHashMap<TaskId, StackTrace>,
+    cache: FxHashMap<usize, StackFrameId>,
+    tasks: FxHashMap<TaskId, TaskStack>,
+}
+
+#[derive(Default)]
+struct TaskStack {
+    pcs: Vec<usize>,
+    raw_snapshot: Option<Arc<[usize]>>,
+    resolved: Option<StackTrace>,
+}
+
+impl TaskStack {
+    fn push(&mut self, pc: usize) {
+        self.pcs.push(pc);
+        self.raw_snapshot = None;
+        self.resolved = None;
+    }
+
+    fn pop(&mut self) {
+        self.pcs
+            .pop()
+            .expect("How can you exit a function before entering any?");
+        self.raw_snapshot = None;
+        self.resolved = None;
+    }
+
+    fn snapshot(&mut self, resolve: impl FnMut(usize) -> StackFrameId) -> StackTrace {
+        self.resolved
+            .get_or_insert_with(|| StackTrace(self.pcs.iter().copied().map(resolve).collect()))
+            .clone()
+    }
 }
 
 impl handler::Handler for StackTraceHandler {
@@ -43,24 +71,11 @@ impl handler::Handler for StackTraceHandler {
             raw::EVENT_STACKTRACE_ENTER => {
                 let caller_pc =
                     ctx.caller_pc().expect("missing stacktrace caller") - call_insn_len();
-                let (sname, fname) = self.get_pc_info(caller_pc as *const c_void);
-                let caller_pc = StableAddress::with_default_method(caller_pc);
-                let frame_id = StackFrameId {
-                    caller_pc,
-                    sname,
-                    fname,
-                };
-                self.tasks
-                    .entry(id)
-                    .and_modify(|trace| trace.0.push(frame_id.clone()))
-                    .or_insert(StackTrace(vec![frame_id]));
+                self.tasks.entry(id).or_default().push(caller_pc);
             }
             raw::EVENT_STACKTRACE_EXIT => {
                 if let Some(stacktrace) = self.tasks.get_mut(&id) {
-                    stacktrace
-                        .0
-                        .pop()
-                        .expect("How can you exit a function before entering any?");
+                    stacktrace.pop();
                 }
             }
             _ => {}
@@ -73,17 +88,6 @@ impl handler::Handler for StackTraceHandler {
 /// - The first element is dli_sname, or offset if it's unavailable.
 /// - The second element is dli_fname
 type PCInfo = (Either<String, u64>, String);
-
-impl StackTraceHandler {
-    /// Given a PC, find its symbol and the file.
-    fn get_pc_info(&mut self, pc: *const c_void) -> PCInfo {
-        let key = pc as u64;
-        self.cache
-            .entry(key)
-            .or_insert_with(|| get_pc_info1(pc))
-            .clone()
-    }
-}
 
 /// Length of a function call instruction.
 fn call_insn_len() -> usize {
@@ -178,6 +182,85 @@ pub fn register_flags() {
 // Interfaces
 //
 
+/// Get stacktrace PCs without resolving stacktrace.
+pub fn get_task_stacktrace_pcs(task: TaskId) -> Option<Arc<[usize]>> {
+    let handler = unsafe { HANDLER.get_mut() };
+    let stack = handler.tasks.get_mut(&task)?;
+    Some(
+        stack
+            .raw_snapshot
+            .get_or_insert_with(|| Arc::from(stack.pcs.as_slice()))
+            .clone(),
+    )
+}
+
 pub fn get_task_stacktrace(task: TaskId) -> Option<StackTrace> {
-    HANDLER.tasks.get(&task).cloned()
+    let handler = unsafe { HANDLER.get_mut() };
+    let stack = handler.tasks.get_mut(&task)?;
+    Some(stack.snapshot(|pc| {
+        handler
+            .cache
+            .entry(pc)
+            .or_insert_with(|| {
+                let (sname, fname) = get_pc_info1(pc as *const c_void);
+                StackFrameId {
+                    caller_pc: StableAddress::with_default_method(pc),
+                    sname,
+                    fname,
+                }
+            })
+            .clone()
+    }))
+}
+
+#[cfg(test)]
+mod tests {
+    extern crate lotto_link;
+
+    use super::*;
+    use std::sync::Arc;
+
+    #[test]
+    fn lazy_stack_snapshots_preserve_frames_and_wire_format() {
+        let mut stack = TaskStack::default();
+        stack.push(1);
+        stack.push(2);
+        stack.pop();
+        assert!(stack.resolved.is_none());
+
+        let mut resolved = Vec::new();
+        let mut resolve = |pc| {
+            resolved.push(pc);
+            StackFrameId {
+                caller_pc: StableAddress::with_method(
+                    pc,
+                    raw::stable_address_method::STABLE_ADDRESS_METHOD_MASK,
+                ),
+                sname: Either::Right(pc as u64),
+                fname: "test".into(),
+            }
+        };
+        let first = stack.snapshot(&mut resolve);
+        let cached = stack.snapshot(|_| panic!("unchanged stack must use cached frames"));
+        assert!(Arc::ptr_eq(&first.0, &cached.0));
+
+        stack.push(3);
+        let nested = stack.snapshot(&mut resolve);
+        stack.pop();
+        stack.pop();
+        assert!(stack.snapshot(|_| unreachable!()).0.is_empty());
+        assert_eq!(first.0.len(), 1);
+        assert_eq!(nested.0.len(), 2);
+        assert_eq!(resolved, [1, 1, 3]);
+
+        let config = bincode::config::standard();
+        let bytes = bincode::encode_to_vec(&nested, config).unwrap();
+        assert_eq!(
+            bytes,
+            bincode::encode_to_vec(nested.0.to_vec(), config).unwrap()
+        );
+        let (decoded, used): (StackTrace, _) = bincode::decode_from_slice(&bytes, config).unwrap();
+        assert_eq!(used, bytes.len());
+        assert_eq!(decoded, nested);
+    }
 }

@@ -69,8 +69,7 @@ impl handler::Handler for StackTraceHandler {
         let id = TaskId(ctx.id);
         match ctx.type_id as u32 {
             raw::EVENT_STACKTRACE_ENTER => {
-                let caller_pc =
-                    ctx.caller_pc().expect("missing stacktrace caller") - call_insn_len();
+                let caller_pc = ctx.caller_pc().expect("missing stacktrace caller");
                 self.tasks.entry(id).or_default().push(caller_pc);
             }
             raw::EVENT_STACKTRACE_EXIT => {
@@ -88,17 +87,6 @@ impl handler::Handler for StackTraceHandler {
 /// - The first element is dli_sname, or offset if it's unavailable.
 /// - The second element is dli_fname
 type PCInfo = (Either<String, u64>, String);
-
-/// Length of a function call instruction.
-fn call_insn_len() -> usize {
-    if cfg!(target_arch = "x86_64") {
-        5 // FIXME: This is incomplete.
-    } else if cfg!(target_arch = "aarch64") {
-        4
-    } else {
-        0
-    }
-}
 
 #[repr(C)]
 #[allow(non_camel_case_types)]
@@ -202,7 +190,7 @@ pub fn get_task_stacktrace(task: TaskId) -> Option<StackTrace> {
             .cache
             .entry(pc)
             .or_insert_with(|| {
-                let (sname, fname) = get_pc_info1(pc as *const c_void);
+                let (sname, fname) = get_pc_info1(pc.saturating_sub(1) as *const c_void);
                 StackFrameId {
                     caller_pc: StableAddress::with_default_method(pc),
                     sname,

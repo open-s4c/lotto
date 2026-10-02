@@ -9,6 +9,7 @@
 // CHECK: event - tid: {{[0-9]+}}, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: MA_AWRITE
 // CHECK-NEXT: []
 // CHECK-NEXT: setter
+// CHECK-NEXT: {{.*}}rinflex_essentiality.c:[[#@LINE+23]]
 // CHECK: event - tid: {{[0-9]+}}, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: MA_AREAD
 // CHECK-NEXT: []
 // CHECK-NEXT: checker

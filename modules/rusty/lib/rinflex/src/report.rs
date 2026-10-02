@@ -22,7 +22,7 @@ impl Instruction {
     }
 
     /// Obtain the source line.
-    fn display_source_impl(&self) -> Result<String, Error> {
+    fn display_source_impl(&self, offset: u64) -> Result<String, Error> {
         if !self.has_path() {
             return Ok(String::new());
         }
@@ -31,7 +31,7 @@ impl Instruction {
             .arg(&self.path)
             .arg("-f")
             .arg("-C")
-            .arg(&format!("{:x}", self.offset))
+            .arg(&format!("{:x}", offset))
             .output()?;
         output_to_string(output)
     }
@@ -67,19 +67,19 @@ impl Instruction {
     }
 
     pub fn display_source(&self) -> Result<String, Error> {
-        Self::with_lotto_disabled(|| self.display_source_impl())
+        Self::with_lotto_disabled(|| self.display_source_impl(self.offset.saturating_sub(1)))
     }
 
     pub fn display_assembly(&self) -> Result<String, Error> {
         Self::with_lotto_disabled(|| self.display_assembly_impl())
     }
 
-    /// Obtain in a mixed, prettified format.
+    /// Display a return address, locating its source within the preceding call.
     pub fn display(&self) -> Result<String, Error> {
         Self::with_lotto_disabled(|| {
             let mut res = String::new();
             let assembly = self.display_assembly_impl()?;
-            let source = self.display_source_impl()?;
+            let source = self.display_source_impl(self.offset.saturating_sub(1))?;
             write!(res, "{}", source).unwrap();
             write!(res, "{}", assembly).unwrap();
             Ok(res)

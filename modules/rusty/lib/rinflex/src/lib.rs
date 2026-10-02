@@ -98,7 +98,7 @@ pub struct StackFrameId {
     /// File name
     pub fname: String,
 
-    /// The PC of the CALL instruction (inside caller).
+    /// The return address of the call (inside caller).
     pub caller_pc: StableAddress,
 }
 

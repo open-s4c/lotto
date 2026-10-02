@@ -12,6 +12,7 @@
 // CHECK: event - tid: {{[0-9]+}}, clk: {{[0-9]+}}, 1 x pc: {{.*}}, cat: MA_AREAD
 // CHECK-NEXT: []
 // CHECK-NEXT: checker
+// CHECK: #total OCs = 1
 
 // clang-format on
 

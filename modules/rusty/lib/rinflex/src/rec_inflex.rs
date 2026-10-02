@@ -116,6 +116,25 @@ impl RecInflex {
         })
     }
 
+    /// Prune useless ordering constraints before reporting.
+    pub fn prune(&mut self) -> Result<(), Error> {
+        if self.constraints.len() <= 1 {
+            return Ok(())
+        }
+        let mut i = 0;
+        while i < self.constraints.len() {
+            let removed = self.constraints.remove(i);
+            let result = self.should_terminate();
+            if !matches!(result, Ok(true)) {
+                self.constraints.insert(i, removed);
+                i += 1;
+            }
+            handlers::order_enforcer::cli_set_constraints(self.constraints.clone());
+            result?;
+        }
+        Ok(())
+    }
+
     pub fn reset_input(&mut self, replay_goal: Clock) -> Result<(), Error> {
         info!("Resetting input");
         // let f_tid =
@@ -475,15 +494,12 @@ impl RecInflex {
         goal: Clock,
         constraints: &ConstraintSet,
     ) -> Result<PathBuf, Error> {
-        if constraints.len() == 0 {
-            return Ok(input.to_owned());
-        }
-
         let input_filename = input.file_name().expect("must be a file").to_str().unwrap();
         let out = self.tempdir.join(format!("{}+oc", input_filename));
 
         let mut rec = Trace::load_file(input);
         rec.trim_to_goal(goal, true);
+        handlers::order_enforcer::cli_set_constraints(constraints.clone());
         let r = Record::new_config(goal);
         rec.append(r).expect("append updated oc to trace");
         rec.save(&out);

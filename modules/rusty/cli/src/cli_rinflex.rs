@@ -79,9 +79,6 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
         let pair = match rinflex.find_next_pair() {
             Ok(Some(pair)) => pair,
             Ok(None) => {
-                eprintln!(
-                    "The current constraint set is sufficient to reproduce the bug, stopping"
-                );
                 break;
             }
             Err(Error::ExecutionNotFound { .. }) => {
@@ -99,6 +96,12 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
         rinflex.reset_input(replay_goal)?;
     }
 
+    eprintln!("Pruning useless ordering constraints");
+    rinflex.prune()?;
+
+    eprintln!(
+        "\nThe current constraint set is sufficient to reproduce the bug, stopping"
+    );
     let mut num_ocs = 0;
     let mut num_virt_ocs = 0;
     eprintln!("");

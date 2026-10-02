@@ -280,7 +280,8 @@ impl RecInflex {
         let same_clock = pair.source.clk == pair.target.clk;
 
         // Sibling check
-        let correct = !same_thread && (repeated || self.sibling_check(ip, &pair)?);
+        let correct = !same_thread &&
+            (same_clock || repeated || self.sibling_check(ip, &pair)?);
         if !correct {
             info!("Incorrect");
             self.get_trace(

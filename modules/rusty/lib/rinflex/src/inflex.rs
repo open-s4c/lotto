@@ -31,6 +31,9 @@ pub struct Inflex {
     //
     pub temp_output: PathBuf,
     pub candidate: PathBuf,
+    /// If set, fast searches save each valid counterexample here.
+    /// Left untouched when the search produces no counterexample.
+    pub counterexample: Option<PathBuf>,
 
     //
     // search
@@ -84,6 +87,7 @@ impl Inflex {
             last_clk,
             candidate,
             temp_output,
+            counterexample: None,
             report_progress: true,
             rounds,
             min: 0,
@@ -168,7 +172,14 @@ impl Inflex {
                     let mut exec =
                         Exec::new(&self.input, &self.temp_output, &flags, &self.log_file);
                     match exec.run()? {
-                        Some(outcome) => Ok::<_, Error>(Some(outcome.is_success())),
+                        Some(outcome) => {
+                            if outcome.is_fail() {
+                                if let Some(path) = &self.counterexample {
+                                    std::fs::copy(&self.temp_output, path)?;
+                                }
+                            }
+                            Ok::<_, Error>(Some(outcome.is_success()))
+                        }
                         None => {
                             bar.tick_invalid();
                             Ok(None)
@@ -249,7 +260,14 @@ impl Inflex {
                     let mut exec =
                         Exec::new(&self.input, &self.temp_output, &flags, &self.log_file);
                     match exec.run()? {
-                        Some(outcome) => Ok::<_, Error>(Some(outcome.is_fail())),
+                        Some(outcome) => {
+                            if outcome.is_success() {
+                                if let Some(path) = &self.counterexample {
+                                    std::fs::copy(&self.temp_output, path)?;
+                                }
+                            }
+                            Ok::<_, Error>(Some(outcome.is_fail()))
+                        }
                         None => {
                             bar.tick_invalid();
                             Ok(None)

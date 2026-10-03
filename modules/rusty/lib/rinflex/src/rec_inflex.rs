@@ -169,6 +169,9 @@ impl RecInflex {
         inflex.output = self.trace_temp.clone();
         inflex.min = min;
         inflex.report_progress = self.report_progress;
+        // Find Ts while searching for IP. On recursive calls, the previous Ts
+        // already witnesses min-1 if the search finds no new counterexample.
+        inflex.counterexample = Some(self.trace_success.clone());
         let ip = inflex.run_fast()?;
         info!("IP is {}", ip);
         if ip == 0 {
@@ -187,6 +190,10 @@ impl RecInflex {
         inflex.output = self.trace_temp.clone();
         inflex.report_progress = self.report_progress;
         inflex.min = min;
+        // The current Tf witnesses min-1. Keep it until a later counterexample
+        // is found, without replacing the Tf needed by sibling_check.
+        std::fs::copy(&self.trace_fail, &self.trace_fail_alt)?;
+        inflex.counterexample = Some(self.trace_fail_alt.clone());
         let iip = inflex.run_inverse_fast()?;
         info!("IIP is {}", iip);
         let (event, delta) = self.event_at_clock(&self.flags, &self.trace_success, iip)?;
@@ -265,22 +272,6 @@ impl RecInflex {
             return Ok(None);
         };
 
-        // Find Ts.
-        info!(
-            "Finding a successful trace up to IP-1={}... #constrs = {}",
-            ip - 1,
-            self.constraints.len()
-        );
-        self.get_trace(
-            Outcome::Success,
-            ip - 1,
-            &self.trace_fail,
-            &self.trace_success,
-            true,
-            true,
-            |_| true,
-        )?;
-
         // Find IIP.
         let Some((_iip_orig, iip, target)) = self.find_inverse_inflex(ip)? else {
             return Ok(None);
@@ -303,15 +294,7 @@ impl RecInflex {
             (same_clock || repeated || self.sibling_check(ip, &pair)?);
         if !correct {
             info!("Incorrect");
-            self.get_trace(
-                Outcome::Fail,
-                iip - 1,
-                &self.trace_success,
-                &self.trace_fail,
-                true,
-                true,
-                |_| true,
-            )?;
+            std::fs::copy(&self.trace_fail_alt, &self.trace_fail)?;
             if same_clock {
                 symm_set.push(pair);
             }

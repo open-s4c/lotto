@@ -137,6 +137,7 @@ where
         // User-supplied filter.
         if let Some(ref mut filter) = self.filter {
             if !filter(self.output) {
+                STATS.tick_discarded_run();
                 return Ok(None);
             }
         }

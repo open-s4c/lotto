@@ -13,6 +13,8 @@ use crate::error::Error;
 use crate::exec::Exec;
 use crate::progress::ProgressBar;
 
+mod search;
+
 pub struct Inflex {
     input: PathBuf,
     pub output: PathBuf,
@@ -147,6 +149,7 @@ impl Inflex {
         let mut iip = self.min;
         let mut last_iip = 0;
         let mut confidence = 0;
+        let mut samples = search::Samples::default();
 
         if self.report_progress {
             info!("inverse inflex input = {}", self.input.display());
@@ -158,18 +161,20 @@ impl Inflex {
 
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
         while confidence <= self.rounds && iip < self.last_clk {
-            iip = binary_search(iip, self.last_clk, |clk| {
-                flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
-                loop {
+            iip = search::binary_search(iip, self.last_clk, |clk| {
+                samples.probe(clk, self.rounds, || {
+                    flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                     flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                     let mut exec =
                         Exec::new(&self.input, &self.temp_output, &flags, &self.log_file);
-                    if let Some(outcome) = exec.run()? {
-                        return Ok(outcome.is_success());
-                    } else {
-                        bar.tick_invalid();
+                    match exec.run()? {
+                        Some(outcome) => Ok::<_, Error>(Some(outcome.is_success())),
+                        None => {
+                            bar.tick_invalid();
+                            Ok(None)
+                        }
                     }
-                }
+                })
             })?;
 
             if iip == last_iip {
@@ -225,6 +230,7 @@ impl Inflex {
         let mut ip = self.min;
         let mut last_ip = 0;
         let mut confidence = 0;
+        let mut samples = search::Samples::default();
 
         if self.report_progress {
             info!("inflex input = {}", self.input.display());
@@ -236,18 +242,20 @@ impl Inflex {
 
         let mut bar = ProgressBar::new(self.report_progress, "", self.rounds);
         while confidence <= self.rounds && ip < self.last_clk {
-            ip = binary_search(ip, self.last_clk, |clk| {
-                flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
-                loop {
+            ip = search::binary_search(ip, self.last_clk, |clk| {
+                samples.probe(clk, self.rounds, || {
+                    flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(clk));
                     flags.set_by_opt(&flag_seed(), Value::U64(prng::next()));
                     let mut exec =
                         Exec::new(&self.input, &self.temp_output, &flags, &self.log_file);
-                    if let Some(outcome) = exec.run()? {
-                        return Ok(outcome.is_fail());
-                    } else {
-                        bar.tick_invalid();
+                    match exec.run()? {
+                        Some(outcome) => Ok::<_, Error>(Some(outcome.is_fail())),
+                        None => {
+                            bar.tick_invalid();
+                            Ok(None)
+                        }
                     }
-                }
+                })
             })?;
 
             if ip == last_ip {

@@ -1,7 +1,7 @@
 use lotto::base::CapturePoint;
 use lotto::collections::FxHashMap;
 use lotto::{
-    base::{StableAddress, TaskId, Value},
+    base::{StableAddress, StableAddressMethod, TaskId, Value},
     brokers::statemgr::*,
     cli::{flags::STR_CONVERTER_BOOL, FlagKey},
     engine::handler,
@@ -17,6 +17,7 @@ pub static HANDLER: LazyLock<AddressHandler> = LazyLock::new(|| AddressHandler {
     cfg: Config {
         enabled: AtomicBool::new(false),
     },
+    cache: FxHashMap::default(),
     pers: Persistent {
         tasks: FxHashMap::default(),
     },
@@ -28,6 +29,8 @@ pub struct AddressHandler {
     pub cfg: Config,
     #[persistent]
     pub pers: Persistent,
+    // Process-local: raw PCs must not be restored from a recorded execution.
+    cache: FxHashMap<(StableAddressMethod, usize), StableAddress>,
 }
 
 impl handler::Handler for AddressHandler {
@@ -36,13 +39,21 @@ impl handler::Handler for AddressHandler {
             return;
         }
         let tasks = &mut self.pers.tasks;
-        let addr = StableAddress::with_default_method(ctx.pc);
-        let info = AddressInfo {
-            addr,
-            type_id: ctx.type_id as u32,
-            after: u32::from(ctx.chain_id) == raw::CHAIN_INGRESS_AFTER,
-        };
-        tasks.insert(TaskId::new(ctx.id), info);
+        let method = unsafe { (*raw::sequencer_config()).stable_address_method };
+        let addr = self
+            .cache
+            .entry((method, ctx.pc))
+            .or_insert_with(|| StableAddress::with_method(ctx.pc, method));
+        let info = tasks
+            .entry(TaskId::new(ctx.id))
+            .or_insert_with(|| AddressInfo {
+                addr: addr.clone(),
+                type_id: 0,
+                after: false,
+            });
+        info.addr.clone_from(addr);
+        info.type_id = ctx.type_id as u32;
+        info.after = u32::from(ctx.chain_id) == raw::CHAIN_INGRESS_AFTER;
     }
 }
 
@@ -118,4 +129,56 @@ pub fn register_flags() {
 
 pub fn get_task_address(task: TaskId) -> Option<AddressInfo> {
     HANDLER.pers.tasks.get(&task).cloned()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lotto::engine::handler::Handler;
+
+    #[test]
+    fn cached_addresses_follow_method_and_current_event() {
+        let mut handler = AddressHandler {
+            cfg: Config {
+                enabled: AtomicBool::new(true),
+            },
+            pers: Persistent {
+                tasks: FxHashMap::default(),
+            },
+            cache: FxHashMap::default(),
+        };
+        let config = unsafe { raw::sequencer_config() };
+        let saved_method = unsafe { (*config).stable_address_method };
+        let mut event = unsafe { std::mem::zeroed() };
+        for method in [
+            raw::stable_address_method::STABLE_ADDRESS_METHOD_NONE,
+            raw::stable_address_method::STABLE_ADDRESS_METHOD_MASK,
+            raw::stable_address_method::STABLE_ADDRESS_METHOD_MAP,
+            raw::stable_address_method::STABLE_ADDRESS_METHOD_NONE,
+        ] {
+            unsafe { (*config).stable_address_method = method };
+            for (id, type_id, chain_id) in [
+                (1, 10, 0),
+                (2, 11, raw::CHAIN_INGRESS_AFTER),
+                (1, 12, raw::CHAIN_INGRESS_AFTER),
+            ] {
+                let ctx = CapturePoint::from(raw::capture_point {
+                    pc: cached_addresses_follow_method_and_current_event as *const () as usize,
+                    id,
+                    type_id,
+                    chain_id: chain_id as _,
+                    ..unsafe { std::mem::zeroed() }
+                });
+                handler.handle(&ctx, &mut event);
+                let info = &handler.pers.tasks[&TaskId::new(id)];
+                assert_eq!(info.addr, StableAddress::with_method(ctx.pc, method));
+                assert_eq!(info.type_id, type_id as u32);
+                assert_eq!(info.after, chain_id == raw::CHAIN_INGRESS_AFTER);
+            }
+            // Replay can replace persistent state while the local cache survives.
+            handler.pers.tasks.clear();
+        }
+        unsafe { (*config).stable_address_method = saved_method };
+        assert_eq!(handler.cache.len(), 3);
+    }
 }

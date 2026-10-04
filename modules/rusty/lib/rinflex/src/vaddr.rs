@@ -68,21 +68,22 @@ impl VAddr {
     }
 }
 
-/// Obtain the current memory range of the stack.
+/// Obtain this thread's stack bounds, querying pthread attributes only once.
 pub fn get_stack_range() -> (u64, u64) {
-    unsafe {
-        let mut attr: libc::pthread_attr_t = std::mem::zeroed();
-        let mut stack_addr: *mut libc::c_void = std::ptr::null_mut();
-        let mut stack_size: libc::size_t = 0;
-
-        libc::pthread_getattr_np(libc::pthread_self(), &mut attr);
-        libc::pthread_attr_getstack(&attr, &mut stack_addr, &mut stack_size);
-
-        let start = stack_addr as u64;
-        let end = start + stack_size as u64;
-
-        (start, end)
+    thread_local! {
+        static STACK_RANGE: (u64, u64) = unsafe {
+            let mut attr: libc::pthread_attr_t = std::mem::zeroed();
+            assert_eq!(libc::pthread_getattr_np(libc::pthread_self(), &mut attr), 0);
+            let mut stack_addr = std::ptr::null_mut();
+            let mut stack_size = 0;
+            let result = libc::pthread_attr_getstack(&attr, &mut stack_addr, &mut stack_size);
+            libc::pthread_attr_destroy(&mut attr);
+            assert_eq!(result, 0);
+            let start = stack_addr as u64;
+            (start, start + stack_size as u64)
+        };
     }
+    STACK_RANGE.with(|range| *range)
 }
 
 #[cfg(test)]
@@ -106,6 +107,30 @@ mod tests {
         let (a, b) = get_stack_range();
         let ptr = &x as *const _ as u64;
         assert!(ptr >= a && ptr < b);
+    }
+
+    #[test]
+    fn stack_ranges_are_thread_local() {
+        let parent_range = get_stack_range();
+        for size in [64 * 1024, 128 * 1024, 256 * 1024, 64 * 1024] {
+            let child_range = std::thread::Builder::new()
+                .stack_size(size)
+                .spawn(|| {
+                    let local = 0u8;
+                    let addr = &local as *const _ as u64;
+                    let range = get_stack_range();
+                    assert!(range.0 <= addr && addr < range.1);
+                    for _ in 0..100 {
+                        assert_eq!(get_stack_range(), range);
+                    }
+                    range
+                })
+                .unwrap()
+                .join()
+                .unwrap();
+            assert_ne!(parent_range, child_range);
+            assert_eq!(get_stack_range(), parent_range);
+        }
     }
 
     #[test]

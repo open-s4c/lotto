@@ -137,6 +137,11 @@ impl RecInflex {
 
     pub fn reset_input(&mut self, replay_goal: Clock) -> Result<(), Error> {
         info!("Resetting input");
+        if self.reuse_failure(replay_goal)? {
+            info!("Reused failing trace with updated constraints");
+            return Ok(());
+        }
+        info!("Recorded suffix could not be reused; searching for another failure");
         // let f_tid =
         //     trace::get_last_tid(&self.trace_fail).expect("trace_fail should have last record");
         // let filter_match_tid = |output: &Path| Some(f_tid) == trace::get_last_tid(output);
@@ -152,6 +157,87 @@ impl RecInflex {
         )?;
         std::fs::copy(&self.trace_temp, &self.trace_fail).expect("reset input");
         Ok(())
+    }
+
+    /// Insert only the Rust configuration, retaining the suffix and its seeds.
+    /// A full CONFIG here would reset scheduler/module state during replay.
+    fn reuse_failure(&mut self, goal: Clock) -> Result<bool, Error> {
+        let input = self.tempdir.join("rinflex.reuse.trace");
+        let mut original = Trace::load_file(&self.trace_fail);
+        if original.last().is_none_or(|r| goal >= r.clk) {
+            return Ok(false);
+        }
+        let mut suffix = Vec::new();
+        while let Some(r) = original.next_any() {
+            if r.clk <= goal && r.kind == raw::record::RECORD_CONFIG {
+                r.unmarshal();
+            }
+            if r.clk > goal {
+                suffix.push(r.to_owned());
+            }
+            original.advance();
+        }
+        // Trace::advance consumes records; reload the prefix before trimming.
+        let mut original = Trace::load_file(&self.trace_fail);
+        original.trim_to_goal(goal, false);
+        handlers::order_enforcer::cli_set_constraints(self.constraints.clone());
+        let config = Record::new_config(goal);
+        let config = unsafe {
+            let ptr = raw::statemgr_config_record_for_slot(
+                config.as_ptr(),
+                raw::LOTTO_RUSTY_MODULE_SLOT as i32,
+            );
+            assert!(!ptr.is_null(), "Rust configuration must be registered");
+            Owned::<Record>::from_raw(ptr)
+        };
+        original
+            .append(config)
+            .expect("append constraint configuration");
+        for r in suffix {
+            original.append(r).expect("retain recorded suffix");
+        }
+        original.save(&input);
+
+        let mut flags = self.flags.clone();
+        flags.set_by_opt(&FLAG_REPLAY_GOAL, Value::U64(trace::get_last_clk(&input)));
+        let _replay = EnvScope::new("LOTTO_REPLAY", &input);
+        let _record = EnvScope::new("LOTTO_RECORD", &self.trace_temp);
+        let _logger = self.set_logger();
+        let result = Exec::new(&input, &self.trace_temp, &flags, &self.log_file).run();
+        let all_loaded = self.constraints.iter().all(|c| {
+            handlers::order_enforcer::HANDLER
+                .fin
+                .constraints
+                .iter()
+                .any(|loaded| loaded.id == c.id)
+        });
+        // Replay/config inspection mutates CLI globals. Subsequent searches
+        // must still attach the complete current constraint set.
+        handlers::order_enforcer::cli_set_constraints(self.constraints.clone());
+        match result {
+            Ok(Some(Outcome::Fail)) if all_loaded => {
+                std::fs::copy(&self.trace_temp, &self.trace_fail)?;
+                Ok(true)
+            }
+            Ok(_) => Ok(false),
+            Err(Error::LottoError { logs, .. }) => {
+                // Enforcing a new order can make a sparse suffix unreplayable.
+                // Only replay mismatch is an expected rejection of this attempt.
+                if logs
+                    .as_deref()
+                    .is_some_and(|log| log.contains("Replay mismatch!"))
+                {
+                    Ok(false)
+                } else {
+                    Err(Error::LottoError {
+                        input,
+                        output: self.trace_temp.clone(),
+                        logs,
+                    })
+                }
+            }
+            Err(e) => Err(e),
+        }
     }
 
     /// Do one iteration of the Recursive Inflex main loop.

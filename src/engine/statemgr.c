@@ -65,6 +65,28 @@ _header_unmarshal(const void *buf)
     return h;
 }
 
+record_t *
+statemgr_config_record_for_slot(const record_t *r, int slot)
+{
+    ASSERT(r->kind == RECORD_CONFIG);
+    size_t offset = 0;
+    while (offset < r->size) {
+        ASSERT(r->size - offset >= sizeof(header_t));
+        header_t h = _header_unmarshal(r->data + offset);
+        ASSERT(h.size <= r->size - offset - sizeof(header_t));
+        size_t size = sizeof(header_t) + h.size;
+        if (h.slot == slot) {
+            record_t *result = record_alloc(size);
+            sys_memcpy(result, r, sizeof(record_t));
+            result->size = size;
+            sys_memcpy(result->data, r->data + offset, size);
+            return result;
+        }
+        offset += size;
+    }
+    return NULL;
+}
+
 static const char *
 _state_type_str(state_type_t type)
 {

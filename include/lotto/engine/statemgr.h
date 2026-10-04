@@ -51,6 +51,10 @@ void statemgr_print(state_type_t type);
  */
 void statemgr_record_unmarshal(const record_t *r);
 
+/* Clone one module's CONFIG payload, leaving other modules unchanged on load.
+ * Returns NULL if the slot is absent. The caller owns the returned record. */
+record_t *statemgr_config_record_for_slot(const record_t *r, int slot);
+
 /**
  * Registers a printable state with statemgr.
  *

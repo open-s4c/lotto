@@ -11,3 +11,8 @@ target_link_libraries(
             memmgr_user_libc.o
             dice)
 add_test(NAME sequencer_test COMMAND sequencer_test)
+
+add_executable(statemgr_slot_test statemgr_slot_test.c)
+target_link_libraries(statemgr_slot_test PRIVATE engine_statemgr_testing.o
+    base_testing.o sys_testing.o memmgr_runtime_libc.o memmgr_user_libc.o dice)
+add_test(NAME statemgr_slot_test COMMAND statemgr_slot_test)

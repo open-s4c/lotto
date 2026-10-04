@@ -1,6 +1,9 @@
 #include <errno.h>
 #include <spawn.h>
 #include <termios.h>
+#ifdef __linux__
+    #include <sys/syscall.h>
+#endif
 
 #include <lotto/driver/exec.h>
 #include <lotto/driver/exec_info.h>
@@ -150,11 +153,21 @@ read_pipes(pid_t pid, child_wait_state_t *state)
 {
     nfds_t nfds             = 2;
     struct timespec timeout = {.tv_sec = 0, .tv_nsec = 10000};
-    struct pollfd pfds[2]   = {{.fd = p_out[0], .events = POLLIN},
+    struct pollfd pfds[3]   = {{.fd = p_out[0], .events = POLLIN},
                                {.fd = p_err[0], .events = POLLIN}};
 
+    int exit_fd = -1;
+#ifdef SYS_pidfd_open
+    exit_fd = syscall(SYS_pidfd_open, pid, 0);
+#endif
     while (nfds > 0) {
-        int ret_ppoll = sys_ppoll(pfds, nfds, &timeout, NULL);
+        bool exited = state->have_status || state->child_missing;
+        pfds[nfds] =
+            (struct pollfd){.fd = exited ? -1 : exit_fd, .events = POLLIN};
+        struct timespec drain_timeout = {0};
+        const struct timespec *wait_timeout =
+            exited ? &drain_timeout : (exit_fd >= 0 ? NULL : &timeout);
+        int ret_ppoll = sys_ppoll(pfds, nfds + 1, wait_timeout, NULL);
         if (ret_ppoll == -1) {
             if (errno == EINTR) {
                 continue;
@@ -203,6 +216,9 @@ read_pipes(pid_t pid, child_wait_state_t *state)
             ret_ppoll == 0) {
             break;
         }
+    }
+    if (exit_fd >= 0) {
+        sys_close(exit_fd);
     }
 }
 

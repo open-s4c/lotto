@@ -384,7 +384,7 @@ impl RecInflex {
             if same_clock {
                 symm_set.push(pair);
             }
-            return self.inflex_pair(iip, depth + 1, symm_set);
+            return self.inflex_pair(if !same_clock { iip } else { iip + 1 }, depth + 1, symm_set);
         }
 
         // Essentiality check

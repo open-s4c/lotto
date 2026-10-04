@@ -85,10 +85,7 @@ fn main1(_args: &mut Args, flags: &mut Flags) -> Result<(), rinflex::error::Erro
                 eprintln!("Cannot find an execution that satisfied the given constraints. This is likely due to circular constraints or control dependence.");
                 break;
             }
-            Err(e) => {
-                eprintln!("Unhandled error: {}", e);
-                break;
-            }
+            Err(e) => return Err(e),
         };
 
         let replay_goal = pair.clk;

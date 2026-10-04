@@ -1,6 +1,7 @@
 // clang-format off
 // RUN: rm -f %s.base.trace %s.config.trace %s.record.trace %s.log
 // RUN: %lotto start -t %T -o %s.base.trace -- %b
+// RUN: %lotto show -t %T -i %s.base.trace | %check %s --check-prefix=DEFAULT-POS
 // RUN: %lotto config -t %T -i %s.base.trace -o %s.config.trace --record-granularity CHPT,SWITCH --record-granularity CAPTURE
 // RUN: %lotto show -t %T -i %s.config.trace | %check %s --check-prefix=GRAN
 // RUN: (! %lotto stress -e busyabort -d deadlock -h 2>&1) | %check %s --check-prefix=MODULES
@@ -13,6 +14,7 @@
 // RUN: %lotto show -t %T -i %s.record.trace | %check %s --check-prefix=INPUT
 // RUN: (! %lotto record --record-granularity nope,SWITCH -h 2>&1) | %check %s --check-prefix=BADVALUE
 //
+// DEFAULT-POS: [pos/state.c:{{[0-9]+}}] enabled{{[[:space:]]+}}= on
 // GRAN: gran  = SWITCH|CHPT|CAPTURE
 // MODULES-DAG: busyabort{{[[:space:]]+}}on
 // MODULES-DAG: deadlock{{[[:space:]]+}}off

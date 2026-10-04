@@ -95,6 +95,7 @@ register_runtime_switchable_module(const char *name,
     slot->name            = name;
     slot->set_enabled     = set_enabled;
     slot->default_enabled = default_enabled;
+    set_enabled(default_enabled);
 }
 
 bool

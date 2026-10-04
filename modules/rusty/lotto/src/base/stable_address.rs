@@ -17,9 +17,18 @@ wrap!(MapAddress, raw::map_address_t);
 
 impl Hash for StableAddress {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        // FIXME: This probably can be improved.
-        let s = self.to_string();
-        s.hash(state);
+        self.inner.type_.hash(state);
+        match self.inner.type_ {
+            raw::stable_address_stable_address_type_ADDRESS_PTR => {
+                unsafe { self.inner.value.ptr }.hash(state);
+            }
+            raw::stable_address_stable_address_type_ADDRESS_MAP => {
+                let map = self.as_map_address();
+                map.name().to_bytes().hash(state);
+                map.offset().hash(state);
+            }
+            _ => unreachable!("Unknown stable address type"),
+        }
     }
 }
 
@@ -178,6 +187,36 @@ mod tests {
     extern crate lotto_link;
     use super::*;
     use crate::brokers::statemgr::Serializable;
+
+    #[test]
+    fn hash_ignores_unused_bytes() {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::Hasher;
+
+        let hash = |address: &StableAddress| {
+            let mut state = DefaultHasher::new();
+            address.hash(&mut state);
+            state.finish()
+        };
+        for kind in [
+            raw::stable_address_stable_address_type_ADDRESS_PTR,
+            raw::stable_address_stable_address_type_ADDRESS_MAP,
+        ] {
+            let mut address = StableAddress {
+                inner: unsafe { std::mem::zeroed() },
+            };
+            address.inner.type_ = kind;
+            // Non-UTF-8 map names are valid; bytes after NUL are not part of equality.
+            unsafe {
+                address.inner.value.map.name[0] = 0xffu8 as _;
+                address.inner.value.map.offset = 42;
+            }
+            let mut equal = address.clone();
+            unsafe { equal.inner.value.map.name[100] = 1 };
+            assert!(address == equal);
+            assert_eq!(hash(&address), hash(&equal));
+        }
+    }
 
     static STATIC_VAR: u64 = 0;
 

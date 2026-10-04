@@ -281,7 +281,7 @@ impl RecInflex {
         let pair = PrimitiveConstraint {
             source: source.clone(),
             target: target.clone(),
-            clk: ip - 1,
+            clk: ip,
         };
 
         // Primitive checking

@@ -255,8 +255,6 @@ impl RecInflex {
         inflex.output = self.trace_temp.clone();
         inflex.min = min;
         inflex.report_progress = self.report_progress;
-        // Find Ts while searching for IP. On recursive calls, the previous Ts
-        // already witnesses min-1 if the search finds no new counterexample.
         inflex.counterexample = Some(self.trace_success.clone());
         let ip = inflex.run_fast()?;
         info!("IP is {}", ip);
@@ -276,8 +274,6 @@ impl RecInflex {
         inflex.output = self.trace_temp.clone();
         inflex.report_progress = self.report_progress;
         inflex.min = min;
-        // The current Tf witnesses min-1. Keep it until a later counterexample
-        // is found, without replacing the Tf needed by sibling_check.
         std::fs::copy(&self.trace_fail, &self.trace_fail_alt)?;
         inflex.counterexample = Some(self.trace_fail_alt.clone());
         let iip = inflex.run_inverse_fast()?;
@@ -358,7 +354,8 @@ impl RecInflex {
             return Ok(None);
         };
 
-        // Find IIP.
+        // Use the adjusted event boundary so exploration does not split an
+        // atomic operation between its BEFORE and AFTER hooks.
         let Some((_iip_orig, iip, target)) = self.find_inverse_inflex(ip)? else {
             return Ok(None);
         };
@@ -384,7 +381,7 @@ impl RecInflex {
             if same_clock {
                 symm_set.push(pair);
             }
-            return self.inflex_pair(if !same_clock { iip } else { iip + 1 }, depth + 1, symm_set);
+            return self.inflex_pair(iip, depth + 1, symm_set);
         }
 
         // Essentiality check

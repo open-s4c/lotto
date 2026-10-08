@@ -10,6 +10,11 @@ It is important to select a reasonably small but sufficient -r (usually twice as
     lotto debug # launches gdb and sets breakpoints
     run-replay-lotto # runs the program until the end of the trace (inflection point)
 
+When sampling a continuation with POS, the new seed also refreshes existing
+thread priorities at the replay boundary. The CONFIG record marks this refresh
+so replaying the resulting trace repeats it. Older, unmarked CONFIG records
+retain their original behavior. Traces with this marker require an updated runtime.
+
 ### How to figure out which libraries I should instrument
 
 If your build process is complicated, and you are not sure what code is linked into your binary, you could

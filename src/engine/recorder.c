@@ -19,6 +19,7 @@
 #define IS_AFTER_KIND(x) (((x) & (RECORD_START | RECORD_CONFIG)) != 0)
 
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__REPLAY_END)
+LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__RESEED)
 LOTTO_ADVERTISE_TYPE(EVENT_ENGINE__INFO_RECORD_LOAD)
 
 void __attribute__((noinline))
@@ -167,6 +168,9 @@ _recorder_replay_next(clk_t clk)
                 ASSERT(clk == 1);
                 // fallthru
             case RECORD_CONFIG:
+                if (r->type_id == EVENT_ENGINE__RESEED) {
+                    LOTTO_PUBLISH(EVENT_ENGINE__RESEED, nil);
+                }
                 _recorder_out_clone(r);
                 break;
             default:

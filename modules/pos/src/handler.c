@@ -38,6 +38,17 @@ _fresh_priority(uint64_t rval)
     return rval;
 }
 
+LOTTO_SUBSCRIBE(EVENT_ENGINE__RESEED, {
+    if (pos_config()->enabled &&
+        strcmp(sequencer_config()->strategy, "pos") == 0) {
+        for (const tiditem_t *cur = tidmap_iterate(&_state); cur;
+             cur = tidmap_next(cur)) {
+            task_t *t = (task_t *)cur;
+            t->priority = _fresh_priority(prng_next());
+        }
+    }
+})
+
 static int
 _pos_cmp(const void *a, const void *b)
 {

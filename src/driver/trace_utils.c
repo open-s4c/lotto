@@ -200,6 +200,7 @@ cli_trace_init(const char *record, const args_t *args, const char *replay,
             fgoal.is_default ? trace_last(rep)->clk : as_uval(fgoal._val);
         cli_trace_trim_to_goal(rep, goal, false);
         record_t *r = record_config(goal);
+        r->type_id  = EVENT_ENGINE__RESEED;
 
         if (!is_file && TRACE_OK != trace_append(rep, r))
             ASSERT(0 && "could not append");
@@ -397,7 +398,7 @@ record_print(const record_t *r, int i)
             statemgr_print(STATE_TYPE_START);
             break;
         case RECORD_CONFIG: {
-            statemgr_unmarshal(r->data, STATE_TYPE_CONFIG, true);
+            statemgr_record_unmarshal(r);
             statemgr_print(STATE_TYPE_CONFIG);
             break;
         }

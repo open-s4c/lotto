@@ -49,8 +49,8 @@ pub struct OrderEnforcer {
     #[result]
     pub fin: Final,
 
-    /// Constraint bookkeeping.
-    pub block: BTreeMap<TaskId, u64>,
+    /// Blocked constraint IDs and source threads, grouped by target thread.
+    pub block: BTreeMap<TaskId, Vec<(usize, TaskId)>>,
 
     /// Handler stopped. Do not respond to `EVENT_NEXT` anymore.
     pub shutdown: bool,
@@ -102,17 +102,6 @@ impl Handler for OrderEnforcer {
         if constraints.len() == 0 {
             return;
         }
-        // If the current task is going to exit, any pending
-        // constraint whose source is this task cannot be satisfied
-        // anymore. Discard this run immediately.
-        if ctx.type_id == raw::EVENT_TASK_FINI as u16 {
-            for c in constraints.iter() {
-                if c.c.source.cnt > 0 && c.c.source.t.id == TaskId(ctx.id) {
-                    debug!("Shutting down due to constraint {} cannot be satisfied because its source is no longer available", c);
-                    discard!(self);
-                }
-            }
-        }
 
         let tset = unsafe { TidSet::wrap(&cappt.tset) };
         for id in tset.iter() {
@@ -137,9 +126,24 @@ impl Handler for OrderEnforcer {
                     debug!("Blocking task {} due to constraint {}", e.t.id, c);
                     self.block
                         .entry(id)
-                        .and_modify(|cnt| *cnt += 1)
-                        .or_insert(1);
+                        .or_default()
+                        .push((c.id, c.c.source.t.id));
                 }
+            }
+        }
+
+        if ctx.type_id == raw::EVENT_TASK_FINI as u16 {
+            if let Some((id, _)) = self
+                .block
+                .values()
+                .flatten()
+                .find(|(_, source)| source.0 == ctx.id)
+            {
+                debug!(
+                    "Discarding blocked constraint {} because its source thread exited",
+                    id
+                );
+                discard!(self);
             }
         }
 
@@ -176,8 +180,8 @@ impl Handler for OrderEnforcer {
          * tset. Guard against this case here (not in the handler to give
          * the execution more opportunity to succeed.)
          */
-        if let Some(cnt) = self.block.get(&tid) {
-            debug!("Shutting down due to Lotto picking thread {} for ANY_TASK which is blocked by {} constraints", tid, cnt);
+        if let Some(blocked) = self.block.get(&tid) {
+            debug!("Shutting down due to Lotto picking thread {} for ANY_TASK which is blocked by {} constraints", tid, blocked.len());
             debug!(
                 "discard from order_enforcer because task {} is blocked",
                 tid
@@ -212,14 +216,11 @@ impl Handler for OrderEnforcer {
                      * satisfied. */
                     continue;
                 }
-                let bcnt = self.block.get_mut(&target.t.id);
-                if bcnt.is_none() {
+                let Some(blocked) = self.block.get_mut(&target.t.id) else {
                     continue;
-                }
-                let bcnt = bcnt.unwrap();
-                assert!(*bcnt > 0);
-                *bcnt -= 1;
-                if *bcnt == 0 {
+                };
+                blocked.retain(|(id, _)| *id != constraint.id);
+                if blocked.is_empty() {
                     debug!("Unblocking {}", target.t.id);
                     self.block.remove(&target.t.id);
                 }

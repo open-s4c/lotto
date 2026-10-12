@@ -141,5 +141,102 @@ fn blocked_constraints_track_sources_and_unblock_by_id() {
         }
     }
     assert!(handler.block.is_empty());
+
+    // Establish a real blocker before checking the clock-bound outcome. Keep
+    // these cases in the same test because the handlers use process-global state.
+    for (name, blocked, discarded, clock, initial_reason, expected) in [
+        (
+            "OC-blocked bound",
+            true,
+            false,
+            11,
+            raw::reason::REASON_UNKNOWN,
+            raw::reason::REASON_SUCCESS,
+        ),
+        (
+            "bound not exceeded",
+            true,
+            false,
+            10,
+            raw::reason::REASON_UNKNOWN,
+            raw::reason::REASON_UNKNOWN,
+        ),
+        (
+            "constraints without blocker",
+            false,
+            false,
+            11,
+            raw::reason::REASON_UNKNOWN,
+            raw::reason::REASON_IGNORE,
+        ),
+        (
+            "prior discard",
+            true,
+            true,
+            11,
+            raw::reason::REASON_UNKNOWN,
+            raw::reason::REASON_IGNORE,
+        ),
+        (
+            "assertion at bound",
+            true,
+            false,
+            11,
+            raw::reason::REASON_ASSERT_FAIL,
+            raw::reason::REASON_ASSERT_FAIL,
+        ),
+        (
+            "runtime error at bound",
+            true,
+            false,
+            11,
+            raw::reason::REASON_RUNTIME_SIGTERM,
+            raw::reason::REASON_RUNTIME_SIGTERM,
+        ),
+        (
+            "prior ignore",
+            true,
+            false,
+            11,
+            raw::reason::REASON_IGNORE,
+            raw::reason::REASON_IGNORE,
+        ),
+    ] {
+        handler.fin = Final {
+            constraints: vec![constraint.clone()],
+            should_discard: false,
+        };
+        handler.block.clear();
+        handler.shutdown = false;
+        handler.max_clock = U64OrInf::from(10);
+        unsafe { event::HANDLER.persistent_mut() }
+            .tasks
+            .insert(target.t.id, target.clone());
+        if blocked {
+            capture(handler, 1, raw::EVENT_MA_READ, &[target.t.id]);
+            assert!(handler.block.contains_key(&target.t.id));
+        }
+        handler.fin.should_discard = discarded;
+        let ctx: raw::capture_point = unsafe { std::mem::zeroed() };
+        let mut cappt: raw::event_t = unsafe { std::mem::zeroed() };
+        cappt.clk = clock;
+        cappt.reason = initial_reason;
+        handler.handle(unsafe { CapturePoint::wrap(&ctx) }, &mut cappt);
+        assert_eq!(cappt.reason, expected, "{name}");
+    }
+    handler.fin = Final::default();
+    handler.block.clear();
+    handler.shutdown = false;
+    let ctx: raw::capture_point = unsafe { std::mem::zeroed() };
+    let mut cappt: raw::event_t = unsafe { std::mem::zeroed() };
+    cappt.clk = 11;
+    handler.handle(unsafe { CapturePoint::wrap(&ctx) }, &mut cappt);
+    assert_eq!(
+        cappt.reason,
+        raw::reason::REASON_IGNORE,
+        "unconstrained bound"
+    );
+    handler.shutdown = false;
+    handler.max_clock = U64OrInf::inf();
     unsafe { event::HANDLER.persistent_mut() }.tasks.clear();
 }

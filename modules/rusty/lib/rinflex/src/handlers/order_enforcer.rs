@@ -75,7 +75,22 @@ impl Handler for OrderEnforcer {
     fn handle(&mut self, ctx: &CapturePoint, cappt: &mut raw::event_t) {
         if U64OrInf::from(cappt.clk) > self.max_clock {
             self.shutdown = true;
-            cappt.reason = REASON_IGNORE;
+            // Preserve failures and shutdowns already selected by another handler.
+            if cappt.reason.is_abort() || cappt.reason.is_shutdown() {
+                return;
+            }
+            // A live OC blocker at the bound is a heuristic passing outcome:
+            // enforcement may be preventing the release needed by its source.
+            // Merely having constraints does not establish OC-induced blocking.
+            if !self.fin.should_discard
+                && !self.fin.constraints.is_empty()
+                && self.block.values().any(|constraints| !constraints.is_empty())
+            {
+                info!("Clock bound reached with an OC-blocked target; treating execution as passing");
+                cappt.reason = REASON_SUCCESS;
+            } else {
+                cappt.reason = REASON_IGNORE;
+            }
             return;
         }
 

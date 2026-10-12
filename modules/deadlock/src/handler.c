@@ -272,9 +272,6 @@ _deadlock_handle(const capture_point *cp, event_t *e)
             if (_is_lost(tid, addr)) {
                 e->reason = REASON_RSRC_DEADLOCK;
             }
-            if (_mutex_try_ok(cp)) {
-                _acquiring(tid, addr);
-            }
         } break;
         case EVENT_DEADLOCK_RSRC_ACQUIRING:
             if (_check_deadlock(tid, _rsrc_addr(cp))) {
@@ -309,6 +306,19 @@ _deadlock_handle(const capture_point *cp, event_t *e)
 }
 
 ON_SEQUENCER_CAPTURE(_deadlock_handle)
+
+/* mutex's resume handler computes the trylock result before this module runs.
+ * At capture, ret is still its initial zero, even when the lock is busy.
+ */
+LOTTO_SUBSCRIBE_SEQUENCER_RESUME(EVENT_MUTEX_TRYACQUIRE, {
+    const capture_point *cp = (const capture_point *)md;
+    ASSERT(cp);
+    if (!deadlock_config()->enabled || cp->vid == ANY_TASK || !_mutex_try_ok(cp))
+        return PS_OK;
+    task_id tid = cp->vid ? cp->vid : cp->id;
+    ASSERT(tid != NO_TASK);
+    _acquiring(tid, mutex_event_addr(cp));
+})
 
 static tidset_t _dbg_set;
 

@@ -9,7 +9,7 @@
 use bincode;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-include!(concat!(env!("OUT_DIR"), "/module_slot.rs"));
+pub const LOTTO_RUSTY_MODULE_SLOT: i32 = SLOT_LOTTO_RUSTY as i32;
 
 impl reason {
     /// Whether the execution terminated due to Lotto runtime

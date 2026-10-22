@@ -16,6 +16,8 @@
  * Keep this local until mutex exposes a lightweight event-id-only header that
  * does not pull Dice/runtime payload types into bare-metal guest builds.
  */
-#define EVENT_MUTEX_TRYACQUIRE 143
+#ifndef DICE_ROLLED
+    #define EVENT_MUTEX_TRYACQUIRE 143
+#endif
 
 #endif

@@ -6,3 +6,5 @@ foreach(SRC ${SRCS})
         ${TEST} PUBLIC sys_testing.o base_testing.o memmgr_runtime_libc.o
                        memmgr_user_libc.o)
 endforeach()
+
+add_test(NAME modules_test COMMAND modules_test)

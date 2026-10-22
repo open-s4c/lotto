@@ -744,7 +744,7 @@ snap_stress(args_t *args, flags_t *flags)
         round_print(flags, i);
 
         uint64_t round_seed =
-            seed.is_default ? (uint64_t)now() : as_uval(seed._val);
+            seed.is_default ? (uint64_t)sys_now() : as_uval(seed._val);
         flags_set_by_opt(flags, flag_seed(), uval(round_seed));
 
         err = _prepare_round(&source, temporary_directory, input, trace_path,
@@ -780,7 +780,7 @@ snap_stress(args_t *args, flags_t *flags)
         }
 
         if (seed.is_default) {
-            seed._val = uval((uint64_t)now());
+            seed._val = uval((uint64_t)sys_now());
         } else {
             seed._val = uval(as_uval(seed._val) + 1);
         }

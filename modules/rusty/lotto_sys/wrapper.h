@@ -3,6 +3,7 @@
  * @brief Rust FFI declarations for wrapper.
  */
 /* IWYU pragma: begin_keep */
+#include "lotto/dice.h"
 #include "dice/chains/capture.h"
 #include "dice/events/memaccess.h"
 #include "dice/events/pthread.h"

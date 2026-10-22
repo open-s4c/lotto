@@ -13,19 +13,19 @@
 #include <lotto/util/iterator.h>
 #include <lotto/util/strings.h>
 
-#define MAX_MODULES            100
 #define MAX_MODULE_NAME_LENGTH 1023
 #if defined(__APPLE__)
-#    define SO_SUFFIX     ".dylib"
+    #define SO_SUFFIX ".dylib"
 #else
-#    define SO_SUFFIX     ".so"
+    #define SO_SUFFIX ".so"
 #endif
-#define SO_SUFFIX_LEN          (sizeof(SO_SUFFIX) - 1)
+#define SO_SUFFIX_LEN (sizeof(SO_SUFFIX) - 1)
 
 #define STARTS_WITH(s, LITERAL_NAME)                                           \
     (sys_strncmp((s), LITERAL_NAME, LITERAL_NAME##_LEN) == 0)
 
-static module_t _modules[MAX_MODULES];
+static module_t *_modules;
+static size_t _capacity;
 static size_t _next = 0;
 
 static char *_module_name(const char *filename);
@@ -395,6 +395,7 @@ _scandir(const char *scan_dir)
         if (kind == MODULE_KIND_NONE) {
             logger_debugf("Ignoring non-Lotto shared object '%s'\n",
                           entry->d_name);
+            sys_free(name);
             continue;
         }
         for (size_t i = 0; i < _next; ++i) {
@@ -412,6 +413,15 @@ _scandir(const char *scan_dir)
                            .shadowed = false,
                            .disabled = false};
         logger_debugf("Found new module '%s'\n", module.path);
+        if (_next == _capacity) {
+            size_t capacity = _capacity ? _capacity * 2 : 64;
+            module_t *modules =
+                sys_realloc(_modules, capacity * sizeof(*modules));
+            if (!modules)
+                logger_fatalf("could not allocate module registry\n");
+            _modules  = modules;
+            _capacity = capacity;
+        }
         _modules[_next++] = module;
     }
     closedir(dir);

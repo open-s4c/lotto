@@ -38,9 +38,9 @@ add_test(NAME autocept-baseline-test COMMAND autocept_baseline_test)
 add_test(
     NAME autocept-interposed-test
     COMMAND
-        env DICE_SOURCE=${PROJECT_SOURCE_DIR}/deps/dice
+        env DICE_SOURCE=${DICE_SOURCE}
         DICE_BUILD=${PROJECT_BINARY_DIR}/deps/dice
-        ${PROJECT_SOURCE_DIR}/deps/dice/scripts/dice -preload
+        ${DICE_SOURCE}/scripts/dice -preload
         $<TARGET_FILE:autocept_testing>:$<TARGET_FILE:autocept_checker>
         $<TARGET_FILE:autocept_baseline_test>)
 
@@ -79,9 +79,9 @@ if(APPLE)
     add_test(
         NAME autocept-dispatch-semaphore-wait-test
         COMMAND
-            env DICE_SOURCE=${PROJECT_SOURCE_DIR}/deps/dice
+            env DICE_SOURCE=${DICE_SOURCE}
             DICE_BUILD=${PROJECT_BINARY_DIR}/deps/dice
-            ${PROJECT_SOURCE_DIR}/deps/dice/scripts/dice -preload
+            ${DICE_SOURCE}/scripts/dice -preload
             $<TARGET_FILE:autocept_dispatch_testing>:$<TARGET_FILE:autocept_dispatch_checker>
             $<TARGET_FILE:autocept_dispatch_wait_test>)
     set_tests_properties(

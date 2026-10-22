@@ -4,6 +4,7 @@ add_compile_definitions(_GNU_SOURCE)
 add_compile_definitions(LOGGER_PREFIX="engine")
 
 set(MODULE_NAME engine)
+# Isolated test objects still use the legacy Dice interface.
 set(MODULE_SLOT 8)
 add_compile_definitions(DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${MODULE_SLOT})
 
@@ -21,25 +22,24 @@ set(ENGINE_RUNTIME_SRCS
 set(ENGINE_DRIVER_SRCS flags.c state.c statemgr.c module.c)
 
 message(STATUS "Module ${MODULE_SLOT} (runtime): ${MODULE_NAME}")
-lotto_module_metadata_add(${MODULE_NAME} ${MODULE_SLOT} runtime BUILTIN)
-add_module_object(lotto-runtime-engine.o ${MODULE_SLOT} ${ENGINE_RUNTIME_SRCS})
-target_link_libraries(lotto-runtime-engine.o PRIVATE lotto.h lotto-src.h dice.h)
+lotto_module_metadata_add(${MODULE_NAME} runtime BUILTIN)
+add_module_object(lotto-runtime-engine.o ${ENGINE_RUNTIME_SRCS})
+target_link_libraries(lotto-runtime-engine.o PRIVATE lotto.h lotto-src.h lotto-dice.h)
 target_include_directories(lotto-runtime-engine.o
                            PRIVATE ${PROJECT_SOURCE_DIR}/modules/clock/include)
 target_compile_definitions(lotto-runtime-engine.o PRIVATE LOGGER_DISABLE)
 
 message(STATUS "Module ${MODULE_SLOT} (runtime-dbg): ${MODULE_NAME}")
-add_module_object(lotto-runtime-dbg-engine.o ${MODULE_SLOT}
-                  ${ENGINE_RUNTIME_SRCS})
+add_module_object(lotto-runtime-dbg-engine.o ${ENGINE_RUNTIME_SRCS})
 target_link_libraries(lotto-runtime-dbg-engine.o PRIVATE lotto.h lotto-src.h
-                                                         dice.h)
+                                                         lotto-dice.h)
 target_include_directories(lotto-runtime-dbg-engine.o
                            PRIVATE ${PROJECT_SOURCE_DIR}/modules/clock/include)
 
 message(STATUS "Module ${MODULE_SLOT} (driver) : ${MODULE_NAME}")
-lotto_module_metadata_add(${MODULE_NAME} ${MODULE_SLOT} driver BUILTIN)
-add_module_object(lotto-driver-engine.o ${MODULE_SLOT} ${ENGINE_DRIVER_SRCS})
-target_link_libraries(lotto-driver-engine.o PRIVATE lotto.h lotto-src.h dice.h)
+lotto_module_metadata_add(${MODULE_NAME} driver BUILTIN)
+add_module_object(lotto-driver-engine.o ${ENGINE_DRIVER_SRCS})
+target_link_libraries(lotto-driver-engine.o PRIVATE lotto.h lotto-src.h lotto-dice.h)
 target_include_directories(lotto-driver-engine.o
                            PRIVATE ${PROJECT_SOURCE_DIR}/modules/clock/include)
 

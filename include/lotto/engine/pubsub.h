@@ -15,20 +15,26 @@
 #include <lotto/util/macros.h>
 
 /* Lotto pubsub chains. */
-#define CHAIN_LOTTO_CONTROL     7
-#define CHAIN_LOTTO_DEFAULT     8
-#define CHAIN_SEQUENCER_CAPTURE 12
-#define CHAIN_SEQUENCER_RESUME  13
-#define CHAIN_LOTTO_TRAP        14
-#define CHAIN_QEMU_CONTROL      15
+#ifndef DICE_ROLLED
+    #define CHAIN_LOTTO_CONTROL     7
+    #define CHAIN_LOTTO_DEFAULT     8
+    #define CHAIN_SEQUENCER_CAPTURE 12
+    #define CHAIN_SEQUENCER_RESUME  13
+    #define CHAIN_LOTTO_TRAP        14
+    #define CHAIN_QEMU_CONTROL      15
+#endif
 
 /* Advertise a Lotto event type name for debugging and tracing output. */
-#define LOTTO_ADVERTISE_TYPE(TYPE)                                             \
-    static void __attribute__((constructor(DICE_XTOR_PRIO)))                   \
-    lotto_advertise_type_##TYPE##_(void)                                       \
-    {                                                                          \
-        ps_register_type(TYPE, #TYPE);                                         \
-    }
+#ifdef DICE_ROLLED
+    #define LOTTO_ADVERTISE_TYPE(TYPE)
+#else
+    #define LOTTO_ADVERTISE_TYPE(TYPE)                                         \
+        static void __attribute__((constructor(DICE_XTOR_PRIO)))               \
+        lotto_advertise_type_##TYPE##_(void)                                   \
+        {                                                                      \
+            ps_register_type(TYPE, #TYPE);                                     \
+        }
+#endif
 
 /* Lotto alias for the standard Dice module constructor helper. */
 #define LOTTO_MODULE_INIT(...) DICE_MODULE_INIT(__VA_ARGS__)

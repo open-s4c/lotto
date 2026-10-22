@@ -14,9 +14,11 @@
 #include <lotto/util/macros.h>
 
 /* Runtime ingress pubsub chains. */
-#define CHAIN_INGRESS_EVENT  9
-#define CHAIN_INGRESS_BEFORE 10
-#define CHAIN_INGRESS_AFTER  11
+#ifndef DICE_ROLLED
+    #define CHAIN_INGRESS_EVENT  9
+    #define CHAIN_INGRESS_BEFORE 10
+    #define CHAIN_INGRESS_AFTER  11
+#endif
 
 #define FORWARD_CAPTURE_TO_INGRESS(SUFFIX, TYPE)                               \
     static void __attribute__((constructor(DICE_XTOR_PRIO)))                   \

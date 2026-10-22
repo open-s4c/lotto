@@ -29,9 +29,11 @@ struct mutex_release_event {
     void *addr;
 };
 
-#define EVENT_MUTEX_ACQUIRE    142
-#define EVENT_MUTEX_TRYACQUIRE 143
-#define EVENT_MUTEX_RELEASE    144
+#ifndef DICE_ROLLED
+    #define EVENT_MUTEX_ACQUIRE    142
+    #define EVENT_MUTEX_TRYACQUIRE 143
+    #define EVENT_MUTEX_RELEASE    144
+#endif
 
 static inline uintptr_t
 mutex_event_addr(const capture_point *cp)

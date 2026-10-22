@@ -3,10 +3,11 @@ add_compile_definitions(_GNU_SOURCE)
 add_compile_definitions(LOGGER_PREFIX="runtime")
 
 set(MODULE_NAME runtime)
+# Isolated test objects still use the legacy Dice interface.
 set(MODULE_SLOT 9)
 add_compile_definitions(DICE_MULTIFILE_MODULE DICE_MODULE_SLOT=${MODULE_SLOT})
-lotto_module_metadata_add(self 4 runtime BUILTIN)
-lotto_module_metadata_add(${MODULE_NAME} ${MODULE_SLOT} runtime BUILTIN)
+lotto_module_metadata_add(self runtime BUILTIN)
+lotto_module_metadata_add(${MODULE_NAME} runtime BUILTIN)
 
 set(SRCS mediator.c)
 add_library(mediator.o OBJECT ${SRCS})
@@ -36,7 +37,7 @@ target_compile_definitions(memmgr_runtime_dice.o PRIVATE LOTTO_MEMMGR_RUNTIME)
 set(SRCS ingress.c sighandler.c module.c)
 add_library(lotto-runtime-phases.o OBJECT phases.c)
 target_link_libraries(lotto-runtime-phases.o PRIVATE lotto.h lotto-src.h
-                                                   dice.h)
+                                                   lotto-dice.h)
 if(APPLE)
     add_library(lotto-runtime-loader SHARED loader.c)
     target_link_libraries(lotto-runtime-loader PRIVATE lotto.h lotto-src.h)
@@ -55,22 +56,8 @@ set(LIBS
     memmgr_runtime_dice.o
     memmgr_user_libc.o
     subscribers.o
-    dice.o
-    dice-cxa.o
-    dice-mman.o
-    dice-malloc.o
-    dice-pthread_cond.o
-    dice-pthread_create.o
-    dice-pthread_mutex.o
-    dice-pthread_rwlock.o
-    dice-self.o
-    dice-sem.o
-    dice-stacktrace.o
-    dice-tsan.o)
-
-if(NOT APPLE)
-    list(APPEND LIBS dice-pthread_spinlock.o)
-endif()
+    lotto-runtime-dice
+    lotto-subscriptions.o)
 
 if(APPLE)
     list(APPEND LIBS c++)

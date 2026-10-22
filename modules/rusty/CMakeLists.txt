@@ -59,6 +59,11 @@ corrosion_import_crate(
                   rusty_cli
     FEATURES      ${FEATURES})
 # cmake-format: on
+foreach(crate rusty_engine rusty_cli)
+    corrosion_set_env_vars(${crate}
+        "LOTTO_BUILD_DIR=${PROJECT_BINARY_DIR}" "DICE_SOURCE=${DICE_SOURCE}")
+    add_dependencies(cargo-prebuild_${crate} lotto-dice-header)
+endforeach()
 
 # ##############################################################################
 # Plugins

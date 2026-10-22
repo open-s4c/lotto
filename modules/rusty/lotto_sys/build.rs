@@ -30,27 +30,21 @@ fn get_lotto_build_dir() -> PathBuf {
     get_lotto_dir().join("build")
 }
 
-fn get_rusty_module_slot(lotto_build_dir: &PathBuf) -> Result<i32> {
-    let rusty_header = lotto_build_dir
-        .join("modules")
-        .join("rusty")
-        .join("include")
-        .join("lotto")
-        .join("modules")
-        .join("rusty")
-        .join("rusty.h");
-    let content = fs::read_to_string(&rusty_header)
-        .with_context(|| format!("could not read {}", rusty_header.display()))?;
-    let define = content
+fn get_dice_dir(lotto_build_dir: &PathBuf) -> Result<PathBuf> {
+    println!("cargo:rerun-if-env-changed=DICE_SOURCE");
+    if let Ok(source) = env::var("DICE_SOURCE") {
+        return Ok(PathBuf::from(source).canonicalize()?);
+    }
+    // Standalone cargo commands use the checkout selected by Lotto's CMake.
+    let cache = lotto_build_dir.join("CMakeCache.txt");
+    println!("cargo:rerun-if-changed={}", cache.display());
+    let content = fs::read_to_string(&cache)
+        .with_context(|| format!("could not read {}", cache.display()))?;
+    let source = content
         .lines()
-        .find_map(|line| line.strip_prefix("#define MODULE_SLOT "))
-        .ok_or_else(|| anyhow!("could not find MODULE_SLOT in {}", rusty_header.display()))?;
-    define.trim().parse::<i32>().with_context(|| {
-        format!(
-            "could not parse MODULE_SLOT from {}",
-            rusty_header.display()
-        )
-    })
+        .find_map(|line| line.strip_prefix("DICE_SOURCE:PATH="))
+        .ok_or_else(|| anyhow!("could not find DICE_SOURCE in {}", cache.display()))?;
+    Ok(PathBuf::from(source).canonicalize()?)
 }
 
 fn collect_module_include_dirs(root: &PathBuf) -> Result<Vec<PathBuf>> {
@@ -76,6 +70,8 @@ fn collect_module_include_dirs(root: &PathBuf) -> Result<Vec<PathBuf>> {
 fn main() -> Result<()> {
     let lotto_dir = get_lotto_dir();
     let lotto_build_dir = get_lotto_build_dir();
+    let dice_dir = get_dice_dir(&lotto_build_dir)?;
+    println!("cargo:rerun-if-env-changed=LOTTO_BUILD_DIR");
     println!("Lotto dir is {}", lotto_dir.display());
     println!("Lotto build dir is {}", lotto_build_dir.display());
 
@@ -123,11 +119,7 @@ fn main() -> Result<()> {
     );
 
     let libvsync_package = find_package("libvsync")
-        .prefix_paths(vec![get_lotto_dir()
-            .join("deps")
-            .join("dice")
-            .join("deps")
-            .join("libvsync")])
+        .prefix_paths(vec![dice_dir.join("deps").join("libvsync")])
         .find()
         .context("could not find libvsync package")?;
     let vsync_target = libvsync_package
@@ -136,7 +128,7 @@ fn main() -> Result<()> {
     let libvsync_include_paths = vsync_target.include_directories;
     println!("Libsync include dirs are {:?}", libvsync_include_paths);
 
-    let dice_include_dir = get_lotto_dir().join("deps").join("dice").join("include");
+    let dice_include_dir = dice_dir.join("include");
     assert!(
         dice_include_dir.exists(),
         "Could not find Dice include dir at {:?}",
@@ -178,6 +170,8 @@ fn main() -> Result<()> {
         .clang_arg(clang_build_include_arg)
         .clang_arg(clang_build_gen_include_arg)
         .clang_arg(dice_include_arg)
+        .clang_arg("-DDICE_MODULE_SLOT=SLOT_LOTTO_RUSTY")
+        .clang_arg("-DDICE_PLUGIN_MODULE")
         .clang_arg("-D_GNU_SOURCE")
         .clang_arg("-DLOGGER_PREFIX=\"lotto_sys\"");
     builder = libvsync_include_paths
@@ -204,13 +198,6 @@ fn main() -> Result<()> {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
-
-    let rusty_module_slot = get_rusty_module_slot(&lotto_build_dir)?;
-    fs::write(
-        out_path.join("module_slot.rs"),
-        format!("pub const LOTTO_RUSTY_MODULE_SLOT: i32 = {rusty_module_slot};\n"),
-    )
-    .context("could not write module_slot.rs")?;
 
     Ok(())
 }

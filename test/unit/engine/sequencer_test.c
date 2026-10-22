@@ -133,9 +133,9 @@ expect_unmarshaled()
 int
 clock_gettime(clockid_t clk_id, struct timespec *tp)
 {
-    logger_printf("read clock: %.5f\n", in_sec(mock.now));
-    tp->tv_sec  = (long)(mock.now / NOW_SECOND);
-    tp->tv_nsec = (long)(mock.now % NOW_SECOND);
+    logger_printf("read clock: %.5f\n", sys_in_sec(mock.now));
+    tp->tv_sec  = (long)(mock.now / SYS_NOW_SECOND);
+    tp->tv_nsec = (long)(mock.now % SYS_NOW_SECOND);
 
     return 0;
 }
@@ -219,7 +219,7 @@ test_main_task()
     capture_point *cp = new_ctx(.id = tid, .type_id = EVENT_TASK_INIT);
     expect_process(cp, false);
     mock.next       = tid;
-    mock.now        = 5 * NOW_SECOND;
+    mock.now        = 5 * SYS_NOW_SECOND;
     struct plan act = sequencer_capture(cp);
     assert(act.next == tid);
     // assert(act.reason == REASON_BLOCKING);

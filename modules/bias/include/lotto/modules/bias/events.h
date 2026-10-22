@@ -7,8 +7,10 @@
 
 #include <lotto/bias.h>
 
-#define EVENT_BIAS_POLICY 190
-#define EVENT_BIAS_TOGGLE 191
+#ifndef DICE_ROLLED
+    #define EVENT_BIAS_POLICY 190
+    #define EVENT_BIAS_TOGGLE 191
+#endif
 
 typedef struct bias_policy_event {
     bias_policy_t policy;

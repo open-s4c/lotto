@@ -1,0 +1,45 @@
+; One configuration gives every component and plugin the same IDs and ABI.
+(callbacks true)
+(mempool-size 2Gi)
+; Defaults apply regardless of where imports appear. Early filters override
+; their relationship with Dice self and Lotto's runtime in their own slots.
+(after _ (dice self))
+(module lotto
+  (after _ runtime)
+  (before _ threads))
+
+(import (lotto events) (lotto core))
+(require (dice self) (lotto engine) (lotto driver)
+         (lotto runtime) (lotto threads))
+
+(import (dice self)
+        (dice cxa)
+        (dice mman)
+        (dice malloc)
+        (dice pthread_cond)
+        (dice pthread_create)
+        (dice pthread_mutex)
+        (dice pthread_rwlock)
+        (dice sem)
+        (dice stacktrace)
+        (dice tsan))
+
+; CMake generates only the imports for enabled optional modules.
+(import (lotto selected))
+
+; Application initialization: interceptors follow Lotto subscribers.
+(after (dice cxa) (lotto threads))
+(after (dice mman) (dice cxa))
+(after (dice malloc) (dice mman))
+(after (dice pthread_cond) (dice malloc))
+(after (dice pthread_create) (dice pthread_cond))
+(after (dice pthread_mutex) (dice pthread_create))
+(after (dice pthread_rwlock) (dice pthread_mutex))
+(after (dice sem) (dice pthread_rwlock))
+(after (dice stacktrace) (dice sem))
+(after (dice tsan) (dice stacktrace))
+(after (dice pthread_spinlock) (dice tsan))
+
+(prioritize
+  (chains INTERCEPT_EVENT CAPTURE_EVENT)
+  (events EVENT_MA_READ EVENT_MA_WRITE))

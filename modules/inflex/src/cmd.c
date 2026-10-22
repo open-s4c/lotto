@@ -341,7 +341,7 @@ _binary_search(args_t *args, flags_t *flags, clk_t l, clk_t r, predicate_t pred)
 static bool
 _fails(const args_t *args, flags_t *flags)
 {
-    struct value val = uval(now());
+    struct value val = uval(sys_now());
     flags_set_by_opt(flags, flag_seed(), val);
 
     int return_code = execute(args, flags, true);

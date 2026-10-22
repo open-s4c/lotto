@@ -20,14 +20,14 @@
 
 typedef uint64_t nanosec_t;
 
-#define NOW_NANOSECOND  (CAST_TYPE(uint64_t, 1))
-#define NOW_MICROSECOND (1000 * NOW_NANOSECOND)
-#define NOW_MILLISECOND (1000 * NOW_MICROSECOND)
-#define NOW_SECOND      (1000 * NOW_MILLISECOND)
+#define SYS_NOW_NANOSECOND  (CAST_TYPE(uint64_t, 1))
+#define SYS_NOW_MICROSECOND (1000 * SYS_NOW_NANOSECOND)
+#define SYS_NOW_MILLISECOND (1000 * SYS_NOW_MICROSECOND)
+#define SYS_NOW_SECOND      (1000 * SYS_NOW_MILLISECOND)
 
 
 static inline nanosec_t
-now(void)
+sys_now(void)
 {
     struct timespec ts;
 
@@ -36,7 +36,8 @@ now(void)
         exit(-1);
     }
 
-    const nanosec_t seconds_ns = (CAST_TYPE(uint64_t, ts.tv_sec)) * NOW_SECOND;
+    const nanosec_t seconds_ns =
+        (CAST_TYPE(uint64_t, ts.tv_sec)) * SYS_NOW_SECOND;
     const nanosec_t nanoseconds_ns = CAST_TYPE(uint64_t, ts.tv_nsec);
     const nanosec_t result_ns      = seconds_ns + nanoseconds_ns;
 
@@ -44,17 +45,17 @@ now(void)
 }
 
 static inline double
-in_sec(nanosec_t ts)
+sys_in_sec(nanosec_t ts)
 {
-    return ((double)ts) / NOW_SECOND;
+    return ((double)ts) / SYS_NOW_SECOND;
 }
 
 static inline struct timespec
-to_timespec(nanosec_t ts)
+sys_to_timespec(nanosec_t ts)
 {
     return (struct timespec){
-        .tv_sec  = CAST_TYPE(int32_t, (ts / NOW_SECOND)),
-        .tv_nsec = CAST_TYPE(int32_t, (ts % NOW_SECOND)),
+        .tv_sec  = CAST_TYPE(int32_t, (ts / SYS_NOW_SECOND)),
+        .tv_nsec = CAST_TYPE(int32_t, (ts % SYS_NOW_SECOND)),
     };
 }
 

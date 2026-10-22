@@ -11,14 +11,19 @@ foreach(SRC ${SRCS})
     endif()
     target_link_libraries(
         ${TARGET}
+        PRIVATE
         lotto-runtime-${MODULE_NAME}
         sys_testing.o
         base_testing.o
         statemgr_testing.o
         memmgr_runtime_libc.o
         memmgr_user_libc.o
-        dice)
+        lotto-driver-dice
+        lotto-subscriptions.o
+        lotto-dice.h)
     target_link_options(${TARGET} PUBLIC -rdynamic)
+    # The fixture drives the same registration phase as Lotto's driver.
+    lotto_dice_module(${TARGET} driver BUILTIN)
     add_test(NAME ${TARGET} COMMAND ${TARGET})
 endforeach()
 

@@ -12,15 +12,19 @@
 #include <lotto/runtime/capture_point.h>
 #include <lotto/sys/assert.h>
 
-#define EVENT_RUNTIME__MEMMGR_INIT 129
-#define EVENT_PTHREAD_DETACH       131
-#define EVENT_RUNTIME__NOP         132
+#ifndef DICE_ROLLED
+    #define EVENT_RUNTIME__MEMMGR_INIT 129
+    #define EVENT_PTHREAD_DETACH       131
+    #define EVENT_RUNTIME__NOP         132
+#endif
 
-#define EVENT_TASK_INIT   170
-#define EVENT_TASK_FINI   171
-#define EVENT_TASK_CREATE 172
-#define EVENT_TASK_DETACH 174
-#define EVENT_TASK_JOIN   176
+#ifndef DICE_ROLLED
+    #define EVENT_TASK_INIT   170
+    #define EVENT_TASK_FINI   171
+    #define EVENT_TASK_CREATE 172
+    #define EVENT_TASK_DETACH 174
+    #define EVENT_TASK_JOIN   176
+#endif
 
 typedef struct task_join_event {
     uintptr_t thread;

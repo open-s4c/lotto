@@ -107,10 +107,10 @@ mediator_capture(mediator_t *m, capture_point *cp)
     do {
         switch (plan_next(m->plan)) {
             case ACTION_WAKE:
-                switcher_wake(m->plan.next,
-                              m->plan.with_slack ?
-                                  sequencer_config()->slack * NOW_MILLISECOND :
-                                  0);
+                switcher_wake(m->plan.next, m->plan.with_slack ?
+                                                sequencer_config()->slack *
+                                                    SYS_NOW_MILLISECOND :
+                                                0);
                 break;
 
             case ACTION_BLOCK:

@@ -37,7 +37,12 @@ set_property(CACHE LOTTO_DEFAULT_DRIVER_MODULE_TYPE
              PROPERTY STRINGS ${LOTTO_MODULE_TYPE_LIST})
 ensure_module_type(LOTTO_DEFAULT_DRIVER_MODULE_TYPE)
 
-function(lotto_module_metadata_add NAME SLOT COMPONENT TYPE)
+function(lotto_module_metadata_add NAME COMPONENT TYPE)
+    if(NAME STREQUAL "self")
+        set(SLOT SLOT_DICE_SELF)
+    else()
+        lotto_dice_slot(SLOT "${NAME}")
+    endif()
     string(TOLOWER "${TYPE}" _type_lower)
     set_property(
         GLOBAL APPEND PROPERTY LOTTO_MODULE_METADATA
@@ -65,14 +70,18 @@ macro(add_runtime_module)
     set(RUNTIME_MODULE_TARGET lotto-runtime-${MODULE_NAME})
     set(RUNTIME_DBG_MODULE_TARGET lotto-runtime-dbg-${MODULE_NAME})
     message(STATUS "Module ${MODULE_SLOT} (runtime): ${MODULE_NAME}")
-    lotto_module_metadata_add(${MODULE_NAME} ${MODULE_SLOT} runtime
+    lotto_module_metadata_add(${MODULE_NAME} runtime
                               ${RUNTIME_MODULE_TYPE})
 
     add_library(${RUNTIME_MODULE_TARGET} ${_lib_type} ${RUNTIME_MODULE_SOURCES})
     add_library(${RUNTIME_DBG_MODULE_TARGET} ${_lib_type}
                                              ${RUNTIME_MODULE_SOURCES})
-    target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto.h dice.h)
-    target_link_libraries(${RUNTIME_DBG_MODULE_TARGET} PRIVATE lotto.h dice.h)
+    target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto.h)
+    target_link_libraries(${RUNTIME_DBG_MODULE_TARGET} PRIVATE lotto.h)
+    lotto_dice_module(${RUNTIME_MODULE_TARGET} "${MODULE_NAME}"
+                      "${RUNTIME_MODULE_TYPE}")
+    lotto_dice_module(${RUNTIME_DBG_MODULE_TARGET} "${MODULE_NAME}"
+                      "${RUNTIME_MODULE_TYPE}")
 
     if("${RUNTIME_MODULE_TYPE}" STREQUAL "PLUGIN")
         target_link_libraries(${RUNTIME_MODULE_TARGET} PRIVATE lotto)
@@ -176,11 +185,13 @@ macro(add_driver_module)
     set(DRIVER_MODULE_SOURCES ${ARGV})
     set(DRIVER_MODULE_TARGET lotto-driver-${MODULE_NAME})
     message(STATUS "Module ${MODULE_SLOT} (driver) : ${MODULE_NAME}")
-    lotto_module_metadata_add(${MODULE_NAME} ${MODULE_SLOT} driver
+    lotto_module_metadata_add(${MODULE_NAME} driver
                               ${DRIVER_MODULE_TYPE})
 
     add_library(${DRIVER_MODULE_TARGET} ${_lib_type} ${DRIVER_MODULE_SOURCES})
-    target_link_libraries(${DRIVER_MODULE_TARGET} PRIVATE lotto.h dice.h)
+    target_link_libraries(${DRIVER_MODULE_TARGET} PRIVATE lotto.h)
+    lotto_dice_module(${DRIVER_MODULE_TARGET} "${MODULE_NAME}"
+                      "${DRIVER_MODULE_TYPE}")
     target_compile_definitions(
         ${DRIVER_MODULE_TARGET}
         PRIVATE DICE_MULTIFILE_MODULE #
@@ -230,15 +241,8 @@ endfunction()
 
 macro(new_module NAME)
     ensure_module_name_prefix(${NAME})
-    math(EXPR SLOT "${SLOT}+1")
     set(MODULE_NAME ${NAME})
-    set(MODULE_SLOT ${SLOT})
-endmacro()
-
-macro(new_module_at NAME EXPLICIT_SLOT)
-    ensure_module_name_prefix(${NAME})
-    set(MODULE_NAME ${NAME})
-    set(MODULE_SLOT ${EXPLICIT_SLOT})
+    lotto_dice_slot(MODULE_SLOT "${NAME}")
 endmacro()
 
 add_custom_target(tikl-modules)
@@ -251,7 +255,7 @@ function(add_tikl_module_target NAME)
 endfunction()
 
 macro(add_module NAME)
-    set(oneValueArgs SLOT DEFAULT)
+    set(oneValueArgs DEFAULT)
     cmake_parse_arguments(ADD_MODULE "" "${oneValueArgs}" "" ${ARGN})
     if(DEFINED ADD_MODULE_DEFAULT)
         set(_add_module_default ${ADD_MODULE_DEFAULT})
@@ -263,14 +267,15 @@ macro(add_module NAME)
 
     if(${LOTTO_MODULE_${NAME}})
         set(MODULE_ROOT_NAME ${NAME})
-        set(RUNTIME_MODULE_TYPE_${NAME} ${LOTTO_DEFAULT_RUNTIME_MODULE_TYPE})
-        set(DRIVER_MODULE_TYPE_${NAME} ${LOTTO_DEFAULT_DRIVER_MODULE_TYPE})
-
-        if(DEFINED ADD_MODULE_SLOT)
-            new_module_at(${NAME} ${ADD_MODULE_SLOT})
-        else()
-            new_module(${NAME})
+        set_property(GLOBAL APPEND PROPERTY LOTTO_DICE_IMPORTS "${NAME}")
+        if(NOT DEFINED RUNTIME_MODULE_TYPE_${NAME})
+            set(RUNTIME_MODULE_TYPE_${NAME} ${LOTTO_DEFAULT_RUNTIME_MODULE_TYPE})
         endif()
+        if(NOT DEFINED DRIVER_MODULE_TYPE_${NAME})
+            set(DRIVER_MODULE_TYPE_${NAME} ${LOTTO_DEFAULT_DRIVER_MODULE_TYPE})
+        endif()
+
+        new_module(${NAME})
         set(TIKL_MODULE_FEATURES "${TIKL_MODULE_FEATURES}\n-D module-${NAME}")
         add_tikl_module_target(${NAME})
         add_subdirectory(${NAME})
@@ -296,10 +301,10 @@ macro(add_module NAME)
     endif()
 endmacro()
 
-macro(add_module_object TARGET SLOT)
+macro(add_module_object TARGET)
     add_library(${TARGET} OBJECT ${ARGN})
-    target_compile_definitions(${TARGET} PRIVATE DICE_MULTIFILE_MODULE
-                                                 DICE_MODULE_SLOT=${SLOT})
+    target_compile_definitions(${TARGET} PRIVATE DICE_MULTIFILE_MODULE)
+    lotto_dice_module(${TARGET} "${MODULE_NAME}" BUILTIN)
 endmacro()
 
 function(add_module_tikl_test SRC)

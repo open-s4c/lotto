@@ -1,8 +1,9 @@
 sanitize()
 add_compile_definitions(_GNU_SOURCE)
+# Isolated test objects still use the legacy Dice interface.
 add_compile_definitions(DICE_MODULE_SLOT=9)
 add_compile_definitions(LOGGER_PREFIX="driver")
-lotto_module_metadata_add(driver 9 driver BUILTIN)
+lotto_module_metadata_add(driver driver BUILTIN)
 add_subdirectory(flags)
 
 include_directories(${CMAKE_BINARY_DIR}/generated)
@@ -40,7 +41,7 @@ target_link_libraries(cli.o PUBLIC m)
 add_driver_dependencies(cli.o)
 
 add_library(lotto-driver-phases.o OBJECT phases.c)
-target_link_libraries(lotto-driver-phases.o PRIVATE lotto.h lotto-src.h dice.h)
+target_link_libraries(lotto-driver-phases.o PRIVATE lotto.h lotto-src.h lotto-dice.h)
 
 add_library(cli_testing.o OBJECT ${CLI_UTILS_SRCS})
 target_compile_definitions(cli_testing.o PRIVATE -DLOTTO_TEST)
@@ -61,7 +62,8 @@ target_link_libraries(
             memmgr_runtime_libc.o
             memmgr_user_libc.o
             lotto-driver-engine.o
-            dice.o)
+            lotto-driver-dice
+            lotto-subscriptions.o)
 if(APPLE)
     target_link_libraries(lotto-driver PRIVATE lotto-driver-phases.o)
 endif()

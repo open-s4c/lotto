@@ -81,7 +81,7 @@ switcher_yield(task_id id, bool (*any_task_filter)(task_id))
         vcond_signal(&_switcher.cnd[bucket]);
         vcond_wait(&_switcher.cnd[bucket], &_switcher.mutex);
         if (_switcher.slack) {
-            struct timespec ts = to_timespec(_switcher.slack);
+            struct timespec ts = sys_to_timespec(_switcher.slack);
             vmutex_release(&_switcher.mutex);
             sys_nanosleep(&ts, NULL);
             vmutex_acquire(&_switcher.mutex);

@@ -1,0 +1,13 @@
+(slot terminate
+  (after blocking clock join mutex rwlock evec poll timeout cxa impasse
+         region_preemption region_filter filtering available watchdog
+         busyabort ichpt race memaccess yield)
+  (consumes
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT)
+    (CHAIN_LOTTO_TRAP EVENT_TERMINATE_ABANDON EVENT_TERMINATE_FAILURE
+      EVENT_TERMINATE_SUCCESS))
+  (produces
+    (CHAIN_INGRESS_EVENT EVENT_TERMINATE_ABANDON EVENT_TERMINATE_FAILURE
+      EVENT_TERMINATE_SUCCESS)
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)))

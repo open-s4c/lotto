@@ -10,12 +10,14 @@
 
 #include <lotto/evec.h>
 
-#define EVENT_EVEC_PREPARE    145
-#define EVENT_EVEC_WAIT       146
-#define EVENT_EVEC_TIMED_WAIT 147
-#define EVENT_EVEC_CANCEL     148
-#define EVENT_EVEC_WAKE       149
-#define EVENT_EVEC_MOVE       150
+#ifndef DICE_ROLLED
+    #define EVENT_EVEC_PREPARE    145
+    #define EVENT_EVEC_WAIT       146
+    #define EVENT_EVEC_TIMED_WAIT 147
+    #define EVENT_EVEC_CANCEL     148
+    #define EVENT_EVEC_WAKE       149
+    #define EVENT_EVEC_MOVE       150
+#endif
 
 struct evec_prepare_event {
     const void *pc;

@@ -5,6 +5,8 @@
 #ifndef LOTTO_MODULES_CXA_EVENTS_H
 #define LOTTO_MODULES_CXA_EVENTS_H
 
-#define EVENT_CXA_GUARD_CALL 175
+#ifndef DICE_ROLLED
+    #define EVENT_CXA_GUARD_CALL 175
+#endif
 
 #endif

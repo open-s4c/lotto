@@ -53,24 +53,16 @@ set(DICE_MAIN_HOOKS
     OFF
     CACHE BOOL "" FORCE)
 
-set(DICE_DISPATCH_CHAINS
-    "0"
-    CACHE STRING "" FORCE)
-
-set(DICE_MAX_BUILTIN_SLOTS
-    60
-    CACHE STRING "" FORCE)
-
-set(DICE_MAX_TYPES
-    256
-    CACHE STRING "" FORCE)
-
 add_compile_definitions(DICE_XTOR_PRIO=1000)
 add_compile_definitions(LOG_PREFIX="[ dice] ")
 add_compile_definitions(LOG_LEVEL=${DICE_LOG_LEVEL})
 
+# Capacity for standalone legacy Dice test fixtures; generated runtimes use
+# the IDs declared in lotto.dice instead.
+set(DICE_MAX_TYPES 256 CACHE STRING "Legacy test event capacity" FORCE)
+
 add_subdirectory(deps)
-link_libraries(dice.h)
+include_directories("${DICE_SOURCE}/include")
 set_property(TARGET dice.h PROPERTY INTERPROCEDURAL_OPTIMIZATION OFF)
 
 find_package(libvsync 4.2 CONFIG REQUIRED)
@@ -118,6 +110,8 @@ hide_cache_variables("^BUILD_STATIC_RUNTIME$")
 
 set(LOTTO_MODULE_TYPE_LIST PLUGIN BUILTIN)
 include(cmake/modules.cmake)
+include(cmake/dice.cmake)
+lotto_prepare_dice()
 
 # ##############################################################################
 # Generic project configuration
@@ -200,6 +194,7 @@ include_directories(include)
 add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(modules)
+lotto_finalize_dice()
 if(APPLE)
     target_link_libraries(lotto PRIVATE lotto-runtime-phases.o)
     target_link_libraries(lotto-dbg PRIVATE lotto-runtime-phases.o)
@@ -224,6 +219,7 @@ add_custom_target(
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         -DCMAKE_INSTALL_PREFIX=${LOTTO_CICD_INSTALL_PREFIX}
         -DLOTTO_MODULE_qemu=${LOTTO_MODULE_qemu} -DLOTTO_LTO=${LOTTO_LTO}
+        -DDICE_SOURCE=${DICE_SOURCE}
         -DLOTTO_RACKET_TESTS=OFF
     COMMAND ${CMAKE_COMMAND} --build "${LOTTO_CICD_INSTALL_BUILD_DIR}" -j
     COMMAND ${CMAKE_COMMAND} --install "${LOTTO_CICD_INSTALL_BUILD_DIR}"

@@ -7,8 +7,10 @@
 
 #include <stdint.h>
 
-#define EVENT_QEMU_PROFILE_START 186
-#define EVENT_QEMU_PROFILE_END   187
+#ifndef DICE_ROLLED
+    #define EVENT_QEMU_PROFILE_START 186
+    #define EVENT_QEMU_PROFILE_END   187
+#endif
 
 typedef struct qemu_profile_event {
     uint64_t id;

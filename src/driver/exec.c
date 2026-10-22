@@ -31,7 +31,6 @@ static bool _tty_state_saved;
 static struct termios _tty_state;
 static volatile sig_atomic_t _interrupted;
 static volatile sig_atomic_t _terminated;
-#define DICE_DSO_ENV "DICE_DSO"
 
 static void
 _restore_tty_state(void)
@@ -305,14 +304,6 @@ execute(const args_t *args, const flags_t *flags, bool config)
         prefixed_args.arg0 = prefixed_args.argv[0];
     }
 
-    const char *old_dice_dso = sys_getenv(DICE_DSO_ENV);
-    char *old_dice_dso_copy  = NULL;
-    if (old_dice_dso) {
-        size_t len        = sys_strlen(old_dice_dso);
-        old_dice_dso_copy = sys_malloc(len + 1);
-        sys_strcpy(old_dice_dso_copy, old_dice_dso);
-    }
-    sys_setenv(DICE_DSO_ENV, LIBLOTTO_RUNTIME, true);
     const char *cmd = flags_get_sval(flags, flag_before_run());
     if (cmd && cmd[0]) {
         sys_setenv("LOTTO_DISABLE", "true", true);
@@ -411,12 +402,6 @@ fini:
         sys_free(replay_copy);
     } else {
         sys_unsetenv("LOTTO_REPLAY");
-    }
-    if (old_dice_dso_copy) {
-        sys_setenv(DICE_DSO_ENV, old_dice_dso_copy, true);
-        sys_free(old_dice_dso_copy);
-    } else {
-        sys_unsetenv(DICE_DSO_ENV);
     }
 
     cmd = flags_get_sval(flags, flag_after_run());

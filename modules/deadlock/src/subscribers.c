@@ -3,8 +3,8 @@
 #include <dice/pubsub.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/deadlock/events.h>
-#include <lotto/runtime/capture_point.h>
 #include <lotto/qemu/trap.h>
+#include <lotto/runtime/capture_point.h>
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_DEADLOCK_RSRC_ACQUIRING, {
     rsrc_event_t *ev = EVENT_PAYLOAD(event);
@@ -33,10 +33,10 @@ PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_DEADLOCK_RSRC_RELEASED, {
 })
 
 PS_SUBSCRIBE(CHAIN_LOTTO_TRAP, EVENT_DEADLOCK_RSRC_ACQUIRING, {
-    capture_point *trap_cp      = EVENT_PAYLOAD(event);
+    capture_point *trap_cp           = EVENT_PAYLOAD(event);
     struct lotto_trap_event *trap_ev = trap_cp ? trap_cp->payload : NULL;
-    rsrc_event_t rsrc_ev        = {
-               .addr = trap_ev ? (void *)trap_ev->regs[1] : NULL,
+    rsrc_event_t rsrc_ev             = {
+                    .addr = trap_ev ? (void *)trap_ev->regs[1] : NULL,
     };
     capture_point cp = {
         .chain_id = chain,
@@ -49,10 +49,10 @@ PS_SUBSCRIBE(CHAIN_LOTTO_TRAP, EVENT_DEADLOCK_RSRC_ACQUIRING, {
 })
 
 PS_SUBSCRIBE(CHAIN_LOTTO_TRAP, EVENT_DEADLOCK_RSRC_RELEASED, {
-    capture_point *trap_cp      = EVENT_PAYLOAD(event);
+    capture_point *trap_cp           = EVENT_PAYLOAD(event);
     struct lotto_trap_event *trap_ev = trap_cp ? trap_cp->payload : NULL;
-    rsrc_event_t rsrc_ev        = {
-               .addr = trap_ev ? (void *)trap_ev->regs[1] : NULL,
+    rsrc_event_t rsrc_ev             = {
+                    .addr = trap_ev ? (void *)trap_ev->regs[1] : NULL,
     };
     capture_point cp = {
         .chain_id = chain,

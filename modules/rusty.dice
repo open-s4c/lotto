@@ -1,0 +1,15 @@
+(slot rusty
+  (after blocking clock join mutex rwlock evec poll timeout cxa impasse
+         region_preemption region_filter filtering available watchdog
+         busyabort ichpt race memaccess yield terminate priority task_velocity
+         order)
+  (consumes
+    (CAPTURE_EVENT EVENT_RUSTY_AWAIT EVENT_RUSTY_SPIN_END
+      EVENT_RUSTY_SPIN_START))
+  (produces
+    (CHAIN_INGRESS_EVENT EVENT_RUSTY_AWAIT EVENT_RUSTY_SPIN_END
+      EVENT_RUSTY_SPIN_START)
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)
+    (INTERCEPT_EVENT EVENT_RUSTY_AWAIT EVENT_RUSTY_SPIN_END
+      EVENT_RUSTY_SPIN_START)))

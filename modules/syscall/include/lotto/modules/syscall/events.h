@@ -5,6 +5,8 @@
 #ifndef LOTTO_MODULES_SYSCALL_EVENTS_H
 #define LOTTO_MODULES_SYSCALL_EVENTS_H
 
-#define EVENT_SYSCALL 182
+#ifndef DICE_ROLLED
+    #define EVENT_SYSCALL 182
+#endif
 
 #endif

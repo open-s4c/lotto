@@ -15,6 +15,7 @@ guard_ready_(void)
     return ready_;
 }
 
+#ifndef DICE_ROLLED
 DICE_WEAK int
 ps_subscribe_(chain_id chain, type_id type, ps_callback_f cb, int slot)
 {
@@ -32,7 +33,14 @@ ps_subscribe(chain_id chain, type_id type, ps_callback_f cb, int slot)
     return ps_subscribe_(chain, type, cb, slot);
 }
 
-LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_REGISTER, { ready_ = true; })
+#endif
+
+LOTTO_SUBSCRIBE_CONTROL(EVENT_LOTTO_REGISTER, {
+    ready_ = true;
+#ifdef DICE_ROLLED
+    lotto_close_subscriptions();
+#endif
+})
 
 PS_SUBSCRIBE(INTERCEPT_BEFORE, ANY_EVENT,
              { return guard_ready_() ? PS_OK : PS_STOP_CHAIN; })

@@ -2,9 +2,6 @@
 #include <pthread.h>
 #include <stdint.h>
 
-#ifdef DICE_MODULE_SLOT
-    #undef DICE_MODULE_SLOT
-#endif
 #include <dice/chains/capture.h>
 #include <dice/chains/intercept.h>
 #include <dice/events/pthread.h>

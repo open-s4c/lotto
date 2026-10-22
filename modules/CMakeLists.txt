@@ -1,5 +1,3 @@
-set(SLOT 16) # we pick runtime
-
 enable_language(CXX)
 # disable clang tidy for this folder
 unset(CMAKE_C_CLANG_TIDY)
@@ -50,8 +48,8 @@ set(RUNTIME_MODULE_TYPE_syscall BUILTIN)
 set(RUNTIME_MODULE_TYPE_rusty PLUGIN)
 set(RUNTIME_MODULE_LTO_rusty OFF)
 
-add_module(guard SLOT 1)
-add_module(summary SLOT 2 DEFAULT OFF)
+add_module(guard)
+add_module(summary DEFAULT OFF)
 
 if(APPLE)
     set(LOTTO_APPLE_DEFAULT_OFF DEFAULT OFF)
@@ -77,7 +75,7 @@ add_module(impasse ${LOTTO_APPLE_DEFAULT_OFF})
 # hard filters
 add_module(region_preemption)
 add_module(region_filter)
-add_module(sampling SLOT 3)
+add_module(sampling)
 add_module(filtering)
 
 # feature handlers
@@ -94,8 +92,8 @@ add_module(terminate)
 add_module(priority)
 add_module(task_velocity)
 add_module(order)
-add_module(concurrent SLOT 6)
-add_module(ghost SLOT 7)
+add_module(concurrent)
+add_module(ghost)
 add_module(rusty DEFAULT ${LOTTO_RUSTY_DEFAULT})
 
 # bias and scheduling strategy handlers
@@ -110,7 +108,7 @@ add_module(inactivity ${LOTTO_APPLE_DEFAULT_OFF})
 
 # other components
 add_module(autocept)
-add_module(syscall SLOT 2 DEFAULT OFF)
+add_module(syscall DEFAULT OFF)
 add_module(time)
 add_module(sleep)
 add_module(random)

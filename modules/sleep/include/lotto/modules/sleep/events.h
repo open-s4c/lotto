@@ -7,7 +7,9 @@
 
 #include <time.h>
 
-#define EVENT_SLEEP_YIELD 162
+#ifndef DICE_ROLLED
+    #define EVENT_SLEEP_YIELD 162
+#endif
 
 typedef struct sleep_yield_event {
     const char *func;

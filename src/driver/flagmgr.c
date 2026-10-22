@@ -234,9 +234,8 @@ _flags_text(const flags_t *flags, const char *text[])
                               flags_get_uval(flags, b), dst);
                     dst += sys_strlen(dst) + 1;
                 } else {
-                    written =
-                        1 + snprintf(dst, len, "%" PRIu64,
-                                     flags_get_uval(flags, b));
+                    written = 1 + snprintf(dst, len, "%" PRIu64,
+                                           flags_get_uval(flags, b));
                     dst += written;
                     len -= written;
                     ASSERT(len > 0);
@@ -543,7 +542,7 @@ apply_forced_non_defaults(flags_t *flags)
         ASSERT(b == flag_seed() &&
                "No action implemented for generic forced non-default behavior");
         if (flags_get(flags, b).is_default) {
-            flags_set_by_opt(flags, b, uval(now()));
+            flags_set_by_opt(flags, b, uval(sys_now()));
         }
     }
     return;

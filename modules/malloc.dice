@@ -1,0 +1,13 @@
+(slot malloc
+  (after blocking clock join mutex rwlock evec poll timeout cxa impasse
+         region_preemption region_filter filtering available watchdog
+         busyabort ichpt race memaccess yield terminate priority task_velocity
+         order rusty bias pos pct deadlock enforce inactivity autocept time
+         sleep random tsan drum debug explore stress trace inflex fork)
+  (consumes
+    (CAPTURE_BEFORE EVENT_ALIGNED_ALLOC EVENT_CALLOC EVENT_FREE EVENT_MALLOC
+      EVENT_POSIX_MEMALIGN EVENT_REALLOC)
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT))
+  (produces
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)))

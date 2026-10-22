@@ -1,0 +1,17 @@
+(slot fork
+  (after blocking clock join mutex rwlock evec poll timeout cxa impasse
+         region_preemption region_filter filtering available watchdog
+         busyabort ichpt race memaccess yield terminate priority task_velocity
+         order rusty bias pos pct deadlock enforce inactivity autocept time
+         sleep random tsan drum debug explore stress trace inflex)
+  (consumes
+    (CAPTURE_AFTER EVENT_FORK_EXECVE)
+    (CAPTURE_BEFORE EVENT_FORK_EXECVE)
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT))
+  (produces
+    (CHAIN_INGRESS_AFTER EVENT_FORK_EXECVE)
+    (CHAIN_INGRESS_BEFORE EVENT_FORK_EXECVE)
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)
+    (INTERCEPT_AFTER EVENT_FORK_EXECVE)
+    (INTERCEPT_BEFORE EVENT_FORK_EXECVE)))

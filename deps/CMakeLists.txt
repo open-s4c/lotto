@@ -5,13 +5,18 @@ include(ExternalProject)
 # ------------------------------------------------------------------------------
 # Dice
 # ------------------------------------------------------------------------------
-v_add_submodule(dice)
+set(DICE_SOURCE "${PROJECT_SOURCE_DIR}/../dice" CACHE PATH
+    "Dice checkout providing dice-roll and module definitions")
+if(NOT EXISTS "${DICE_SOURCE}/cmake/roll.cmake")
+    message(FATAL_ERROR "DICE_SOURCE must point to the Dice generator checkout")
+endif()
+add_subdirectory("${DICE_SOURCE}" dice EXCLUDE_FROM_ALL)
 
 # ------------------------------------------------------------------------------
 # tsano
 # ------------------------------------------------------------------------------
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dice/include/dice DESTINATION include)
+install(DIRECTORY ${DICE_SOURCE}/include/dice DESTINATION include)
 
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/include/blob-tsano.h

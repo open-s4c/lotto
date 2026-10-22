@@ -5,7 +5,9 @@
 #ifndef LOTTO_MODULES_POLL_EVENTS_H
 #define LOTTO_MODULES_POLL_EVENTS_H
 
-#define EVENT_POLL 164
+#ifndef DICE_ROLLED
+    #define EVENT_POLL 164
+#endif
 
 #include <poll.h>
 

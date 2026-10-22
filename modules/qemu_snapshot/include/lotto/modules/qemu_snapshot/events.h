@@ -7,8 +7,10 @@
 
 #include <stdbool.h>
 
-#define EVENT_QEMU_SNAPSHOT_REQUEST 188
-#define EVENT_QEMU_SNAPSHOT_DONE    189
+#ifndef DICE_ROLLED
+    #define EVENT_QEMU_SNAPSHOT_REQUEST 188
+    #define EVENT_QEMU_SNAPSHOT_DONE    189
+#endif
 
 struct qemu_snapshot_done_event {
     const char *name;

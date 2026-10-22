@@ -2,7 +2,9 @@
 
 // general libc functions
 ADD_INTERCEPTOR(select)
+#ifndef __APPLE__
 ADD_INTERCEPTOR(epoll_wait)
+#endif
 ADD_INTERCEPTOR(recv)
 //ADD_INTERCEPTOR(send)
 ADD_INTERCEPTOR(accept)

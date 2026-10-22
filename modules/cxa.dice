@@ -1,0 +1,10 @@
+(slot cxa
+  (after blocking clock join mutex rwlock evec poll timeout)
+  (consumes
+    (CAPTURE_AFTER EVENT_CXA_GUARD_ACQUIRE)
+    (CAPTURE_BEFORE EVENT_CXA_GUARD_ACQUIRE))
+  (produces
+    (CHAIN_INGRESS_AFTER ANY_EVENT)
+    (CHAIN_INGRESS_BEFORE ANY_EVENT)
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)))

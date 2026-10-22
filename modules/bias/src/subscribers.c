@@ -3,8 +3,8 @@
 #include <dice/pubsub.h>
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/bias/events.h>
-#include <lotto/runtime/capture_point.h>
 #include <lotto/qemu/trap.h>
+#include <lotto/runtime/capture_point.h>
 
 PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_BIAS_POLICY, {
     bias_policy_event_t *ev = EVENT_PAYLOAD(event);

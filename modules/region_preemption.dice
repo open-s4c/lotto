@@ -1,0 +1,10 @@
+(slot region_preemption
+  (after blocking clock join mutex rwlock evec poll timeout cxa impasse)
+  (consumes
+    (CAPTURE_EVENT EVENT_REGION_PREEMPTION)
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT))
+  (produces
+    (CHAIN_INGRESS_EVENT ANY_EVENT)
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)
+    (INTERCEPT_EVENT EVENT_REGION_PREEMPTION)))

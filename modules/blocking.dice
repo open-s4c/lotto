@@ -1,0 +1,6 @@
+(slot blocking
+  (consumes
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT))
+  (produces
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)))

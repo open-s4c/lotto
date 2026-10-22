@@ -3,15 +3,15 @@
 #include <lotto/engine/pubsub.h>
 #include <lotto/modules/qemu/events.h>
 #include <lotto/modules/yield/events.h>
-#include <lotto/runtime/events.h>
 #include <lotto/qemu/trap.h>
+#include <lotto/runtime/events.h>
 
 PS_SUBSCRIBE(CHAIN_QEMU_CONTROL, EVENT_QEMU_INIT, { qemu_profile_on_init(); })
 
 PS_SUBSCRIBE(CHAIN_QEMU_CONTROL, EVENT_QEMU_FINI, { qemu_profile_on_fini(); })
 
 PS_SUBSCRIBE(CHAIN_QEMU_CONTROL, EVENT_QEMU_TRANSLATE, {
-    const qemu_translate_event_t *ev = data;
+    const qemu_translate_event_t *ev = event;
     qemu_profile_on_translate(ev->insn_count);
 })
 

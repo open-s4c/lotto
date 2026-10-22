@@ -25,7 +25,7 @@ r1()
         return 0;
     ++counter;
     ENSURE(counter == 1);
-    switcher_wake(3, (nanosec_t)(2.0 * NOW_SECOND));
+    switcher_wake(3, (nanosec_t)(2.0 * SYS_NOW_SECOND));
     return 0;
 }
 
@@ -49,7 +49,7 @@ main()
     double elapsed;
     start = time(NULL);
 
-    switcher_wake(2, (nanosec_t)(1.5 * NOW_SECOND));
+    switcher_wake(2, (nanosec_t)(1.5 * SYS_NOW_SECOND));
 
     pthread_t t[2];
     pthread_create(&t[0], 0, r1, 0);

@@ -1,0 +1,12 @@
+(slot syscall
+  (before (dice self) engine driver runtime concurrent ghost)
+  (after guard summary)
+  (consumes
+    (CAPTURE_AFTER EVENT_SYSCALL)
+    (CAPTURE_BEFORE EVENT_SYSCALL)
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT)
+    (INTERCEPT_AFTER EVENT_SYSCALL)
+    (INTERCEPT_BEFORE EVENT_SYSCALL))
+  (produces
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)))

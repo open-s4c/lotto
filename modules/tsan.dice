@@ -1,0 +1,20 @@
+(slot tsan
+  (after blocking clock join mutex rwlock evec poll timeout cxa impasse
+         region_preemption region_filter filtering available watchdog
+         busyabort ichpt race memaccess yield terminate priority task_velocity
+         order rusty bias pos pct deadlock enforce inactivity autocept time
+         sleep random)
+  (consumes
+    (CAPTURE_AFTER EVENT_MA_AREAD EVENT_MA_AWRITE EVENT_MA_CMPXCHG
+      EVENT_MA_CMPXCHG_WEAK EVENT_MA_FENCE EVENT_MA_RMW EVENT_MA_XCHG)
+    (CAPTURE_BEFORE EVENT_MA_AREAD EVENT_MA_AWRITE EVENT_MA_CMPXCHG
+      EVENT_MA_CMPXCHG_WEAK EVENT_MA_FENCE EVENT_MA_RMW EVENT_MA_XCHG)
+    (CAPTURE_EVENT EVENT_MA_READ EVENT_MA_WRITE EVENT_STACKTRACE_ENTER
+      EVENT_STACKTRACE_EXIT)
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT))
+  (produces
+    (CHAIN_INGRESS_AFTER ANY_EVENT)
+    (CHAIN_INGRESS_BEFORE ANY_EVENT)
+    (CHAIN_INGRESS_EVENT ANY_EVENT)
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)))

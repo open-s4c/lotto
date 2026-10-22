@@ -1,0 +1,15 @@
+(slot order
+  (after blocking clock join mutex rwlock evec poll timeout cxa impasse
+         region_preemption region_filter filtering available watchdog
+         busyabort ichpt race memaccess yield terminate priority task_velocity)
+  (consumes
+    (CAPTURE_AFTER EVENT_ORDER_SET)
+    (CAPTURE_BEFORE EVENT_ORDER_SET)
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT))
+  (produces
+    (CHAIN_INGRESS_AFTER EVENT_ORDER_SET)
+    (CHAIN_INGRESS_BEFORE EVENT_ORDER_SET)
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)
+    (INTERCEPT_AFTER EVENT_ORDER_SET)
+    (INTERCEPT_BEFORE EVENT_ORDER_SET)))

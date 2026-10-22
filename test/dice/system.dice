@@ -1,0 +1,24 @@
+(callbacks true)
+(mempool-size 1Mi)
+(slot publisher (produces (CHAIN_TEST EVENT_TEST)))
+(slot first
+  (before early)
+  (consumes (CHAIN_DICE_CONTROL EVENT_DICE_INIT)
+            (CHAIN_TEST EVENT_TEST))
+  (produces (CHAIN_REPLY EVENT_REPLY)))
+(slot early
+  (before second)
+  (consumes (CHAIN_DICE_CONTROL EVENT_DICE_INIT)
+            (CHAIN_TEST EVENT_TEST)))
+(slot second
+  (before late)
+  (consumes (CHAIN_DICE_CONTROL EVENT_DICE_INIT)
+            (CHAIN_TEST EVENT_TEST)
+            (CHAIN_REPLY EVENT_REPLY)))
+(slot late
+  (before legacy)
+  (consumes (CHAIN_DICE_CONTROL EVENT_DICE_INIT)
+            (CHAIN_TEST ANY_EVENT)))
+(slot legacy
+  (consumes (CHAIN_DICE_CONTROL EVENT_DICE_INIT)
+            (CHAIN_TEST EVENT_TEST)))

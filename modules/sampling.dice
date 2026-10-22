@@ -1,0 +1,13 @@
+(slot sampling
+  (before (dice self) engine driver runtime concurrent ghost)
+  (after guard summary syscall)
+  (consumes
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT)
+    (CHAIN_INGRESS_BEFORE EVENT_TASK_CREATE)
+    (CHAIN_INGRESS_EVENT EVENT_TASK_INIT)
+    (INTERCEPT_AFTER ANY_EVENT)
+    (INTERCEPT_BEFORE ANY_EVENT)
+    (INTERCEPT_EVENT ANY_EVENT))
+  (produces
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)))

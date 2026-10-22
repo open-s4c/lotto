@@ -5,8 +5,8 @@
 #include <lotto/driver/flags/prng.h>
 #include <lotto/driver/subcmd.h>
 #include <lotto/driver/utils.h>
-#include <lotto/sys/now.h>
 #include <lotto/engine/pubsub.h>
+#include <lotto/sys/now.h>
 
 int
 stress(args_t *args, flags_t *flags)
@@ -27,7 +27,7 @@ stress(args_t *args, flags_t *flags)
         }
 
         if (seed.is_default) {
-            seed._val = uval(now());
+            seed._val = uval(sys_now());
         } else {
             seed._val = uval(as_uval(seed._val) + 1);
         }

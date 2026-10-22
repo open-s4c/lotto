@@ -33,8 +33,8 @@ _default_flags()
 static int
 _trace_prepare(args_t *args, flags_t *flags, bool requires_program)
 {
-    uint64_t verbose = flag_verbose_count(flags);
-    const char *input = flags_get_sval(flags, flag_input());
+    uint64_t verbose   = flag_verbose_count(flags);
+    const char *input  = flags_get_sval(flags, flag_input());
     const char *output = flags_get_sval(flags, flag_output());
 
     preload(flags_get_sval(flags, flag_temporary_directory()), verbose,
@@ -42,10 +42,9 @@ _trace_prepare(args_t *args, flags_t *flags, bool requires_program)
             flags_get_sval(flags, flag_memmgr_runtime()),
             flags_get_sval(flags, flag_memmgr_user()));
 
-    envvar_t vars[] = {
-        {"LOTTO_REPLAY", .sval = input},
-        {"LOTTO_RECORD", .sval = output},
-        {NULL}};
+    envvar_t vars[] = {{"LOTTO_REPLAY", .sval = input},
+                       {"LOTTO_RECORD", .sval = output},
+                       {NULL}};
     envvar_set(vars, true);
 
     if (verbose > 0) {
@@ -58,7 +57,7 @@ _trace_prepare(args_t *args, flags_t *flags, bool requires_program)
         }
     }
 
-    struct value val = uval(now());
+    struct value val = uval(sys_now());
     flags_set_by_opt(flags, flag_seed(), val);
     cli_trace_init(output, args, input, flags_get(flags, flag_replay_goal()),
                    true, flags);

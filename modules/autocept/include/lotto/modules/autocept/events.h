@@ -10,7 +10,9 @@
 #include <dice/types.h>
 #include <lotto/base/value.h>
 
-#define EVENT_AUTOCEPT_CALL 181
+#ifndef DICE_ROLLED
+    #define EVENT_AUTOCEPT_CALL 181
+#endif
 
 struct autocept_call_regs {
 #if defined(__x86_64__)

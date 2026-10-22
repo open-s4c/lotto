@@ -1,0 +1,13 @@
+(slot yield
+  (after blocking clock join mutex rwlock evec poll timeout cxa impasse
+         region_preemption region_filter filtering available watchdog
+         busyabort ichpt race memaccess)
+  (consumes
+    (CAPTURE_EVENT EVENT_YIELD_LOTTO EVENT_YIELD_SCHED)
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT)
+    (CHAIN_LOTTO_TRAP EVENT_YIELD_USER))
+  (produces
+    (CHAIN_INGRESS_EVENT ANY_EVENT)
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)
+    (INTERCEPT_EVENT EVENT_YIELD_LOTTO EVENT_YIELD_SCHED)))

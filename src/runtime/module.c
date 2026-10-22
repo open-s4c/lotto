@@ -87,7 +87,7 @@ runtime_init_(void)
         return;
     }
 
-    _start = now();
+    _start = sys_now();
     if ((var = getenv("LOTTO_RECORD")) && var[0]) {
         logger_debugf("record: %s\n", var);
         stream_t *st = stream_file_alloc();
@@ -160,7 +160,7 @@ fini_cb_(void *arg)
     }
 
     if (vatomic_xchg(&_only_once, 1) == 0) {
-        struct metadata *md = self_md();
+        struct metadata *md        = self_md();
         struct lotto_fini_event ev = {
             .md     = md,
             .reason = reason,
@@ -185,8 +185,8 @@ fini_cb_(void *arg)
 
         lotto_intercept_fini();
         sys_memory_fini();
-        nanosec_t elapsed = now() - _start;
-        logger_debugf("Elapsed time = %.2fs\n", in_sec(elapsed));
+        nanosec_t elapsed = sys_now() - _start;
+        logger_debugf("Elapsed time = %.2fs\n", sys_in_sec(elapsed));
         if (reason == REASON_SUCCESS) {
             _exit(0);
         }
@@ -251,4 +251,4 @@ ON_INITIALIZATION_PHASE({
     vatomic_write(&_runtime_initialized, 1);
 })
 
-LOTTO_MODULE_INIT()
+PS_SUBSCRIBE(CHAIN_DICE_CONTROL, EVENT_DICE_INIT, {})

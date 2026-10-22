@@ -1,0 +1,11 @@
+(slot poll
+  (after blocking clock join mutex rwlock evec)
+  (consumes
+    (CAPTURE_BEFORE EVENT_POLL)
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT))
+  (produces
+    (CHAIN_INGRESS_EVENT EVENT_POLL)
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)
+    (INTERCEPT_AFTER EVENT_POLL)
+    (INTERCEPT_BEFORE EVENT_POLL)))

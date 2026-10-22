@@ -31,5 +31,3 @@ _attach_qemu_gdb_flags(const char *name)
 }
 
 ON_INITIALIZATION_PHASE({ _attach_qemu_gdb_flags("qemu"); })
-
-LOTTO_MODULE_INIT()

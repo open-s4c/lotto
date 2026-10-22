@@ -7,7 +7,9 @@
 
 #include <stdint.h>
 
-#define EVENT_TASK_VELOCITY 154
+#ifndef DICE_ROLLED
+    #define EVENT_TASK_VELOCITY 154
+#endif
 
 typedef struct task_velocity_event {
     int64_t probability;

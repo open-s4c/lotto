@@ -22,6 +22,10 @@ Assuming a Ubuntu/Debian, get the minimal dependencies:
 	sudo apt install cmake gcc xxd
 
 
+Lotto uses the Dice checkout alongside this repository by default. It must
+provide `dice-roll` and the module definitions in `src/mod`. Select a different
+checkout with `-DDICE_SOURCE=/path/to/dice`.
+
 Now create a build directory and compile the default Lotto configuration
 
     cmake -S. -Bbuild
@@ -70,4 +74,90 @@ Use `./lotto debug` to start the replay in `gdb` and have it automatically confi
 
 See the [installation guide](doc/install.md) for more compilation options for *pLotto*.
 
+## Generated Dice configuration
 
+[`lotto.dice`](lotto.dice) is the shared configuration for the runtime, driver,
+and their plugins. Core declarations live in `src/dice/`; each optional
+module has a definition in `modules/<name>.dice`. CMake imports only enabled
+modules and writes their imports to `<build>/dice/selected.dice`, loaded by
+`lotto.dice` through `(import (lotto selected))`. The source and generated
+definitions are mapped into the `lotto` namespace.
+
+Ordering is declared in the `.dice` files. `lotto.dice` sets the default
+`(after _ (dice self))`; within `lotto`, ordinary slots default to running after
+`runtime` and before `threads`. Early filters override those relationships in
+their slot declarations. Core dependencies live in `src/dice/core.dice`, and
+optional modules declare their predecessors in `modules/<name>.dice`.
+The predecessor lists preserve the existing sequencer pipeline even when an
+optional module in the middle is disabled. Interceptor initialization order
+is application policy in `lotto.dice`.
+
+Ordering references to absent modules are ignored. `(require ...)` in
+`lotto.dice` makes the shared core slots mandatory. Requirements validate
+presence without importing definitions. CMake only selects module imports;
+changing its `add_module()` order does not change handler order.
+
+Slot numbers come from Dice. A module's CMake target supplies
+`DICE_MODULE_SLOT=SLOT_LOTTO_<NAME>` and includes the generated configuration
+before the public headers. Builtin handlers use direct dispatch; loadable
+modules define `DICE_PLUGIN_MODULE` and register callbacks at their declared
+slots. Runtime and driver use the same slot assignments and configuration ID.
+Rebuild plugins whenever the configuration changes.
+
+Each compiled target has a fixed default slot. Ordinary consumers use
+`PS_SUBSCRIBE(chain, event, ...)`; a source that needs another slot uses
+`PS_SUBSCRIBE_SLOT(chain, event, slot, ...)`. For example, with clock as the
+target's default:
+
+```c
+PS_SUBSCRIBE(CAPTURE_EVENT, EVENT_CLOCK_READ, {
+    /* Uses SLOT_LOTTO_CLOCK. */
+})
+
+PS_SUBSCRIBE(CHAIN_DICE_CONTROL, EVENT_DICE_INIT, {
+    /* Initialization that follows the declared slot order. */
+})
+```
+
+An explicit subscription such as
+`PS_SUBSCRIBE_SLOT(CHAIN, EVENT, SLOT_OTHER, { ... })` selects another declared
+slot and supplies that slot's route context for publications inside its body.
+Set `DICE_MODULE_SLOT` before including the generated interface and keep it
+fixed throughout the source file. Redefining it later does not update the
+publication context or the dispatch/plugin mode chosen by the header.
+Linked consumers use `DICE_DISPATCH_MODULE`; plugins use `DICE_PLUGIN_MODULE`,
+which takes precedence if both flags are set.
+
+An initialization subscription runs when Dice dispatches `EVENT_DICE_INIT`,
+in slot order. Its constructor only registers it. All participating plugins
+must be loaded before that event; a plugin loaded later cannot participate in
+the initialization that already ran. This does not change Lotto's existing
+startup/loader sequencing. Unlike `DICE_MODULE_INIT`, the subscription has no
+once-only guard of its own or separate constructor initialization.
+
+Modules can have multiple slots. The thread forwarding target defaults to
+`SLOT_LOTTO_THREADS`, separately from `SLOT_LOTTO_RUNTIME`.
+`FORWARD_CAPTURE_TO_INGRESS(suffix, event)` uses its target's default slot.
+Modules such as `uafcheck` and `leakcheck` compile shared sources for distinct
+memory-manager slots, with a fixed default for each target.
+
+The repeated `LOTTO_SUBSCRIBE`, state, and flag macros retain their existing
+`1000 * DICE_MODULE_SLOT + __COUNTER__` callback slots. This preserves their
+ordering while the extension-slot redesign remains a separate change.
+Public Lotto event and chain IDs are pinned in `src/dice/events.dice` to retain
+the guest interface values. Numeric header definitions remain available to
+standalone legacy test fixtures and guest programs.
+
+Use `-DLOTTO_CHECK_ROUTES=ON` to validate publications against the declarations.
+For example:
+
+```sh
+cmake -S . -B build -DDICE_SOURCE=../dice \
+  -DCMAKE_BUILD_TYPE=Release -DLOTTO_LTO=ON -DLOTTO_CHECK_ROUTES=ON
+cmake --build build -j
+ctest --test-dir build --output-on-failure
+```
+
+The `dice-record-replay` test records and replays a pthread program with a
+loaded probe. It checks repeated registration callback order and event
+delivery. It is enabled when the blocking, clock, and join modules are enabled.

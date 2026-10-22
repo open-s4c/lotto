@@ -1,2 +1,2 @@
 #include <lotto/engine/pubsub.h>
-LOTTO_MODULE_INIT()
+PS_SUBSCRIBE(CHAIN_DICE_CONTROL, EVENT_DICE_INIT, {})

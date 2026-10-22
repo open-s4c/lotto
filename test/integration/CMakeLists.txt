@@ -27,7 +27,7 @@ add_library(mock-probe SHARED probes/mock-probe.c)
 set_target_properties(
     mock-probe PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY
                                   "${CMAKE_BINARY_DIR}/tikl")
-target_link_libraries(mock-probe PRIVATE lotto.h dice.h ${CMAKE_DL_LIBS})
+target_link_libraries(mock-probe PRIVATE lotto.h lotto-dice.h ${CMAKE_DL_LIBS})
 if(APPLE)
     target_link_options(mock-probe PRIVATE LINKER:-undefined,dynamic_lookup)
 endif()
@@ -40,7 +40,8 @@ set(INTEGRATION_PROBE_TARGETS)
 foreach(PROBE_SRC ${PROBE_SRCS})
     get_filename_component(PROBE ${PROBE_SRC} NAME_WLE)
     add_library(${PROBE} SHARED ${PROBE_SRC})
-    target_link_libraries(${PROBE} PRIVATE lotto.h dice.h ${CMAKE_DL_LIBS})
+    target_link_libraries(${PROBE} PRIVATE lotto.h lotto-dice.h ${CMAKE_DL_LIBS})
+    target_compile_definitions(${PROBE} PRIVATE DICE_PLUGIN_MODULE)
     if(APPLE)
         target_link_options(${PROBE} PRIVATE LINKER:-undefined,dynamic_lookup)
     endif()
@@ -380,3 +381,15 @@ add_lit_target(lit ${LOTTO_LIT_WORKERS} ${LOTTO_LIT_TIMEOUT} LIT_SRCS)
 add_dependencies(lit lit-prepare ${LIT_DEPS})
 add_lit_target(lit-tests ${LOTTO_LIT_WORKERS} ${LOTTO_LIT_TIMEOUT} LIT_TESTS)
 add_dependencies(lit-tests lit-prepare ${LIT_TESTS_DEPS})
+
+# Exercise the generated runtime, loaded subscriptions, and state replay together.
+if(LOTTO_MODULE_blocking AND LOTTO_MODULE_clock AND LOTTO_MODULE_join)
+    add_test(NAME dice-record-replay
+        COMMAND ${CMAKE_COMMAND}
+            -DLOTTO=$<TARGET_FILE:lotto-cli>
+            -DPROBE=$<TARGET_FILE:pthread_create-probe>
+            -DPROGRAM=$<TARGET_FILE:bin-0000-handler-called>
+            -DWORK=${CMAKE_CURRENT_BINARY_DIR}/dice-record-replay
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/dice.cmake)
+    set_tests_properties(dice-record-replay PROPERTIES TIMEOUT 75)
+endif()

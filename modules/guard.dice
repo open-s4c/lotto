@@ -1,0 +1,10 @@
+(slot guard
+  (before (dice self) engine driver runtime concurrent ghost)
+  (consumes
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT)
+    (INTERCEPT_AFTER ANY_EVENT)
+    (INTERCEPT_BEFORE ANY_EVENT)
+    (INTERCEPT_EVENT ANY_EVENT))
+  (produces
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)))

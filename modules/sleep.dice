@@ -1,0 +1,13 @@
+(slot sleep
+  (after blocking clock join mutex rwlock evec poll timeout cxa impasse
+         region_preemption region_filter filtering available watchdog
+         busyabort ichpt race memaccess yield terminate priority task_velocity
+         order rusty bias pos pct deadlock enforce inactivity autocept time)
+  (consumes
+    (CAPTURE_EVENT EVENT_SLEEP_YIELD)
+    (CHAIN_DICE_CONTROL EVENT_DICE_INIT))
+  (produces
+    (CHAIN_INGRESS_EVENT EVENT_SLEEP_YIELD)
+    (CHAIN_LOTTO_CONTROL ANY_EVENT)
+    (CHAIN_LOTTO_DEFAULT ANY_EVENT)
+    (INTERCEPT_EVENT EVENT_SLEEP_YIELD)))

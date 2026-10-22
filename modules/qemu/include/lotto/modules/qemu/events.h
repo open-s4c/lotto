@@ -12,13 +12,15 @@
 
 struct qemu_plugin_tb;
 
-#define EVENT_QEMU_INSTRUMENT   216
-#define EVENT_QEMU_INIT         210
-#define EVENT_QEMU_FINI         211
-#define EVENT_QEMU_TRANSLATE    212
-#define EVENT_QEMU_START        213
-#define EVENT_QEMU_STOP         214
-#define EVENT_QEMU_VCPU_INIT    215
+#ifndef DICE_ROLLED
+    #define EVENT_QEMU_INSTRUMENT 216
+    #define EVENT_QEMU_INIT       210
+    #define EVENT_QEMU_FINI       211
+    #define EVENT_QEMU_TRANSLATE  212
+    #define EVENT_QEMU_START      213
+    #define EVENT_QEMU_STOP       214
+    #define EVENT_QEMU_VCPU_INIT  215
+#endif
 
 typedef struct qemu_control_event {
     uintptr_t plugin_id;

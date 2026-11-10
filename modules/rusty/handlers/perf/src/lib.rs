@@ -80,7 +80,7 @@ impl From<(usize, u64)> for LineCnt {
         assert!(!addr_ptr.is_null());
         // Safety: We ensure the address is not null, and trust the user
         // to pass a valid C-string, with a 0 at the end.
-        let addr_ptr = &mut addr.name as *mut i8;
+        let addr_ptr = addr.name.as_ptr();
         unsafe {
             LineCnt {
                 line: format!("{:?} {:?}", CStr::from_ptr(addr_ptr), addr.offset),

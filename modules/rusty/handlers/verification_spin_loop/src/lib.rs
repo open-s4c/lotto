@@ -161,14 +161,14 @@ struct InternalState {
 #[derive(CategoryMacro)]
 #[handler_type(SpinLoopHandler)]
 pub struct SpinStart {
-    pub name: *const i8,
+    pub name: *const std::ffi::c_char,
     tid: TaskId,
 }
 
 #[derive(CategoryMacro)]
 #[handler_type(SpinLoopHandler)]
 pub struct SpinEnd {
-    pub name: *const i8,
+    pub name: *const std::ffi::c_char,
     tid: TaskId,
     val: ValuesTypes,
 }

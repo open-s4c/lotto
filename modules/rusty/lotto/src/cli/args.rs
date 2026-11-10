@@ -114,7 +114,8 @@ mod tests {
     use super::*;
 
     unsafe fn create(argc: usize) -> Owned<Args> {
-        let argv = raw::sys_calloc(argc + 1, std::mem::size_of::<*mut i8>()) as *mut *mut i8;
+        let argv = raw::sys_calloc(argc + 1, std::mem::size_of::<*mut std::ffi::c_char>())
+            as *mut *mut std::ffi::c_char;
         for i in 0..argc {
             *argv.add(i) = raw::sys_strdup(c"ARGUMENT".as_ptr());
         }

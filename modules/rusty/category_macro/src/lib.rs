@@ -147,7 +147,7 @@ fn generate_parse_method(
         } else if let syn::Type::Ptr(ptr) = field_type {
             if let syn::Type::Path(type_path) = &*ptr.elem {
                 let type_name = type_path.path.segments.last().unwrap().ident.to_string();
-                if type_name == "i8" {
+                if type_name == "i8" || type_name == "c_char" {
                     field_assignments.push(quote! {
                         #field_name: context.func,
                     });

@@ -48,7 +48,7 @@ impl InternalState {
 #[derive(CategoryMacro)]
 #[handler_type(SwitchWaitingThread)]
 pub struct Await {
-    pub name: *const i8,
+    pub name: *const std::ffi::c_char,
     address: Address,
     tid: TaskId,
 }

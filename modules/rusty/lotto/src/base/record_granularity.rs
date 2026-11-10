@@ -17,7 +17,7 @@ impl fmt::Display for RecordGranularities {
         unsafe {
             raw::record_granularities_str(self.0, buf.as_mut_ptr());
         }
-        let cstr = unsafe { CStr::from_ptr(&buf as *const i8) };
+        let cstr = unsafe { CStr::from_ptr(buf.as_ptr()) };
         write!(formatter, "{}", cstr.to_str().unwrap())
     }
 }
